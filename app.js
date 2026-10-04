@@ -26,11 +26,11 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask'];
-  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble'];
+  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star'];
@@ -379,6 +379,16 @@ const ShiroLib = (() => {
         q.lArm = .05; q.rArm = .05; q.lElb = 0; q.rElb = 0;
         break;
       }
+      case 'stretch': {
+        // 背伸び: 両腕を頭上に伸ばしてゆっくり持ち上がる(顔も上向き)
+        const u = .5 + .5 * Math.sin(tt * 1.6 - Math.PI / 2); // 0→1→0 ゆったり
+        q.bob = .05 * u;
+        q.lArm = -(.1 + 2.5 * u); q.rArm = .1 + 2.5 * u;
+        q.lElb = .05; q.rElb = .05;
+        q.lean = -.05 * u; q.headTilt = -.12 * u;
+        q.lKnee = q.rKnee = .06 * u; // 爪先立ちぎみ
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -710,7 +720,7 @@ const ShiroLib = (() => {
 
   function drawParticles(ctx, W, H, type, t, seed) {
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
-    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : 42;
+    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : 42;
     ctx.save();
     for (let i = 0; i < N; i++) {
       if (type === 'snow') {
@@ -753,6 +763,21 @@ const ShiroLib = (() => {
         ctx.strokeStyle = `rgba(170,215,255,${.35 + .35 * h(i, 4)})`;
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(x, y, 2 + 4 * h(i, 3), 0, 7); ctx.stroke();
+      } else if (type === 'confetti') {
+        // 紙吹雪: カラフルな長方形がひらひら回転しながら舞い落ちる
+        const x = h(i, 0) * W + Math.sin(t * (1 + h(i, 2)) + h(i, 1) * 9) * W * .06;
+        const y = ((h(i, 1) + t * (.1 + .09 * h(i, 2))) % 1) * H;
+        ctx.fillStyle = `hsla(${Math.round(h(i, 3) * 360)},85%,62%,${.6 + .3 * h(i, 4)})`;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(t * 3 + i * 2.7) * 2.4);
+        ctx.fillRect(-2.5 - 2.5 * h(i, 4), -1.4, 5 + 5 * h(i, 4), 2.8);
+        ctx.restore();
+      } else if (type === 'firefly') {
+        // ホタル: ぼんやり光りながら漂う(夜空・夕焼けと相性)
+        const x = h(i, 0) * W + Math.sin(t * .5 + i * 1.7) * W * .07;
+        const y = h(i, 1) * H * .85 + Math.cos(t * .4 + i * 2.3) * H * .05;
+        const a = Math.max(0, .15 + .8 * Math.sin(t * (1.2 + h(i, 2)) + h(i, 3) * 9));
+        ctx.fillStyle = `rgba(200,255,120,${a})`;
+        ctx.beginPath(); ctx.arc(x, y, 1.2 + 1.4 * h(i, 3), 0, 7); ctx.fill();
       } else { // petal
         const x = h(i, 0) * W + Math.sin(t * .6 + h(i, 1) * 9) * W * .05;
         const y = ((h(i, 1) + t * (.03 + .03 * h(i, 2))) % 1) * H;
