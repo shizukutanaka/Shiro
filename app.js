@@ -26,15 +26,15 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat'];
-  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony'];
+  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
@@ -434,6 +434,13 @@ const ShiroLib = (() => {
         q.headTilt = .12 * Math.sin(tt * 2);
         break;
       }
+      case 'sad': {
+        // しょんぼり: うなだれ + 時々ため息(肩が落ちて戻る)
+        const sigh = Math.max(0, Math.sin(tt * .9)) ** 3;      // 長い周期で0→1
+        q.headTilt = .38 + .1 * sigh; q.lean = .12; q.bob = -.03 - .02 * sigh;
+        q.lArm = .16; q.rArm = .16; q.lElb = .12; q.rElb = .12;
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -616,6 +623,16 @@ const ShiroLib = (() => {
       ctx.quadraticCurveTo(hx + hr * .9, hy + hr * .45, hx + hr * .75, hy - hr * .5);
       ctx.closePath(); ctx.fill();
       ctx.beginPath(); ctx.arc(hx + hr * .52, hy - hr * .82, hr * .16, 0, 7); ctx.fill(); // 結び目
+    }
+    if (hs === 'mush') {
+      // マッシュルーム: 頭全体を覆う丸いキノコ頭(顔の下半分だけ残す)
+      ctx.fillStyle = hairC;
+      ctx.beginPath();
+      ctx.arc(hx, hy - hr * .18, hr * 1.14, Math.PI, Math.PI * 2);
+      ctx.quadraticCurveTo(hx + hr * 1.14, hy + hr * .28, hx + hr * .9, hy + hr * .3);
+      ctx.lineTo(hx - hr * .9, hy + hr * .3);
+      ctx.quadraticCurveTo(hx - hr * 1.14, hy + hr * .28, hx - hr * 1.14, hy - hr * .18);
+      ctx.closePath(); ctx.fill();
     }
     if (hs === 'odango') {
       // お団子: 頭頂両サイドの丸いお団子
@@ -1199,6 +1216,23 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath();
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
+      }
+    } else if (pr === 'desert') {
+      // 砂漠: 空+大きな太陽+うねる砂丘(決定論的)
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#ffd9a0'); gr.addColorStop(.45, '#ffedcf'); gr.addColorStop(.46, '#e8b968');
+      gr.addColorStop(1, '#c98f3d');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      c.fillStyle = 'rgba(255,240,200,0.95)';
+      c.beginPath(); c.arc(W * .5, H * .3, H * .11, 0, 7); c.fill();
+      // 砂丘: 正弦カーブの砂稜を2枚重ねる
+      for (const [base, amp, col] of [[.6, .07, '#d9a44f'], [.75, .09, '#b57f30']]) {
+        c.fillStyle = col;
+        c.beginPath(); c.moveTo(0, H);
+        for (let x = 0; x <= W; x += W / 40) {
+          c.lineTo(x, H * (base + amp * Math.sin(x / W * 4.4 + base * 9)));
+        }
+        c.lineTo(W, H); c.closePath(); c.fill();
       }
     } else if (pr === 'aurora') {
       // オーロラ: 夜空 + ゆらめく光のカーテン + 星
