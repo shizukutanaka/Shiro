@@ -29,6 +29,7 @@ const ShiroLib = (() => {
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'still'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses'];
+  const BGS = ['gradient', 'green', 'white', 'transparent'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
     'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue'];
@@ -50,7 +51,7 @@ const ShiroLib = (() => {
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
       smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, clothHue: 0,
-      acc: 'none', bgFit: 'cover',
+      acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
 
@@ -63,6 +64,7 @@ const ShiroLib = (() => {
     o.anim = ANIMS.includes(p && p.anim) ? p.anim : d.anim;
     o.bgFit = FITS.includes(p && p.bgFit) ? p.bgFit : d.bgFit;
     o.acc = ACCS.includes(p && p.acc) ? p.acc : d.acc;
+    o.bgPreset = BGS.includes(p && p.bgPreset) ? p.bgPreset : d.bgPreset;
     o.flip = !!(p && p.flip);
     const sv = p ? +p.seed : NaN;
     o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
@@ -75,6 +77,7 @@ const ShiroLib = (() => {
     p.anim = ANIMS[Math.floor(rng() * ANIMS.length)];
     p.acc = ACCS[Math.floor(rng() * ACCS.length)];
     p.flip = rng() < .35;
+    p.bgPreset = rng() < .75 ? 'gradient' : BGS[1 + Math.floor(rng() * 3)];
     p.x = .3 + rng() * .4; p.y = .6 + rng() * .35;
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
@@ -389,7 +392,7 @@ const ShiroLib = (() => {
   }
 
   return {
-    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, NUM_KEYS, SLIDERS,
+    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
     keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, mannequinPose, skeleton, drawMannequin, drawAccessory,
@@ -432,13 +435,20 @@ if (typeof document !== 'undefined') (() => {
   }
 
   // 背景グレーディング: 被写体を際立たせるため背景をぼかし・減光する(合成定番)
+  // 画像なし時はプリセット背景: gradient=内蔵/green=グリーンスクリーン/white=白/transparent=透過PNG用
   function drawBackdrop(c, p) {
-    if (state.bg) drawCover(c, state.bg, p.bgFit, p.bgBlur * 10);
-    else {
-      if (p.bgBlur > 0) c.filter = `blur(${p.bgBlur * 10}px)`;
-      defaultBackdrop(c);
-      c.filter = 'none';
+    if (state.bg) {
+      drawCover(c, state.bg, p.bgFit, p.bgBlur * 10);
+      if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
+      return;
     }
+    const pr = p.bgPreset || 'gradient';
+    if (pr === 'transparent') return; // アルファを残す(ディムもかけない)
+    if (p.bgBlur > 0) c.filter = `blur(${p.bgBlur * 10}px)`;
+    if (pr === 'green') { c.fillStyle = '#00b140'; c.fillRect(0, 0, W, H); }
+    else if (pr === 'white') { c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); }
+    else defaultBackdrop(c);
+    c.filter = 'none';
     if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
   }
 
@@ -550,12 +560,14 @@ if (typeof document !== 'undefined') (() => {
       $('sel-anim').value = state.params.anim;
       $('sel-acc').value = state.params.acc;
       $('sel-bgfit').value = state.params.bgFit;
+      $('sel-bgpreset').value = state.params.bgPreset;
       $('chk-flip').checked = state.params.flip;
     }
   }
   $('sel-anim').addEventListener('change', e => state.params.anim = e.target.value);
   $('sel-acc').addEventListener('change', e => state.params.acc = e.target.value);
   $('sel-bgfit').addEventListener('change', e => state.params.bgFit = e.target.value);
+  $('sel-bgpreset').addEventListener('change', e => state.params.bgPreset = e.target.value);
   $('chk-flip').addEventListener('change', e => state.params.flip = e.target.checked);
 
   $('btn-random').addEventListener('click', () => {
@@ -598,6 +610,15 @@ if (typeof document !== 'undefined') (() => {
   }
   $('btn-png').addEventListener('click', () =>
     stage.toBlob(b => b ? download(b, 'shiro.png') : err('PNG生成に失敗'), 'image/png'));
+  $('btn-png-copy').addEventListener('click', () => {
+    if (!navigator.clipboard || !window.ClipboardItem) return err('このブラウザはコピーに未対応です');
+    stage.toBlob(async b => {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': b })]);
+        const t = $('btn-png-copy'); t.textContent = 'コピーしました'; setTimeout(() => t.textContent = 'PNGをコピー', 1500);
+      } catch (e) { err('コピーに失敗しました(ブラウザ権限を確認)'); }
+    }, 'image/png');
+  });
   // 録画はトグル式: クリックで開始、再クリックまたは15秒で停止
   $('btn-rec').addEventListener('click', () => {
     if (state.recorder) { state.recorder.stop(); return; }
