@@ -122,6 +122,21 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(q0.bob === 0, 'jump lands at t=0');
 }
 
+// sticker outline: emits offset draws, no-op at 0
+{
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return {}; },
+    set: () => true,
+  });
+  const sil = { width: 100, height: 200 };
+  L.drawStickerOutline(ctx, sil, 100, 200, 300, 400, 0);
+  ok(calls.length === 0, 'outline 0 draws nothing');
+  L.drawStickerOutline(ctx, sil, 100, 200, 300, 400, .5);
+  ok(calls.length === 32 * 4, 'outline emits 2x16 offset draws');
+  ok(calls.every(Number.isFinite), 'outline coords finite');
+}
+
 // blink cycle
 {
   ok(L.blinkOpen(1.0) === 1 && L.blinkOpen(1.0) === L.blinkOpen(1.0), 'blink deterministic/open by default');

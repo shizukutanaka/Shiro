@@ -11,6 +11,11 @@
   #app { display:flex; gap:12px; padding:12px; height:100vh; }
   #stage-wrap { flex:1; display:flex; flex-direction:column; min-width:0; }
   #stage { width:100%; background:#000; border-radius:8px; display:block; }
+  #canvas-holder { position:relative; }
+  #guides { position:absolute; inset:0; pointer-events:none; display:none; border-radius:8px; opacity:.55;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 3' preserveAspectRatio='none'%3E%3Cpath d='M1 0v3M2 0v3M0 1h3M0 2h3' stroke='%23ffffff' stroke-width='.015'/%3E%3C/svg%3E");
+    background-size:100% 100%; }
+  #guides.on { display:block; }
   #fav-bar { display:flex; gap:8px; margin-top:10px; overflow-x:auto; padding:4px 2px; min-height:74px; }
   .fav { position:relative; flex:0 0 auto; width:110px; cursor:pointer; border:2px solid var(--line); border-radius:6px; overflow:hidden; background:var(--panel); }
   .fav:hover { border-color:var(--acc); }
@@ -39,7 +44,10 @@
 <body>
 <div id="app">
   <div id="stage-wrap">
-    <canvas id="stage" width="1280" height="720"></canvas>
+    <div id="canvas-holder">
+      <canvas id="stage" width="1280" height="720"></canvas>
+      <div id="guides"></div>
+    </div>
     <div id="fav-bar"></div>
   </div>
   <div id="panel">
@@ -90,6 +98,7 @@
       <option value="transparent">透過（αチャンネル）</option>
     </select>
     <div class="chk"><input type="checkbox" id="chk-flip"><label for="chk-flip">左右反転</label></div>
+    <div class="chk"><input type="checkbox" id="chk-guides"><label for="chk-guides">三分割ガイド（書き出しには含まれません）</label></div>
     <div id="sliders"></div>
     <hr>
     <div class="row">
