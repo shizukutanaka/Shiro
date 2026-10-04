@@ -112,7 +112,7 @@
 ## テスト
 
 ```sh
-node test.mjs   # 2802 assertions
+node test.mjs   # 2803 assertions
 ```
 
 ## 設計メモ
