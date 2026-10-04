@@ -150,6 +150,22 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.length > 0 && calls.every(Number.isFinite), 'vignette coords finite');
 }
 
+// watermark: string clamp + draw behavior
+{
+  ok(L.clampParams({ watermark: 'x'.repeat(100) }).watermark.length === 60, 'watermark capped at 60');
+  ok(L.clampParams({ watermark: 12345 }).watermark === '12345', 'watermark coerced to string');
+  ok(L.clampParams(null).watermark === '', 'watermark defaults empty');
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) calls.push(v); return {}; },
+    set: () => true,
+  });
+  L.drawWatermark(ctx, '', 1280, 720, .5);
+  ok(calls.length === 0, 'empty watermark draws nothing');
+  L.drawWatermark(ctx, '@ume', 1280, 720, .5);
+  ok(calls.some(v => v === '@ume'), 'watermark text drawn');
+}
+
 // blink cycle
 {
   ok(L.blinkOpen(1.0) === 1 && L.blinkOpen(1.0) === L.blinkOpen(1.0), 'blink deterministic/open by default');

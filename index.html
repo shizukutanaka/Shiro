@@ -100,6 +100,15 @@
     <div class="chk"><input type="checkbox" id="chk-flip"><label for="chk-flip">左右反転</label></div>
     <div class="chk"><input type="checkbox" id="chk-guides"><label for="chk-guides">三分割ガイド（書き出しには含まれません）</label></div>
     <div class="chk"><input type="checkbox" id="chk-freeze"><label for="chk-freeze">アニメを一時停止（ポーズ固定）</label></div>
+    <label class="ctl">配置プリセット</label>
+    <select id="sel-place">
+      <option value="">選んで即移動…</option>
+      <option value="tl">左上</option><option value="tc">上中央</option><option value="tr">右上</option>
+      <option value="ml">左</option><option value="center">中央</option><option value="mr">右</option>
+      <option value="bl">左下</option><option value="bc">下中央</option><option value="br">右下</option>
+    </select>
+    <label class="ctl">透かしテキスト</label>
+    <input type="text" id="inp-watermark" maxlength="60" placeholder="例: @yourname" style="width:100%;background:#2a2e3a;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px;">
     <div id="sliders"></div>
     <hr>
     <div class="row">
