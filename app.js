@@ -26,10 +26,11 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'still'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'crown', 'phones', 'cape'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal'];
+  const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent'];
   const EYES = ['dot', 'wink', 'closed', 'heart'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -47,7 +48,8 @@ const ShiroLib = (() => {
     'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity',
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
-    'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift'];
+    'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
+    'rot', 'eyeGap'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -65,7 +67,7 @@ const ShiroLib = (() => {
     ['glow', '発光'], ['glowHue', '発光色'], ['eyeSize', '目の大きさ'],
     ['bgX', '背景位置 X'], ['bgY', '背景位置 Y'],
     ['despill', 'スピル除去'], ['temp', '色温度'], ['shadowSoft', '影の柔らかさ'], ['brow', '眉毛の角度'],
-    ['bgDrift', '背景のゆっくりズーム'],
+    ['bgDrift', '背景のゆっくりズーム'], ['rot', 'モデルの傾き'], ['eyeGap', '目の間隔'],
   ];
 
   function defaultParams() {
@@ -79,7 +81,8 @@ const ShiroLib = (() => {
       rimHue: .62, reflect: 0, tOffset: .5, grain: 0, trail: 0, subjHue: .5, pixel: 0,
       shake: 0, glow: 0, glowHue: .55, eyeSize: .5, bgX: .5, bgY: .5,
       despill: .5, temp: .5, shadowSoft: .4, brow: .5, bgDrift: 0,
-      subjFx: 'none', grade: 'none', blend: 'none', particles: 'none',
+      rot: .5, eyeGap: .5,
+      subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br',
       eyeStyle: 'dot', acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
@@ -100,6 +103,7 @@ const ShiroLib = (() => {
     o.grade = GRADES.includes(p && p.grade) ? p.grade : d.grade;
     o.blend = BLENDS.includes(p && p.blend) ? p.blend : d.blend;
     o.particles = PARTICLES.includes(p && p.particles) ? p.particles : d.particles;
+    o.wmPos = WMPOS.includes(p && p.wmPos) ? p.wmPos : d.wmPos;
     o.flip = !!(p && p.flip);
     const sv = p ? +p.seed : NaN;
     o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
@@ -248,15 +252,16 @@ const ShiroLib = (() => {
   }
 
   // 透かし(ウォーターマーク): クリエイターが作品に入れる署名テキスト。右下・影付き白文字。
-  function drawWatermark(c, text, w, h, opacity) {
+  function drawWatermark(c, text, w, h, opacity, pos = 'br') {
     if (!text || opacity <= 0) return;
     const fs = Math.max(12, Math.round(h * .032));
     c.save();
     c.font = `600 ${fs}px "Hiragino Sans","Segoe UI",sans-serif`;
-    c.textAlign = 'right'; c.textBaseline = 'bottom';
+    c.textAlign = pos[1] === 'r' ? 'right' : 'left';
+    c.textBaseline = pos[0] === 't' ? 'top' : 'bottom';
     c.shadowColor = 'rgba(0,0,0,.55)'; c.shadowBlur = fs * .3; c.shadowOffsetY = 1;
     c.fillStyle = `rgba(255,255,255,${opacity})`;
-    c.fillText(text, w - fs * .6, h - fs * .5);
+    c.fillText(text, pos[1] === 'r' ? w - fs * .6 : fs * .6, pos[0] === 't' ? fs * .5 : h - fs * .5);
     c.restore();
   }
 
@@ -336,6 +341,13 @@ const ShiroLib = (() => {
         q.bob = .008 * Math.sin(tt * 2); q.lean = .015 * Math.sin(tt * 1.1);
         q.headTilt = .05 * Math.sin(tt * 2.7);
         q.lArm = .08; q.rArm = .08;
+        break;
+      }
+      case 'bow': {
+        // おじぎ: 頭を深く垂れて体ごと少し沈む敬礼動作(1.4s弱周期で往復)
+        const b = Math.pow(Math.max(0, Math.sin(tt * 1.4)), .7);
+        q.headTilt = b * .55; q.bob = -b * .05;
+        q.lArm = .05; q.rArm = .05; q.lElb = 0; q.rElb = 0;
         break;
       }
       case 'still': break;
@@ -503,7 +515,7 @@ const ShiroLib = (() => {
     const es = p.eyeStyle || 'dot';
     const esz = .6 + p.eyeSize * .8; // 目の大きさスケール(0.6-1.4)
     for (const s of [-1, 1]) {
-      const ex = hx + s * hr * .38, ey = hy - hr * .08;
+      const ex = hx + s * hr * (.26 + .24 * (p.eyeGap == null ? .5 : p.eyeGap)), ey = hy - hr * .08;
       if (es === 'closed' || (es === 'wink' && s === 1)) {
         ctx.strokeStyle = 'rgba(60,64,74,0.85)'; ctx.lineWidth = Math.max(1, hr * .08 * esz);
         ctx.beginPath(); ctx.arc(ex, ey, hr * .13 * esz, .15 * Math.PI, .85 * Math.PI); ctx.stroke();
@@ -853,6 +865,11 @@ if (typeof document !== 'undefined') (() => {
       ctx.translate(-W / 2, -H / 2);
     }
     drawBackdrop(ctx, p, t);
+    // モデルの傾き: 被写体全体を足元を支点に回転(影・リム等も一体で傾く)
+    const rotA = (p.rot - .5) * .6;
+    if (state.media && Math.abs(rotA) > .001) {
+      ctx.save(); ctx.translate(p.x * W, p.y * H); ctx.rotate(rotA); ctx.translate(-p.x * W, -p.y * H);
+    }
     if (state.media) drawMedia(ctx);
     else {
       const hPix = H * (0.25 + 0.7 * p.scale), wPix = hPix * .55;
@@ -864,6 +881,9 @@ if (typeof document !== 'undefined') (() => {
         cx = (p.flip ? 1.125 - ph : -.125 + ph) * W;
       }
       const baseY = p.y * H;
+      if (Math.abs(rotA) > .001) {
+        ctx.save(); ctx.translate(cx, baseY); ctx.rotate(rotA); ctx.translate(-cx, -baseY);
+      }
       // マネキンをオフスクリーンに描き、シルエット化して影/リムに利用
       if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0 || p.glow > 0) {
         modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix);
@@ -908,7 +928,9 @@ if (typeof document !== 'undefined') (() => {
         if (p.blend !== 'none') ctx.globalCompositeOperation = 'source-over';
         if (fx) ctx.filter = 'none';
       }
+      if (Math.abs(rotA) > .001) ctx.restore();
     }
+    if (state.media && Math.abs(rotA) > .001) ctx.restore();
     if (p.particles !== 'none') L.drawParticles(ctx, W, H, p.particles, t, p.seed);
     // シーン全体の色調(グレード)。ウォーターマークより下に適用して文字は鮮明に残す
     const gs = GRADE_STYLES[p.grade];
@@ -927,7 +949,7 @@ if (typeof document !== 'undefined') (() => {
       ctx.restore();
     }
     L.drawVignette(ctx, W, H, p.vignette);
-    L.drawWatermark(ctx, p.watermark, W, H, p.wmOpacity);
+    L.drawWatermark(ctx, p.watermark, W, H, p.wmOpacity, p.wmPos);
     requestAnimationFrame(frame);
   }
 
@@ -960,6 +982,7 @@ if (typeof document !== 'undefined') (() => {
       $('sel-bgfit').value = state.params.bgFit;
       $('sel-bgpreset').value = state.params.bgPreset;
       $('sel-particles').value = state.params.particles;
+      $('sel-wmpos').value = state.params.wmPos;
       $('chk-flip').checked = state.params.flip;
       $('inp-watermark').value = state.params.watermark;
     }
@@ -973,6 +996,7 @@ if (typeof document !== 'undefined') (() => {
   $('sel-bgfit').addEventListener('change', e => { state.params.bgFit = e.target.value; touch(); });
   $('sel-bgpreset').addEventListener('change', e => { state.params.bgPreset = e.target.value; touch(); });
   $('sel-particles').addEventListener('change', e => { state.params.particles = e.target.value; touch(); });
+  $('sel-wmpos').addEventListener('change', e => { state.params.wmPos = e.target.value; touch(); });
   $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });
   $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
   $('inp-watermark').addEventListener('input', e => { state.params.watermark = e.target.value.slice(0, 60); touch(); });

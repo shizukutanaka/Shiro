@@ -225,6 +225,14 @@ ok(L.clampParams({ particles: 'bogus' }).particles === 'none', 'particles invali
 ok(L.clampParams({ particles: 'snow' }).particles === 'snow', 'particles snow kept');
 ok(L.clampParams({ acc: 'cape' }).acc === 'cape', 'cape accessory kept');
 ok(L.clampParams({ brow: 2 }).brow === 1 && L.clampParams({ brow: -1 }).brow === 0, 'brow clamped');
+ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' }).wmPos === 'tl', 'wmPos enum');
+// bowアニメはポーズが頭を深く垂れる(headTilt>0の瞬間がある)
+{
+  const p = { ...L.defaultParams(), anim: 'bow' };
+  let maxTilt = 0;
+  for (let t = 0; t < 3; t += .05) maxTilt = Math.max(maxTilt, L.mannequinPose(p, t).headTilt);
+  ok(maxTilt > .3, 'bow pose tilts head deeply');
+}
 
 // despill: 半透明画素の彩度を落とす / 不透明・完全透過は無変更
 {

@@ -73,6 +73,7 @@
       <option value="nod">うなずき</option>
       <option value="run">走る（横断）</option>
       <option value="talk">おしゃべり</option>
+      <option value="bow">おじぎ</option>
       <option value="still">静止</option>
     </select>
     <label class="ctl">アクセサリ</label>
@@ -151,6 +152,13 @@
     </select>
     <label class="ctl">透かしテキスト</label>
     <input type="text" id="inp-watermark" maxlength="60" placeholder="例: @yourname" style="width:100%;background:#2a2e3a;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px;">
+    <label class="ctl">透かしの位置</label>
+    <select id="sel-wmpos">
+      <option value="br">右下</option>
+      <option value="bl">左下</option>
+      <option value="tr">右上</option>
+      <option value="tl">左上</option>
+    </select>
     <div id="sliders"></div>
     <hr>
     <div class="row">
