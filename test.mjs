@@ -102,6 +102,18 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.every(Number.isFinite), 'draw coords finite');
 }
 
+// jump anim: mid-flight bob positive, arms raised, knees tucked
+{
+  const p = L.defaultParams(); p.anim = 'jump'; p.animSpeed = .5;
+  const s = .4 + .5 * 2.2;
+  const q = L.mannequinPose(p, 0.5 / s); // tt=0.5 → apex
+  ok(q.bob > .1, 'jump apex lifts model');
+  ok(q.lKnee > .5 && q.rKnee > .5, 'jump tucks knees');
+  ok(q.lArm < -.5 && q.rArm > .5, 'jump raises both arms');
+  const q0 = L.mannequinPose(p, 0);
+  ok(q0.bob === 0, 'jump lands at t=0');
+}
+
 // blink cycle
 {
   ok(L.blinkOpen(1.0) === 1 && L.blinkOpen(1.0) === L.blinkOpen(1.0), 'blink deterministic/open by default');

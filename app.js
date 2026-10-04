@@ -26,12 +26,12 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'still'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
-    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue'];
+    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -41,6 +41,7 @@ const ShiroLib = (() => {
     ['keyThresh', '白抜き強度'], ['keySoft', '白抜きぼかし'], ['shadow', 'モデルの影'],
     ['smile', '表情（笑顔）'], ['bgDim', '背景を暗く'], ['bgBlur', '背景ぼかし'],
     ['castDir', '影の向き'], ['rim', 'リムライト'], ['eyeHue', '目の色'],
+    ['clothHue', '衣装色'],
   ];
 
   function defaultParams() {
@@ -48,7 +49,8 @@ const ShiroLib = (() => {
       seed: 1, height: .5, headSize: .5, shoulder: .5, armLen: .5, legLen: .5,
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
-      smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, acc: 'none', bgFit: 'cover',
+      smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, clothHue: 0,
+      acc: 'none', bgFit: 'cover',
     };
   }
 
@@ -77,7 +79,7 @@ const ShiroLib = (() => {
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
     p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
-    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng();
+    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng();
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -203,6 +205,14 @@ const ShiroLib = (() => {
         q.lThigh = .15 * w; q.rThigh = -.15 * w;
         break;
       }
+      case 'jump': {
+        const air = Math.sin((tt % 1) * Math.PI); // 0→1→0 の放物線で1秒周期の跳躍
+        q.bob = .13 * air;
+        q.lThigh = q.rThigh = -.1 * air; q.lKnee = q.rKnee = .9 * air;
+        q.lArm = .1 - 1.9 * air; q.rArm = .1 + 1.9 * air; // 両腕を上げる
+        q.lElb = .3; q.rElb = .3; q.lean = .03 * Math.sin(tt * 4);
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -278,8 +288,10 @@ const ShiroLib = (() => {
     const q = mannequinPose(p, t);
     const K = skeleton(p, q);
     const g = 1 - p.tone * .55; // tone: 0=白, 1=グレー
-    const col = `rgb(${Math.round(255 * g)},${Math.round(255 * g)},${Math.round(255 * g + 8 * (1 - g))})`;
-    const shade = `rgb(${Math.round(222 * g)},${Math.round(224 * g)},${Math.round(232 * g)})`;
+    // clothHue 0付近は無彩色(白モデル)のまま、上げると衣装色として着色
+    const hue = Math.round(p.clothHue * 360), sat = p.clothHue < .03 ? 0 : 55;
+    const col = `hsl(${hue},${sat}%,${Math.round(96 * g)}%)`;
+    const shade = `hsl(${hue},${sat}%,${Math.round(85 * g)}%)`;
     const lw = (0.5 + p.line * 4);
     const px = (x, y) => [cx + (x + q.sway) * hPix, baseY - (y + q.bob) * hPix];
     const limbW = hPix * (.045 + .02 * p.shoulder);
@@ -498,7 +510,13 @@ if (typeof document !== 'undefined') (() => {
     if (state.media) drawMedia(ctx);
     else {
       const hPix = H * (0.25 + 0.7 * p.scale), wPix = hPix * .55;
-      const cx = p.x * W, baseY = p.y * H;
+      // 歩行アニメはステージを横断してループ(反転で歩行方向を変える)
+      let cx = p.x * W;
+      if (p.anim === 'walk') {
+        const ph = (t * .10 * (0.5 + p.animSpeed) + .125) % 1.25;
+        cx = (p.flip ? 1.125 - ph : -.125 + ph) * W;
+      }
+      const baseY = p.y * H;
       // マネキンをオフスクリーンに描き、シルエット化して影/リムに利用
       if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0) {
         modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix);
