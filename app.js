@@ -26,11 +26,11 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower'];
-  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly'];
+  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying'];
@@ -390,6 +390,14 @@ const ShiroLib = (() => {
         q.lKnee = q.rKnee = .06 * u; // 爪先立ちぎみ
         break;
       }
+      case 'sleep': {
+        // 居眠り: 3秒周期で頭がゆっくり落ちてハッと戻る
+        const cyc = (tt % 3) / 3;
+        const d = cyc < .7 ? Math.pow(cyc / .7, 2) : Math.max(0, 1 - (cyc - .7) / .3);
+        q.headTilt = d * .4; q.bob = -d * .02; q.lean = d * .06;
+        q.lArm = .06; q.rArm = .06; q.lElb = .1; q.rElb = .1;
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -736,7 +744,7 @@ const ShiroLib = (() => {
 
   function drawParticles(ctx, W, H, type, t, seed) {
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
-    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : 42;
+    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : 42;
     ctx.save();
     for (let i = 0; i < N; i++) {
       if (type === 'snow') {
@@ -794,6 +802,12 @@ const ShiroLib = (() => {
         const a = Math.max(0, .15 + .8 * Math.sin(t * (1.2 + h(i, 2)) + h(i, 3) * 9));
         ctx.fillStyle = `rgba(200,255,120,${a})`;
         ctx.beginPath(); ctx.arc(x, y, 1.2 + 1.4 * h(i, 3), 0, 7); ctx.fill();
+      } else if (type === 'bokeh') {
+        // 光ボケ: 大きな柔らかい光玉がゆっくり昇る(写真のボケ表現)
+        const x = h(i, 0) * W + Math.sin(t * .3 + i) * W * .03;
+        const y = (1 - ((h(i, 1) + t * (.02 + .02 * h(i, 2))) % 1)) * H;
+        ctx.fillStyle = `hsla(${Math.round(h(i, 3) * 360)},80%,75%,${.1 + .12 * h(i, 4)})`;
+        ctx.beginPath(); ctx.arc(x, y, 8 + 22 * h(i, 3), 0, 7); ctx.fill();
       } else { // petal
         const x = h(i, 0) * W + Math.sin(t * .6 + h(i, 1) * 9) * W * .05;
         const y = ((h(i, 1) + t * (.03 + .03 * h(i, 2))) % 1) * H;
@@ -1357,6 +1371,7 @@ if (typeof document !== 'undefined') (() => {
     angry: { eyeStyle: 'sharp', smile: .15, brow: .15 },
     sleepy: { eyeStyle: 'closed', smile: .45, brow: .5 },
     wink: { eyeStyle: 'wink', smile: .8, brow: .6 },
+    cry: { eyeStyle: 'crying', smile: .15, brow: .1 },
   };
   $('sel-face').addEventListener('change', e => {
     const f = FACES[e.target.value]; e.target.value = '';
