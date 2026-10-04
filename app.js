@@ -33,6 +33,7 @@ const ShiroLib = (() => {
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp'];
+  const HAIRS = ['none', 'short', 'bob', 'twin', 'long'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
@@ -49,7 +50,7 @@ const ShiroLib = (() => {
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
     'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
-    'rot', 'eyeGap', 'duo'];
+    'rot', 'eyeGap', 'duo', 'hairHue'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -68,7 +69,7 @@ const ShiroLib = (() => {
     ['bgX', '背景位置 X'], ['bgY', '背景位置 Y'],
     ['despill', 'スピル除去'], ['temp', '色温度'], ['shadowSoft', '影の柔らかさ'], ['brow', '眉毛の角度'],
     ['bgDrift', '背景のゆっくりズーム'], ['rot', 'モデルの傾き'], ['eyeGap', '目の間隔'],
-    ['duo', '相方（2体目）'],
+    ['duo', '相方（2体目）'], ['hairHue', '髪色'],
   ];
 
   function defaultParams() {
@@ -82,9 +83,9 @@ const ShiroLib = (() => {
       rimHue: .62, reflect: 0, tOffset: .5, grain: 0, trail: 0, subjHue: .5, pixel: 0,
       shake: 0, glow: 0, glowHue: .55, eyeSize: .5, bgX: .5, bgY: .5,
       despill: .5, temp: .5, shadowSoft: .4, brow: .5, bgDrift: 0,
-      rot: .5, eyeGap: .5, duo: 0,
+      rot: .5, eyeGap: .5, duo: 0, hairHue: .07,
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br',
-      eyeStyle: 'dot', acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
+      eyeStyle: 'dot', acc: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
 
@@ -106,6 +107,7 @@ const ShiroLib = (() => {
     o.blend = BLENDS.includes(p && p.blend) ? p.blend : d.blend;
     o.particles = PARTICLES.includes(p && p.particles) ? p.particles : d.particles;
     o.wmPos = WMPOS.includes(p && p.wmPos) ? p.wmPos : d.wmPos;
+    o.hair = HAIRS.includes(p && p.hair) ? p.hair : d.hair;
     o.flip = !!(p && p.flip);
     const sv = p ? +p.seed : NaN;
     o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
@@ -118,6 +120,8 @@ const ShiroLib = (() => {
     p.anim = ANIMS[Math.floor(rng() * ANIMS.length)];
     p.acc = ACCS[Math.floor(rng() * ACCS.length)];
     p.eyeStyle = EYES[Math.floor(rng() * EYES.length)];
+    p.hair = HAIRS[Math.floor(rng() * HAIRS.length)];
+    p.hairHue = rng();
     p.subjFx = rng() < .75 ? 'none' : SUBJFX[1 + Math.floor(rng() * 3)];
     p.grade = rng() < .6 ? 'none' : GRADES[1 + Math.floor(rng() * 4)];
     p.blend = rng() < .75 ? 'none' : BLENDS[1 + Math.floor(rng() * 3)];
@@ -507,10 +511,38 @@ const ShiroLib = (() => {
     // neck + head
     capsule(ctx, ...px(...K.neckB), ...px(...K.neckT), limbW * .7, col, lw);
     const [hx, hy] = px(...K.headC), hr = K.headR * hPix;
+    // 髪: キャラクリの顔。hairHueで着色、hair形状は手続き描画
+    const hs = p.hair || 'none';
+    const hairC = `hsl(${Math.round(p.hairHue * 360)},50%,${Math.round(26 + 16 * g)}%)`;
+    if (hs === 'long' || hs === 'twin' || hs === 'bob') {
+      // 後ろ髪: 頭の背面へ垂れる髪を顔より先に描く
+      ctx.fillStyle = hairC;
+      ctx.beginPath();
+      ctx.ellipse(hx, hy + hr * .5, hr * 1.22, hr * (hs === 'long' ? 1.55 : hs === 'bob' ? .95 : .75), 0, 0, 7);
+      ctx.fill();
+      if (hs === 'twin') for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.ellipse(hx + s * hr * 1.18, hy + hr * .75, hr * .3, hr * .8, s * .4, 0, 7);
+        ctx.fill();
+      }
+    }
     ctx.fillStyle = col;
     if (lw > 0) { ctx.strokeStyle = 'rgba(40,44,54,0.85)'; ctx.lineWidth = lw; }
     ctx.beginPath(); ctx.arc(hx, hy, hr, 0, 7); ctx.fill();
     if (lw > 0) ctx.stroke();
+    if (hs !== 'none') {
+      // 前髪+キャップ: 頭の上半分を覆い、ギザギザ前髪で顔を残す
+      ctx.fillStyle = hairC;
+      ctx.beginPath();
+      ctx.arc(hx, hy, hr * 1.1, Math.PI * 1.02, Math.PI * 1.98);
+      ctx.lineTo(hx + hr * .95, hy - hr * .18);
+      ctx.lineTo(hx + hr * .6, hy - hr * .38);
+      ctx.lineTo(hx + hr * .22, hy - hr * .12);
+      ctx.lineTo(hx - hr * .18, hy - hr * .38);
+      ctx.lineTo(hx - hr * .55, hy - hr * .12);
+      ctx.lineTo(hx - hr * .95, hy - hr * .38);
+      ctx.closePath(); ctx.fill();
+    }
     // eyes (素朴な2点、まばたきで縦につぶれる)
     // eyes: スタイル別(ふつう2点/ウィンク/うっとり^^/ハート)。dotのみ瞬きでつぶれる
     const eo = Math.max(.12, blinkOpen(t, p.seed));
@@ -1035,6 +1067,7 @@ if (typeof document !== 'undefined') (() => {
       $('sel-bgpreset').value = state.params.bgPreset;
       $('sel-particles').value = state.params.particles;
       $('sel-wmpos').value = state.params.wmPos;
+      $('sel-hair').value = state.params.hair;
       $('chk-flip').checked = state.params.flip;
       $('inp-watermark').value = state.params.watermark;
       $('inp-bubble').value = state.params.bubble;
@@ -1050,6 +1083,7 @@ if (typeof document !== 'undefined') (() => {
   $('sel-bgpreset').addEventListener('change', e => { state.params.bgPreset = e.target.value; touch(); });
   $('sel-particles').addEventListener('change', e => { state.params.particles = e.target.value; touch(); });
   $('sel-wmpos').addEventListener('change', e => { state.params.wmPos = e.target.value; touch(); });
+  $('sel-hair').addEventListener('change', e => { state.params.hair = e.target.value; touch(); });
   $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });
   $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
   $('inp-watermark').addEventListener('input', e => { state.params.watermark = e.target.value.slice(0, 60); touch(); });
