@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark', 'wind'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat', 'wide'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp', 'braid'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -615,6 +615,16 @@ const ShiroLib = (() => {
         q.lKnee = .8 * ls; q.rKnee = -.8 * rs;
         q.lArm = .4 * rs; q.rArm = .4 * ls; q.lElb = .6; q.rElb = .6;
         q.lean = .08; q.bob = .025 * Math.abs(Math.sin(ph5));
+        break;
+      }
+      case 'lunge': {
+        // ランジ: 交互に深く沈み込む前後の脚開き
+        const ph6 = tt * 2.2;
+        const ld = Math.max(0, Math.sin(ph6)), rd = Math.max(0, -Math.sin(ph6));
+        q.lThigh = .8 * ld; q.rThigh = -.8 * rd;
+        q.lKnee = 1.1 * ld; q.rKnee = -1.1 * rd;
+        q.bob = -.06 * (ld + rd); q.lean = .1;
+        q.lArm = .3; q.rArm = .3; q.lElb = .5; q.rElb = .5;
         break;
       }
       case 'still': break;
@@ -1344,6 +1354,27 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.arc(hx + hr * .95, hy - hr * .62, hr * .09, 0, 7); ctx.fill();
         break;
       }
+      case 'fez': {
+        // フェズ帽: 赤い円台+黒い房
+        ctx.fillStyle = '#b02830';
+        ctx.beginPath();
+        ctx.moveTo(hx - hr * .55, hy - hr * .65);
+        ctx.lineTo(hx + hr * .55, hy - hr * .65);
+        ctx.lineTo(hx + hr * .4, hy - hr * 1.5);
+        ctx.lineTo(hx - hr * .4, hy - hr * 1.5);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = dk; ctx.lineWidth = hr * .05;
+        ctx.stroke();
+        // 房(頭頂から垂れる黒い紐)
+        ctx.strokeStyle = '#2a2a32'; ctx.lineWidth = hr * .06; ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(hx, hy - hr * 1.5);
+        ctx.quadraticCurveTo(hx + hr * .3, hy - hr * 1.4, hx + hr * .45, hy - hr * .8);
+        ctx.stroke();
+        ctx.fillStyle = '#2a2a32';
+        ctx.beginPath(); ctx.arc(hx + hr * .45, hy - hr * .75, hr * .1, 0, 7); ctx.fill();
+        break;
+      }
       case 'viking': {
         // ヴァイキング兜: ドーム+中央の帯+左右の湾曲角
         ctx.fillStyle = '#6a7080';
@@ -1702,6 +1733,42 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath();
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
+      }
+    } else if (pr === 'fjord') {
+      // フィヨルド: 冷たい空 + 切り立つ山壁 + 静かな水面
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#a8c8d8'); gr.addColorStop(.5, '#6a94a8'); gr.addColorStop(1, '#3a5a6e');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rng = L.mulberry32(87);
+      // 左右の山壁(切り立つギザギザ)
+      for (const [x0, s] of [[0, 1], [W, -1]]) {
+        c.fillStyle = s > 0 ? '#3e5a52' : '#4a6a5e';
+        c.beginPath();
+        c.moveTo(x0, H);
+        c.lineTo(x0, H * .15);
+        let vx = 0;
+        while (vx < W * .32) {
+          vx += W * (.05 + rng() * .07);
+          c.lineTo(x0 + s * vx, H * (.15 + rng() * .3));
+        }
+        c.lineTo(x0 + s * W * .35, H);
+        c.closePath(); c.fill();
+      }
+      // 雪の稜線
+      c.fillStyle = 'rgba(240,245,250,0.8)';
+      c.beginPath();
+      c.moveTo(0, H * .15); c.lineTo(W * .1, H * .2); c.lineTo(W * .05, H * .24);
+      c.lineTo(0, H * .22); c.closePath(); c.fill();
+      // 水面(下3割、穏やかな横線)
+      c.fillStyle = '#4a7a8e';
+      c.fillRect(0, H * .7, W, H * .3);
+      c.strokeStyle = 'rgba(200,230,240,0.35)'; c.lineWidth = 1.5;
+      for (let i = 0; i < 10; i++) {
+        const wy = H * (.72 + rng() * .25);
+        const wx = rng() * W * .7, wl = W * (.05 + rng() * .12);
+        c.beginPath();
+        c.moveTo(wx + Math.sin(t + i) * 5, wy); c.lineTo(wx + wl, wy);
+        c.stroke();
       }
     } else if (pr === 'autumn') {
       // 紅葉: 淡い秋空 + 紅葉の木々 + 舞う紅葉 + 落ち葉の地面
