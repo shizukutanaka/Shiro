@@ -52,7 +52,8 @@ const ShiroLib = (() => {
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
     'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
     'rot', 'eyeGap', 'duo', 'hairHue', 'squash', 'frame', 'frameHue',
-    'subjSat', 'subjBright', 'titleSize', 'camZoom', 'shine', 'shadowHue'];
+    'subjSat', 'subjBright', 'titleSize', 'camZoom', 'shine', 'shadowHue',
+    'outlineHue', 'bubbleHue', 'titleHue'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -76,6 +77,7 @@ const ShiroLib = (() => {
     ['subjSat', 'モデル彩度'], ['subjBright', 'モデル明度'], ['titleSize', 'タイトル大きさ'],
     ['camZoom', 'シーンズーム'],
     ['shine', '光沢（テカリ）'], ['shadowHue', '影の色'],
+    ['outlineHue', '縁取り色'], ['bubbleHue', 'ふきだし色'], ['titleHue', 'タイトル色'],
   ];
 
   function defaultParams() {
@@ -93,6 +95,7 @@ const ShiroLib = (() => {
       frame: 0, frameHue: .12,
       subjSat: .5, subjBright: .5, titleSize: .5, title: '', camZoom: 0,
       shine: 0, shadowHue: .62,
+      outlineHue: .12, bubbleHue: .12, titleHue: .08,
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br', vidQ: 'std',
       eyeStyle: 'dot', acc: 'none', acc2: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
@@ -656,7 +659,7 @@ const ShiroLib = (() => {
   }
 
   // ふきだし: モデルの頭の上にセリフの吹き出しを描く(丸角矩形+尾)
-  function drawBubble(c, text, x, topY, W, H) {
+  function drawBubble(c, text, x, topY, W, H, hue) {
     if (!text) return;
     const fs = Math.max(13, Math.round(H * .03));
     c.save();
@@ -666,7 +669,7 @@ const ShiroLib = (() => {
     const bx = Math.min(Math.max(x - bw / 2, 6), W - bw - 6);
     const by = Math.max(6, topY - bh - fs * 1.2);
     const r = fs * .5;
-    c.fillStyle = 'rgba(255,255,255,0.94)';
+    c.fillStyle = `hsla(${Math.round((hue == null ? 0 : hue) * 360)},60%,96%,0.94)`;
     c.strokeStyle = 'rgba(40,44,54,0.8)'; c.lineWidth = Math.max(1, fs * .08);
     c.beginPath();
     c.moveTo(bx + r, by);
@@ -1011,7 +1014,7 @@ if (typeof document !== 'undefined') (() => {
     L.drawGlow(c, silhouetteOf(src, sw, sh, glowCol, glowCv, glowCtx, silCache), wPix, hPix, cx, baseY, state.params.glow);
     L.drawCastShadow(c, silhouetteOf(src, sw, sh, `hsla(${Math.round(state.params.shadowHue * 360)},45%,12%,1)`, null, null, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4, state.params.shadowSoft);
     L.drawRimLight(c, silhouetteOf(src, sw, sh, `hsla(${Math.round(state.params.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
-    L.drawStickerOutline(c, silhouetteOf(src, sw, sh, '#ffffff', outCv, outCtx, silCache), wPix, hPix, cx, baseY, state.params.outline);
+    L.drawStickerOutline(c, silhouetteOf(src, sw, sh, `hsla(${Math.round(state.params.outlineHue * 360)},70%,80%,1)`, outCv, outCtx, silCache), wPix, hPix, cx, baseY, state.params.outline);
     L.drawReflection(c, src, cx, baseY, wPix, hPix, state.params.reflect);
     if (state.media.kind === 'video') el.playbackRate = .25 + state.params.vidSpeed * 1.5;
     c.save();
@@ -1113,7 +1116,7 @@ if (typeof document !== 'undefined') (() => {
         L.drawGlow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.glowHue * 360)},90%,70%,1)`, glowCv, glowCtx), wPix, hPix, cx, baseY, p.glow);
         L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.shadowHue * 360)},45%,12%,1)`), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4, p.shadowSoft);
         L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hPix, cx, baseY, p.castDir, p.rim);
-        L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, '#ffffff', outCv, outCtx), wPix, hPix, cx, baseY, p.outline);
+        L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.outlineHue * 360)},70%,80%,1)`, outCv, outCtx), wPix, hPix, cx, baseY, p.outline);
         L.drawReflection(ctx, modCv, cx, baseY, wPix, hPix, p.reflect);
       }
       if (p.pixel > .05) {
@@ -1156,7 +1159,7 @@ if (typeof document !== 'undefined') (() => {
         if (fx) ctx.filter = 'none';
       }
       // ふきだし: 頭頂の少し上に表示(回転の内側・本体と一緒に傾く)
-      if (p.bubble) L.drawBubble(ctx, p.bubble, cx, baseY - hPix * 1.02, W, H);
+      if (p.bubble) L.drawBubble(ctx, p.bubble, cx, baseY - hPix * 1.02, W, H, p.bubbleHue);
       if (xformed) ctx.restore();
     }
     if (state.media && xformed) ctx.restore();
@@ -1185,7 +1188,7 @@ if (typeof document !== 'undefined') (() => {
       ctx.lineWidth = Math.max(2, fs * .14); ctx.strokeStyle = 'rgba(0,0,0,.78)';
       ctx.lineJoin = 'round';
       ctx.strokeText(p.title, W / 2, H * .12);
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = `hsl(${Math.round(p.titleHue * 360)},75%,85%)`;
       ctx.fillText(p.title, W / 2, H * .12);
       ctx.restore();
     }
