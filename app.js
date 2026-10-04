@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark', 'wind'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat', 'wide'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp', 'braid'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -625,6 +625,16 @@ const ShiroLib = (() => {
         q.lKnee = 1.1 * ld; q.rKnee = -1.1 * rd;
         q.bob = -.06 * (ld + rd); q.lean = .1;
         q.lArm = .3; q.rArm = .3; q.lElb = .5; q.rElb = .5;
+        break;
+      }
+      case 'cossack': {
+        // コサック: 腕を組んで脚を交互に前へ蹴り出す
+        const ph7 = tt * 4;
+        const lc = Math.sin(ph7) > 0 ? 1 : 0, rc = 1 - lc;
+        q.lThigh = .7 * lc; q.rThigh = -.7 * rc;
+        q.lKnee = .1; q.rKnee = -.1;
+        q.lArm = .55; q.rArm = .55; q.lElb = 1.5; q.rElb = 1.5;
+        q.bob = -.05 + .02 * Math.sin(ph7 * 2); q.lean = .06;
         break;
       }
       case 'still': break;
@@ -1354,6 +1364,22 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.arc(hx + hr * .95, hy - hr * .62, hr * .09, 0, 7); ctx.fill();
         break;
       }
+      case 'sombrero': {
+        // ソンブレロ: 巨大なつば+丸い頂+縁の帯
+        ctx.fillStyle = acc2;
+        ctx.beginPath();
+        ctx.ellipse(hx, hy - hr * .62, hr * 1.6, hr * .32, 0, 0, 7);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(hx, hy - hr * .85, hr * .6, Math.PI, 0);
+        ctx.closePath(); ctx.fill();
+        // 縁の帯(三角模様風の刻み)
+        ctx.strokeStyle = dk; ctx.lineWidth = hr * .05;
+        ctx.beginPath(); ctx.ellipse(hx, hy - hr * .62, hr * 1.6, hr * .32, 0, 0, 7); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = hr * .08;
+        ctx.beginPath(); ctx.arc(hx, hy - hr * .85, hr * .62, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+        break;
+      }
       case 'fez': {
         // フェズ帽: 赤い円台+黒い房
         ctx.fillStyle = '#b02830';
@@ -1734,6 +1760,43 @@ if (typeof document !== 'undefined') (() => {
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
       }
+    } else if (pr === 'glacier') {
+      // 氷河: 白みがかった空 + 氷山 + 氷の水面 + 光る稜線
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#c8dce8'); gr.addColorStop(.5, '#8ab4cc'); gr.addColorStop(1, '#4a7a9a');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rng = L.mulberry32(19);
+      // 遠景の氷山2つ(白い尖り)
+      c.fillStyle = 'rgba(230,240,248,0.9)';
+      for (const [ix, ih] of [[W * .2, .3], [W * .75, .38]]) {
+        c.beginPath();
+        c.moveTo(ix - W * .12, H * .72);
+        c.lineTo(ix - W * .05, H * .72 - H * ih * .5);
+        c.lineTo(ix, H * .72 - H * ih);
+        c.lineTo(ix + W * .07, H * .72 - H * ih * .4);
+        c.lineTo(ix + W * .12, H * .72);
+        c.closePath(); c.fill();
+      }
+      // 水面(氷青色)
+      c.fillStyle = '#3a6a86';
+      c.fillRect(0, H * .72, W, H * .28);
+      // 浮氷
+      c.fillStyle = 'rgba(220,235,245,0.85)';
+      for (let i = 0; i < 8; i++) {
+        const fx = rng() * W, fy = H * (.74 + rng() * .2);
+        c.beginPath();
+        c.ellipse(fx, fy, W * (.015 + rng() * .03), H * .012, 0, 0, 7);
+        c.fill();
+      }
+      // きらめく水面の光
+      c.strokeStyle = 'rgba(220,240,255,0.4)'; c.lineWidth = 1.5;
+      for (let i = 0; i < 12; i++) {
+        const wx = rng() * W, wy = H * (.74 + rng() * .24);
+        const tw = .5 + .5 * Math.sin(t * 2 + i);
+        c.globalAlpha = .2 + .4 * tw;
+        c.beginPath(); c.moveTo(wx, wy); c.lineTo(wx + W * .02, wy); c.stroke();
+      }
+      c.globalAlpha = 1;
     } else if (pr === 'fjord') {
       // フィヨルド: 冷たい空 + 切り立つ山壁 + 静かな水面
       const gr = c.createLinearGradient(0, 0, 0, H);
