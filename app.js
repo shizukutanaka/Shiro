@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -490,6 +490,15 @@ const ShiroLib = (() => {
         q.lean = .05 * Math.sin(tt * 1.4);
         q.lArm = .45 + .1 * Math.sin(tt * 2); q.rArm = .45 - .1 * Math.sin(tt * 2);
         q.lThigh = .15; q.rThigh = .18; q.lKnee = .5; q.rKnee = .55;
+        break;
+      }
+      case 'skip': {
+        // スキップ: 交互に膝を上げて小刻みに跳ねる
+        const ph2 = Math.sin(tt * 6);
+        q.bob = -.04 * Math.abs(Math.sin(tt * 6));
+        q.lThigh = -.7 * Math.max(0, ph2); q.lKnee = .9 * Math.max(0, ph2);
+        q.rThigh = -.7 * Math.max(0, -ph2); q.rKnee = .9 * Math.max(0, -ph2);
+        q.lArm = -.35 * ph2; q.rArm = .35 * ph2;
         break;
       }
       case 'still': break;
@@ -1185,6 +1194,18 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.arc(hx + hr * .95, hy - hr * .62, hr * .09, 0, 7); ctx.fill();
         break;
       }
+      case 'goggles': {
+        // ゴーグル: 額の帯+2つのレンズ
+        ctx.strokeStyle = dk; ctx.lineWidth = hr * .1;
+        ctx.beginPath(); ctx.moveTo(hx - hr * 1.02, hy - hr * .62); ctx.lineTo(hx + hr * 1.02, hy - hr * .62); ctx.stroke();
+        ctx.lineWidth = hr * .07; ctx.strokeStyle = acc2; ctx.fillStyle = 'rgba(160,220,255,0.55)';
+        for (const s of [-1, 1]) {
+          ctx.beginPath(); ctx.arc(hx + s * hr * .42, hy - hr * .62, hr * .3, 0, 7);
+          ctx.fill(); ctx.stroke();
+        }
+        ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * .62); ctx.lineTo(hx + hr * .12, hy - hr * .62); ctx.stroke();
+        break;
+      }
       case 'cat-ear': {
         // 猫耳: 頭頂両端の三角形(内側は淡ピンク)
         for (const s of [-1, 1]) {
@@ -1352,6 +1373,36 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath();
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
+      }
+    } else if (pr === 'snowfield') {
+      // 雪原: 曇り空 + 白い起伏 + 遠景の針葉樹 + 降る雪
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#aebfcb'); gr.addColorStop(.5, '#d5e0e8'); gr.addColorStop(.51, '#eef4f8'); gr.addColorStop(1, '#d8e6ee');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      // 雪の起伏
+      c.fillStyle = '#f4f9fc';
+      c.beginPath(); c.moveTo(0, H);
+      c.quadraticCurveTo(W * .3, H * .55, W * .6, H * .66);
+      c.quadraticCurveTo(W * .85, H * .74, W, H * .64); c.lineTo(W, H); c.closePath(); c.fill();
+      // 遠景の木
+      const rng = L.mulberry32(48);
+      c.fillStyle = 'rgba(70,95,90,0.5)';
+      for (let i = 0; i < 7; i++) {
+        const tx = rng() * W, th = H * (.06 + rng() * .05), ty = H * (.52 + rng() * .04);
+        for (let k = 0; k < 3; k++) {
+          c.beginPath();
+          c.moveTo(tx - th * (.7 - k * .2), ty - k * th * .3);
+          c.lineTo(tx + th * (.7 - k * .2), ty - k * th * .3);
+          c.lineTo(tx, ty - k * th * .3 - th * .45);
+          c.closePath(); c.fill();
+        }
+      }
+      // 降る雪
+      c.fillStyle = 'rgba(255,255,255,0.9)';
+      for (let i = 0; i < 40; i++) {
+        const sx = (rng() + t * .03 * (0.5 + rng())) % 1 * W;
+        const sy = (rng() + t * .08 * (0.6 + rng() * .8)) % 1 * H;
+        c.beginPath(); c.arc(sx, sy, 1 + rng() * 2, 0, 7); c.fill();
       }
     } else if (pr === 'meadow') {
       // 草原: 青空 + なだらかな緑の丘2層 + 草花 + 飛ぶ蝶
