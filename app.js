@@ -30,10 +30,10 @@ const ShiroLib = (() => {
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf'];
-  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh'];
+  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel'];
-  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid'];
+  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
@@ -643,6 +643,14 @@ const ShiroLib = (() => {
           k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
         }
         ctx.closePath(); ctx.fill();
+      } else if (es === 'xx') {
+        // バツ目: ✕✕(気絶・KO系の定番記号)
+        ctx.strokeStyle = eyeCol; ctx.lineWidth = Math.max(1.2, hr * .05 * esz);
+        const rr = hr * .13 * esz;
+        ctx.beginPath();
+        ctx.moveTo(ex - rr, ey - rr); ctx.lineTo(ex + rr, ey + rr);
+        ctx.moveTo(ex + rr, ey - rr); ctx.lineTo(ex - rr, ey + rr);
+        ctx.stroke();
       } else if (es === 'dizzy') {
         // ぐるぐる目: 渦巻き(旋回する小円弧の連鎖で近似)
         ctx.strokeStyle = eyeCol; ctx.lineWidth = Math.max(1, hr * .06 * esz);
@@ -783,7 +791,7 @@ const ShiroLib = (() => {
 
   function drawParticles(ctx, W, H, type, t, seed) {
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
-    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : 42;
+    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : type === 'notes' ? 18 : 42;
     ctx.save();
     for (let i = 0; i < N; i++) {
       if (type === 'snow') {
@@ -841,6 +849,14 @@ const ShiroLib = (() => {
         const a = Math.max(0, .15 + .8 * Math.sin(t * (1.2 + h(i, 2)) + h(i, 3) * 9));
         ctx.fillStyle = `rgba(200,255,120,${a})`;
         ctx.beginPath(); ctx.arc(x, y, 1.2 + 1.4 * h(i, 3), 0, 7); ctx.fill();
+      } else if (type === 'notes') {
+        // 音符: ♪♫ がゆらゆら昇る(ダンス・おしゃべりと相性)
+        const x = h(i, 0) * W + Math.sin(t * .8 + i * 1.7) * W * .04;
+        const y = (1 - ((h(i, 1) + t * (.06 + .04 * h(i, 2))) % 1)) * H;
+        ctx.fillStyle = `hsla(${Math.round(h(i, 3) * 360)},70%,68%,${.55 + .3 * h(i, 4)})`;
+        ctx.font = `${Math.round(14 + 12 * h(i, 3))}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(h(i, 2) < .5 ? '♪' : '♫', x, y);
       } else if (type === 'bokeh') {
         // 光ボケ: 大きな柔らかい光玉がゆっくり昇る(写真のボケ表現)
         const x = h(i, 0) * W + Math.sin(t * .3 + i) * W * .03;
@@ -1096,6 +1112,32 @@ if (typeof document !== 'undefined') (() => {
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
       }
+    } else if (pr === 'grid') {
+      // サイバー格子: シンセウェイブ風 — 暗い空 + 消失点に収束する発光格子
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#0c0820'); gr.addColorStop(.6, '#241040'); gr.addColorStop(1, '#451a55');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const horizon = H * .55;
+      c.strokeStyle = 'rgba(255,110,200,0.5)'; c.lineWidth = 1.2;
+      // 縦線: 地平線の点から下方へ広がる
+      for (let i = -10; i <= 10; i++) {
+        c.beginPath();
+        c.moveTo(W / 2 + i * W * .06, horizon);
+        c.lineTo(W / 2 + i * W * .3, H);
+        c.stroke();
+      }
+      // 横線: スクロールする透視線
+      for (let k = 0; k < 9; k++) {
+        const f = ((k / 9 + t * .12) % 1);
+        const y = horizon + f * f * (H - horizon);
+        c.globalAlpha = .25 + .55 * f;
+        c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke();
+      }
+      c.globalAlpha = 1;
+      // 地平線の輝き
+      const hg = c.createLinearGradient(0, horizon - 14, 0, horizon + 14);
+      hg.addColorStop(0, 'rgba(255,110,200,0)'); hg.addColorStop(.5, 'rgba(255,150,220,0.55)'); hg.addColorStop(1, 'rgba(255,110,200,0)');
+      c.fillStyle = hg; c.fillRect(0, horizon - 14, W, 28);
     } else if (pr === 'city') {
       // 夜景ビル群: 薄明りの空 + ビルシルエット + 灯りのついた窓(決定論的)
       const gr = c.createLinearGradient(0, 0, 0, H);
