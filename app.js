@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -422,6 +422,16 @@ const ShiroLib = (() => {
         q.lean = .3 * Math.sign(d) * e; q.sway = .09 * d;
         q.headTilt = -.4 * Math.sign(d) * e;             // 首は逆に傾げてこちらを覗く
         q.lArm = .14; q.rArm = .14;
+        break;
+      }
+      case 'cheer': {
+        // バンザイ: 両手を頭上に振り上げながら小刻みに跳ねる
+        const j = Math.abs(Math.sin(tt * 4));
+        q.bob = .09 * j;
+        q.lArm = -.25 - .6 * j; q.rArm = .25 + .6 * j;   // 腕は跳ねに合わせて上げ下げ
+        q.lElb = .25; q.rElb = .25;
+        q.lThigh = -.15 * j; q.rThigh = -.15 * j; q.lKnee = q.rKnee = .5 * j;
+        q.headTilt = .12 * Math.sin(tt * 2);
         break;
       }
       case 'still': break;
@@ -1042,6 +1052,18 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * 1.28); ctx.lineTo(hx - hr * .12, hy - hr * 1.05); ctx.stroke();
         break;
       }
+      case 'tie': {
+        // ネクタイ: 首元の結び目 + 胸へ下がる帯(accHueで着色)
+        ctx.fillStyle = acc2;
+        ctx.beginPath();
+        ctx.moveTo(hx - hr * .22, hy + hr * .82); ctx.lineTo(hx + hr * .22, hy + hr * .82);
+        ctx.lineTo(hx, hy + hr * 1.06); ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(hx - hr * .16, hy + hr * 1.06); ctx.lineTo(hx + hr * .16, hy + hr * 1.06);
+        ctx.lineTo(hx + hr * .1, hy + hr * 2.1); ctx.lineTo(hx - hr * .1, hy + hr * 2.1);
+        ctx.closePath(); ctx.fill();
+        break;
+      }
       case 'flower': {
         // 花飾り: 頭の側面に5弁の花(accHueで花弁着色)
         const fx2 = hx + hr * .62, fy2 = hy - hr * .55, pr3 = hr * .16;
@@ -1177,6 +1199,28 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath();
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
+      }
+    } else if (pr === 'aurora') {
+      // オーロラ: 夜空 + ゆらめく光のカーテン + 星
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#050a18'); gr.addColorStop(1, '#101c30');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rng = L.mulberry32(777);
+      for (let i = 0; i < 60; i++) {
+        const tw = .3 + .7 * Math.abs(Math.sin(t * .7 + i * 1.9));
+        c.fillStyle = `rgba(255,255,255,${.2 + .55 * tw * rng()})`;
+        c.fillRect(rng() * W, rng() * H * .7, 1.3, 1.3);
+      }
+      // 光のカーテン: 縦波の半透明帯を色違いで重ねる
+      for (const [hue, ph0, amp] of [[140, 0, .5], [190, 2.1, .34], [280, 4.2, .22]]) {
+        c.fillStyle = `hsla(${hue},85%,60%,${amp * .4})`;
+        c.beginPath();
+        c.moveTo(0, H);
+        for (let x = 0; x <= W; x += W / 32) {
+          const y = H * (.28 + .12 * Math.sin(x / W * 5 + ph0 + t * .6) + .06 * Math.sin(x / W * 11 - t * .9 + ph0));
+          c.lineTo(x, y);
+        }
+        c.lineTo(W, H); c.closePath(); c.fill();
       }
     } else if (pr === 'forest') {
       // 森: 深い緑の空 + 木漏れ日 + 針葉樹シルエット(決定論的)
