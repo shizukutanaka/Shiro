@@ -32,7 +32,7 @@ const ShiroLib = (() => {
   const BGS = ['gradient', 'green', 'white', 'transparent'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
-    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette'];
+    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -43,6 +43,7 @@ const ShiroLib = (() => {
     ['smile', '表情（笑顔）'], ['bgDim', '背景を暗く'], ['bgBlur', '背景ぼかし'],
     ['castDir', '影の向き'], ['rim', 'リムライト'], ['eyeHue', '目の色'],
     ['clothHue', '衣装色'], ['outline', '縁取り（ステッカー）'], ['vignette', 'ビネット'],
+    ['wmOpacity', '透かしの濃さ'],
   ];
 
   function defaultParams() {
@@ -51,7 +52,8 @@ const ShiroLib = (() => {
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
       smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, clothHue: 0,
-      outline: 0, vignette: 0, acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
+      outline: 0, vignette: 0, wmOpacity: .4, watermark: '',
+      acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
 
@@ -65,6 +67,7 @@ const ShiroLib = (() => {
     o.bgFit = FITS.includes(p && p.bgFit) ? p.bgFit : d.bgFit;
     o.acc = ACCS.includes(p && p.acc) ? p.acc : d.acc;
     o.bgPreset = BGS.includes(p && p.bgPreset) ? p.bgPreset : d.bgPreset;
+    o.watermark = String(p && p.watermark || '').slice(0, 60);
     o.flip = !!(p && p.flip);
     const sv = p ? +p.seed : NaN;
     o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
@@ -82,7 +85,7 @@ const ShiroLib = (() => {
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
     p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
-    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7; p.vignette = rng() < .6 ? 0 : rng() * .6;
+    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7; p.vignette = rng() < .6 ? 0 : rng() * .6; p.watermark = ''; p.wmOpacity = .4;
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -186,6 +189,19 @@ const ShiroLib = (() => {
     g.addColorStop(0, 'rgba(0,0,0,0)');
     g.addColorStop(1, `rgba(0,0,0,${strength * .45})`);
     c.save(); c.fillStyle = g; c.fillRect(0, 0, w, h); c.restore();
+  }
+
+  // 透かし(ウォーターマーク): クリエイターが作品に入れる署名テキスト。右下・影付き白文字。
+  function drawWatermark(c, text, w, h, opacity) {
+    if (!text || opacity <= 0) return;
+    const fs = Math.max(12, Math.round(h * .032));
+    c.save();
+    c.font = `600 ${fs}px "Hiragino Sans","Segoe UI",sans-serif`;
+    c.textAlign = 'right'; c.textBaseline = 'bottom';
+    c.shadowColor = 'rgba(0,0,0,.55)'; c.shadowBlur = fs * .3; c.shadowOffsetY = 1;
+    c.fillStyle = `rgba(255,255,255,${opacity})`;
+    c.fillText(text, w - fs * .6, h - fs * .5);
+    c.restore();
   }
 
   // ---------- recorder ----------
@@ -420,7 +436,7 @@ const ShiroLib = (() => {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, mannequinPose, skeleton, drawMannequin, drawAccessory,
+    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -568,6 +584,7 @@ if (typeof document !== 'undefined') (() => {
       L.drawMannequin(ctx, p, t, cx, baseY, hPix);
     }
     L.drawVignette(ctx, W, H, p.vignette);
+    L.drawWatermark(ctx, p.watermark, W, H, p.wmOpacity);
     requestAnimationFrame(frame);
   }
 
@@ -594,6 +611,7 @@ if (typeof document !== 'undefined') (() => {
       $('sel-bgfit').value = state.params.bgFit;
       $('sel-bgpreset').value = state.params.bgPreset;
       $('chk-flip').checked = state.params.flip;
+      $('inp-watermark').value = state.params.watermark;
     }
   }
   $('sel-anim').addEventListener('change', e => { state.params.anim = e.target.value; touch(); });
@@ -602,6 +620,18 @@ if (typeof document !== 'undefined') (() => {
   $('sel-bgpreset').addEventListener('change', e => { state.params.bgPreset = e.target.value; touch(); });
   $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });
   $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
+  $('inp-watermark').addEventListener('input', e => { state.params.watermark = e.target.value.slice(0, 60); touch(); });
+  // 配置プリセット: モデルを9アンカーへ一発移動
+  const PLACES = {
+    tl: [.2, .62], tc: [.5, .62], tr: [.8, .62],
+    ml: [.2, .84], center: [.5, .84], mr: [.8, .84],
+    bl: [.2, .97], bc: [.5, .97], br: [.8, .97],
+  };
+  $('sel-place').addEventListener('change', e => {
+    const pt = PLACES[e.target.value]; e.target.value = '';
+    if (!pt) return;
+    state.params.x = pt[0]; state.params.y = pt[1]; syncUI();
+  });
   $('chk-freeze').addEventListener('change', e => {
     // 撮影用ポーズ固定: アニメーション時間を現在値で止める(動画素材も一時停止)
     state.frozenT = e.target.checked ? (performance.now() - t0) / 1000 : null;
