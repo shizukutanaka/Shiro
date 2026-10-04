@@ -30,11 +30,11 @@ const ShiroLib = (() => {
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles'];
-  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark'];
+  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark', 'wind'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield'];
-  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat'];
-  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp'];
+  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat', 'wide'];
+  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp', 'braid'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
@@ -706,6 +706,18 @@ const ShiroLib = (() => {
         ctx.fill();
       }
     }
+    if (hs === 'braid') {
+      // 三つ編み: 側頭部から垂れる玉髪(交互ずれの連続円+先の結び目)
+      ctx.fillStyle = hairC;
+      const bx = hx + hr * .8, by = hy - hr * .1;
+      for (let k = 0; k < 6; k++) {
+        ctx.beginPath();
+        ctx.ellipse(bx + ((k % 2) ? .07 : -.07) * hr, by + k * hr * .32, hr * .19, hr * .22, 0, 0, 7);
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(52,56,68,0.95)';
+      ctx.fillRect(bx - hr * .1, by + 6 * hr * .32 - hr * .06, hr * .2, hr * .1);
+    }
     if (hs === 'pomp') {
       // ポンパドール: 前髪を高く盛り上げたリーゼント風
       ctx.fillStyle = hairC;
@@ -781,7 +793,15 @@ const ShiroLib = (() => {
           k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
         }
         ctx.closePath(); ctx.fill();
-      } else if (es === 'cat') {
+      } else if (es === 'wide') {
+      // 見開き目: 大きな白目+小さい瞳(驚き・キラキラ)
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.beginPath(); ctx.arc(ex - eo, ey, esz * .62 * eo, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(ex + eo, ey, esz * .62 * eo, 0, 7); ctx.fill();
+      ctx.fillStyle = eyeCol;
+      ctx.beginPath(); ctx.arc(ex - eo, ey, esz * .3 * eo, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(ex + eo, ey, esz * .3 * eo, 0, 7); ctx.fill();
+    } else if (es === 'cat') {
         // 猫目: 縦長の縦孔瞳孔(瞬きと連動)
         ctx.fillStyle = eyeCol;
         ctx.beginPath();
@@ -935,7 +955,7 @@ const ShiroLib = (() => {
 
   function drawParticles(ctx, W, H, type, t, seed) {
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
-    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : type === 'notes' ? 18 : type === 'hearts' ? 20 : type === 'spark' ? 46 : 42;
+    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : type === 'notes' ? 18 : type === 'hearts' ? 20 : type === 'spark' ? 46 : type === 'wind' ? 14 : 42;
     ctx.save();
     for (let i = 0; i < N; i++) {
       if (type === 'snow') {
@@ -1005,6 +1025,20 @@ const ShiroLib = (() => {
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(sx - Math.cos(ang) * 5, sy - Math.sin(ang) * 5);
+        ctx.stroke();
+      } else if (type === 'wind') {
+        // 風: 右へ流れる長い弧の流線(途切れて再出現)
+        const life = (h(i, 0) + t * (.12 + .1 * h(i, 1))) % 1;
+        const x = (life * 1.3 - .15) * W;
+        const y = h(i, 2) * H + Math.sin(life * 6 + i) * H * .02;
+        const len = W * (.06 + .08 * h(i, 3));
+        const a = Math.sin(life * Math.PI) * (.25 + .3 * h(i, 4));
+        ctx.strokeStyle = `rgba(255,255,255,${a})`;
+        ctx.lineWidth = 1.2 + h(i, 3);
+        ctx.beginPath();
+        ctx.moveTo(x - len, y);
+        ctx.quadraticCurveTo(x - len * .5, y - len * .22, x, y);
+        ctx.quadraticCurveTo(x + len * .18, y + len * .12, x + len * .3, y + len * .05);
         ctx.stroke();
       } else if (type === 'hearts') {
         // ハート: ♥マークがふわふわ昇る
