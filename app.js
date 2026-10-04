@@ -31,7 +31,7 @@ const ShiroLib = (() => {
   const ACCS = ['none', 'ribbon', 'hat', 'glasses'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
-    'smile', 'bgDim', 'bgBlur', 'castDir'];
+    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -40,7 +40,7 @@ const ShiroLib = (() => {
     ['y', '位置 Y'], ['scale', 'モデル倍率'], ['opacity', 'モデル不透明度'],
     ['keyThresh', '白抜き強度'], ['keySoft', '白抜きぼかし'], ['shadow', 'モデルの影'],
     ['smile', '表情（笑顔）'], ['bgDim', '背景を暗く'], ['bgBlur', '背景ぼかし'],
-    ['castDir', '影の向き'],
+    ['castDir', '影の向き'], ['rim', 'リムライト'], ['eyeHue', '目の色'],
   ];
 
   function defaultParams() {
@@ -48,7 +48,7 @@ const ShiroLib = (() => {
       seed: 1, height: .5, headSize: .5, shoulder: .5, armLen: .5, legLen: .5,
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
-      smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, acc: 'none', bgFit: 'cover',
+      smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, acc: 'none', bgFit: 'cover',
     };
   }
 
@@ -77,7 +77,7 @@ const ShiroLib = (() => {
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
     p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
-    p.castDir = rng();
+    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng();
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -142,6 +142,19 @@ const ShiroLib = (() => {
     c.translate(cx, baseY);
     c.transform(1, 0, -skew, .32, 0, 0);
     c.drawImage(silCanvas, -wPix / 2, -hPix, wPix, hPix);
+    c.restore();
+  }
+
+  // リムライト(ライトラップ): 光源側エッジに薄い光をまとわせ被写体を背景に馴染ませる。
+  // 影の向き(castDir)と逆側が光方向。モデル描画の直前に呼ぶ。
+  function drawRimLight(c, silCanvas, wPix, hPix, cx, baseY, dir, strength) {
+    if (strength <= 0) return;
+    const dx = (dir - .5) * -wPix * .08; // 影と逆方向
+    const g = 1.06;
+    c.save();
+    c.filter = `blur(${Math.max(1, wPix * .05)}px)`;
+    c.globalAlpha = strength * .55;
+    c.drawImage(silCanvas, cx - wPix / 2 + dx - (wPix * g - wPix) / 2, baseY - hPix * g - hPix * .015, wPix * g, hPix * g);
     c.restore();
   }
 
@@ -306,7 +319,7 @@ const ShiroLib = (() => {
     if (lw > 0) ctx.stroke();
     // eyes (素朴な2点、まばたきで縦につぶれる)
     const eo = Math.max(.12, blinkOpen(t));
-    ctx.fillStyle = 'rgba(60,64,74,0.8)';
+    ctx.fillStyle = `hsla(${Math.round(p.eyeHue * 360)},65%,42%,0.9)`;
     for (const s of [-1, 1]) {
       ctx.beginPath();
       ctx.ellipse(hx + s * hr * .38, hy - hr * .08, Math.max(1, hr * .09), Math.max(.5, hr * .09 * eo), 0, 0, 7);
@@ -367,7 +380,7 @@ const ShiroLib = (() => {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, mannequinPose, skeleton, drawMannequin, drawAccessory,
+    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -420,15 +433,17 @@ if (typeof document !== 'undefined') (() => {
   // ---------- silhouettes for cast shadows ----------
   const shCv = document.createElement('canvas'), shCtx = shCv.getContext('2d');
   const modCv = document.createElement('canvas'), mctx = modCv.getContext('2d');
-  function silhouetteOf(src, w, h) {
-    if (shCv.width !== w || shCv.height !== h) { shCv.width = w; shCv.height = h; }
-    shCtx.clearRect(0, 0, w, h);
-    shCtx.globalCompositeOperation = 'source-over';
-    shCtx.drawImage(src, 0, 0, w, h);
-    shCtx.globalCompositeOperation = 'source-in';
-    shCtx.fillStyle = '#0a0a0e'; shCtx.fillRect(0, 0, w, h);
-    shCtx.globalCompositeOperation = 'source-over';
-    return shCv;
+  const rimCv = document.createElement('canvas'), rimCtx = rimCv.getContext('2d');
+  function silhouetteOf(src, w, h, color, cv, cctx) {
+    cv = cv || shCv; cctx = cctx || shCtx;
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    cctx.clearRect(0, 0, w, h);
+    cctx.globalCompositeOperation = 'source-over';
+    cctx.drawImage(src, 0, 0, w, h);
+    cctx.globalCompositeOperation = 'source-in';
+    cctx.fillStyle = color || '#0a0a0e'; cctx.fillRect(0, 0, w, h);
+    cctx.globalCompositeOperation = 'source-over';
+    return cv;
   }
 
   // ---------- chroma-keyed media ----------
@@ -465,6 +480,7 @@ if (typeof document !== 'undefined') (() => {
     const cx = state.params.x * W, baseY = state.params.y * H;
     L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5);
     L.drawCastShadow(c, silhouetteOf(src, sw, sh), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4);
+    L.drawRimLight(c, silhouetteOf(src, sw, sh, '#dfe8ff', rimCv, rimCtx), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
     c.save();
     c.globalAlpha = state.params.opacity;
     if (state.params.flip) { c.translate(2 * cx, 0); c.scale(-1, 1); }
@@ -483,12 +499,13 @@ if (typeof document !== 'undefined') (() => {
     else {
       const hPix = H * (0.25 + 0.7 * p.scale), wPix = hPix * .55;
       const cx = p.x * W, baseY = p.y * H;
-      // マネキンをオフスクリーンに描き、シルエット化してキャストシャドウに利用
-      if (Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) {
+      // マネキンをオフスクリーンに描き、シルエット化して影/リムに利用
+      if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0) {
         modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix);
         mctx.clearRect(0, 0, modCv.width, modCv.height);
         L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, modCv.height);
         L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4);
+        L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, '#dfe8ff', rimCv, rimCtx), wPix, hPix, cx, baseY, p.castDir, p.rim);
       }
       L.drawMannequin(ctx, p, t, cx, baseY, hPix);
     }
