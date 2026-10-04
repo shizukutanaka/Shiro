@@ -26,15 +26,15 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat'];
-  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush'];
+  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
@@ -450,6 +450,15 @@ const ShiroLib = (() => {
         q.headTilt = .1 * Math.sin(tt * .8);
         break;
       }
+      case 'point': {
+        // 指差し: 右腕を前へ突き出してキメる(2秒ごとに左右交互)
+        const alt = Math.sin(tt * Math.PI) > 0 ? 1 : -1;
+        if (alt > 0) { q.rArm = .95; q.rElb = .05; q.lArm = .12; }
+        else { q.lArm = -.95; q.lElb = .05; q.rArm = .12; }
+        q.lean = .06 * alt; q.headTilt = .1 * alt;
+        q.bob = .015 * Math.sin(tt * 3);
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -642,6 +651,18 @@ const ShiroLib = (() => {
       ctx.lineTo(hx - hr * .9, hy + hr * .3);
       ctx.quadraticCurveTo(hx - hr * 1.14, hy + hr * .28, hx - hr * 1.14, hy - hr * .18);
       ctx.closePath(); ctx.fill();
+    }
+    if (hs === 'curly') {
+      // パーマ: 頭全体を覆うモコモコの縮れ毛(重なる小円)
+      ctx.fillStyle = hairC;
+      const rng2 = mulberry32(31);
+      for (let i = 0; i < 14; i++) {
+        const a = Math.PI + (i / 13) * Math.PI;             // 上半周に配置
+        const rr = hr * (1.02 + rng2() * .18);
+        ctx.beginPath();
+        ctx.arc(hx + Math.cos(a) * rr, hy - hr * .05 + Math.sin(a) * rr, hr * (.3 + rng2() * .14), 0, 7);
+        ctx.fill();
+      }
     }
     if (hs === 'odango') {
       // お団子: 頭頂両サイドの丸いお団子
@@ -1237,6 +1258,25 @@ if (typeof document !== 'undefined') (() => {
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
       }
+    } else if (pr === 'space') {
+      // 宇宙: 漆黒 + 星々 + リング付き惑星(土星風)
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#03040c'); gr.addColorStop(1, '#0d1230');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rng = L.mulberry32(414);
+      for (let i = 0; i < 130; i++) {
+        const tw = .4 + .6 * Math.abs(Math.sin(t * .8 + i * 2.3));
+        c.fillStyle = `rgba(255,255,255,${.2 + .6 * tw * rng()})`;
+        c.fillRect(rng() * W, rng() * H, 1.4, 1.4);
+      }
+      // 惑星: 帯グラデーションの球体 + 傾いたリング
+      const px2 = W * .72, py2 = H * .4, pr2 = H * .2;
+      const pg = c.createLinearGradient(px2 - pr2, py2 - pr2, px2 + pr2, py2 + pr2);
+      pg.addColorStop(0, '#e8c98a'); pg.addColorStop(.5, '#b98d4f'); pg.addColorStop(1, '#6e4f2a');
+      c.fillStyle = pg;
+      c.beginPath(); c.arc(px2, py2, pr2, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(230,210,170,0.55)'; c.lineWidth = H * .02;
+      c.beginPath(); c.ellipse(px2, py2 + pr2 * .1, pr2 * 1.8, pr2 * .45, -.18, 0, 7); c.stroke();
     } else if (pr === 'sea') {
       // 海中: 深い青 + 差し込む光の柱 + 昇る泡(決定論的)
       const gr = c.createLinearGradient(0, 0, 0, H);
