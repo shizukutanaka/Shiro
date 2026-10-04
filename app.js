@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'hop', 'dab', 'side', 'twist', 'swim', 'bodyroll', 'charleston', 'vogue', 'stomp', 'krump', 'waltz', 'tarantella', 'capoeira', 'belly', 'flamenco', 'samba', 'tango', 'swing', 'polka', 'foxtrot', 'chacha', 'pasodoble', 'cancan', 'mazurka', 'minuet', 'bolero', 'sirtaki', 'reel', 'hora', 'gavotte', 'czardas', 'morris', 'jig', 'bourree', 'sarabande', 'pavane', 'allemande', 'courante', 'rigaudon', 'passepied', 'hambo', 'galliard', 'saltarello', 'bransle', 'farandole', 'canarie', 'volta', 'jota', 'fandango', 'zapateado', 'korobushka', 'trepak', 'legenyes', 'kalamatianos', 'kolo', 'dabke', 'sardana', 'zeybek', 'tsamiko', 'seguidilla', 'sevillanas', 'forro', 'schuhplattler', 'halay', 'polska', 'cumbia', 'landler', 'hopak', 'kalbelia', 'bhangra', 'kathak', 'bharat', 'odissi', 'garba', 'bihu', 'lavani', 'dandiya', 'ghoomar', 'khorovod', 'lezginka', 'krakowiak', 'verbunk', 'sirba', 'hasapiko', 'oberek', 'tropanka', 'tinikling', 'gumboot', 'halling', 'haka', 'marinera', 'sagayan', 'malambo', 'caporales', 'huayno', 'cueca', 'morenada', 'diablada', 'carnavalito', 'tinku', 'zamba', 'singkil', 'kecak', 'saman', 'robam', 'indlamu', 'adumu', 'eskista', 'gnawa', 'piring', 'pangalay', 'kartuli', 'lazgi', 'springar', 'ganggang', 'biyelgee', 'saidi', 'horon', 'jarabe', 'frevo', 'siva', 'gorshey', 'seannos', 'salegy', 'otea', 'meke', 'singsing', 'lakalaka', 'toka', 'vira', 'yarkhushta', 'yalli', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'hop', 'dab', 'side', 'twist', 'swim', 'bodyroll', 'charleston', 'vogue', 'stomp', 'krump', 'waltz', 'tarantella', 'capoeira', 'belly', 'flamenco', 'samba', 'tango', 'swing', 'polka', 'foxtrot', 'chacha', 'pasodoble', 'cancan', 'mazurka', 'minuet', 'bolero', 'sirtaki', 'reel', 'hora', 'gavotte', 'czardas', 'morris', 'jig', 'bourree', 'sarabande', 'pavane', 'allemande', 'courante', 'rigaudon', 'passepied', 'hambo', 'galliard', 'saltarello', 'bransle', 'farandole', 'canarie', 'volta', 'jota', 'fandango', 'zapateado', 'korobushka', 'trepak', 'legenyes', 'kalamatianos', 'kolo', 'dabke', 'sardana', 'zeybek', 'tsamiko', 'seguidilla', 'sevillanas', 'forro', 'schuhplattler', 'halay', 'polska', 'cumbia', 'landler', 'hopak', 'kalbelia', 'bhangra', 'kathak', 'bharat', 'odissi', 'garba', 'bihu', 'lavani', 'dandiya', 'ghoomar', 'khorovod', 'lezginka', 'krakowiak', 'verbunk', 'sirba', 'hasapiko', 'oberek', 'tropanka', 'tinikling', 'gumboot', 'halling', 'haka', 'marinera', 'sagayan', 'malambo', 'caporales', 'huayno', 'cueca', 'morenada', 'diablada', 'carnavalito', 'tinku', 'zamba', 'singkil', 'kecak', 'saman', 'robam', 'indlamu', 'adumu', 'eskista', 'gnawa', 'piring', 'pangalay', 'kartuli', 'lazgi', 'springar', 'ganggang', 'biyelgee', 'saidi', 'horon', 'jarabe', 'frevo', 'siva', 'gorshey', 'seannos', 'salegy', 'otea', 'meke', 'singsing', 'lakalaka', 'toka', 'vira', 'yarkhushta', 'yalli', 'ardha', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero', 'ushanka', 'laurel', 'nightcap', 'jester', 'tiara', 'flowercrown', 'bowler', 'fedora', 'newsboy', 'tricorne', 'turban', 'matador', 'plume', 'veil', 'cloche', 'boater', 'deerstalker', 'bonnet', 'mobcap', 'sunvisor', 'keffiyeh', 'porkpie', 'sailor', 'tam', 'shako', 'pickelhaube', 'bicorne', 'mortar', 'beanie', 'crown2', 'kasa', 'mantilla', 'coif', 'kippah', 'topknot', 'eboshi', 'cowboy', 'mitre', 'snood', 'phrygian', 'calot', 'biretta', 'kokoshnik', 'hennin', 'chaperon', 'kettle', 'attifet', 'barbette', 'fontange', 'coonskin', 'wimple', 'busby', 'petasos', 'souwester', 'caubeen', 'tagelmust', 'kalpak', 'doppa', 'capirote', 'capotain', 'vueltiao', 'pamela', 'kepi', 'pith', 'chullo', 'cordobes', 'bandeau', 'karakul', 'tikka', 'pagri', 'mukut', 'jhoomar', 'peacock', 'tilak', 'jaapi', 'pheta', 'sarpech', 'borla', 'venok', 'papakha', 'rogatywka', 'csikos', 'clop', 'sariki', 'pakol', 'songkok', 'blangkon', 'gibus', 'toque', 'salakot', 'barretina', 'montenegrin', 'chupalla', 'spodik', 'montera', 'akubra', 'panama', 'tiroler', 'homburg', 'dhakatopi', 'gandhi', 'tengkolok', 'udeng', 'kofia', 'apsara', 'isicholo', 'maasai', 'netela', 'burnous', 'tengkuluk', 'saputangan', 'bashlyk', 'telpek', 'sjuhatt', 'gat', 'toortsog', 'nemes', 'kavuk', 'penacho', 'cangaceiro', 'tuiga', 'zhawa', 'glengarry', 'satroka', 'taupoo', 'salusalu', 'kapkap', 'tekiteki', 'pare', 'capote', 'taraz', 'kalagayi'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero', 'ushanka', 'laurel', 'nightcap', 'jester', 'tiara', 'flowercrown', 'bowler', 'fedora', 'newsboy', 'tricorne', 'turban', 'matador', 'plume', 'veil', 'cloche', 'boater', 'deerstalker', 'bonnet', 'mobcap', 'sunvisor', 'keffiyeh', 'porkpie', 'sailor', 'tam', 'shako', 'pickelhaube', 'bicorne', 'mortar', 'beanie', 'crown2', 'kasa', 'mantilla', 'coif', 'kippah', 'topknot', 'eboshi', 'cowboy', 'mitre', 'snood', 'phrygian', 'calot', 'biretta', 'kokoshnik', 'hennin', 'chaperon', 'kettle', 'attifet', 'barbette', 'fontange', 'coonskin', 'wimple', 'busby', 'petasos', 'souwester', 'caubeen', 'tagelmust', 'kalpak', 'doppa', 'capirote', 'capotain', 'vueltiao', 'pamela', 'kepi', 'pith', 'chullo', 'cordobes', 'bandeau', 'karakul', 'tikka', 'pagri', 'mukut', 'jhoomar', 'peacock', 'tilak', 'jaapi', 'pheta', 'sarpech', 'borla', 'venok', 'papakha', 'rogatywka', 'csikos', 'clop', 'sariki', 'pakol', 'songkok', 'blangkon', 'gibus', 'toque', 'salakot', 'barretina', 'montenegrin', 'chupalla', 'spodik', 'montera', 'akubra', 'panama', 'tiroler', 'homburg', 'dhakatopi', 'gandhi', 'tengkolok', 'udeng', 'kofia', 'apsara', 'isicholo', 'maasai', 'netela', 'burnous', 'tengkuluk', 'saputangan', 'bashlyk', 'telpek', 'sjuhatt', 'gat', 'toortsog', 'nemes', 'kavuk', 'penacho', 'cangaceiro', 'tuiga', 'zhawa', 'glengarry', 'satroka', 'taupoo', 'salusalu', 'kapkap', 'tekiteki', 'pare', 'capote', 'taraz', 'kalagayi', 'agal'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark', 'wind'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier', 'ruins', 'sakura', 'moon', 'harbor', 'terraces', 'bridge', 'wheatfield', 'pagoda', 'geyser', 'coral', 'vineyard', 'lavender', 'rainforest', 'mesa', 'alps', 'bayou', 'cliff', 'lagoon', 'prairie', 'observatory', 'storm', 'zen', 'wisteria', 'sunflowers', 'cosmos', 'orchard', 'onsen', 'moor', 'brook', 'grove', 'tide', 'pond', 'badlands', 'taiga', 'mangrove', 'delta', 'highland', 'saltflat', 'wadi', 'tundra', 'quarry', 'dune', 'cirque', 'fen', 'cove', 'glen', 'steppe', 'meseta', 'hamada', 'kelp', 'cenote', 'loch', 'karst', 'polder', 'bazaar', 'seastack', 'billabong', 'glade', 'tea', 'pampas', 'canal', 'grotto', 'cloudforest', 'iceberg', 'rapids', 'meteora', 'dojo', 'stupa', 'taj', 'ghat', 'himalaya', 'thar', 'gopuram', 'kerala', 'kaziranga', 'ghats', 'rann', 'haveli', 'izba', 'caucasus', 'tatras', 'puszta', 'carpathians', 'santorini', 'cappadocia', 'redwoods', 'slotcanyon', 'angkor', 'pantanal', 'deadvlei', 'uyuni', 'bagan', 'torres', 'lauterbrunnen', 'hallstatt', 'petra', 'machupicchu', 'dolomites', 'zhangjiajie', 'halong', 'vinicunca', 'lofoten', 'borobudur', 'socotra', 'tonlesap', 'drakensberg', 'serengeti', 'simien', 'chefchaouen', 'toraja', 'chocohills', 'svaneti', 'khiva', 'preikestolen', 'jeju', 'gobi', 'nile', 'pamukkale', 'chichen', 'lencois', 'atoll', 'potala', 'moher', 'baobab', 'moorea', 'bure', 'kokoda', 'haamonga', 'yasur', 'douro', 'ararat', 'khinalug'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier', 'ruins', 'sakura', 'moon', 'harbor', 'terraces', 'bridge', 'wheatfield', 'pagoda', 'geyser', 'coral', 'vineyard', 'lavender', 'rainforest', 'mesa', 'alps', 'bayou', 'cliff', 'lagoon', 'prairie', 'observatory', 'storm', 'zen', 'wisteria', 'sunflowers', 'cosmos', 'orchard', 'onsen', 'moor', 'brook', 'grove', 'tide', 'pond', 'badlands', 'taiga', 'mangrove', 'delta', 'highland', 'saltflat', 'wadi', 'tundra', 'quarry', 'dune', 'cirque', 'fen', 'cove', 'glen', 'steppe', 'meseta', 'hamada', 'kelp', 'cenote', 'loch', 'karst', 'polder', 'bazaar', 'seastack', 'billabong', 'glade', 'tea', 'pampas', 'canal', 'grotto', 'cloudforest', 'iceberg', 'rapids', 'meteora', 'dojo', 'stupa', 'taj', 'ghat', 'himalaya', 'thar', 'gopuram', 'kerala', 'kaziranga', 'ghats', 'rann', 'haveli', 'izba', 'caucasus', 'tatras', 'puszta', 'carpathians', 'santorini', 'cappadocia', 'redwoods', 'slotcanyon', 'angkor', 'pantanal', 'deadvlei', 'uyuni', 'bagan', 'torres', 'lauterbrunnen', 'hallstatt', 'petra', 'machupicchu', 'dolomites', 'zhangjiajie', 'halong', 'vinicunca', 'lofoten', 'borobudur', 'socotra', 'tonlesap', 'drakensberg', 'serengeti', 'simien', 'chefchaouen', 'toraja', 'chocohills', 'svaneti', 'khiva', 'preikestolen', 'jeju', 'gobi', 'nile', 'pamukkale', 'chichen', 'lencois', 'atoll', 'potala', 'moher', 'baobab', 'moorea', 'bure', 'kokoda', 'haamonga', 'yasur', 'douro', 'ararat', 'khinalug', 'hegra'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat', 'wide'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp', 'braid'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -2921,6 +2921,26 @@ const ShiroLib = (() => {
         q.headTilt = .05 * st;
         break;
       }
+      case 'ardha': {
+        // アルダ: サウジの剣舞踊 — 前後の揺れ+剣を掲げる腕+厳かな歩
+        const ad = tt * 2.8;
+        const st = Math.sin(ad);
+        const raise = Math.sin(ad * 1.5);
+        q.bob = .03 + .025 * Math.abs(st);
+        q.lThigh = -.1 + .08 * Math.max(0, st);          // 厳かな前後の歩
+        q.rThigh = -.1 + .08 * Math.max(0, -st);
+        q.lKnee = .15;
+        q.rKnee = .15;
+        // 剣を掲げる右腕(頭上でゆっくり上下)
+        q.lArm = .35 + .1 * st;
+        q.rArm = 1.05 + .1 * raise;
+        q.lElb = -.2;
+        q.rElb = -.1;
+        q.sway = .1 * st;                                // 列の揺れ
+        q.lean = .07;
+        q.headTilt = .06 * st;
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -5444,6 +5464,46 @@ const ShiroLib = (() => {
         ctx.beginPath();
         ctx.arc(hx + hr * .52, hy - hr * .1, hr * .04, 0, 7);
         ctx.fill();
+        break;
+      }
+      case 'agal': {
+        // アガール: 二重の黒い頭の紐 — 二つの輪+垂れる房
+        ctx.strokeStyle = dk;
+        // 二重の輪(頭頂の黒い紐帯)
+        for (const oy of [.72, .8]) {
+          ctx.lineWidth = hr * .05;
+          ctx.beginPath();
+          ctx.moveTo(hx - hr * .5, hy - oy * hr);
+          ctx.quadraticCurveTo(hx, hy - (oy + .1) * hr, hx + hr * .5, hy - oy * hr);
+          ctx.stroke();
+        }
+        // 輪の留め結び(背面の小さな結び目)
+        ctx.lineWidth = hr * .04;
+        ctx.beginPath();
+        ctx.moveTo(hx + hr * .48, hy - hr * .7);
+        ctx.quadraticCurveTo(hx + hr * .52, hy - hr * .6, hx + hr * .48, hy - hr * .5);
+        ctx.stroke();
+        // 垂れる房(2本の細い紐の先端)
+        for (const [tx, len] of [[.46, .35], [.52, .42]]) {
+          ctx.lineWidth = hr * .025;
+          ctx.beginPath();
+          ctx.moveTo(hx + tx * hr, hy - hr * .5);
+          ctx.quadraticCurveTo(hx + tx * hr + hr * .03, hy - hr * .3, hx + tx * hr, hy - hr * len);
+          ctx.stroke();
+          // 房の先の結び玉
+          ctx.fillStyle = dk;
+          ctx.beginPath();
+          ctx.arc(hx + tx * hr, hy - hr * len + hr * .02, hr * .03, 0, 7);
+          ctx.fill();
+        }
+        // 白いグトラ(頭巾の垂れ布: 紐の下の白い輪郭)
+        ctx.fillStyle = 'rgba(250,250,248,0.4)';
+        ctx.beginPath();
+        ctx.moveTo(hx - hr * .5, hy - hr * .55);
+        ctx.quadraticCurveTo(hx - hr * .55, hy - hr * .3, hx - hr * .48, hy - hr * .1);
+        ctx.lineTo(hx + hr * .48, hy - hr * .1);
+        ctx.quadraticCurveTo(hx + hr * .55, hy - hr * .3, hx + hr * .5, hy - hr * .55);
+        ctx.closePath(); ctx.fill();
         break;
       }
       case 'clop': {
@@ -11099,6 +11159,88 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = 'rgba(250,252,255,0.6)';
       c.beginPath(); c.ellipse(W * .25, H * .1, W * .14, H * .016, 0, 0, 7); c.fill();
       c.beginPath(); c.ellipse(W * .7, H * .14, W * .12, H * .014, 0, 0, 7); c.fill();
+    } else if (pr === 'hegra') {
+      // ヘグラ: 砂岩の墓のファサード+砂漠の床+遠い岩山
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#d8a868'); gr.addColorStop(.5, '#c89058'); gr.addColorStop(1, '#a06838');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      // 砂漠の床(砂の帯)
+      c.fillStyle = '#c09858';
+      c.fillRect(0, H * .72, W, H * .28);
+      // 遠い岩山(2つの砂岩の突起)
+      c.fillStyle = '#a87848';
+      c.beginPath();
+      c.moveTo(0, H * .55);
+      c.lineTo(W * .18, H * .35); c.lineTo(W * .3, H * .5); c.lineTo(W * .45, H * .4);
+      c.lineTo(W * .6, H * .55); c.lineTo(W, H * .5); c.lineTo(W, H * .72); c.lineTo(0, H * .72);
+      c.closePath(); c.fill();
+      // 中央の大きな岩塊(墓のある崖)
+      const hx2 = W * .5;
+      c.fillStyle = '#b08858';
+      c.beginPath();
+      c.moveTo(hx2 - W * .2, H * .72);
+      c.lineTo(hx2 - W * .18, H * .38);
+      c.lineTo(hx2 - W * .08, H * .3);
+      c.lineTo(hx2 + W * .12, H * .34);
+      c.lineTo(hx2 + W * .2, H * .45);
+      c.lineTo(hx2 + W * .2, H * .72);
+      c.closePath(); c.fill();
+      // 岩の水平層理(3本の筋)
+      c.strokeStyle = 'rgba(140,100,60,0.6)'; c.lineWidth = Math.max(1, H * .004);
+      for (const ly of [.45, .55, .65]) {
+        c.beginPath();
+        c.moveTo(hx2 - W * .19, H * ly);
+        c.lineTo(hx2 + W * .19, H * (ly + .01));
+        c.stroke();
+      }
+      // 墓のファサード(岩に刻まれた神殿の正面)
+      const fx = hx2, fw = W * .14, fy = H * .7, fh = H * .22;
+      // 階段状の玄関帯(上部の2段の縁)
+      c.fillStyle = '#8a6840';
+      c.fillRect(fx - fw / 2, fy - fh, fw, H * .015);
+      c.fillRect(fx - fw / 2 + W * .008, fy - fh + H * .015, fw - W * .016, H * .012);
+      // 門(暗い入口)
+      c.fillStyle = '#3a2c20';
+      c.beginPath();
+      c.moveTo(fx - fw * .25, fy);
+      c.lineTo(fx - fw * .25, fy - fh * .55);
+      c.lineTo(fx - fw * .2, fy - fh * .62);
+      c.lineTo(fx + fw * .2, fy - fh * .62);
+      c.lineTo(fx + fw * .25, fy - fh * .55);
+      c.lineTo(fx + fw * .25, fy);
+      c.closePath(); c.fill();
+      // 門の内側の明るい壁
+      c.fillStyle = '#6a5030';
+      c.fillRect(fx - fw * .2, fy - fh * .5, fw * .4, fh * .5);
+      // 柱4本(ファサードの柱列)
+      c.fillStyle = '#8a6840';
+      for (const px2 of [-.3, -.1, .1, .3]) {
+        c.fillRect(fx + px2 * fw, fy - fh * .52, fw * .06, fh * .52);
+      }
+      // 三角の破風(上の三角縁)
+      c.fillStyle = '#8a6840';
+      c.beginPath();
+      c.moveTo(fx - fw * .3, fy - fh);
+      c.lineTo(fx, fy - fh - H * .03);
+      c.lineTo(fx + fw * .3, fy - fh);
+      c.closePath(); c.fill();
+      // ラクダ2頭(遠くのシルエット)
+      c.fillStyle = '#6a5030';
+      for (const cx3 of [.12, .2]) {
+        c.beginPath();
+        c.ellipse(W * cx3, H * .78, W * .015, H * .012, 0, 0, 7); c.fill();
+        c.strokeStyle = '#6a5030'; c.lineWidth = Math.max(1, W * .003);
+        c.beginPath();
+        c.moveTo(W * cx3 + W * .012, H * .77);
+        c.lineTo(W * cx3 + W * .018, H * .74);
+        c.stroke();
+      }
+      // 陽の光(斜めの筋)
+      c.strokeStyle = 'rgba(255,220,160,0.25)'; c.lineWidth = W * .02;
+      c.beginPath();
+      c.moveTo(W * .1, 0);
+      c.lineTo(W * .5, H);
+      c.stroke();
     } else if (pr === 'carpathians') {
       // カルパチア: 深い針葉樹の連山+古城(ブラン城)+山霧+熊の影
       const gr = c.createLinearGradient(0, 0, 0, H);
