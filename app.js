@@ -28,9 +28,10 @@ const ShiroLib = (() => {
   // ---------- params ----------
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'still'];
   const FITS = ['cover', 'contain'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
-    'smile', 'bgDim', 'bgBlur'];
+    'smile', 'bgDim', 'bgBlur', 'castDir'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -39,6 +40,7 @@ const ShiroLib = (() => {
     ['y', '位置 Y'], ['scale', 'モデル倍率'], ['opacity', 'モデル不透明度'],
     ['keyThresh', '白抜き強度'], ['keySoft', '白抜きぼかし'], ['shadow', 'モデルの影'],
     ['smile', '表情（笑顔）'], ['bgDim', '背景を暗く'], ['bgBlur', '背景ぼかし'],
+    ['castDir', '影の向き'],
   ];
 
   function defaultParams() {
@@ -46,7 +48,7 @@ const ShiroLib = (() => {
       seed: 1, height: .5, headSize: .5, shoulder: .5, armLen: .5, legLen: .5,
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
-      smile: .6, bgDim: 0, bgBlur: 0, bgFit: 'cover',
+      smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, acc: 'none', bgFit: 'cover',
     };
   }
 
@@ -58,6 +60,7 @@ const ShiroLib = (() => {
     }
     o.anim = ANIMS.includes(p && p.anim) ? p.anim : d.anim;
     o.bgFit = FITS.includes(p && p.bgFit) ? p.bgFit : d.bgFit;
+    o.acc = ACCS.includes(p && p.acc) ? p.acc : d.acc;
     o.flip = !!(p && p.flip);
     const sv = p ? +p.seed : NaN;
     o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
@@ -68,11 +71,13 @@ const ShiroLib = (() => {
     const p = defaultParams();
     for (const k of NUM_KEYS) p[k] = rng();
     p.anim = ANIMS[Math.floor(rng() * ANIMS.length)];
+    p.acc = ACCS[Math.floor(rng() * ACCS.length)];
     p.flip = rng() < .35;
     p.x = .3 + rng() * .4; p.y = .6 + rng() * .35;
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
     p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
+    p.castDir = rng();
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -124,6 +129,20 @@ const ShiroLib = (() => {
     if (ph >= .18) return 1;
     const s = Math.abs(ph - .09) / .09; // 0..1..0 の三角形
     return Math.min(1, s * 1.4);
+  }
+
+  // キャストシャドウ: モデルのシルエットを傾斜・押し潰して落とし影にする。
+  // silCanvas は濃色シルエット済みキャンバス(下部=足元)。castDir .5=真下(省略可)
+  function drawCastShadow(c, silCanvas, wPix, hPix, cx, baseY, dir, alpha) {
+    const skew = (dir - .5) * 1.6;
+    if (Math.abs(skew) < .05 || alpha <= 0) return;
+    c.save();
+    c.filter = `blur(${Math.max(1, wPix * .04)}px)`;
+    c.globalAlpha = alpha;
+    c.translate(cx, baseY);
+    c.transform(1, 0, -skew, .32, 0, 0);
+    c.drawImage(silCanvas, -wPix / 2, -hPix, wPix, hPix);
+    c.restore();
   }
 
   // ---------- recorder ----------
@@ -300,14 +319,55 @@ const ShiroLib = (() => {
       ctx.beginPath(); ctx.moveTo(hx - mw, my);
       ctx.quadraticCurveTo(hx, my + curv * 2, hx + mw, my); ctx.stroke();
     }
+    drawAccessory(ctx, p.acc, hx, hy, hr);
+    ctx.restore();
+  }
+
+  // アクセサリ: キャラクリ定番の頭部装飾を手続き描画
+  function drawAccessory(ctx, acc, hx, hy, hr) {
+    const dk = 'rgba(52,56,68,0.95)', acc2 = 'rgba(110,168,255,0.9)';
+    ctx.save();
+    switch (acc) {
+      case 'ribbon': {
+        ctx.fillStyle = acc2;
+        const bx = hx - hr * .7, by = hy - hr * .75, s = hr * .42;
+        for (const d of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx, by);
+          ctx.lineTo(bx + d * s, by - s * .6);
+          ctx.lineTo(bx + d * s, by + s * .6);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.fillStyle = dk;
+        ctx.beginPath(); ctx.arc(bx, by, s * .3, 0, 7); ctx.fill();
+        break;
+      }
+      case 'hat': {
+        ctx.fillStyle = dk;
+        ctx.beginPath(); ctx.ellipse(hx, hy - hr * .62, hr * 1.25, hr * .22, 0, 0, 7); ctx.fill(); // brim
+        ctx.beginPath(); ctx.ellipse(hx, hy - hr * .85, hr * .72, hr * .5, 0, Math.PI, 0); ctx.fill(); // dome
+        ctx.fillStyle = acc2;
+        ctx.fillRect(hx - hr * .72, hy - hr * .85, hr * 1.44, hr * .12); // band
+        break;
+      }
+      case 'glasses': {
+        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07);
+        for (const s of [-1, 1]) {
+          ctx.beginPath(); ctx.arc(hx + s * hr * .38, hy - hr * .08, hr * .26, 0, 7); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(hx + s * hr * .64, hy - hr * .08); ctx.lineTo(hx + s * hr * .95, hy - hr * .18); ctx.stroke(); // temple
+        }
+        ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * .1); ctx.lineTo(hx + hr * .12, hy - hr * .1); ctx.stroke(); // bridge
+        break;
+      }
+    }
     ctx.restore();
   }
 
   return {
-    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, NUM_KEYS, SLIDERS,
+    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, blinkOpen, contactShadow, mannequinPose, skeleton, drawMannequin,
+    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -357,6 +417,20 @@ if (typeof document !== 'undefined') (() => {
     if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
   }
 
+  // ---------- silhouettes for cast shadows ----------
+  const shCv = document.createElement('canvas'), shCtx = shCv.getContext('2d');
+  const modCv = document.createElement('canvas'), mctx = modCv.getContext('2d');
+  function silhouetteOf(src, w, h) {
+    if (shCv.width !== w || shCv.height !== h) { shCv.width = w; shCv.height = h; }
+    shCtx.clearRect(0, 0, w, h);
+    shCtx.globalCompositeOperation = 'source-over';
+    shCtx.drawImage(src, 0, 0, w, h);
+    shCtx.globalCompositeOperation = 'source-in';
+    shCtx.fillStyle = '#0a0a0e'; shCtx.fillRect(0, 0, w, h);
+    shCtx.globalCompositeOperation = 'source-over';
+    return shCv;
+  }
+
   // ---------- chroma-keyed media ----------
   const keyCv = document.createElement('canvas'), kctx = keyCv.getContext('2d', { willReadFrequently: true });
   function keyedMediaCanvas() {
@@ -390,6 +464,7 @@ if (typeof document !== 'undefined') (() => {
     const wPix = hPix * (sw / sh);
     const cx = state.params.x * W, baseY = state.params.y * H;
     L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5);
+    L.drawCastShadow(c, silhouetteOf(src, sw, sh), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4);
     c.save();
     c.globalAlpha = state.params.opacity;
     if (state.params.flip) { c.translate(2 * cx, 0); c.scale(-1, 1); }
@@ -405,7 +480,18 @@ if (typeof document !== 'undefined') (() => {
     ctx.clearRect(0, 0, W, H);
     drawBackdrop(ctx, p);
     if (state.media) drawMedia(ctx);
-    else L.drawMannequin(ctx, p, t, p.x * W, p.y * H, H * (0.25 + 0.7 * p.scale));
+    else {
+      const hPix = H * (0.25 + 0.7 * p.scale), wPix = hPix * .55;
+      const cx = p.x * W, baseY = p.y * H;
+      // マネキンをオフスクリーンに描き、シルエット化してキャストシャドウに利用
+      if (Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) {
+        modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix);
+        mctx.clearRect(0, 0, modCv.width, modCv.height);
+        L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, modCv.height);
+        L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4);
+      }
+      L.drawMannequin(ctx, p, t, cx, baseY, hPix);
+    }
     requestAnimationFrame(frame);
   }
 
@@ -427,11 +513,13 @@ if (typeof document !== 'undefined') (() => {
     }
     if (fromParams) {
       $('sel-anim').value = state.params.anim;
+      $('sel-acc').value = state.params.acc;
       $('sel-bgfit').value = state.params.bgFit;
       $('chk-flip').checked = state.params.flip;
     }
   }
   $('sel-anim').addEventListener('change', e => state.params.anim = e.target.value);
+  $('sel-acc').addEventListener('change', e => state.params.acc = e.target.value);
   $('sel-bgfit').addEventListener('change', e => state.params.bgFit = e.target.value);
   $('chk-flip').addEventListener('change', e => state.params.flip = e.target.checked);
 
@@ -475,8 +563,9 @@ if (typeof document !== 'undefined') (() => {
   }
   $('btn-png').addEventListener('click', () =>
     stage.toBlob(b => b ? download(b, 'shiro.png') : err('PNG生成に失敗'), 'image/png'));
+  // 録画はトグル式: クリックで開始、再クリックまたは15秒で停止
   $('btn-rec').addEventListener('click', () => {
-    if (state.recorder) return;
+    if (state.recorder) { state.recorder.stop(); return; }
     const pick = L.pickMime(m => MediaRecorder.isTypeSupported(m));
     if (!pick) return err('このブラウザは動画録画に未対応です');
     const rec = new MediaRecorder(stage.captureStream(30), { mimeType: pick.mime });
@@ -484,12 +573,13 @@ if (typeof document !== 'undefined') (() => {
     rec.ondataavailable = e => e.data.size && chunks.push(e.data);
     rec.onstop = () => {
       state.recorder = null;
+      clearTimeout(state.recTimer);
       download(new Blob(chunks, { type: pick.mime }), 'shiro.' + pick.ext);
-      $('btn-rec').textContent = '動画を保存（5秒）';
+      $('btn-rec').textContent = '動画 録画開始';
     };
     state.recorder = rec; rec.start();
-    $('btn-rec').textContent = '録画中…';
-    state.recTimer = setTimeout(() => rec.stop(), 5000);
+    $('btn-rec').textContent = '録画中… クリックで停止';
+    state.recTimer = setTimeout(() => state.recorder && state.recorder.stop(), 15000);
   });
   $('btn-share').addEventListener('click', async () => {
     try {
@@ -590,6 +680,12 @@ if (typeof document !== 'undefined') (() => {
   $('sel-aspect').addEventListener('change', e => {
     const [w, h] = ASPECTS[e.target.value] || ASPECTS['16:9'];
     stage.width = w; stage.height = h; W = w; H = h;
+  });
+
+  // ---------- shortcuts ----------
+  document.addEventListener('keydown', e => {
+    if (/^(input|select|textarea)$/i.test(e.target.tagName)) return;
+    if (e.key === 'r' || e.key === 'R') $('btn-random').click();
   });
 
   // ---------- init ----------

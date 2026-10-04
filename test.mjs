@@ -133,6 +133,34 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.length === before, 'zero alpha shadow skipped');
 }
 
+// accessories: all variants draw finite geometry
+{
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: () => (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return {}; },
+    set: () => true,
+  });
+  for (const acc of L.ACCS) L.drawAccessory(ctx, acc, 100, 100, 20);
+  ok(calls.length > 20, 'accessory draws geometry');
+  ok(calls.every(Number.isFinite), 'accessory coords finite');
+  const p = L.randomParams(L.mulberry32(3));
+  ok(L.ACCS.includes(p.acc) && L.clampParams({ acc: 'x' }).acc === 'none', 'acc clamped/valid');
+}
+
+// cast shadow: directional only, finite args
+{
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: () => (...a) => { calls.push([...a]); return {}; },
+    set: () => true,
+  });
+  L.drawCastShadow(ctx, { width: 10, height: 10 }, 100, 200, 320, 600, 0, .4);
+  ok(calls.length > 0, 'cast shadow emitted when dir off-center');
+  const before = calls.length;
+  L.drawCastShadow(ctx, { width: 10, height: 10 }, 100, 200, 320, 600, .5, .4);
+  ok(calls.length === before, 'cast shadow skipped at center dir');
+}
+
 // mime picker
 {
   ok(L.pickMime(() => true).ext === 'mp4', 'mp4 preferred');
