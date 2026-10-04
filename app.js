@@ -29,10 +29,10 @@ const ShiroLib = (() => {
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'crown', 'phones', 'cape'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -51,7 +51,7 @@ const ShiroLib = (() => {
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
     'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
-    'rot', 'eyeGap', 'duo', 'hairHue', 'squash'];
+    'rot', 'eyeGap', 'duo', 'hairHue', 'squash', 'frame', 'frameHue'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -71,6 +71,7 @@ const ShiroLib = (() => {
     ['despill', 'スピル除去'], ['temp', '色温度'], ['shadowSoft', '影の柔らかさ'], ['brow', '眉毛の角度'],
     ['bgDrift', '背景のゆっくりズーム'], ['rot', 'モデルの傾き'], ['eyeGap', '目の間隔'],
     ['duo', '相方（2体目）'], ['hairHue', '髪色'], ['squash', 'つぶし・伸び'],
+    ['frame', '額縁の太さ'], ['frameHue', '額縁の色'],
   ];
 
   function defaultParams() {
@@ -85,6 +86,7 @@ const ShiroLib = (() => {
       shake: 0, glow: 0, glowHue: .55, eyeSize: .5, bgX: .5, bgY: .5,
       despill: .5, temp: .5, shadowSoft: .4, brow: .5, bgDrift: 0,
       rot: .5, eyeGap: .5, duo: 0, hairHue: .07, squash: 0,
+      frame: 0, frameHue: .12,
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br', vidQ: 'std',
       eyeStyle: 'dot', acc: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
@@ -128,7 +130,7 @@ const ShiroLib = (() => {
     p.grade = rng() < .6 ? 'none' : GRADES[1 + Math.floor(rng() * 4)];
     p.blend = rng() < .75 ? 'none' : BLENDS[1 + Math.floor(rng() * 3)];
     p.flip = rng() < .35;
-    p.bgPreset = rng() < .75 ? 'gradient' : BGS[1 + Math.floor(rng() * 3)];
+    p.bgPreset = rng() < .7 ? 'gradient' : BGS[1 + Math.floor(rng() * (BGS.length - 1))];
     p.x = .3 + rng() * .4; p.y = .6 + rng() * .35;
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
@@ -721,6 +723,17 @@ const ShiroLib = (() => {
         ctx.fillRect(hx - hr * .72, hy - hr * .85, hr * 1.44, hr * .12); // band
         break;
       }
+      case 'shades': {
+        ctx.fillStyle = 'rgba(20,20,24,0.88)';
+        for (const s of [-1, 1]) {
+          ctx.beginPath(); ctx.arc(hx + s * hr * .38, hy - hr * .08, hr * .26, 0, 7); ctx.fill();
+          ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07);
+          ctx.beginPath(); ctx.moveTo(hx + s * hr * .64, hy - hr * .08); ctx.lineTo(hx + s * hr * .95, hy - hr * .18); ctx.stroke();
+        }
+        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07);
+        ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * .1); ctx.lineTo(hx + hr * .12, hy - hr * .1); ctx.stroke();
+        break;
+      }
       case 'glasses': {
         ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07);
         for (const s of [-1, 1]) {
@@ -751,6 +764,22 @@ const ShiroLib = (() => {
         ctx.fillStyle = acc2;
         for (const s of [-1, 1]) {
           ctx.beginPath(); ctx.ellipse(hx + s * hr * .95, hy - hr * .1, hr * .16, hr * .28, 0, 0, 7); ctx.fill(); // ear cups
+        }
+        break;
+      }
+      case 'beard': {
+        ctx.fillStyle = 'rgba(70,60,52,0.88)';
+        ctx.beginPath(); ctx.ellipse(hx, hy + hr * .55, hr * .62, hr * .5, 0, 0, 7); ctx.fill(); // 顎周り
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.beginPath(); ctx.ellipse(hx, hy + hr * .38, hr * .28, hr * .12, 0, 0, 7); ctx.fill(); // 口元の隙間
+        break;
+      }
+      case 'mask': {
+        ctx.fillStyle = dk;
+        ctx.beginPath(); ctx.ellipse(hx, hy - hr * .12, hr * .92, hr * .34, 0, 0, 7); ctx.fill(); // 眼帯バンド
+        ctx.fillStyle = '#fdfdfd';
+        for (const s of [-1, 1]) {
+          ctx.beginPath(); ctx.ellipse(hx + s * hr * .4, hy - hr * .1, hr * .22, hr * .16, 0, 0, 7); ctx.fill(); // 目穴
         }
         break;
       }
@@ -819,7 +848,35 @@ if (typeof document !== 'undefined') (() => {
     if (p.bgBlur > 0) c.filter = `blur(${p.bgBlur * 10}px)`;
     if (pr === 'green') { c.fillStyle = '#00b140'; c.fillRect(0, 0, W, H); }
     else if (pr === 'white') { c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); }
-    else defaultBackdrop(c);
+    else if (pr === 'sunset') {
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#2b2f6e'); gr.addColorStop(.55, '#c9526a'); gr.addColorStop(1, '#ffb56b');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      c.fillStyle = 'rgba(255,190,90,0.92)';
+      c.beginPath(); c.arc(W * .5, H * .6, H * .15, 0, 7); c.fill(); // 夕日
+    } else if (pr === 'night') {
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#0a0d24'); gr.addColorStop(1, '#1c2347');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rng = L.mulberry32(999);
+      for (let i = 0; i < 90; i++) {
+        const sx = rng() * W, sy = rng() * H * .85, sr = rng() * 1.4 + .4;
+        const tw = .3 + .65 * Math.abs(Math.sin(t * (.4 + rng() * 1.6) + rng() * 9));
+        c.fillStyle = `rgba(255,255,255,${tw})`;
+        c.beginPath(); c.arc(sx, sy, sr, 0, 7); c.fill();
+      }
+      c.fillStyle = 'rgba(240,240,220,0.95)';
+      c.beginPath(); c.arc(W * .8, H * .18, H * .07, 0, 7); c.fill(); // 月
+    } else if (pr === 'spot') {
+      c.fillStyle = '#0b0c10'; c.fillRect(0, 0, W, H);
+      const g = c.createRadialGradient(W * .5, H * .86, 10, W * .5, H * .86, W * .5);
+      g.addColorStop(0, 'rgba(255,240,200,0.55)'); g.addColorStop(1, 'rgba(255,240,200,0)');
+      c.fillStyle = g;
+      c.beginPath();
+      c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.lineTo(W * .9, H * .95); c.lineTo(W * .1, H * .95);
+      c.closePath(); c.fill();
+      c.beginPath(); c.ellipse(W * .5, H * .88, W * .28, H * .07, 0, 0, 7); c.fill(); // 床の光り輪
+    } else defaultBackdrop(c);
     c.filter = 'none';
     if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
   }
@@ -1045,6 +1102,13 @@ if (typeof document !== 'undefined') (() => {
       ctx.restore();
     }
     L.drawVignette(ctx, W, H, p.vignette);
+    if (p.frame > .02) { // 額縁: ポラロイド/ポストカード風の枠線を最前面に
+      const b = 4 + p.frame * 44;
+      ctx.fillStyle = `hsla(${Math.round(p.frameHue * 360)},45%,${p.frameHue < .08 ? 14 : 90}%,0.96)`;
+      ctx.beginPath();
+      ctx.rect(0, 0, W, H); ctx.rect(b, b, W - 2 * b, H - 2 * b);
+      ctx.fill('evenodd');
+    }
     L.drawWatermark(ctx, p.watermark, W, H, p.wmOpacity, p.wmPos);
     requestAnimationFrame(frame);
   }
@@ -1112,6 +1176,19 @@ if (typeof document !== 'undefined') (() => {
     const pt = PLACES[e.target.value]; e.target.value = '';
     if (!pt) return;
     state.params.x = pt[0]; state.params.y = pt[1]; syncUI();
+  });
+  // 表情プリセット: 目+口+眉を一発切替(配置プリセット同様非保持)
+  const FACES = {
+    happy: { eyeStyle: 'closed', smile: .95, brow: .7 },
+    surprise: { eyeStyle: 'dot', smile: .9, brow: .9 },
+    angry: { eyeStyle: 'sharp', smile: .15, brow: .15 },
+    sleepy: { eyeStyle: 'closed', smile: .45, brow: .5 },
+    wink: { eyeStyle: 'wink', smile: .8, brow: .6 },
+  };
+  $('sel-face').addEventListener('change', e => {
+    const f = FACES[e.target.value]; e.target.value = '';
+    if (!f) return;
+    Object.assign(state.params, f); syncUI();
   });
   $('chk-freeze').addEventListener('change', e => {
     // 撮影用ポーズ固定: アニメーション時間を現在値で止める(動画素材も一時停止)
