@@ -102,6 +102,14 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.every(Number.isFinite), 'draw coords finite');
 }
 
+// bgPreset enum clamp + random validity
+{
+  ok(L.clampParams({ bgPreset: 'bogus' }).bgPreset === 'gradient', 'bad bgPreset falls back');
+  ok(L.BGS.includes(L.clampParams({ bgPreset: 'transparent' }).bgPreset), 'bgPreset survives clamp');
+  for (let i = 0; i < 50; i++)
+    ok(L.BGS.includes(L.randomParams(L.mulberry32(i)).bgPreset), 'random bgPreset valid');
+}
+
 // jump anim: mid-flight bob positive, arms raised, knees tucked
 {
   const p = L.defaultParams(); p.anim = 'jump'; p.animSpeed = .5;

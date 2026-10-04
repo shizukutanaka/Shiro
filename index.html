@@ -82,6 +82,13 @@
       <option value="cover">全体を覆う（cover）</option>
       <option value="contain">全体を表示（contain）</option>
     </select>
+    <label class="ctl">背景プリセット（画像なし時）</label>
+    <select id="sel-bgpreset">
+      <option value="gradient">グラデーション（標準）</option>
+      <option value="green">グリーンスクリーン</option>
+      <option value="white">真っ白</option>
+      <option value="transparent">透過（αチャンネル）</option>
+    </select>
     <div class="chk"><input type="checkbox" id="chk-flip"><label for="chk-flip">左右反転</label></div>
     <div id="sliders"></div>
     <hr>
@@ -91,6 +98,7 @@
     </div>
     <div class="row">
       <button id="btn-png">PNG保存</button>
+      <button id="btn-png-copy">PNGをコピー</button>
       <button id="btn-rec">動画 録画開始</button>
       <button id="btn-share">共有（外部アプリ）</button>
     </div>
