@@ -29,10 +29,10 @@ const ShiroLib = (() => {
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'crown', 'phones', 'cape'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'crown', 'phones', 'cape', 'beard', 'mask'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -128,7 +128,7 @@ const ShiroLib = (() => {
     p.grade = rng() < .6 ? 'none' : GRADES[1 + Math.floor(rng() * 4)];
     p.blend = rng() < .75 ? 'none' : BLENDS[1 + Math.floor(rng() * 3)];
     p.flip = rng() < .35;
-    p.bgPreset = rng() < .75 ? 'gradient' : BGS[1 + Math.floor(rng() * 3)];
+    p.bgPreset = rng() < .7 ? 'gradient' : BGS[1 + Math.floor(rng() * (BGS.length - 1))];
     p.x = .3 + rng() * .4; p.y = .6 + rng() * .35;
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
@@ -754,6 +754,22 @@ const ShiroLib = (() => {
         }
         break;
       }
+      case 'beard': {
+        ctx.fillStyle = 'rgba(70,60,52,0.88)';
+        ctx.beginPath(); ctx.ellipse(hx, hy + hr * .55, hr * .62, hr * .5, 0, 0, 7); ctx.fill(); // 顎周り
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.beginPath(); ctx.ellipse(hx, hy + hr * .38, hr * .28, hr * .12, 0, 0, 7); ctx.fill(); // 口元の隙間
+        break;
+      }
+      case 'mask': {
+        ctx.fillStyle = dk;
+        ctx.beginPath(); ctx.ellipse(hx, hy - hr * .12, hr * .92, hr * .34, 0, 0, 7); ctx.fill(); // 眼帯バンド
+        ctx.fillStyle = '#fdfdfd';
+        for (const s of [-1, 1]) {
+          ctx.beginPath(); ctx.ellipse(hx + s * hr * .4, hy - hr * .1, hr * .22, hr * .16, 0, 0, 7); ctx.fill(); // 目穴
+        }
+        break;
+      }
     }
     ctx.restore();
   }
@@ -819,7 +835,35 @@ if (typeof document !== 'undefined') (() => {
     if (p.bgBlur > 0) c.filter = `blur(${p.bgBlur * 10}px)`;
     if (pr === 'green') { c.fillStyle = '#00b140'; c.fillRect(0, 0, W, H); }
     else if (pr === 'white') { c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); }
-    else defaultBackdrop(c);
+    else if (pr === 'sunset') {
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#2b2f6e'); gr.addColorStop(.55, '#c9526a'); gr.addColorStop(1, '#ffb56b');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      c.fillStyle = 'rgba(255,190,90,0.92)';
+      c.beginPath(); c.arc(W * .5, H * .6, H * .15, 0, 7); c.fill(); // 夕日
+    } else if (pr === 'night') {
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#0a0d24'); gr.addColorStop(1, '#1c2347');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rng = L.mulberry32(999);
+      for (let i = 0; i < 90; i++) {
+        const sx = rng() * W, sy = rng() * H * .85, sr = rng() * 1.4 + .4;
+        const tw = .3 + .65 * Math.abs(Math.sin(t * (.4 + rng() * 1.6) + rng() * 9));
+        c.fillStyle = `rgba(255,255,255,${tw})`;
+        c.beginPath(); c.arc(sx, sy, sr, 0, 7); c.fill();
+      }
+      c.fillStyle = 'rgba(240,240,220,0.95)';
+      c.beginPath(); c.arc(W * .8, H * .18, H * .07, 0, 7); c.fill(); // 月
+    } else if (pr === 'spot') {
+      c.fillStyle = '#0b0c10'; c.fillRect(0, 0, W, H);
+      const g = c.createRadialGradient(W * .5, H * .86, 10, W * .5, H * .86, W * .5);
+      g.addColorStop(0, 'rgba(255,240,200,0.55)'); g.addColorStop(1, 'rgba(255,240,200,0)');
+      c.fillStyle = g;
+      c.beginPath();
+      c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.lineTo(W * .9, H * .95); c.lineTo(W * .1, H * .95);
+      c.closePath(); c.fill();
+      c.beginPath(); c.ellipse(W * .5, H * .88, W * .28, H * .07, 0, 0, 7); c.fill(); // 床の光り輪
+    } else defaultBackdrop(c);
     c.filter = 'none';
     if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
   }
