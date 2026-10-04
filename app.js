@@ -26,14 +26,14 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf'];
-  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes'];
+  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid'];
-  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx'];
+  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
@@ -406,6 +406,14 @@ const ShiroLib = (() => {
         q.lArm = .5; q.rArm = .5; q.lElb = .4; q.rElb = .4;
         break;
       }
+      case 'clap': {
+        // 拍手: 両腕を胸の前で交互に合わせる(2.5Hzの往復)
+        const c = Math.sin(tt * 8);
+        q.lArm = -.55 + .3 * c; q.rArm = .55 + .3 * c;
+        q.lElb = .85; q.rElb = .85;
+        q.bob = .015 * Math.abs(c); q.headTilt = .08 * Math.sin(tt * 2);
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -643,6 +651,12 @@ const ShiroLib = (() => {
           k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
         }
         ctx.closePath(); ctx.fill();
+      } else if (es === 'cat') {
+        // 猫目: 縦長の縦孔瞳孔(瞬きと連動)
+        ctx.fillStyle = eyeCol;
+        ctx.beginPath();
+        ctx.ellipse(ex, ey, Math.max(.8, hr * .045 * esz), Math.max(1, hr * .15 * esz * Math.max(.15, eo)), 0, 0, 7);
+        ctx.fill();
       } else if (es === 'xx') {
         // バツ目: ✕✕(気絶・KO系の定番記号)
         ctx.strokeStyle = eyeCol; ctx.lineWidth = Math.max(1.2, hr * .05 * esz);
@@ -791,7 +805,7 @@ const ShiroLib = (() => {
 
   function drawParticles(ctx, W, H, type, t, seed) {
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
-    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : type === 'notes' ? 18 : 42;
+    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : type === 'notes' ? 18 : type === 'hearts' ? 20 : 42;
     ctx.save();
     for (let i = 0; i < N; i++) {
       if (type === 'snow') {
@@ -849,6 +863,14 @@ const ShiroLib = (() => {
         const a = Math.max(0, .15 + .8 * Math.sin(t * (1.2 + h(i, 2)) + h(i, 3) * 9));
         ctx.fillStyle = `rgba(200,255,120,${a})`;
         ctx.beginPath(); ctx.arc(x, y, 1.2 + 1.4 * h(i, 3), 0, 7); ctx.fill();
+      } else if (type === 'hearts') {
+        // ハート: ♥マークがふわふわ昇る
+        const x = h(i, 0) * W + Math.sin(t * .7 + i * 2.1) * W * .045;
+        const y = (1 - ((h(i, 1) + t * (.05 + .035 * h(i, 2))) % 1)) * H;
+        ctx.fillStyle = `hsla(${330 + Math.round(h(i, 3) * 30)},85%,${62 + Math.round(h(i, 4) * 12)}%,${.5 + .35 * h(i, 4)})`;
+        ctx.font = `${Math.round(12 + 14 * h(i, 3))}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('♥', x, y);
       } else if (type === 'notes') {
         // 音符: ♪♫ がゆらゆら昇る(ダンス・おしゃべりと相性)
         const x = h(i, 0) * W + Math.sin(t * .8 + i * 1.7) * W * .04;
