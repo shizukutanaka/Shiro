@@ -34,6 +34,7 @@ const ShiroLib = (() => {
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
+  const BLENDS = ['none', 'multiply', 'screen', 'overlay'];
   const GRADE_STYLES = {
     warm: ['overlay', 'rgba(255,150,50,0.16)'],
     cool: ['overlay', 'rgba(70,130,255,0.16)'],
@@ -44,7 +45,8 @@ const ShiroLib = (() => {
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
     'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity',
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
-    'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake'];
+    'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
+    'glow', 'glowHue', 'eyeSize'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -59,6 +61,7 @@ const ShiroLib = (() => {
     ['blush', '頬の赤み'], ['headTilt', '頭の傾き'], ['bgSat', '背景の彩度'], ['bgContrast', '背景コントラスト'],
     ['rimHue', 'リムライト色'], ['reflect', '床の反射'], ['tOffset', 'ポーズ位置（停止時）'],
     ['grain', 'フィルムグレイン'], ['trail', '残像（トレイル）'], ['subjHue', 'モデル色相'], ['pixel', 'ピクセル化'], ['shake', '手持ちカメラ'],
+    ['glow', '発光'], ['glowHue', '発光色'], ['eyeSize', '目の大きさ'],
   ];
 
   function defaultParams() {
@@ -70,8 +73,8 @@ const ShiroLib = (() => {
       outline: 0, vignette: 0, wmOpacity: .4, watermark: '',
       accHue: .58, vidSpeed: .5, blush: 0, headTilt: .5, bgSat: .5, bgContrast: .5,
       rimHue: .62, reflect: 0, tOffset: .5, grain: 0, trail: 0, subjHue: .5, pixel: 0,
-      shake: 0,
-      subjFx: 'none', grade: 'none',
+      shake: 0, glow: 0, glowHue: .55, eyeSize: .5,
+      subjFx: 'none', grade: 'none', blend: 'none',
       eyeStyle: 'dot', acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
@@ -90,6 +93,7 @@ const ShiroLib = (() => {
     o.eyeStyle = EYES.includes(p && p.eyeStyle) ? p.eyeStyle : d.eyeStyle;
     o.subjFx = SUBJFX.includes(p && p.subjFx) ? p.subjFx : d.subjFx;
     o.grade = GRADES.includes(p && p.grade) ? p.grade : d.grade;
+    o.blend = BLENDS.includes(p && p.blend) ? p.blend : d.blend;
     o.flip = !!(p && p.flip);
     const sv = p ? +p.seed : NaN;
     o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
@@ -104,6 +108,7 @@ const ShiroLib = (() => {
     p.eyeStyle = EYES[Math.floor(rng() * EYES.length)];
     p.subjFx = rng() < .75 ? 'none' : SUBJFX[1 + Math.floor(rng() * 3)];
     p.grade = rng() < .6 ? 'none' : GRADES[1 + Math.floor(rng() * 4)];
+    p.blend = rng() < .75 ? 'none' : BLENDS[1 + Math.floor(rng() * 3)];
     p.flip = rng() < .35;
     p.bgPreset = rng() < .75 ? 'gradient' : BGS[1 + Math.floor(rng() * 3)];
     p.x = .3 + rng() * .4; p.y = .6 + rng() * .35;
@@ -115,6 +120,7 @@ const ShiroLib = (() => {
     p.reflect = rng() < .6 ? 0 : rng() * .8; p.tOffset = .5;
     p.grain = rng() < .7 ? 0 : rng() * .5; p.trail = rng() < .7 ? 0 : rng() * .7; p.subjHue = .4 + rng() * .2;
     p.pixel = rng() < .75 ? 0 : rng() * .7; p.shake = rng() < .7 ? 0 : rng() * .5;
+    p.glow = rng() < .7 ? 0 : rng() * .8; p.eyeSize = .3 + rng() * .5;
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -365,6 +371,16 @@ const ShiroLib = (() => {
     ctx.closePath();
   }
 
+  // 発光グロー: 色付きシルエットをぼかして背後に描く(全方位リムライト)
+  function drawGlow(ctx, silCanvas, wPix, hPix, cx, baseY, strength) {
+    if (strength <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = strength * .55;
+    ctx.filter = `blur(${Math.round(4 + strength * 14)}px)`;
+    ctx.drawImage(silCanvas, cx - wPix * .56, baseY - hPix * 1.06, wPix * 1.12, hPix * 1.12);
+    ctx.restore();
+  }
+
   // 床の鏡面反射: 被写体を上下反転して足元の下に薄く描く。src はimg/canvas/video何でも可
   function drawReflection(ctx, src, cx, baseY, wPix, hPix, strength) {
     if (strength <= 0) return;
@@ -427,17 +443,18 @@ const ShiroLib = (() => {
     const eo = Math.max(.12, blinkOpen(t, p.seed));
     const eyeCol = `hsla(${Math.round(p.eyeHue * 360)},65%,42%,0.9)`;
     const es = p.eyeStyle || 'dot';
+    const esz = .6 + p.eyeSize * .8; // 目の大きさスケール(0.6-1.4)
     for (const s of [-1, 1]) {
       const ex = hx + s * hr * .38, ey = hy - hr * .08;
       if (es === 'closed' || (es === 'wink' && s === 1)) {
-        ctx.strokeStyle = 'rgba(60,64,74,0.85)'; ctx.lineWidth = Math.max(1, hr * .08);
-        ctx.beginPath(); ctx.arc(ex, ey, hr * .13, .15 * Math.PI, .85 * Math.PI); ctx.stroke();
+        ctx.strokeStyle = 'rgba(60,64,74,0.85)'; ctx.lineWidth = Math.max(1, hr * .08 * esz);
+        ctx.beginPath(); ctx.arc(ex, ey, hr * .13 * esz, .15 * Math.PI, .85 * Math.PI); ctx.stroke();
       } else if (es === 'heart') {
-        ctx.fillStyle = eyeCol; heartPath(ctx, ex, ey, hr * .15); ctx.fill();
+        ctx.fillStyle = eyeCol; heartPath(ctx, ex, ey, hr * .15 * esz); ctx.fill();
       } else {
         ctx.fillStyle = eyeCol;
         ctx.beginPath();
-        ctx.ellipse(ex, ey, Math.max(1, hr * .09), Math.max(.5, hr * .09 * eo), 0, 0, 7);
+        ctx.ellipse(ex, ey, Math.max(1, hr * .09 * esz), Math.max(.5, hr * .09 * esz * eo), 0, 0, 7);
         ctx.fill();
       }
     }
@@ -529,7 +546,7 @@ const ShiroLib = (() => {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, mannequinPose, skeleton, drawMannequin, drawAccessory,
+    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -594,6 +611,7 @@ if (typeof document !== 'undefined') (() => {
   const rimCv = document.createElement('canvas'), rimCtx = rimCv.getContext('2d');
   const outCv = document.createElement('canvas'), outCtx = outCv.getContext('2d');
   const pixCv = document.createElement('canvas'), pctx = pixCv.getContext('2d');
+  const glowCv = document.createElement('canvas'), glowCtx = glowCv.getContext('2d');
   // cacheable=true で (src,サイズ,色) 不変なら再描画をスキップ — 静止画の3回シルエット生成を1回に
   function silhouetteOf(src, w, h, color, cv, cctx, cacheable) {
     cv = cv || shCv; cctx = cctx || shCtx;
@@ -645,6 +663,8 @@ if (typeof document !== 'undefined') (() => {
     const cx = state.params.x * W, baseY = state.params.y * H;
     L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5);
     const silCache = state.media.kind === 'image';
+    const glowCol = `hsla(${Math.round(state.params.glowHue * 360)},90%,70%,1)`;
+    L.drawGlow(c, silhouetteOf(src, sw, sh, glowCol, glowCv, glowCtx, silCache), wPix, hPix, cx, baseY, state.params.glow);
     L.drawCastShadow(c, silhouetteOf(src, sw, sh, null, null, null, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4);
     L.drawRimLight(c, silhouetteOf(src, sw, sh, `hsla(${Math.round(state.params.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
     L.drawStickerOutline(c, silhouetteOf(src, sw, sh, '#ffffff', outCv, outCtx, silCache), wPix, hPix, cx, baseY, state.params.outline);
@@ -656,6 +676,7 @@ if (typeof document !== 'undefined') (() => {
     if (state.params.subjHue !== .5) fParts.push(`hue-rotate(${Math.round((state.params.subjHue - .5) * 360)}deg)`);
     if (state.params.subjFx !== 'none') fParts.push(SUBJFX_FILTERS[state.params.subjFx]);
     if (fParts.length) c.filter = fParts.join(' ');
+    if (state.params.blend !== 'none') c.globalCompositeOperation = state.params.blend;
     if (state.params.flip) { c.translate(2 * cx, 0); c.scale(-1, 1); }
     // ピクセル化: 小さく引き延ばしてからスムージングなしで拡大
     let drawSrc = src;
@@ -717,10 +738,11 @@ if (typeof document !== 'undefined') (() => {
       }
       const baseY = p.y * H;
       // マネキンをオフスクリーンに描き、シルエット化して影/リムに利用
-      if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0) {
+      if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0 || p.glow > 0) {
         modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix);
         mctx.clearRect(0, 0, modCv.width, modCv.height);
         L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, modCv.height);
+        L.drawGlow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.glowHue * 360)},90%,70%,1)`, glowCv, glowCtx), wPix, hPix, cx, baseY, p.glow);
         L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4);
         L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hPix, cx, baseY, p.castDir, p.rim);
         L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, '#ffffff', outCv, outCtx), wPix, hPix, cx, baseY, p.outline);
@@ -742,6 +764,7 @@ if (typeof document !== 'undefined') (() => {
         // 残像トレイル: 過去フレームのポーズを薄く残す(マネキンのみ・手続き描画なので安い)
         const fx = SUBJFX_FILTERS[p.subjFx];
         if (fx) ctx.filter = fx;
+        if (p.blend !== 'none') ctx.globalCompositeOperation = p.blend;
         if (p.trail > 0) {
           for (let i = 2; i >= 1; i--) {
             ctx.globalAlpha = p.trail * .45 * (3 - i) / 3;
@@ -752,6 +775,7 @@ if (typeof document !== 'undefined') (() => {
         ctx.globalAlpha = p.opacity;
         L.drawMannequin(ctx, p, t, cx, baseY, hPix);
         ctx.globalAlpha = 1;
+        if (p.blend !== 'none') ctx.globalCompositeOperation = 'source-over';
         if (fx) ctx.filter = 'none';
       }
     }
@@ -799,6 +823,7 @@ if (typeof document !== 'undefined') (() => {
       $('sel-eyes').value = state.params.eyeStyle;
       $('sel-fx').value = state.params.subjFx;
       $('sel-grade').value = state.params.grade;
+      $('sel-blend').value = state.params.blend;
       $('sel-bgfit').value = state.params.bgFit;
       $('sel-bgpreset').value = state.params.bgPreset;
       $('chk-flip').checked = state.params.flip;
@@ -810,6 +835,7 @@ if (typeof document !== 'undefined') (() => {
   $('sel-eyes').addEventListener('change', e => { state.params.eyeStyle = e.target.value; touch(); });
   $('sel-fx').addEventListener('change', e => { state.params.subjFx = e.target.value; touch(); });
   $('sel-grade').addEventListener('change', e => { state.params.grade = e.target.value; touch(); });
+  $('sel-blend').addEventListener('change', e => { state.params.blend = e.target.value; touch(); });
   $('sel-bgfit').addEventListener('change', e => { state.params.bgFit = e.target.value; touch(); });
   $('sel-bgpreset').addEventListener('change', e => { state.params.bgPreset = e.target.value; touch(); });
   $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });
