@@ -29,7 +29,7 @@ const ShiroLib = (() => {
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot'];
@@ -38,7 +38,7 @@ const ShiroLib = (() => {
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
-  const BLENDS = ['none', 'multiply', 'screen', 'overlay'];
+  const BLENDS = ['none', 'multiply', 'screen', 'overlay', 'soft-light', 'difference', 'hue'];
   const GRADE_STYLES = {
     warm: ['overlay', 'rgba(255,150,50,0.16)'],
     cool: ['overlay', 'rgba(70,130,255,0.16)'],
@@ -53,7 +53,7 @@ const ShiroLib = (() => {
     'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
     'rot', 'eyeGap', 'duo', 'hairHue', 'squash', 'frame', 'frameHue',
     'subjSat', 'subjBright', 'titleSize', 'camZoom', 'shine', 'shadowHue',
-    'outlineHue', 'bubbleHue', 'titleHue'];
+    'outlineHue', 'bubbleHue', 'titleHue', 'gaze'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -78,6 +78,7 @@ const ShiroLib = (() => {
     ['camZoom', 'シーンズーム'],
     ['shine', '光沢（テカリ）'], ['shadowHue', '影の色'],
     ['outlineHue', '縁取り色'], ['bubbleHue', 'ふきだし色'], ['titleHue', 'タイトル色'],
+    ['gaze', '目線（左右）'],
   ];
 
   function defaultParams() {
@@ -95,7 +96,7 @@ const ShiroLib = (() => {
       frame: 0, frameHue: .12,
       subjSat: .5, subjBright: .5, titleSize: .5, title: '', camZoom: 0,
       shine: 0, shadowHue: .62,
-      outlineHue: .12, bubbleHue: .12, titleHue: .08,
+      outlineHue: .12, bubbleHue: .12, titleHue: .08, gaze: .5,
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br', vidQ: 'std',
       eyeStyle: 'dot', acc: 'none', acc2: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
@@ -609,13 +610,15 @@ const ShiroLib = (() => {
       } else {
         ctx.fillStyle = eyeCol;
         ctx.beginPath();
-        ctx.ellipse(ex, ey, Math.max(1, hr * .09 * esz), Math.max(.5, hr * .09 * esz * eo), 0, 0, 7);
+        // gaze: 瞳を左右にずらす(目線)
+        const gx = ex + ((p.gaze == null ? .5 : p.gaze) - .5) * hr * .3;
+        ctx.ellipse(gx, ey, Math.max(1, hr * .09 * esz), Math.max(.5, hr * .09 * esz * eo), 0, 0, 7);
         ctx.fill();
         // 瞳のハイライト(キャッチライト): 生き生きした目にする白点
         if (eo > .4) {
           ctx.fillStyle = `rgba(255,255,255,${.85 * eo})`;
           ctx.beginPath();
-          ctx.arc(ex - hr * .03 * esz, ey - hr * .035 * esz * eo, Math.max(.6, hr * .028 * esz), 0, 7);
+          ctx.arc(gx - hr * .03 * esz, ey - hr * .035 * esz * eo, Math.max(.6, hr * .028 * esz), 0, 7);
           ctx.fill();
         }
       }
@@ -795,6 +798,13 @@ const ShiroLib = (() => {
     const dk = 'rgba(52,56,68,0.95)', acc2 = `hsla(${Math.round((hue == null ? .58 : hue) * 360)},80%,64%,0.92)`;
     ctx.save();
     switch (acc) {
+      case 'halo': {
+        // 天使の輪: 頭上に浮く発光リング(accHueで着色、わずかに傾ける)
+        ctx.strokeStyle = `hsla(${Math.round((hue == null ? .13 : hue) * 360)},85%,65%,0.95)`;
+        ctx.lineWidth = Math.max(2, hr * .13);
+        ctx.beginPath(); ctx.ellipse(hx, hy - hr * 1.5, hr * .62, hr * .17, -.06, 0, 7); ctx.stroke();
+        break;
+      }
       case 'ribbon': {
         ctx.fillStyle = acc2;
         const bx = hx - hr * .7, by = hy - hr * .75, s = hr * .42;
