@@ -31,7 +31,7 @@ const ShiroLib = (() => {
   const ACCS = ['none', 'ribbon', 'hat', 'glasses'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
-    'smile', 'bgDim', 'bgBlur'];
+    'smile', 'bgDim', 'bgBlur', 'castDir'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -40,6 +40,7 @@ const ShiroLib = (() => {
     ['y', '位置 Y'], ['scale', 'モデル倍率'], ['opacity', 'モデル不透明度'],
     ['keyThresh', '白抜き強度'], ['keySoft', '白抜きぼかし'], ['shadow', 'モデルの影'],
     ['smile', '表情（笑顔）'], ['bgDim', '背景を暗く'], ['bgBlur', '背景ぼかし'],
+    ['castDir', '影の向き'],
   ];
 
   function defaultParams() {
@@ -47,7 +48,7 @@ const ShiroLib = (() => {
       seed: 1, height: .5, headSize: .5, shoulder: .5, armLen: .5, legLen: .5,
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
-      smile: .6, bgDim: 0, bgBlur: 0, acc: 'none', bgFit: 'cover',
+      smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, acc: 'none', bgFit: 'cover',
     };
   }
 
@@ -76,6 +77,7 @@ const ShiroLib = (() => {
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
     p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
+    p.castDir = rng();
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -127,6 +129,20 @@ const ShiroLib = (() => {
     if (ph >= .18) return 1;
     const s = Math.abs(ph - .09) / .09; // 0..1..0 の三角形
     return Math.min(1, s * 1.4);
+  }
+
+  // キャストシャドウ: モデルのシルエットを傾斜・押し潰して落とし影にする。
+  // silCanvas は濃色シルエット済みキャンバス(下部=足元)。castDir .5=真下(省略可)
+  function drawCastShadow(c, silCanvas, wPix, hPix, cx, baseY, dir, alpha) {
+    const skew = (dir - .5) * 1.6;
+    if (Math.abs(skew) < .05 || alpha <= 0) return;
+    c.save();
+    c.filter = `blur(${Math.max(1, wPix * .04)}px)`;
+    c.globalAlpha = alpha;
+    c.translate(cx, baseY);
+    c.transform(1, 0, -skew, .32, 0, 0);
+    c.drawImage(silCanvas, -wPix / 2, -hPix, wPix, hPix);
+    c.restore();
   }
 
   // ---------- recorder ----------
@@ -351,7 +367,7 @@ const ShiroLib = (() => {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, blinkOpen, contactShadow, mannequinPose, skeleton, drawMannequin, drawAccessory,
+    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -401,6 +417,20 @@ if (typeof document !== 'undefined') (() => {
     if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
   }
 
+  // ---------- silhouettes for cast shadows ----------
+  const shCv = document.createElement('canvas'), shCtx = shCv.getContext('2d');
+  const modCv = document.createElement('canvas'), mctx = modCv.getContext('2d');
+  function silhouetteOf(src, w, h) {
+    if (shCv.width !== w || shCv.height !== h) { shCv.width = w; shCv.height = h; }
+    shCtx.clearRect(0, 0, w, h);
+    shCtx.globalCompositeOperation = 'source-over';
+    shCtx.drawImage(src, 0, 0, w, h);
+    shCtx.globalCompositeOperation = 'source-in';
+    shCtx.fillStyle = '#0a0a0e'; shCtx.fillRect(0, 0, w, h);
+    shCtx.globalCompositeOperation = 'source-over';
+    return shCv;
+  }
+
   // ---------- chroma-keyed media ----------
   const keyCv = document.createElement('canvas'), kctx = keyCv.getContext('2d', { willReadFrequently: true });
   function keyedMediaCanvas() {
@@ -434,6 +464,7 @@ if (typeof document !== 'undefined') (() => {
     const wPix = hPix * (sw / sh);
     const cx = state.params.x * W, baseY = state.params.y * H;
     L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5);
+    L.drawCastShadow(c, silhouetteOf(src, sw, sh), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4);
     c.save();
     c.globalAlpha = state.params.opacity;
     if (state.params.flip) { c.translate(2 * cx, 0); c.scale(-1, 1); }
@@ -449,7 +480,18 @@ if (typeof document !== 'undefined') (() => {
     ctx.clearRect(0, 0, W, H);
     drawBackdrop(ctx, p);
     if (state.media) drawMedia(ctx);
-    else L.drawMannequin(ctx, p, t, p.x * W, p.y * H, H * (0.25 + 0.7 * p.scale));
+    else {
+      const hPix = H * (0.25 + 0.7 * p.scale), wPix = hPix * .55;
+      const cx = p.x * W, baseY = p.y * H;
+      // マネキンをオフスクリーンに描き、シルエット化してキャストシャドウに利用
+      if (Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) {
+        modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix);
+        mctx.clearRect(0, 0, modCv.width, modCv.height);
+        L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, modCv.height);
+        L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4);
+      }
+      L.drawMannequin(ctx, p, t, cx, baseY, hPix);
+    }
     requestAnimationFrame(frame);
   }
 
@@ -638,6 +680,12 @@ if (typeof document !== 'undefined') (() => {
   $('sel-aspect').addEventListener('change', e => {
     const [w, h] = ASPECTS[e.target.value] || ASPECTS['16:9'];
     stage.width = w; stage.height = h; W = w; H = h;
+  });
+
+  // ---------- shortcuts ----------
+  document.addEventListener('keydown', e => {
+    if (/^(input|select|textarea)$/i.test(e.target.tagName)) return;
+    if (e.key === 'r' || e.key === 'R') $('btn-random').click();
   });
 
   // ---------- init ----------
