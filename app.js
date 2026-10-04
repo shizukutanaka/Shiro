@@ -29,10 +29,10 @@ const ShiroLib = (() => {
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -935,6 +935,13 @@ const ShiroLib = (() => {
         }
         break;
       }
+      case 'scarf': {
+        // マフラー: 首の帯 + 風に揺れる垂れ端
+        ctx.fillStyle = acc2;
+        ctx.beginPath(); ctx.ellipse(hx, hy + hr * .75, hr * .78, hr * .22, 0, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(hx + hr * .42, hy + hr * 1.02, hr * .2, hr * .42, .5, 0, 7); ctx.fill();
+        break;
+      }
       case 'flower': {
         // 花飾り: 頭の側面に5弁の花(accHueで花弁着色)
         const fx2 = hx + hr * .62, fy2 = hy - hr * .55, pr3 = hr * .16;
@@ -1056,6 +1063,27 @@ if (typeof document !== 'undefined') (() => {
           c.beginPath();
           c.ellipse(cxx + k * W * .05, cy + (k === 0 ? -H * .014 : 0), W * (.045 + .018 * rng()), H * .028, 0, 0, 7);
           c.fill();
+        }
+      }
+    } else if (pr === 'city') {
+      // 夜景ビル群: 薄明りの空 + ビルシルエット + 灯りのついた窓(決定論的)
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#141a30'); gr.addColorStop(1, '#3a3050');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rng = L.mulberry32(555);
+      const n = 8;
+      for (let i = 0; i < n; i++) {
+        const bw = W / n * (.7 + rng() * .5), bh = H * (.3 + rng() * .35);
+        const bx = i * W / n + rng() * W * .02, by = H - bh;
+        c.fillStyle = '#10131f';
+        c.fillRect(bx, by, bw, bh + 2);
+        for (let wy = by + H * .02; wy < H * .92; wy += H * .035) {
+          for (let wx = bx + bw * .12; wx < bx + bw * .85; wx += bw * .18) {
+            if (rng() < .35) {
+              c.fillStyle = `rgba(255,220,140,${.3 + .5 * rng()})`;
+              c.fillRect(wx, wy, 2, 3);
+            }
+          }
         }
       }
     } else defaultBackdrop(c);
@@ -1394,6 +1422,7 @@ if (typeof document !== 'undefined') (() => {
     sleepy: { eyeStyle: 'closed', smile: .45, brow: .5 },
     wink: { eyeStyle: 'wink', smile: .8, brow: .6 },
     cry: { eyeStyle: 'crying', smile: .15, brow: .1 },
+    cool: { eyeStyle: 'sharp', smile: .5, brow: .4, acc: 'shades' },
   };
   $('sel-face').addEventListener('change', e => {
     const f = FACES[e.target.value]; e.target.value = '';
