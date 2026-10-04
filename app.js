@@ -32,9 +32,9 @@ const ShiroLib = (() => {
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city'];
-  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying'];
-  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel'];
+  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy'];
+  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
@@ -579,6 +579,13 @@ const ShiroLib = (() => {
     if (lw > 0) { ctx.strokeStyle = 'rgba(40,44,54,0.85)'; ctx.lineWidth = lw; }
     ctx.beginPath(); ctx.arc(hx, hy, hr, 0, 7); ctx.fill();
     if (lw > 0) ctx.stroke();
+    if (hs === 'odango') {
+      // お団子: 頭頂両サイドの丸いお団子
+      ctx.fillStyle = hairC;
+      for (const s of [-1, 1]) {
+        ctx.beginPath(); ctx.arc(hx + s * hr * .8, hy - hr * .85, hr * .34, 0, 7); ctx.fill();
+      }
+    }
     if (hs === 'ahoge') {
       // アホ毛: 頭頂から一本だけ跳ねた毛束
       ctx.strokeStyle = hairC; ctx.lineWidth = Math.max(1.5, hr * .09); ctx.lineCap = 'round';
@@ -636,6 +643,17 @@ const ShiroLib = (() => {
           k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
         }
         ctx.closePath(); ctx.fill();
+      } else if (es === 'dizzy') {
+        // ぐるぐる目: 渦巻き(旋回する小円弧の連鎖で近似)
+        ctx.strokeStyle = eyeCol; ctx.lineWidth = Math.max(1, hr * .06 * esz);
+        ctx.beginPath();
+        const dr = hr * .16 * esz;
+        for (let k = 0; k < 8; k++) {
+          const a = k * 1.05, r2 = dr * (1 - k / 10);
+          const mx = ex + Math.cos(a) * r2, my2 = ey + Math.sin(a) * r2;
+          k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
+        }
+        ctx.stroke();
       } else if (es === 'crying') {
         // 泣き目: ふつうの瞳 + 目尻側に涙滴(瞬きにも連動)
         ctx.fillStyle = eyeCol;
@@ -1064,6 +1082,19 @@ if (typeof document !== 'undefined') (() => {
           c.ellipse(cxx + k * W * .05, cy + (k === 0 ? -H * .014 : 0), W * (.045 + .018 * rng()), H * .028, 0, 0, 7);
           c.fill();
         }
+      }
+    } else if (pr === 'pastel') {
+      // パステル虹: ふんわりした虹色グラデーション + 白い光斑
+      const gr = c.createLinearGradient(0, 0, W, H);
+      gr.addColorStop(0, '#ffd9e8'); gr.addColorStop(.35, '#ffe9c9');
+      gr.addColorStop(.65, '#d9f2e3'); gr.addColorStop(1, '#c9e3ff');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rng = L.mulberry32(4242);
+      c.fillStyle = 'rgba(255,255,255,0.5)';
+      for (let i = 0; i < 24; i++) {
+        c.beginPath();
+        c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
+        c.fill();
       }
     } else if (pr === 'city') {
       // 夜景ビル群: 薄明りの空 + ビルシルエット + 灯りのついた窓(決定論的)
