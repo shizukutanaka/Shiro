@@ -34,7 +34,8 @@ const ShiroLib = (() => {
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
     'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity',
-    'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast'];
+    'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
+    'rimHue', 'reflect', 'tOffset'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -47,6 +48,7 @@ const ShiroLib = (() => {
     ['clothHue', '衣装色'], ['outline', '縁取り（ステッカー）'], ['vignette', 'ビネット'],
     ['wmOpacity', '透かしの濃さ'], ['accHue', 'アクセサリ色'], ['vidSpeed', '動画の速さ'],
     ['blush', '頬の赤み'], ['headTilt', '頭の傾き'], ['bgSat', '背景の彩度'], ['bgContrast', '背景コントラスト'],
+    ['rimHue', 'リムライト色'], ['reflect', '床の反射'], ['tOffset', 'ポーズ位置（停止時）'],
   ];
 
   function defaultParams() {
@@ -57,6 +59,7 @@ const ShiroLib = (() => {
       smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, clothHue: 0,
       outline: 0, vignette: 0, wmOpacity: .4, watermark: '',
       accHue: .58, vidSpeed: .5, blush: 0, headTilt: .5, bgSat: .5, bgContrast: .5,
+      rimHue: .62, reflect: 0, tOffset: .5,
       eyeStyle: 'dot', acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
@@ -93,6 +96,7 @@ const ShiroLib = (() => {
     p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
     p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7; p.vignette = rng() < .6 ? 0 : rng() * .6; p.watermark = ''; p.wmOpacity = .4; p.vidSpeed = .5; p.blush = rng() * .6; p.headTilt = .35 + rng() * .3;
     p.bgSat = .3 + rng() * .7; p.bgContrast = .35 + rng() * .5;
+    p.reflect = rng() < .6 ? 0 : rng() * .8; p.tOffset = .5;
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -343,6 +347,17 @@ const ShiroLib = (() => {
     ctx.closePath();
   }
 
+  // 床の鏡面反射: 被写体を上下反転して足元の下に薄く描く。src はimg/canvas/video何でも可
+  function drawReflection(ctx, src, cx, baseY, wPix, hPix, strength) {
+    if (strength <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = strength * .38;
+    ctx.translate(cx, baseY);
+    ctx.scale(1, -1);
+    ctx.drawImage(src, -wPix / 2, -hPix, wPix, hPix);
+    ctx.restore();
+  }
+
   // ctx に (cx, baseY) を足元・高さ hPix で描画。q は mannequinPose の結果。
   function drawMannequin(ctx, p, t, cx, baseY, hPix) {
     const q = mannequinPose(p, t);
@@ -472,7 +487,7 @@ const ShiroLib = (() => {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, mannequinPose, skeleton, drawMannequin, drawAccessory,
+    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -582,8 +597,9 @@ if (typeof document !== 'undefined') (() => {
     const cx = state.params.x * W, baseY = state.params.y * H;
     L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5);
     L.drawCastShadow(c, silhouetteOf(src, sw, sh), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4);
-    L.drawRimLight(c, silhouetteOf(src, sw, sh, '#dfe8ff', rimCv, rimCtx), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
+    L.drawRimLight(c, silhouetteOf(src, sw, sh, `hsla(${Math.round(state.params.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
     L.drawStickerOutline(c, silhouetteOf(src, sw, sh, '#ffffff', outCv, outCtx), wPix, hPix, cx, baseY, state.params.outline);
+    L.drawReflection(c, src, cx, baseY, wPix, hPix, state.params.reflect);
     if (state.media.kind === 'video') el.playbackRate = .25 + state.params.vidSpeed * 1.5;
     c.save();
     c.globalAlpha = state.params.opacity;
@@ -596,8 +612,9 @@ if (typeof document !== 'undefined') (() => {
   const t0 = performance.now();
   function frame() {
     const liveT = (performance.now() - t0) / 1000;
-    const t = state.frozenT !== null ? state.frozenT : liveT;
     const p = state.params;
+    // ポーズ固定中は tOffset で前後4秒のフレームをスクラブできる
+    const t = state.frozenT !== null ? state.frozenT + (p.tOffset - .5) * 4 : liveT;
     ctx.clearRect(0, 0, W, H);
     drawBackdrop(ctx, p);
     if (state.media) drawMedia(ctx);
@@ -611,13 +628,14 @@ if (typeof document !== 'undefined') (() => {
       }
       const baseY = p.y * H;
       // マネキンをオフスクリーンに描き、シルエット化して影/リムに利用
-      if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0) {
+      if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0) {
         modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix);
         mctx.clearRect(0, 0, modCv.width, modCv.height);
         L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, modCv.height);
         L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4);
-        L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, '#dfe8ff', rimCv, rimCtx), wPix, hPix, cx, baseY, p.castDir, p.rim);
+        L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hPix, cx, baseY, p.castDir, p.rim);
         L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, '#ffffff', outCv, outCtx), wPix, hPix, cx, baseY, p.outline);
+        L.drawReflection(ctx, modCv, cx, baseY, wPix, hPix, p.reflect);
       }
       L.drawMannequin(ctx, p, t, cx, baseY, hPix);
     }
