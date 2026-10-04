@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'hop', 'dab', 'side', 'twist', 'swim', 'bodyroll', 'charleston', 'vogue', 'stomp', 'krump', 'waltz', 'tarantella', 'capoeira', 'belly', 'flamenco', 'samba', 'tango', 'swing', 'polka', 'foxtrot', 'chacha', 'pasodoble', 'cancan', 'mazurka', 'minuet', 'bolero', 'sirtaki', 'reel', 'hora', 'gavotte', 'czardas', 'morris', 'jig', 'bourree', 'sarabande', 'pavane', 'allemande', 'courante', 'rigaudon', 'passepied', 'hambo', 'galliard', 'saltarello', 'bransle', 'farandole', 'canarie', 'volta', 'jota', 'fandango', 'zapateado', 'korobushka', 'trepak', 'legenyes', 'kalamatianos', 'kolo', 'dabke', 'sardana', 'zeybek', 'tsamiko', 'seguidilla', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'hop', 'dab', 'side', 'twist', 'swim', 'bodyroll', 'charleston', 'vogue', 'stomp', 'krump', 'waltz', 'tarantella', 'capoeira', 'belly', 'flamenco', 'samba', 'tango', 'swing', 'polka', 'foxtrot', 'chacha', 'pasodoble', 'cancan', 'mazurka', 'minuet', 'bolero', 'sirtaki', 'reel', 'hora', 'gavotte', 'czardas', 'morris', 'jig', 'bourree', 'sarabande', 'pavane', 'allemande', 'courante', 'rigaudon', 'passepied', 'hambo', 'galliard', 'saltarello', 'bransle', 'farandole', 'canarie', 'volta', 'jota', 'fandango', 'zapateado', 'korobushka', 'trepak', 'legenyes', 'kalamatianos', 'kolo', 'dabke', 'sardana', 'zeybek', 'tsamiko', 'seguidilla', 'sevillanas', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero', 'ushanka', 'laurel', 'nightcap', 'jester', 'tiara', 'flowercrown', 'bowler', 'fedora', 'newsboy', 'tricorne', 'turban', 'matador', 'plume', 'veil', 'cloche', 'boater', 'deerstalker', 'bonnet', 'mobcap', 'sunvisor', 'keffiyeh', 'porkpie', 'sailor', 'tam', 'shako', 'pickelhaube', 'bicorne', 'mortar', 'beanie', 'crown2', 'kasa', 'mantilla', 'coif', 'kippah', 'topknot', 'eboshi', 'cowboy', 'mitre', 'snood', 'phrygian', 'calot', 'biretta', 'kokoshnik', 'hennin', 'chaperon', 'kettle', 'attifet', 'barbette', 'fontange', 'coonskin', 'wimple', 'busby', 'petasos', 'souwester', 'caubeen', 'tagelmust', 'kalpak', 'doppa', 'capirote', 'capotain'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero', 'ushanka', 'laurel', 'nightcap', 'jester', 'tiara', 'flowercrown', 'bowler', 'fedora', 'newsboy', 'tricorne', 'turban', 'matador', 'plume', 'veil', 'cloche', 'boater', 'deerstalker', 'bonnet', 'mobcap', 'sunvisor', 'keffiyeh', 'porkpie', 'sailor', 'tam', 'shako', 'pickelhaube', 'bicorne', 'mortar', 'beanie', 'crown2', 'kasa', 'mantilla', 'coif', 'kippah', 'topknot', 'eboshi', 'cowboy', 'mitre', 'snood', 'phrygian', 'calot', 'biretta', 'kokoshnik', 'hennin', 'chaperon', 'kettle', 'attifet', 'barbette', 'fontange', 'coonskin', 'wimple', 'busby', 'petasos', 'souwester', 'caubeen', 'tagelmust', 'kalpak', 'doppa', 'capirote', 'capotain', 'vueltiao'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark', 'wind'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier', 'ruins', 'sakura', 'moon', 'harbor', 'terraces', 'bridge', 'wheatfield', 'pagoda', 'geyser', 'coral', 'vineyard', 'lavender', 'rainforest', 'mesa', 'alps', 'bayou', 'cliff', 'lagoon', 'prairie', 'observatory', 'storm', 'zen', 'wisteria', 'sunflowers', 'cosmos', 'orchard', 'onsen', 'moor', 'brook', 'grove', 'tide', 'pond', 'badlands', 'taiga', 'mangrove', 'delta', 'highland', 'saltflat', 'wadi', 'tundra', 'quarry', 'dune', 'cirque', 'fen', 'cove', 'glen', 'steppe', 'meseta', 'hamada', 'kelp', 'cenote', 'loch', 'karst', 'polder', 'bazaar', 'seastack', 'billabong', 'glade', 'tea', 'pampas'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier', 'ruins', 'sakura', 'moon', 'harbor', 'terraces', 'bridge', 'wheatfield', 'pagoda', 'geyser', 'coral', 'vineyard', 'lavender', 'rainforest', 'mesa', 'alps', 'bayou', 'cliff', 'lagoon', 'prairie', 'observatory', 'storm', 'zen', 'wisteria', 'sunflowers', 'cosmos', 'orchard', 'onsen', 'moor', 'brook', 'grove', 'tide', 'pond', 'badlands', 'taiga', 'mangrove', 'delta', 'highland', 'saltflat', 'wadi', 'tundra', 'quarry', 'dune', 'cirque', 'fen', 'cove', 'glen', 'steppe', 'meseta', 'hamada', 'kelp', 'cenote', 'loch', 'karst', 'polder', 'bazaar', 'seastack', 'billabong', 'glade', 'tea', 'pampas', 'canal'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat', 'wide'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp', 'braid'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -1552,6 +1552,25 @@ const ShiroLib = (() => {
         q.spin = .25 * Math.sin(sg * .33); // ペアの回り込み
         break;
       }
+      case 'sevillanas': {
+        // セビジャーナス: セビーリャの祭り踊り — 腕を大きく回す+優雅な足捌き
+        const sv = tt * 4.6;
+        const st = Math.sin(sv);
+        const arm = Math.sin(sv * .8);
+        q.lArm = -1.1 + .6 * arm;          // 大きく回す腕
+        q.rArm = -1.1 - .6 * arm;
+        q.lElb = -.3 + .2 * arm; q.rElb = -.3 - .2 * arm;
+        q.lThigh = -.18 * Math.max(0, st);
+        q.rThigh = -.18 * Math.max(0, -st);
+        q.lKnee = .12 * Math.abs(st);
+        q.rKnee = .12 * Math.abs(st);
+        q.bob = -.012 * Math.abs(st);
+        q.sway = .08 * st;
+        q.lean = .07 * st;
+        q.headTilt = .08 * arm; // 腕に合わせて頭も
+        q.spin = .3 * Math.sin(sv * .4);
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -2321,6 +2340,45 @@ const ShiroLib = (() => {
         ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .08);
         ctx.beginPath();
         ctx.ellipse(hx, hy + hr * .5, hr * .68, hr * .35, 0, Math.PI * .15, Math.PI * .85);
+        ctx.stroke();
+        break;
+      }
+      case 'vueltiao': {
+        // ソンブレロ・ヴェルティアオ: コロンビアの編み帽 — 黒白の帯+広つば
+        // 高いドーム
+        ctx.fillStyle = acc2;
+        ctx.beginPath();
+        ctx.ellipse(hx, hy - hr * .5, hr * .5, hr * .5, 0, Math.PI, 0);
+        ctx.closePath(); ctx.fill();
+        // 広いつば(わずかに上反り)
+        ctx.beginPath();
+        ctx.moveTo(hx - hr, hy - hr * .52);
+        ctx.quadraticCurveTo(hx, hy - hr * .7, hx + hr, hy - hr * .52);
+        ctx.quadraticCurveTo(hx, hy - hr * .45, hx - hr, hy - hr * .52);
+        ctx.closePath();
+        ctx.fillStyle = acc2; ctx.fill();
+        // 黒い編み帯(つばとドームの境)
+        ctx.strokeStyle = dk; ctx.lineWidth = hr * .1;
+        ctx.beginPath();
+        ctx.moveTo(hx - hr * .55, hy - hr * .52);
+        ctx.lineTo(hx + hr * .55, hy - hr * .52);
+        ctx.stroke();
+        // ジグザグ編み模様
+        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .045);
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const zx = hx - hr * .42 + i * hr * .15;
+          ctx.moveTo(zx, hy - hr * .95);
+          ctx.lineTo(zx + hr * .08, hy - hr * .7);
+        }
+        ctx.stroke();
+        // つばの編み文様
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const zx = hx - hr * .85 + i * hr * .24;
+          ctx.moveTo(zx, hy - hr * .55);
+          ctx.lineTo(zx + hr * .12, hy - hr * .6);
+        }
         ctx.stroke();
         break;
       }
@@ -4062,6 +4120,76 @@ if (typeof document !== 'undefined') (() => {
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
       }
+    } else if (pr === 'canal') {
+      // 運河の街: 両岸の彩色建物+アーチ橋+水面に揺れるゴンドラ
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#a0c0d8'); gr.addColorStop(.6, '#c8b8a0'); gr.addColorStop(1, '#6a8090');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      // 両岸の建物(左)
+      const rng = L.mulberry32(613);
+      const hues = ['#c07050', '#d0a060', '#a08060', '#b06050', '#c09070'];
+      for (let i = 0; i < 4; i++) {
+        const bx = W * i * .13;
+        const bh = H * (.2 + rng() * .15);
+        c.fillStyle = hues[i % hues.length];
+        c.fillRect(bx, H * .45 - bh, W * .12, bh);
+        // 窓
+        c.fillStyle = '#4a5a6a';
+        for (let w = 0; w < 3; w++) {
+          c.fillRect(bx + W * .02 + w * W * .035, H * .45 - bh * .7, W * .018, bh * .25);
+        }
+      }
+      // 右側
+      for (let i = 0; i < 4; i++) {
+        const bx = W * (.6 + i * .11);
+        const bh = H * (.18 + rng() * .16);
+        c.fillStyle = hues[(i + 2) % hues.length];
+        c.fillRect(bx, H * .45 - bh, W * .1, bh);
+        c.fillStyle = '#4a5a6a';
+        for (let w = 0; w < 2; w++) {
+          c.fillRect(bx + W * .015 + w * W * .04, H * .45 - bh * .65, W * .02, bh * .3);
+        }
+      }
+      // 遠くのアーチ橋
+      c.fillStyle = '#8a7058';
+      c.beginPath();
+      c.moveTo(W * .32, H * .52);
+      c.quadraticCurveTo(W * .5, H * .38, W * .68, H * .52);
+      c.lineTo(W * .68, H * .56); c.lineTo(W * .32, H * .56);
+      c.closePath(); c.fill();
+      // 運河の水面
+      c.fillStyle = '#4a6a7a';
+      c.fillRect(0, H * .56, W, H * .44);
+      // 水の揺らめき
+      c.strokeStyle = 'rgba(200,220,230,0.35)'; c.lineWidth = 1.5;
+      for (let i = 0; i < 9; i++) {
+        const wy = H * (.6 + i * .045);
+        c.beginPath();
+        c.moveTo(0, wy);
+        for (let x = 0; x <= 8; x++) {
+          c.lineTo(W * x / 8, wy + Math.sin(x * 2 + i * 3 + t * .8) * H * .006);
+        }
+        c.stroke();
+      }
+      // ゴンドラ(ゆっくり横切る)
+      const gx = W * (.75 - ((t * .04) % 1) * .5);
+      c.fillStyle = '#20242a';
+      c.beginPath();
+      c.moveTo(gx - W * .06, H * .7);
+      c.quadraticCurveTo(gx, H * .75, gx + W * .06, H * .7);
+      c.quadraticCurveTo(gx + W * .07, H * .66, gx + W * .06, H * .69);
+      c.lineTo(gx - W * .06, H * .69);
+      c.quadraticCurveTo(gx - W * .07, H * .66, gx - W * .06, H * .7);
+      c.closePath(); c.fill();
+      // 船頭
+      c.fillRect(gx + W * .02, H * .64, W * .008, H * .05);
+      c.beginPath(); c.arc(gx + W * .024, H * .63, H * .008, 0, 7); c.fill();
+      // 橋の欄干
+      c.strokeStyle = '#6a5038'; c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(W * .32, H * .5);
+      c.quadraticCurveTo(W * .5, H * .36, W * .68, H * .5);
+      c.stroke();
     } else if (pr === 'pampas') {
       // パンパス: 銀色の穂の草原+大空+遠くのガウチョの影
       const gr = c.createLinearGradient(0, 0, 0, H);
