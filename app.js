@@ -29,21 +29,21 @@ const ShiroLib = (() => {
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'still'];
   const FITS = ['cover', 'contain'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
-    'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft'];
+    'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
     ['armLen', '腕の長さ'], ['legLen', '脚の長さ'], ['tone', 'モデルトーン'],
     ['line', '輪郭の太さ'], ['animSpeed', '動きの速さ'], ['x', '位置 X'],
     ['y', '位置 Y'], ['scale', 'モデル倍率'], ['opacity', 'モデル不透明度'],
-    ['keyThresh', '白抜き強度'], ['keySoft', '白抜きぼかし'],
+    ['keyThresh', '白抜き強度'], ['keySoft', '白抜きぼかし'], ['shadow', 'モデルの影'],
   ];
 
   function defaultParams() {
     return {
       seed: 1, height: .5, headSize: .5, shoulder: .5, armLen: .5, legLen: .5,
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
-      scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, bgFit: 'cover',
+      scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5, bgFit: 'cover',
     };
   }
 
@@ -97,6 +97,29 @@ const ShiroLib = (() => {
     const d = 255 - Math.min(r, g, b);
     const T = thresh * 200, S = 1 + soft * 120;
     return Math.round(Math.max(0, Math.min(255, (d - T) / S * 255)));
+  }
+
+  // 1px 4近傍アルファ縮小: 透過境界の白フリンジ残りを除去する。
+  // d = ImageData.data（破壊的）
+  function erodeAlpha(d, w, h) {
+    const a = new Uint8Array(w * h);
+    for (let i = 0; i < w * h; i++) a[i] = d[i * 4 + 3];
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (!a[i]) continue;
+      const m = Math.min(
+        x > 0 ? a[i - 1] : 0, x < w - 1 ? a[i + 1] : 0,
+        y > 0 ? a[i - w] : 0, y < h - 1 ? a[i + w] : 0);
+      d[i * 4 + 3] = Math.min(d[i * 4 + 3], m);
+    }
+  }
+
+  // 瞬き: animSpeed に連動しない周期的なまばたき。1=開, 0=閉。
+  function blinkOpen(t) {
+    const ph = t % 3.9;
+    if (ph >= .18) return 1;
+    const s = Math.abs(ph - .09) / .09; // 0..1..0 の三角形
+    return Math.min(1, s * 1.4);
   }
 
   // ---------- recorder ----------
@@ -201,6 +224,19 @@ const ShiroLib = (() => {
     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
   }
 
+  // 接地影: キャラクターを背景に「着地」させる最重要の合成要素。
+  function contactShadow(ctx, cx, baseY, rx, alpha) {
+    if (alpha <= 0 || rx <= 0) return;
+    const g = ctx.createRadialGradient(cx, baseY, 0, cx, baseY, rx);
+    g.addColorStop(0, `rgba(0,0,0,${alpha})`);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.fillStyle = g;
+    ctx.translate(cx, baseY); ctx.scale(1, .24); ctx.translate(-cx, -baseY);
+    ctx.beginPath(); ctx.arc(cx, baseY, rx, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+
   // ctx に (cx, baseY) を足元・高さ hPix で描画。q は mannequinPose の結果。
   function drawMannequin(ctx, p, t, cx, baseY, hPix) {
     const q = mannequinPose(p, t);
@@ -212,6 +248,8 @@ const ShiroLib = (() => {
     const px = (x, y) => [cx + (x + q.sway) * hPix, baseY - (y + q.bob) * hPix];
     const limbW = hPix * (.045 + .02 * p.shoulder);
     const bodyW = hPix * (.10 + .06 * p.shoulder);
+
+    contactShadow(ctx, cx, baseY, hPix * (.16 + .07 * p.shoulder), p.shadow * .5);
 
     ctx.save();
     ctx.globalAlpha = p.opacity;
@@ -243,10 +281,13 @@ const ShiroLib = (() => {
     if (lw > 0) { ctx.strokeStyle = 'rgba(40,44,54,0.85)'; ctx.lineWidth = lw; }
     ctx.beginPath(); ctx.arc(hx, hy, hr, 0, 7); ctx.fill();
     if (lw > 0) ctx.stroke();
-    // eyes (素朴な2点)
+    // eyes (素朴な2点、まばたきで縦につぶれる)
+    const eo = Math.max(.12, blinkOpen(t));
     ctx.fillStyle = 'rgba(60,64,74,0.8)';
     for (const s of [-1, 1]) {
-      ctx.beginPath(); ctx.arc(hx + s * hr * .38, hy - hr * .08, Math.max(1, hr * .09), 0, 7); ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(hx + s * hr * .38, hy - hr * .08, Math.max(1, hr * .09), Math.max(.5, hr * .09 * eo), 0, 0, 7);
+      ctx.fill();
     }
     ctx.restore();
   }
@@ -255,7 +296,7 @@ const ShiroLib = (() => {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, mannequinPose, skeleton, drawMannequin,
+    keyAlpha, erodeAlpha, blinkOpen, contactShadow, mannequinPose, skeleton, drawMannequin,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -308,6 +349,7 @@ if (typeof document !== 'undefined') (() => {
       const im = kctx.getImageData(0, 0, kw, kh), d = im.data;
       for (let i = 0; i < d.length; i += 4)
         d[i + 3] = Math.min(d[i + 3], L.keyAlpha(d[i], d[i + 1], d[i + 2], state.params.keyThresh, state.params.keySoft));
+      L.erodeAlpha(d, kw, kh); // 白フリンジ残りを1px削る
       kctx.putImageData(im, 0, 0);
     }
     if (state.media.kind === 'image') state.keyParams = cacheKey;
@@ -323,6 +365,7 @@ if (typeof document !== 'undefined') (() => {
     const hPix = H * (0.25 + 0.7 * state.params.scale);
     const wPix = hPix * (sw / sh);
     const cx = state.params.x * W, baseY = state.params.y * H;
+    L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5);
     c.save();
     c.globalAlpha = state.params.opacity;
     if (state.params.flip) { c.translate(2 * cx, 0); c.scale(-1, 1); }

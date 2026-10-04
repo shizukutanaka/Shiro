@@ -90,6 +90,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   const ctx = new Proxy({}, {
     get: (t, k) => k === 'canvas' ? {} : (...a) => {
       for (const v of a) if (typeof v === 'number') calls.push(v);
+      return { addColorStop() {} };
     },
     set: () => true,
   });
@@ -99,6 +100,37 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   }
   ok(calls.length > 100, 'draw emits geometry');
   ok(calls.every(Number.isFinite), 'draw coords finite');
+}
+
+// blink cycle
+{
+  ok(L.blinkOpen(1.0) === 1 && L.blinkOpen(1.0) === L.blinkOpen(1.0), 'blink deterministic/open by default');
+  ok(L.blinkOpen(.09) < .5, 'blink closes mid-cycle');
+  for (let i = 0; i < 200; i++) { const v = L.blinkOpen(i * .07); ok(v >= 0 && v <= 1, 'blink range'); }
+}
+
+// erodeAlpha: opaque island loses its 1px border
+{
+  const w = 5, h = 5, d = new Uint8Array(w * h * 4);
+  for (let y = 1; y <= 3; y++) for (let x = 1; x <= 3; x++) d[(y * w + x) * 4 + 3] = 255;
+  L.erodeAlpha(d, w, h);
+  ok(d[(2 * w + 2) * 4 + 3] === 255, 'interior survives erosion');
+  ok(d[(1 * w + 1) * 4 + 3] === 0, 'edge pixel eroded');
+  ok(d[(0 * w + 0) * 4 + 3] === 0, 'transparent stays transparent');
+}
+
+// contactShadow: no draw when alpha/radius zero, finite args otherwise
+{
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => (...a) => { calls.push([k, ...a]); return { addColorStop() {} }; },
+    set: () => true,
+  });
+  L.contactShadow(ctx, 100, 200, 50, .5);
+  ok(calls.some(c => c[0] === 'createRadialGradient'), 'shadow gradient emitted');
+  const before = calls.length;
+  L.contactShadow(ctx, 100, 200, 50, 0);
+  ok(calls.length === before, 'zero alpha shadow skipped');
 }
 
 // mime picker
