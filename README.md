@@ -445,7 +445,7 @@
 ## テスト
 
 ```sh
-node test.mjs   # 4361 assertions
+node test.mjs   # 4597 assertions
 ```
 
 ## 設計メモ
