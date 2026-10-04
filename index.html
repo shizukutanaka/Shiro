@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shiro — 白モデルスワップ</title>
+<style>
+  :root { --bg:#14151a; --panel:#1d1f26; --line:#2c2f3a; --fg:#e8e9ee; --sub:#9aa0b0; --acc:#6ea8ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.5 "Hiragino Sans","Segoe UI",sans-serif; }
+  #app { display:flex; gap:12px; padding:12px; height:100vh; }
+  #stage-wrap { flex:1; display:flex; flex-direction:column; min-width:0; }
+  #stage { width:100%; background:#000; border-radius:8px; display:block; }
+  #fav-bar { display:flex; gap:8px; margin-top:10px; overflow-x:auto; padding:4px 2px; min-height:74px; }
+  .fav { position:relative; flex:0 0 auto; width:110px; cursor:pointer; border:2px solid var(--line); border-radius:6px; overflow:hidden; background:var(--panel); }
+  .fav:hover { border-color:var(--acc); }
+  .fav img { width:100%; height:56px; object-fit:cover; display:block; }
+  .fav span { display:block; font-size:11px; padding:2px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--sub); }
+  .fav .del { position:absolute; top:2px; right:2px; width:18px; height:18px; border:0; border-radius:4px; background:rgba(0,0,0,.6); color:#fff; cursor:pointer; font-size:11px; line-height:1; }
+  #panel { width:300px; flex:0 0 auto; overflow-y:auto; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; }
+  h1 { font-size:16px; margin:0 0 4px; }
+  .sub { color:var(--sub); font-size:12px; margin:0 0 12px; }
+  .row { display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+  button, .filebtn { background:#2a2e3a; color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:7px 10px; cursor:pointer; font-size:13px; }
+  button:hover, .filebtn:hover { background:#343947; }
+  button.primary { background:var(--acc); color:#0b1220; border-color:var(--acc); font-weight:600; }
+  label.ctl { display:block; margin:8px 0 2px; font-size:12px; color:var(--sub); }
+  label.ctl output { float:right; color:var(--fg); }
+  input[type=range] { width:100%; accent-color:var(--acc); }
+  select { width:100%; background:#2a2e3a; color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:6px; }
+  .chk { display:flex; align-items:center; gap:6px; margin:8px 0; font-size:13px; }
+  hr { border:0; border-top:1px solid var(--line); margin:12px 0; }
+  #err { color:#ff8a8a; font-size:12px; white-space:pre-wrap; }
+  input[type=file] { display:none; }
+  details { font-size:12px; color:var(--sub); }
+  @media (max-width:760px){ #app{flex-direction:column} #panel{width:100%} }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage-wrap">
+    <canvas id="stage" width="1280" height="720"></canvas>
+    <div id="fav-bar"></div>
+  </div>
+  <div id="panel">
+    <h1>Shiro</h1>
+    <p class="sub">白モデルを好きな画像にスワップ。パラメーターでキャラクリエイト。</p>
+    <div id="err"></div>
+    <div class="row">
+      <label class="filebtn">背景画像を選ぶ<input id="bg-file" type="file" accept="image/*"></label>
+      <label class="filebtn">モデル画像/動画<input id="model-file" type="file" accept="image/*,video/*"></label>
+    </div>
+    <div class="row">
+      <button id="btn-model-reset">モデルを白モデルに戻す</button>
+      <button id="btn-bg-reset">背景を消す</button>
+    </div>
+    <hr>
+    <label class="ctl">アニメーション</label>
+    <select id="sel-anim">
+      <option value="idle">待機（ゆらゆら）</option>
+      <option value="wave">手を振る</option>
+      <option value="walk">歩く</option>
+      <option value="dance">ダンス</option>
+      <option value="still">静止</option>
+    </select>
+    <label class="ctl">背景の合わせ方</label>
+    <select id="sel-bgfit">
+      <option value="cover">全体を覆う（cover）</option>
+      <option value="contain">全体を表示（contain）</option>
+    </select>
+    <div class="chk"><input type="checkbox" id="chk-flip"><label for="chk-flip">左右反転</label></div>
+    <div id="sliders"></div>
+    <hr>
+    <div class="row">
+      <button id="btn-random" class="primary">ランダム</button>
+      <button id="btn-fav">お気に入りに保存</button>
+    </div>
+    <div class="row">
+      <button id="btn-png">PNG保存</button>
+      <button id="btn-rec">動画を保存（5秒）</button>
+      <button id="btn-share">共有（外部アプリ）</button>
+    </div>
+    <div class="row">
+      <button id="btn-fav-exp">お気に入りを書き出し</button>
+      <label class="filebtn">お気に入りを読み込み<input id="fav-file" type="file" accept="application/json"></label>
+    </div>
+    <details><summary>使い方</summary>
+      背景画像を読み込み、白モデル（内蔵）または自分の画像・動画を合成します。
+      「白抜き強度」を上げると白背景の素材が切り抜かれます。ランダムで全身パラメーターが一括変化。
+      お気に入りはブラウザに保存され、JSONで書き出し/読み込みできます。
+    </details>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
