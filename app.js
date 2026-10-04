@@ -308,7 +308,7 @@ const ShiroLib = (() => {
     const s = .4 + p.animSpeed * 2.2, tt = t * s;
     const q = {
       bob: 0, sway: 0, lean: 0, headTilt: 0,
-      lThigh: 0, rThigh: 0, lKnee: 0, rKnee: 0,
+      lThigh: 0, rThigh: 0, lKnee: 0, rKnee: 0, lShin: 0, rShin: 0,
       lArm: .1, rArm: .1, lElb: .15, rElb: .15,
     };
     switch (p.anim) {
@@ -1996,10 +1996,10 @@ const ShiroLib = (() => {
 
     // legs: hip -> knee -> ankle
     const legL = legFrac / 2;
-    for (const [side, hipX, thA, knA] of [['l', -hipHalf, q.lThigh, q.lKnee], ['r', hipHalf, q.rThigh, q.rKnee]]) {
+    for (const [side, hipX, thA, knA, shn] of [['l', -hipHalf, q.lThigh, q.lKnee, q.lShin || 0], ['r', hipHalf, q.rThigh, q.rKnee, q.rShin || 0]]) {
       const hx = hipX, hy = legFrac;
       const kx = hx + Math.sin(thA) * legL, ky = hy - Math.cos(thA) * legL;
-      const shA = thA - knA;
+      const shA = thA - knA + shn;
       const ax = kx + Math.sin(shA) * legL, ay = ky - Math.cos(shA) * legL;
       K[side + 'Hip'] = [hx, hy]; K[side + 'Knee'] = [kx, ky]; K[side + 'Ank'] = [ax, Math.max(.015, ay)];
     }
