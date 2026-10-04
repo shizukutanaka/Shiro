@@ -28,7 +28,8 @@ const ShiroLib = (() => {
   // ---------- params ----------
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'still'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'crown', 'phones'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'crown', 'phones', 'cape'];
+  const PARTICLES = ['none', 'snow', 'sparkle', 'petal'];
   const BGS = ['gradient', 'green', 'white', 'transparent'];
   const EYES = ['dot', 'wink', 'closed', 'heart'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -46,7 +47,7 @@ const ShiroLib = (() => {
     'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity',
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
-    'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft'];
+    'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -63,7 +64,7 @@ const ShiroLib = (() => {
     ['grain', 'フィルムグレイン'], ['trail', '残像（トレイル）'], ['subjHue', 'モデル色相'], ['pixel', 'ピクセル化'], ['shake', '手持ちカメラ'],
     ['glow', '発光'], ['glowHue', '発光色'], ['eyeSize', '目の大きさ'],
     ['bgX', '背景位置 X'], ['bgY', '背景位置 Y'],
-    ['despill', 'スピル除去'], ['temp', '色温度'], ['shadowSoft', '影の柔らかさ'],
+    ['despill', 'スピル除去'], ['temp', '色温度'], ['shadowSoft', '影の柔らかさ'], ['brow', '眉毛の角度'],
   ];
 
   function defaultParams() {
@@ -76,8 +77,8 @@ const ShiroLib = (() => {
       accHue: .58, vidSpeed: .5, blush: 0, headTilt: .5, bgSat: .5, bgContrast: .5,
       rimHue: .62, reflect: 0, tOffset: .5, grain: 0, trail: 0, subjHue: .5, pixel: 0,
       shake: 0, glow: 0, glowHue: .55, eyeSize: .5, bgX: .5, bgY: .5,
-      despill: .5, temp: .5, shadowSoft: .4,
-      subjFx: 'none', grade: 'none', blend: 'none',
+      despill: .5, temp: .5, shadowSoft: .4, brow: .5,
+      subjFx: 'none', grade: 'none', blend: 'none', particles: 'none',
       eyeStyle: 'dot', acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
@@ -97,6 +98,7 @@ const ShiroLib = (() => {
     o.subjFx = SUBJFX.includes(p && p.subjFx) ? p.subjFx : d.subjFx;
     o.grade = GRADES.includes(p && p.grade) ? p.grade : d.grade;
     o.blend = BLENDS.includes(p && p.blend) ? p.blend : d.blend;
+    o.particles = PARTICLES.includes(p && p.particles) ? p.particles : d.particles;
     o.flip = !!(p && p.flip);
     const sv = p ? +p.seed : NaN;
     o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
@@ -436,6 +438,19 @@ const ShiroLib = (() => {
     ctx.globalAlpha = p.opacity;
     if (p.flip) { ctx.translate(2 * cx, 0); ctx.scale(-1, 1); }
 
+    // ケープ: 肩から背後へなびく布(衣装色を濃くして継承)
+    if (p.acc === 'cape') {
+      const cs = `hsla(${hue},${Math.max(sat, 45)}%,${Math.round(38 + 12 * g)}%,0.95)`;
+      const sw = (q.lean * 2 + Math.sin(t * 1.8) * .05) * hPix;
+      const [lShx, lShy] = px(...K.lSh), [rShx, rShy] = px(...K.rSh), [pelx, pely] = px(...K.pelvis);
+      ctx.fillStyle = cs;
+      ctx.beginPath();
+      ctx.moveTo(lShx, lShy);
+      ctx.quadraticCurveTo(lShx - bodyW + sw, pely + hPix * .06, pelx + sw * 1.5, pely + hPix * .3);
+      ctx.quadraticCurveTo(rShx + bodyW + sw, pely + hPix * .06, rShx, rShy);
+      ctx.closePath(); ctx.fill();
+    }
+
     // legs
     for (const s of ['l', 'r']) {
       const [h, k, a] = [K[s + 'Hip'], K[s + 'Knee'], K[s + 'Ank']];
@@ -489,6 +504,18 @@ const ShiroLib = (() => {
         }
       }
     }
+    // 眉毛: brow<.5 で垂れ眉(困り) / >.5 で内側が下がるきりっと眉
+    const bt = (p.brow - .5) * hr * .3;
+    if (Math.abs(bt) > hr * .02) {
+      ctx.strokeStyle = 'rgba(60,64,74,0.8)'; ctx.lineWidth = Math.max(1, hr * .07);
+      for (const s of [-1, 1]) {
+        const by = hy - hr * .36;
+        ctx.beginPath();
+        ctx.moveTo(hx + s * hr * .18, by + bt);
+        ctx.lineTo(hx + s * hr * .56, by - bt * .3);
+        ctx.stroke();
+      }
+    }
     // 頬の赤み
     if (p.blush > .02) {
       ctx.fillStyle = `rgba(255,120,140,${p.blush * .4})`;
@@ -514,6 +541,35 @@ const ShiroLib = (() => {
       ctx.fill();
     }
     drawAccessory(ctx, p.acc, hx, hy, hr, p.accHue);
+    ctx.restore();
+  }
+
+  // パーティクル: シーン全体の空気感エフェクト(雪/キラキラ/花びら)。seed決定論
+  function drawParticles(ctx, W, H, type, t, seed) {
+    const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
+    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : 42;
+    ctx.save();
+    for (let i = 0; i < N; i++) {
+      if (type === 'snow') {
+        const x = h(i, 0) * W + Math.sin(t * .8 + h(i, 1) * 7) * W * .02;
+        const y = ((h(i, 1) + t * (.04 + .06 * h(i, 2))) % 1) * H;
+        ctx.fillStyle = `rgba(255,255,255,${.4 + .5 * h(i, 4)})`;
+        ctx.beginPath(); ctx.arc(x, y, 1 + 2.5 * h(i, 3), 0, 7); ctx.fill();
+      } else if (type === 'sparkle') {
+        const a = .25 + .75 * Math.abs(Math.sin(t * (.8 + h(i, 2) * 2.2) + h(i, 3) * 7));
+        const x = h(i, 0) * W, y = h(i, 1) * H, r = 2 + 4 * h(i, 4);
+        ctx.strokeStyle = `rgba(255,230,140,${a})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x - r, y); ctx.lineTo(x + r, y);
+        ctx.moveTo(x, y - r); ctx.lineTo(x, y + r); ctx.stroke();
+      } else { // petal
+        const x = h(i, 0) * W + Math.sin(t * .6 + h(i, 1) * 9) * W * .05;
+        const y = ((h(i, 1) + t * (.03 + .03 * h(i, 2))) % 1) * H;
+        ctx.fillStyle = `rgba(255,170,190,${.55 + .3 * h(i, 4)})`;
+        ctx.beginPath();
+        ctx.ellipse(x, y, 3 + 3 * h(i, 3), 1.5 + 1.5 * h(i, 3), Math.sin(t * 2 + i) * 1.2, 0, 7);
+        ctx.fill();
+      }
+    }
     ctx.restore();
   }
 
@@ -585,7 +641,7 @@ const ShiroLib = (() => {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, despill, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory,
+    keyAlpha, erodeAlpha, despill, blinkOpen, drawParticles, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -824,6 +880,7 @@ if (typeof document !== 'undefined') (() => {
         if (fx) ctx.filter = 'none';
       }
     }
+    if (p.particles !== 'none') L.drawParticles(ctx, W, H, p.particles, t, p.seed);
     // シーン全体の色調(グレード)。ウォーターマークより下に適用して文字は鮮明に残す
     const gs = GRADE_STYLES[p.grade];
     if (gs) {
@@ -873,6 +930,7 @@ if (typeof document !== 'undefined') (() => {
       $('sel-blend').value = state.params.blend;
       $('sel-bgfit').value = state.params.bgFit;
       $('sel-bgpreset').value = state.params.bgPreset;
+      $('sel-particles').value = state.params.particles;
       $('chk-flip').checked = state.params.flip;
       $('inp-watermark').value = state.params.watermark;
     }
@@ -885,6 +943,7 @@ if (typeof document !== 'undefined') (() => {
   $('sel-blend').addEventListener('change', e => { state.params.blend = e.target.value; touch(); });
   $('sel-bgfit').addEventListener('change', e => { state.params.bgFit = e.target.value; touch(); });
   $('sel-bgpreset').addEventListener('change', e => { state.params.bgPreset = e.target.value; touch(); });
+  $('sel-particles').addEventListener('change', e => { state.params.particles = e.target.value; touch(); });
   $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });
   $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
   $('inp-watermark').addEventListener('input', e => { state.params.watermark = e.target.value.slice(0, 60); touch(); });
