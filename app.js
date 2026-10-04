@@ -29,12 +29,12 @@ const ShiroLib = (() => {
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat'];
-  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango'];
+  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
@@ -587,6 +587,16 @@ const ShiroLib = (() => {
     if (lw > 0) { ctx.strokeStyle = 'rgba(40,44,54,0.85)'; ctx.lineWidth = lw; }
     ctx.beginPath(); ctx.arc(hx, hy, hr, 0, 7); ctx.fill();
     if (lw > 0) ctx.stroke();
+    if (hs === 'pony') {
+      // ポニーテール: 頭の右後ろから流れる髪束
+      ctx.fillStyle = hairC;
+      ctx.beginPath();
+      ctx.moveTo(hx + hr * .55, hy - hr * .95);
+      ctx.quadraticCurveTo(hx + hr * 1.55, hy - hr * .55, hx + hr * 1.35, hy + hr * .95);
+      ctx.quadraticCurveTo(hx + hr * .9, hy + hr * .45, hx + hr * .75, hy - hr * .5);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.arc(hx + hr * .52, hy - hr * .82, hr * .16, 0, 7); ctx.fill(); // 結び目
+    }
     if (hs === 'odango') {
       // お団子: 頭頂両サイドの丸いお団子
       ctx.fillStyle = hairC;
@@ -998,6 +1008,17 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.ellipse(hx + hr * .42, hy + hr * 1.02, hr * .2, hr * .42, .5, 0, 7); ctx.fill();
         break;
       }
+      case 'beret': {
+        // ベレー帽: 頭頂に斜め被せた円盤 + 茎
+        ctx.fillStyle = acc2;
+        ctx.save();
+        ctx.translate(hx - hr * .12, hy - hr * .92); ctx.rotate(-.22);
+        ctx.beginPath(); ctx.ellipse(0, 0, hr * .95, hr * .4, 0, 0, 7); ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1.5, hr * .06); ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * 1.28); ctx.lineTo(hx - hr * .12, hy - hr * 1.05); ctx.stroke();
+        break;
+      }
       case 'flower': {
         // 花飾り: 頭の側面に5弁の花(accHueで花弁着色)
         const fx2 = hx + hr * .62, fy2 = hy - hr * .55, pr3 = hr * .16;
@@ -1134,6 +1155,25 @@ if (typeof document !== 'undefined') (() => {
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
       }
+    } else if (pr === 'beach') {
+      // 海辺: 空+太陽+海面+砂浜 + 揺れる波線(決定論的)
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#8ecfff'); gr.addColorStop(.5, '#c9e9ff'); gr.addColorStop(.51, '#2b7fc9');
+      gr.addColorStop(.78, '#1d63a8'); gr.addColorStop(.79, '#e8d5a0'); gr.addColorStop(1, '#d9c289');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      // 太陽
+      c.fillStyle = 'rgba(255,245,200,0.95)';
+      c.beginPath(); c.arc(W * .78, H * .18, H * .09, 0, 7); c.fill();
+      // 波の輝き線(ゆっくり流れる)
+      c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = 1.4;
+      const rng = L.mulberry32(909);
+      for (let i = 0; i < 14; i++) {
+        const wy = H * (.54 + rng() * .22), wl = W * (.06 + rng() * .18);
+        const wx = ((rng() + t * .02) % 1) * W;
+        c.globalAlpha = .3 + .4 * rng();
+        c.beginPath(); c.moveTo(wx, wy); c.lineTo(wx + wl, wy); c.stroke();
+      }
+      c.globalAlpha = 1;
     } else if (pr === 'grid') {
       // サイバー格子: シンセウェイブ風 — 暗い空 + 消失点に収束する発光格子
       const gr = c.createLinearGradient(0, 0, 0, H);
