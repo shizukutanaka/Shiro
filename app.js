@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'hop', 'dab', 'side', 'twist', 'swim', 'bodyroll', 'charleston', 'vogue', 'stomp', 'krump', 'waltz', 'tarantella', 'capoeira', 'belly', 'flamenco', 'samba', 'tango', 'swing', 'polka', 'foxtrot', 'chacha', 'pasodoble', 'cancan', 'mazurka', 'minuet', 'bolero', 'sirtaki', 'reel', 'hora', 'gavotte', 'czardas', 'morris', 'jig', 'bourree', 'sarabande', 'pavane', 'allemande', 'courante', 'rigaudon', 'passepied', 'hambo', 'galliard', 'saltarello', 'bransle', 'farandole', 'canarie', 'volta', 'jota', 'fandango', 'zapateado', 'korobushka', 'trepak', 'legenyes', 'kalamatianos', 'kolo', 'dabke', 'sardana', 'zeybek', 'tsamiko', 'seguidilla', 'sevillanas', 'forro', 'schuhplattler', 'halay', 'polska', 'cumbia', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'hop', 'dab', 'side', 'twist', 'swim', 'bodyroll', 'charleston', 'vogue', 'stomp', 'krump', 'waltz', 'tarantella', 'capoeira', 'belly', 'flamenco', 'samba', 'tango', 'swing', 'polka', 'foxtrot', 'chacha', 'pasodoble', 'cancan', 'mazurka', 'minuet', 'bolero', 'sirtaki', 'reel', 'hora', 'gavotte', 'czardas', 'morris', 'jig', 'bourree', 'sarabande', 'pavane', 'allemande', 'courante', 'rigaudon', 'passepied', 'hambo', 'galliard', 'saltarello', 'bransle', 'farandole', 'canarie', 'volta', 'jota', 'fandango', 'zapateado', 'korobushka', 'trepak', 'legenyes', 'kalamatianos', 'kolo', 'dabke', 'sardana', 'zeybek', 'tsamiko', 'seguidilla', 'sevillanas', 'forro', 'schuhplattler', 'halay', 'polska', 'cumbia', 'landler', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero', 'ushanka', 'laurel', 'nightcap', 'jester', 'tiara', 'flowercrown', 'bowler', 'fedora', 'newsboy', 'tricorne', 'turban', 'matador', 'plume', 'veil', 'cloche', 'boater', 'deerstalker', 'bonnet', 'mobcap', 'sunvisor', 'keffiyeh', 'porkpie', 'sailor', 'tam', 'shako', 'pickelhaube', 'bicorne', 'mortar', 'beanie', 'crown2', 'kasa', 'mantilla', 'coif', 'kippah', 'topknot', 'eboshi', 'cowboy', 'mitre', 'snood', 'phrygian', 'calot', 'biretta', 'kokoshnik', 'hennin', 'chaperon', 'kettle', 'attifet', 'barbette', 'fontange', 'coonskin', 'wimple', 'busby', 'petasos', 'souwester', 'caubeen', 'tagelmust', 'kalpak', 'doppa', 'capirote', 'capotain', 'vueltiao', 'pamela', 'kepi', 'pith', 'chullo', 'cordobes'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero', 'ushanka', 'laurel', 'nightcap', 'jester', 'tiara', 'flowercrown', 'bowler', 'fedora', 'newsboy', 'tricorne', 'turban', 'matador', 'plume', 'veil', 'cloche', 'boater', 'deerstalker', 'bonnet', 'mobcap', 'sunvisor', 'keffiyeh', 'porkpie', 'sailor', 'tam', 'shako', 'pickelhaube', 'bicorne', 'mortar', 'beanie', 'crown2', 'kasa', 'mantilla', 'coif', 'kippah', 'topknot', 'eboshi', 'cowboy', 'mitre', 'snood', 'phrygian', 'calot', 'biretta', 'kokoshnik', 'hennin', 'chaperon', 'kettle', 'attifet', 'barbette', 'fontange', 'coonskin', 'wimple', 'busby', 'petasos', 'souwester', 'caubeen', 'tagelmust', 'kalpak', 'doppa', 'capirote', 'capotain', 'vueltiao', 'pamela', 'kepi', 'pith', 'chullo', 'cordobes', 'bandeau'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark', 'wind'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier', 'ruins', 'sakura', 'moon', 'harbor', 'terraces', 'bridge', 'wheatfield', 'pagoda', 'geyser', 'coral', 'vineyard', 'lavender', 'rainforest', 'mesa', 'alps', 'bayou', 'cliff', 'lagoon', 'prairie', 'observatory', 'storm', 'zen', 'wisteria', 'sunflowers', 'cosmos', 'orchard', 'onsen', 'moor', 'brook', 'grove', 'tide', 'pond', 'badlands', 'taiga', 'mangrove', 'delta', 'highland', 'saltflat', 'wadi', 'tundra', 'quarry', 'dune', 'cirque', 'fen', 'cove', 'glen', 'steppe', 'meseta', 'hamada', 'kelp', 'cenote', 'loch', 'karst', 'polder', 'bazaar', 'seastack', 'billabong', 'glade', 'tea', 'pampas', 'canal', 'grotto', 'cloudforest', 'iceberg', 'rapids', 'meteora'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier', 'ruins', 'sakura', 'moon', 'harbor', 'terraces', 'bridge', 'wheatfield', 'pagoda', 'geyser', 'coral', 'vineyard', 'lavender', 'rainforest', 'mesa', 'alps', 'bayou', 'cliff', 'lagoon', 'prairie', 'observatory', 'storm', 'zen', 'wisteria', 'sunflowers', 'cosmos', 'orchard', 'onsen', 'moor', 'brook', 'grove', 'tide', 'pond', 'badlands', 'taiga', 'mangrove', 'delta', 'highland', 'saltflat', 'wadi', 'tundra', 'quarry', 'dune', 'cirque', 'fen', 'cove', 'glen', 'steppe', 'meseta', 'hamada', 'kelp', 'cenote', 'loch', 'karst', 'polder', 'bazaar', 'seastack', 'billabong', 'glade', 'tea', 'pampas', 'canal', 'grotto', 'cloudforest', 'iceberg', 'rapids', 'meteora', 'dojo'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat', 'wide'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp', 'braid'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -1664,6 +1664,25 @@ const ShiroLib = (() => {
         q.spin = .35 * Math.sin(cb * .33); // 輪を周る
         break;
       }
+      case 'landler': {
+        // レントラー: オーストリアのゆったり円舞 — 手を打つ+ホップ+旋回
+        const ld = tt * 3.6;
+        const st = Math.sin(ld);
+        const clap = Math.max(0, Math.sin(ld * 3)); // 手拍子
+        q.bob = -.03 * Math.abs(st);
+        q.spin = .8 * st;          // 大きく旋回
+        q.sway = .06 * st;
+        q.lArm = -.6 - .5 * clap;  // 手を打つために前方へ
+        q.rArm = -.6 - .5 * clap;
+        q.lElb = -.4; q.rElb = -.4;
+        q.lThigh = -.2 * Math.max(0, st);
+        q.rThigh = -.2 * Math.max(0, -st);
+        q.lKnee = .15 * Math.abs(st);
+        q.rKnee = .15 * Math.abs(st);
+        q.lean = .06 * st;
+        q.headTilt = .07 * st;
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -2434,6 +2453,39 @@ const ShiroLib = (() => {
         ctx.beginPath();
         ctx.ellipse(hx, hy + hr * .5, hr * .68, hr * .35, 0, Math.PI * .15, Math.PI * .85);
         ctx.stroke();
+        break;
+      }
+      case 'bandeau': {
+        // バンドゥ: 1920年代の額帯 — 額を巻く帯+羽根飾り+宝石
+        ctx.strokeStyle = acc2; ctx.lineWidth = hr * .22;
+        ctx.beginPath();
+        ctx.ellipse(hx, hy - hr * .28, hr * .95, hr * .8, 0, Math.PI * 1.05, Math.PI * 1.95);
+        ctx.stroke();
+        // 側面の結び目
+        ctx.fillStyle = dk;
+        ctx.beginPath();
+        ctx.arc(hx + hr * .82, hy - hr * .32, hr * .12, 0, 7);
+        ctx.fill();
+        // 立つ羽根
+        ctx.fillStyle = acc2;
+        ctx.beginPath();
+        ctx.moveTo(hx + hr * .85, hy - hr * .35);
+        ctx.quadraticCurveTo(hx + hr * .75, hy - hr * 1.1, hx + hr * .95, hy - hr * 1.35);
+        ctx.quadraticCurveTo(hx + hr * .95, hy - hr * .9, hx + hr * .9, hy - hr * .35);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .03);
+        ctx.beginPath();
+        ctx.moveTo(hx + hr * .87, hy - hr * .35);
+        ctx.lineTo(hx + hr * .92, hy - hr * 1.3);
+        ctx.stroke();
+        // 中央の宝石
+        ctx.fillStyle = '#e0c040';
+        ctx.beginPath();
+        ctx.moveTo(hx, hy - hr * .5);
+        ctx.lineTo(hx + hr * .09, hy - hr * .32);
+        ctx.lineTo(hx, hy - hr * .14);
+        ctx.lineTo(hx - hr * .09, hy - hr * .32);
+        ctx.closePath(); ctx.fill();
         break;
       }
       case 'cordobes': {
@@ -4369,6 +4421,71 @@ if (typeof document !== 'undefined') (() => {
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
       }
+    } else if (pr === 'dojo') {
+      // 道場: 板張りの床+障子の窓+掛け軸+木刀
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#8a7458'); gr.addColorStop(.55, '#b8956a'); gr.addColorStop(1, '#7a5f42');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      // 壁と床の境
+      c.fillStyle = '#9a7a54';
+      c.fillRect(0, H * .55, W, H * .45);
+      // 床の板目(遠近感)
+      c.strokeStyle = 'rgba(90,65,40,0.5)'; c.lineWidth = 1.5;
+      for (let i = 0; i < 10; i++) {
+        const fx = W * i / 9;
+        c.beginPath();
+        c.moveTo(W * .5 + (fx - W * .5) * .4, H * .55);
+        c.lineTo(fx, H);
+        c.stroke();
+      }
+      for (let i = 0; i < 4; i++) {
+        const fy = H * (.6 + i * .1);
+        c.beginPath();
+        c.moveTo(0, fy); c.lineTo(W, fy);
+        c.stroke();
+      }
+      // 障子窓(両側に光)
+      for (let s = 0; s < 2; s++) {
+        const wx = s === 0 ? W * .05 : W * .78;
+        c.fillStyle = '#f0e8d0';
+        c.fillRect(wx, H * .12, W * .17, H * .38);
+        c.strokeStyle = '#6a5238'; c.lineWidth = 2;
+        c.strokeRect(wx, H * .12, W * .17, H * .38);
+        // 格子
+        c.beginPath();
+        for (let i = 1; i < 4; i++) {
+          c.moveTo(wx + W * .17 * i / 4, H * .12);
+          c.lineTo(wx + W * .17 * i / 4, H * .5);
+        }
+        for (let i = 1; i < 3; i++) {
+          c.moveTo(wx, H * .12 + H * .38 * i / 3);
+          c.lineTo(wx + W * .17, H * .12 + H * .38 * i / 3);
+        }
+        c.stroke();
+      }
+      // 掛け軸(中央の書)
+      c.fillStyle = '#f5efe0';
+      c.fillRect(W * .45, H * .08, W * .1, H * .3);
+      c.fillStyle = '#4a3a28';
+      c.fillRect(W * .43, H * .08, W * .14, H * .02);
+      c.fillRect(W * .43, H * .36, W * .14, H * .02);
+      // 大きな一文字
+      c.strokeStyle = '#1a1a1a'; c.lineWidth = 5;
+      c.beginPath();
+      c.moveTo(W * .47, H * .15); c.lineTo(W * .53, H * .15);
+      c.moveTo(W * .5, H * .13); c.lineTo(W * .5, H * .28);
+      c.moveTo(W * .475, H * .22); c.quadraticCurveTo(W * .5, H * .26, W * .525, H * .22);
+      c.stroke();
+      // 木刀(壁に立てかけ)
+      c.strokeStyle = '#5a4228'; c.lineWidth = 4;
+      c.beginPath();
+      c.moveTo(W * .32, H * .52);
+      c.lineTo(W * .35, H * .3);
+      c.stroke();
+      c.strokeStyle = '#3a2a18'; c.lineWidth = 5;
+      c.beginPath();
+      c.moveTo(W * .335, H * .42); c.lineTo(W * .365, H * .415);
+      c.stroke();
     } else if (pr === 'meteora') {
       // メテオラ: 天空の岩柱+頂の僧院+夕空+鳶
       const gr = c.createLinearGradient(0, 0, 0, H);
