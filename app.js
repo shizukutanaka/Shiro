@@ -46,7 +46,7 @@ const ShiroLib = (() => {
     'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity',
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
-    'glow', 'glowHue', 'eyeSize'];
+    'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -62,6 +62,7 @@ const ShiroLib = (() => {
     ['rimHue', 'リムライト色'], ['reflect', '床の反射'], ['tOffset', 'ポーズ位置（停止時）'],
     ['grain', 'フィルムグレイン'], ['trail', '残像（トレイル）'], ['subjHue', 'モデル色相'], ['pixel', 'ピクセル化'], ['shake', '手持ちカメラ'],
     ['glow', '発光'], ['glowHue', '発光色'], ['eyeSize', '目の大きさ'],
+    ['bgX', '背景位置 X'], ['bgY', '背景位置 Y'],
   ];
 
   function defaultParams() {
@@ -73,7 +74,7 @@ const ShiroLib = (() => {
       outline: 0, vignette: 0, wmOpacity: .4, watermark: '',
       accHue: .58, vidSpeed: .5, blush: 0, headTilt: .5, bgSat: .5, bgContrast: .5,
       rimHue: .62, reflect: 0, tOffset: .5, grain: 0, trail: 0, subjHue: .5, pixel: 0,
-      shake: 0, glow: 0, glowHue: .55, eyeSize: .5,
+      shake: 0, glow: 0, glowHue: .55, eyeSize: .5, bgX: .5, bgY: .5,
       subjFx: 'none', grade: 'none', blend: 'none',
       eyeStyle: 'dot', acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
@@ -121,6 +122,7 @@ const ShiroLib = (() => {
     p.grain = rng() < .7 ? 0 : rng() * .5; p.trail = rng() < .7 ? 0 : rng() * .7; p.subjHue = .4 + rng() * .2;
     p.pixel = rng() < .75 ? 0 : rng() * .7; p.shake = rng() < .7 ? 0 : rng() * .5;
     p.glow = rng() < .7 ? 0 : rng() * .8; p.eyeSize = .3 + rng() * .5;
+    p.bgX = .5; p.bgY = .5; // 背景オフセットはランダムにしない(構図崩壊防止)
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -576,14 +578,15 @@ if (typeof document !== 'undefined') (() => {
     g.addColorStop(0, '#2a3550'); g.addColorStop(.6, '#3b4a6b'); g.addColorStop(1, '#1d2230');
     c.fillStyle = g; c.fillRect(0, 0, W, H);
   }
-  function drawCover(c, img, fit, blurPx, sat, con) {
+  function drawCover(c, img, fit, blurPx, sat, con, offX, offY) {
     const iw = img.naturalWidth || img.videoWidth, ih = img.naturalHeight || img.videoHeight;
     if (!iw || !ih) return;
     const s = fit === 'contain' ? Math.min(W / iw, H / ih) : Math.max(W / iw, H / ih);
     const dw = iw * s, dh = ih * s;
     const f = `blur(${blurPx}px) saturate(${sat}) contrast(${con})`;
     if (f !== 'blur(0px) saturate(1) contrast(1)') c.filter = f;
-    c.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    // 背景位置オフセット: 被写体に合わせて構図をずらす
+    c.drawImage(img, (W - dw) / 2 + (offX - .5) * W, (H - dh) / 2 + (offY - .5) * H, dw, dh);
     c.filter = 'none';
   }
 
@@ -591,7 +594,7 @@ if (typeof document !== 'undefined') (() => {
   // 画像なし時はプリセット背景: gradient=内蔵/green=グリーンスクリーン/white=白/transparent=透過PNG用
   function drawBackdrop(c, p) {
     if (state.bg) {
-      drawCover(c, state.bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast);
+      drawCover(c, state.bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast, p.bgX, p.bgY);
       if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
       return;
     }
@@ -809,6 +812,8 @@ if (typeof document !== 'undefined') (() => {
     const inp = document.createElement('input');
     inp.type = 'range'; inp.min = 0; inp.max = 1; inp.step = .01; inp.id = 'sl-' + key;
     inp.addEventListener('input', () => { state.params[key] = +inp.value; syncUI(false); });
+    // ダブルクリックでその項目だけ初期値に戻す(キャラクリ系UIの定番)
+    inp.addEventListener('dblclick', () => { state.params[key] = L.defaultParams()[key]; syncUI(false); });
     sDiv.appendChild(lab); sDiv.appendChild(inp);
   }
   function syncUI(fromParams = true) {
@@ -865,6 +870,7 @@ if (typeof document !== 'undefined') (() => {
     state.params = L.randomParams(L.mulberry32((Math.random() * 4294967296) >>> 0));
     syncUI();
   });
+  $('btn-reset').addEventListener('click', () => { state.params = L.defaultParams(); syncUI(); });
 
   // ---------- file inputs ----------
   function readURL(file) { return URL.createObjectURL(file); }
@@ -958,10 +964,24 @@ if (typeof document !== 'undefined') (() => {
     for (const f of state.favs) {
       const d = document.createElement('div'); d.className = 'fav';
       d.title = f.name;
+      d.draggable = true;
       d.innerHTML = `<img alt=""><span></span><button class="del" title="削除">×</button>`;
       d.querySelector('img').src = f.thumb || '';
       d.querySelector('span').textContent = f.name;
       d.addEventListener('click', () => { state.params = L.clampParams(f.params); syncUI(); });
+      // ドラッグで並べ替え
+      d.addEventListener('dragstart', ev => { ev.dataTransfer.setData('text/plain', f.id); ev.dataTransfer.effectAllowed = 'move'; });
+      d.addEventListener('dragover', ev => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; });
+      d.addEventListener('drop', ev => {
+        ev.preventDefault();
+        const id = ev.dataTransfer.getData('text/plain');
+        if (!id || id === f.id) return;
+        const from = state.favs.findIndex(x => x.id === id), to = state.favs.findIndex(x => x.id === f.id);
+        if (from < 0 || to < 0) return;
+        const [mv] = state.favs.splice(from, 1);
+        state.favs.splice(to, 0, mv);
+        saveFavs(); renderFavs();
+      });
       d.querySelector('span').addEventListener('dblclick', ev => {
         ev.stopPropagation();
         const n = prompt('新しい名前', f.name);
