@@ -26,7 +26,7 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'still'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'crown', 'phones', 'cape'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal'];
@@ -47,7 +47,7 @@ const ShiroLib = (() => {
     'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity',
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
-    'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow'];
+    'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -65,6 +65,7 @@ const ShiroLib = (() => {
     ['glow', '発光'], ['glowHue', '発光色'], ['eyeSize', '目の大きさ'],
     ['bgX', '背景位置 X'], ['bgY', '背景位置 Y'],
     ['despill', 'スピル除去'], ['temp', '色温度'], ['shadowSoft', '影の柔らかさ'], ['brow', '眉毛の角度'],
+    ['bgDrift', '背景のゆっくりズーム'],
   ];
 
   function defaultParams() {
@@ -77,7 +78,7 @@ const ShiroLib = (() => {
       accHue: .58, vidSpeed: .5, blush: 0, headTilt: .5, bgSat: .5, bgContrast: .5,
       rimHue: .62, reflect: 0, tOffset: .5, grain: 0, trail: 0, subjHue: .5, pixel: 0,
       shake: 0, glow: 0, glowHue: .55, eyeSize: .5, bgX: .5, bgY: .5,
-      despill: .5, temp: .5, shadowSoft: .4, brow: .5,
+      despill: .5, temp: .5, shadowSoft: .4, brow: .5, bgDrift: 0,
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none',
       eyeStyle: 'dot', acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
@@ -319,6 +320,24 @@ const ShiroLib = (() => {
         q.lean = .02 * n; q.lArm = .1; q.rArm = .1;
         break;
       }
+      case 'run': {
+        // 走る: 歩行の2倍弱の脚回転 + 前傾 + 肘を畳む
+        const w = Math.sin(tt * 5);
+        q.lThigh = .8 * w; q.rThigh = -.8 * w;
+        q.lKnee = Math.max(0, 1.1 * Math.sin(tt * 5 + Math.PI / 2));
+        q.rKnee = Math.max(0, 1.1 * Math.sin(tt * 5 - Math.PI / 2));
+        q.lArm = .3 - .7 * w; q.rArm = .3 + .7 * w;
+        q.lElb = 1.1; q.rElb = 1.1;
+        q.bob = .04 * Math.abs(Math.cos(tt * 5)); q.lean = .12;
+        break;
+      }
+      case 'talk': {
+        // おしゃべり: ゆるい待機 + 会話っぽい小さな頭の動き(口の開閉は描画側で処理)
+        q.bob = .008 * Math.sin(tt * 2); q.lean = .015 * Math.sin(tt * 1.1);
+        q.headTilt = .05 * Math.sin(tt * 2.7);
+        q.lArm = .08; q.rArm = .08;
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -532,8 +551,15 @@ const ShiroLib = (() => {
       ctx.beginPath(); ctx.moveTo(hx - mw, my);
       ctx.quadraticCurveTo(hx, my + curv * 2, hx + mw, my); ctx.stroke();
     }
-    // 大きな笑顔(smile>.78)では口を開いて赤味を見せる表情に
-    if (p.smile > .78) {
+    // おしゃべり: 口が周期的に開閉(話している表情)
+    if (p.anim === 'talk') {
+      const mo = Math.abs(Math.sin(t * 5.5));
+      ctx.fillStyle = `rgba(120,40,45,${.55 * mo})`;
+      ctx.beginPath();
+      ctx.ellipse(hx, my + curv * 1.1, mw * .45, Math.max(1, hr * .11 * mo), 0, 0, 7);
+      ctx.fill();
+    } else if (p.smile > .78) {
+      // 大きな笑顔(smile>.78)では口を開いて赤味を見せる表情に
       const op = (p.smile - .78) / .22;
       ctx.fillStyle = `rgba(120,40,45,${.55 * op})`;
       ctx.beginPath();
@@ -671,10 +697,10 @@ if (typeof document !== 'undefined') (() => {
     g.addColorStop(0, '#2a3550'); g.addColorStop(.6, '#3b4a6b'); g.addColorStop(1, '#1d2230');
     c.fillStyle = g; c.fillRect(0, 0, W, H);
   }
-  function drawCover(c, img, fit, blurPx, sat, con, offX, offY) {
+  function drawCover(c, img, fit, blurPx, sat, con, offX, offY, zoom = 0) {
     const iw = img.naturalWidth || img.videoWidth, ih = img.naturalHeight || img.videoHeight;
     if (!iw || !ih) return;
-    const s = fit === 'contain' ? Math.min(W / iw, H / ih) : Math.max(W / iw, H / ih);
+    const s = (fit === 'contain' ? Math.min(W / iw, H / ih) : Math.max(W / iw, H / ih)) * (1 + zoom);
     const dw = iw * s, dh = ih * s;
     const f = `blur(${blurPx}px) saturate(${sat}) contrast(${con})`;
     if (f !== 'blur(0px) saturate(1) contrast(1)') c.filter = f;
@@ -685,9 +711,11 @@ if (typeof document !== 'undefined') (() => {
 
   // 背景グレーディング: 被写体を際立たせるため背景をぼかし・減光する(合成定番)
   // 画像なし時はプリセット背景: gradient=内蔵/green=グリーンスクリーン/white=白/transparent=透過PNG用
-  function drawBackdrop(c, p) {
+  function drawBackdrop(c, p, t) {
     if (state.bg) {
-      drawCover(c, state.bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast, p.bgX, p.bgY);
+      // 背景のゆっくりズーム(Ken Burns): 1→1+bgDrift*.15 をゆるく往復
+      const z = p.bgDrift * .15 * (.5 + .5 * Math.sin(t * .12));
+      drawCover(c, state.bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast, p.bgX, p.bgY, z);
       if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
       return;
     }
@@ -824,14 +852,15 @@ if (typeof document !== 'undefined') (() => {
       ctx.scale(os, os);
       ctx.translate(-W / 2, -H / 2);
     }
-    drawBackdrop(ctx, p);
+    drawBackdrop(ctx, p, t);
     if (state.media) drawMedia(ctx);
     else {
       const hPix = H * (0.25 + 0.7 * p.scale), wPix = hPix * .55;
       // 歩行アニメはステージを横断してループ(反転で歩行方向を変える)
       let cx = p.x * W;
-      if (p.anim === 'walk') {
-        const ph = (t * .10 * (0.5 + p.animSpeed) + .125) % 1.25;
+      if (p.anim === 'walk' || p.anim === 'run') {
+        const spd = p.anim === 'run' ? .2 : .10;
+        const ph = (t * spd * (0.5 + p.animSpeed) + .125) % 1.25;
         cx = (p.flip ? 1.125 - ph : -.125 + ph) * W;
       }
       const baseY = p.y * H;
