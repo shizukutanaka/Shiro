@@ -32,7 +32,7 @@ const ShiroLib = (() => {
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent'];
-  const EYES = ['dot', 'wink', 'closed', 'heart'];
+  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
@@ -49,7 +49,7 @@ const ShiroLib = (() => {
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
     'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
-    'rot', 'eyeGap'];
+    'rot', 'eyeGap', 'duo'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -68,6 +68,7 @@ const ShiroLib = (() => {
     ['bgX', '背景位置 X'], ['bgY', '背景位置 Y'],
     ['despill', 'スピル除去'], ['temp', '色温度'], ['shadowSoft', '影の柔らかさ'], ['brow', '眉毛の角度'],
     ['bgDrift', '背景のゆっくりズーム'], ['rot', 'モデルの傾き'], ['eyeGap', '目の間隔'],
+    ['duo', '相方（2体目）'],
   ];
 
   function defaultParams() {
@@ -76,12 +77,12 @@ const ShiroLib = (() => {
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
       smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, clothHue: 0,
-      outline: 0, vignette: 0, wmOpacity: .4, watermark: '',
+      outline: 0, vignette: 0, wmOpacity: .4, watermark: '', bubble: '',
       accHue: .58, vidSpeed: .5, blush: 0, headTilt: .5, bgSat: .5, bgContrast: .5,
       rimHue: .62, reflect: 0, tOffset: .5, grain: 0, trail: 0, subjHue: .5, pixel: 0,
       shake: 0, glow: 0, glowHue: .55, eyeSize: .5, bgX: .5, bgY: .5,
       despill: .5, temp: .5, shadowSoft: .4, brow: .5, bgDrift: 0,
-      rot: .5, eyeGap: .5,
+      rot: .5, eyeGap: .5, duo: 0,
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br',
       eyeStyle: 'dot', acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
@@ -98,6 +99,7 @@ const ShiroLib = (() => {
     o.acc = ACCS.includes(p && p.acc) ? p.acc : d.acc;
     o.bgPreset = BGS.includes(p && p.bgPreset) ? p.bgPreset : d.bgPreset;
     o.watermark = String(p && p.watermark || '').slice(0, 60);
+    o.bubble = String(p && p.bubble || '').slice(0, 24);
     o.eyeStyle = EYES.includes(p && p.eyeStyle) ? p.eyeStyle : d.eyeStyle;
     o.subjFx = SUBJFX.includes(p && p.subjFx) ? p.subjFx : d.subjFx;
     o.grade = GRADES.includes(p && p.grade) ? p.grade : d.grade;
@@ -131,6 +133,7 @@ const ShiroLib = (() => {
     p.grain = rng() < .7 ? 0 : rng() * .5; p.trail = rng() < .7 ? 0 : rng() * .7; p.subjHue = .4 + rng() * .2;
     p.pixel = rng() < .75 ? 0 : rng() * .7; p.shake = rng() < .7 ? 0 : rng() * .5;
     p.glow = rng() < .7 ? 0 : rng() * .8; p.eyeSize = .3 + rng() * .5;
+    p.duo = rng() < .7 ? 0 : rng() * .7; p.rot = .35 + rng() * .3;
     p.bgX = .5; p.bgY = .5; // 背景オフセットはランダムにしない(構図崩壊防止)
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
@@ -519,6 +522,13 @@ const ShiroLib = (() => {
       if (es === 'closed' || (es === 'wink' && s === 1)) {
         ctx.strokeStyle = 'rgba(60,64,74,0.85)'; ctx.lineWidth = Math.max(1, hr * .08 * esz);
         ctx.beginPath(); ctx.arc(ex, ey, hr * .13 * esz, .15 * Math.PI, .85 * Math.PI); ctx.stroke();
+      } else if (es === 'sharp') {
+        // キリッ目: 外側が上がった鋭角ライン(怒り/決意の表情)
+        ctx.strokeStyle = eyeCol; ctx.lineWidth = Math.max(1, hr * .07 * esz);
+        ctx.beginPath();
+        ctx.moveTo(ex + s * hr * .16 * esz, ey - hr * .05 * esz);
+        ctx.lineTo(ex - s * hr * .16 * esz, ey + hr * .09 * esz);
+        ctx.stroke();
       } else if (es === 'heart') {
         ctx.fillStyle = eyeCol; heartPath(ctx, ex, ey, hr * .15 * esz); ctx.fill();
       } else {
@@ -580,6 +590,39 @@ const ShiroLib = (() => {
     }
     drawAccessory(ctx, p.acc, hx, hy, hr, p.accHue);
     ctx.restore();
+  }
+
+  // ふきだし: モデルの頭の上にセリフの吹き出しを描く(丸角矩形+尾)
+  function drawBubble(c, text, x, topY, W, H) {
+    if (!text) return;
+    const fs = Math.max(13, Math.round(H * .03));
+    c.save();
+    c.font = `600 ${fs}px "Hiragino Sans","Segoe UI",sans-serif`;
+    const tw = Math.min(c.measureText(text).width, W * .6);
+    const bw = tw + fs * 1.4, bh = fs * 2;
+    const bx = Math.min(Math.max(x - bw / 2, 6), W - bw - 6);
+    const by = Math.max(6, topY - bh - fs * 1.2);
+    const r = fs * .5;
+    c.fillStyle = 'rgba(255,255,255,0.94)';
+    c.strokeStyle = 'rgba(40,44,54,0.8)'; c.lineWidth = Math.max(1, fs * .08);
+    c.beginPath();
+    c.moveTo(bx + r, by);
+    c.lineTo(bx + bw - r, by); c.quadraticCurveTo(bx + bw, by, bx + bw, by + r);
+    c.lineTo(bx + bw, by + bh - r); c.quadraticCurveTo(bx + bw, by + bh, bx + bw - r, by + bh);
+    c.lineTo(bx + r, by + bh); c.quadraticCurveTo(bx, by + bh, bx, by + bh - r);
+    c.lineTo(bx, by + r); c.quadraticCurveTo(bx, by, bx + r, by);
+    c.closePath();
+    // 尾(モデル方向へ三角)
+    const tx = Math.min(Math.max(x, bx + fs), bx + bw - fs);
+    c.moveTo(tx - fs * .3, by + bh - 1);
+    c.lineTo(tx + fs * .3, by + bh - 1);
+    c.lineTo(x, topY - fs * .2);
+    c.closePath();
+    c.fill(); c.stroke();
+    c.fillStyle = '#22252e';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(text, bx + bw / 2, by + bh / 2, tw + fs);
+    c.restore();
   }
 
   // パーティクル: シーン全体の空気感エフェクト(雪/キラキラ/花びら)。seed決定論
@@ -677,7 +720,7 @@ const ShiroLib = (() => {
 
   return {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS,
-    defaultParams, clampParams, randomParams,
+    defaultParams, clampParams, randomParams, drawBubble,
     serializePreset, parsePreset, parseFavList,
     keyAlpha, erodeAlpha, despill, blinkOpen, drawParticles, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
@@ -884,6 +927,13 @@ if (typeof document !== 'undefined') (() => {
       if (Math.abs(rotA) > .001) {
         ctx.save(); ctx.translate(cx, baseY); ctx.rotate(rotA); ctx.translate(-cx, -baseY);
       }
+      // 相方(duo): 後ろに小さく反転した2体目を描いてから本体
+      if (p.duo > .05) {
+        const p2 = { ...p, opacity: p.opacity * .7, flip: !p.flip };
+        ctx.save();
+        L.drawMannequin(ctx, p2, t * .9 + 2.3, cx + wPix * .55 * (p.flip ? -1 : 1), baseY, hPix * (.55 + p.duo * .35));
+        ctx.restore();
+      }
       // マネキンをオフスクリーンに描き、シルエット化して影/リムに利用
       if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0 || p.glow > 0) {
         modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix);
@@ -928,6 +978,8 @@ if (typeof document !== 'undefined') (() => {
         if (p.blend !== 'none') ctx.globalCompositeOperation = 'source-over';
         if (fx) ctx.filter = 'none';
       }
+      // ふきだし: 頭頂の少し上に表示(回転の内側・本体と一緒に傾く)
+      if (p.bubble) L.drawBubble(ctx, p.bubble, cx, baseY - hPix * 1.02, W, H);
       if (Math.abs(rotA) > .001) ctx.restore();
     }
     if (state.media && Math.abs(rotA) > .001) ctx.restore();
@@ -985,6 +1037,7 @@ if (typeof document !== 'undefined') (() => {
       $('sel-wmpos').value = state.params.wmPos;
       $('chk-flip').checked = state.params.flip;
       $('inp-watermark').value = state.params.watermark;
+      $('inp-bubble').value = state.params.bubble;
     }
   }
   $('sel-anim').addEventListener('change', e => { state.params.anim = e.target.value; touch(); });
@@ -1000,6 +1053,7 @@ if (typeof document !== 'undefined') (() => {
   $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });
   $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
   $('inp-watermark').addEventListener('input', e => { state.params.watermark = e.target.value.slice(0, 60); touch(); });
+  $('inp-bubble').addEventListener('input', e => { state.params.bubble = e.target.value.slice(0, 24); touch(); });
   // 配置プリセット: モデルを9アンカーへ一発移動
   const PLACES = {
     tl: [.2, .62], tc: [.5, .62], tr: [.8, .62],
