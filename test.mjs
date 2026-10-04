@@ -185,6 +185,19 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(['none','warm','cool','noir','vivid'].includes(pr.grade), 'random grade valid');
   ok(L.clampParams({ subjFx: 'x', grade: 'y' }).subjFx === 'none' && L.clampParams({ subjFx: 'x', grade: 'y' }).grade === 'none', 'bad fx/grade fall back');
   ok(L.clampParams({ acc: 'crown' }).acc === 'crown' && L.clampParams({ acc: 'phones' }).acc === 'phones', 'new accessories valid');
+  ok(L.clampParams({ blend: 'bogus' }).blend === 'none' && L.clampParams({ blend: 'screen' }).blend === 'screen', 'blend clamp');
+  // glow
+  {
+    const calls = [];
+    const gctx = new Proxy({}, {
+      get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+      set: () => true,
+    });
+    L.drawGlow(gctx, {}, 300, 500, 640, 600, 0);
+    ok(calls.length === 0, 'glow off draws nothing');
+    L.drawGlow(gctx, {}, 300, 500, 640, 600, .8);
+    ok(calls.length === 4 && calls.every(Number.isFinite), 'glow draws blurred silhouette');
+  }
   // accessories draw without error
   for (const acc of L.ACCS) {
     const p = L.defaultParams(); p.acc = acc;
