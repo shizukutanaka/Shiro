@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'hop', 'dab', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'hop', 'dab', 'side', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero', 'ushanka', 'laurel'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero', 'ushanka', 'laurel', 'nightcap'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark', 'wind'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier', 'ruins', 'sakura'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier', 'ruins', 'sakura', 'moon'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat', 'wide'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp', 'braid'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -654,6 +654,16 @@ const ShiroLib = (() => {
         q.lArm = .9; q.lElb = 1.7;
         q.headTilt = .5 + db; q.lean = .12;
         q.bob = .015 * Math.abs(Math.sin(tt * 4));
+        break;
+      }
+      case 'side': {
+        // サイドステップ: 左右へ交互にステップ、腰を横に揺らす
+        const sd = Math.sin(tt * 3.2);
+        q.sway = .12 * sd;
+        q.lean = .08 * sd;
+        q.lThigh = Math.max(0, sd) * .35; q.rThigh = -Math.max(0, -sd) * .35;
+        q.lKnee = Math.max(0, sd) * .25; q.rKnee = -Math.max(0, -sd) * .25;
+        q.lArm = .4 + .2 * sd; q.rArm = .4 - .2 * sd; q.lElb = .5; q.rElb = .5;
         break;
       }
       case 'still': break;
@@ -1383,6 +1393,24 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.arc(hx + hr * .95, hy - hr * .62, hr * .09, 0, 7); ctx.fill();
         break;
       }
+      case 'nightcap': {
+        // ナイトキャップ: 垂れる三角帽+房(眠そうな帽子)
+        ctx.fillStyle = `hsla(${hue},50%,60%,1)`;
+        ctx.beginPath();
+        ctx.moveTo(hx - hr * .8, hy - hr * .6);
+        ctx.quadraticCurveTo(hx - hr * .2, hy - hr * 1.7, hx + hr * 1.1, hy - hr * 1.5);
+        ctx.quadraticCurveTo(hx + hr * .5, hy - hr * 1.1, hx + hr * .7, hy - hr * .55);
+        ctx.closePath(); ctx.fill();
+        // 房
+        ctx.fillStyle = '#f0f0f0';
+        ctx.beginPath(); ctx.arc(hx + hr * 1.08, hy - hr * 1.5, hr * .14, 0, 7); ctx.fill();
+        // 帯
+        ctx.fillStyle = '#f0f0f0';
+        ctx.beginPath();
+        ctx.ellipse(hx, hy - hr * .62, hr * .82, hr * .18, 0, Math.PI, 0);
+        ctx.closePath(); ctx.fill();
+        break;
+      }
       case 'laurel': {
         // 月桂冠: 左右から頭を囲む葉の輪
         ctx.fillStyle = '#4a7a3a';
@@ -1813,6 +1841,41 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath();
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
+      }
+    } else if (pr === 'moon') {
+      // 月面: 暗い空+地球+クレーターの灰色地表
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#0a0a12'); gr.addColorStop(.75, '#101018'); gr.addColorStop(1, '#181820');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rng = L.mulberry32(97);
+      // 星
+      c.fillStyle = '#fff';
+      for (let i = 0; i < 60; i++) {
+        c.fillRect(rng() * W, rng() * H * .6, 1.2, 1.2);
+      }
+      // 地球(青い丸+白い雲筋)
+      c.fillStyle = '#3a6ac8';
+      c.beginPath(); c.arc(W * .8, H * .18, H * .1, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = H * .012;
+      c.beginPath(); c.arc(W * .8, H * .18, H * .1, -.6, .9); c.stroke();
+      // 地表
+      c.fillStyle = '#8a8a92';
+      c.fillRect(0, H * .76, W, H * .24);
+      // 起伏線
+      c.strokeStyle = '#6a6a72'; c.lineWidth = 3;
+      c.beginPath();
+      for (let i = 0; i <= 20; i++) {
+        const px = W * i / 20, py = H * .76 + Math.sin(i * 2.1) * H * .015;
+        i ? c.lineTo(px, py) : c.moveTo(px, py);
+      }
+      c.stroke();
+      // クレーター
+      for (let i = 0; i < 7; i++) {
+        const crx = rng() * W, cry = H * (.8 + rng() * .15), crr = W * (.015 + rng() * .03);
+        c.fillStyle = '#6e6e76';
+        c.beginPath(); c.ellipse(crx, cry, crr, crr * .45, 0, 0, 7); c.fill();
+        c.strokeStyle = '#a8a8b0'; c.lineWidth = 2;
+        c.beginPath(); c.ellipse(crx, cry - 1, crr, crr * .45, 0, Math.PI, 0); c.stroke();
       }
     } else if (pr === 'sakura') {
       // 桜並木: 淡い空 + 桜の木(ピンクの樹冠) + 散る花びら + 地面
