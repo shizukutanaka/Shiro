@@ -26,7 +26,7 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower'];
@@ -34,7 +34,7 @@ const ShiroLib = (() => {
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying'];
-  const HAIRS = ['none', 'short', 'bob', 'twin', 'long'];
+  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
@@ -398,6 +398,14 @@ const ShiroLib = (() => {
         q.lArm = .06; q.rArm = .06; q.lElb = .1; q.rElb = .1;
         break;
       }
+      case 'flip': {
+        // 宙返り: Y反転は描画側の座標変換(cos(t*2.5))で行う。体は浮き上がり+脚タック
+        const u = .5 + .5 * Math.sin(tt * 2.5);
+        q.bob = .08 * u;
+        q.lKnee = q.rKnee = .7 * u; q.lThigh = q.rThigh = -.15 * u;
+        q.lArm = .5; q.rArm = .5; q.lElb = .4; q.rElb = .4;
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -571,7 +579,20 @@ const ShiroLib = (() => {
     if (lw > 0) { ctx.strokeStyle = 'rgba(40,44,54,0.85)'; ctx.lineWidth = lw; }
     ctx.beginPath(); ctx.arc(hx, hy, hr, 0, 7); ctx.fill();
     if (lw > 0) ctx.stroke();
-    if (hs !== 'none') {
+    if (hs === 'ahoge') {
+      // アホ毛: 頭頂から一本だけ跳ねた毛束
+      ctx.strokeStyle = hairC; ctx.lineWidth = Math.max(1.5, hr * .09); ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(hx + hr * .08, hy - hr * 1.02);
+      ctx.quadraticCurveTo(hx + hr * .55, hy - hr * 1.9, hx + hr * .85, hy - hr * 1.35);
+      ctx.stroke();
+    }
+    if (hs === 'mohawk') {
+      // モヒカン: 頭頂の縦帯(前髪キャップは描かず剥ぎ感を出す)
+      ctx.fillStyle = hairC;
+      ctx.beginPath(); ctx.ellipse(hx, hy - hr * 1.05, hr * .24, hr * .5, 0, 0, 7); ctx.fill();
+    }
+    if (hs !== 'none' && hs !== 'mohawk') {
       // 前髪+キャップ: 頭の上半分を覆い、ギザギザ前髪で顔を残す
       ctx.fillStyle = hairC;
       ctx.beginPath();
@@ -1173,8 +1194,9 @@ if (typeof document !== 'undefined') (() => {
     // モデルの傾き + 回転(spin) + つぶし・伸び(squash): 被写体を足元支点に変形(影等も一体)
     const rotA = (p.rot - .5) * .6;
     const spinX = p.anim === 'spin' ? Math.cos(t * 2.5) : 1;
+    const flipY = p.anim === 'flip' ? Math.cos(t * 2.5) : 1; // 宙返り: 負になると上下反転=バク転
     const sq = p.squash > .02 ? Math.sin(t * 3) * p.squash : 0;
-    const sxx = (1 + sq * .18) * spinX, syy = 1 - sq * .22;
+    const sxx = (1 + sq * .18) * spinX, syy = (1 - sq * .22) * flipY;
     const xformed = Math.abs(rotA) > .001 || Math.abs(sxx - 1) > .001 || Math.abs(syy - 1) > .001;
     if (state.media && xformed) {
       ctx.save(); ctx.translate(p.x * W, p.y * H); ctx.rotate(rotA); ctx.scale(sxx, syy); ctx.translate(-p.x * W, -p.y * H);
