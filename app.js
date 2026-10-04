@@ -30,7 +30,7 @@ const ShiroLib = (() => {
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask'];
-  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf'];
+  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star'];
@@ -52,7 +52,7 @@ const ShiroLib = (() => {
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
     'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
     'rot', 'eyeGap', 'duo', 'hairHue', 'squash', 'frame', 'frameHue',
-    'subjSat', 'subjBright', 'titleSize'];
+    'subjSat', 'subjBright', 'titleSize', 'camZoom'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -74,6 +74,7 @@ const ShiroLib = (() => {
     ['duo', '相方（2体目）'], ['hairHue', '髪色'], ['squash', 'つぶし・伸び'],
     ['frame', '額縁の太さ'], ['frameHue', '額縁の色'],
     ['subjSat', 'モデル彩度'], ['subjBright', 'モデル明度'], ['titleSize', 'タイトル大きさ'],
+    ['camZoom', 'シーンズーム'],
   ];
 
   function defaultParams() {
@@ -89,7 +90,7 @@ const ShiroLib = (() => {
       despill: .5, temp: .5, shadowSoft: .4, brow: .5, bgDrift: 0,
       rot: .5, eyeGap: .5, duo: 0, hairHue: .07, squash: 0,
       frame: 0, frameHue: .12,
-      subjSat: .5, subjBright: .5, titleSize: .5, title: '',
+      subjSat: .5, subjBright: .5, titleSize: .5, title: '', camZoom: 0,
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br', vidQ: 'std',
       eyeStyle: 'dot', acc: 'none', acc2: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
@@ -688,7 +689,7 @@ const ShiroLib = (() => {
   // パーティクル: シーン全体の空気感エフェクト(雪/キラキラ/花びら)。seed決定論
   function drawParticles(ctx, W, H, type, t, seed) {
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
-    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : 42;
+    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : 42;
     ctx.save();
     for (let i = 0; i < N; i++) {
       if (type === 'snow') {
@@ -717,6 +718,20 @@ const ShiroLib = (() => {
         ctx.beginPath();
         ctx.ellipse(x, y, 2.5 + 2.5 * h(i, 3), 1.2 + 1.2 * h(i, 3), Math.sin(t * 1.6 + i * 2) * 1.4, 0, 7);
         ctx.fill();
+      } else if (type === 'ember') {
+        // 火の粉: 揺らめきながら上昇
+        const x = h(i, 0) * W + Math.sin(t * 1.4 + h(i, 1) * 9) * W * .04;
+        const y = (1 - ((h(i, 1) + t * (.05 + .05 * h(i, 2))) % 1)) * H;
+        const fl = .4 + .6 * Math.abs(Math.sin(t * 3 + i));
+        ctx.fillStyle = `rgba(255,${120 + 80 * h(i, 3) | 0},60,${fl * .85})`;
+        ctx.beginPath(); ctx.arc(x, y, 1 + 1.8 * h(i, 3), 0, 7); ctx.fill();
+      } else if (type === 'bubble') {
+        // 泡: ゆらゆら上昇する泡(輪郭線)
+        const x = h(i, 0) * W + Math.sin(t * .9 + h(i, 1) * 8) * W * .05;
+        const y = (1 - ((h(i, 1) + t * (.04 + .04 * h(i, 2))) % 1)) * H;
+        ctx.strokeStyle = `rgba(170,215,255,${.35 + .35 * h(i, 4)})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(x, y, 2 + 4 * h(i, 3), 0, 7); ctx.stroke();
       } else { // petal
         const x = h(i, 0) * W + Math.sin(t * .6 + h(i, 1) * 9) * W * .05;
         const y = ((h(i, 1) + t * (.03 + .03 * h(i, 2))) % 1) * H;
@@ -1031,9 +1046,10 @@ if (typeof document !== 'undefined') (() => {
     const t = state.frozenT !== null ? state.frozenT + (p.tOffset - .5) * 4 : liveT;
     ctx.clearRect(0, 0, W, H);
     // 手持ちカメラ: シーン全体を微小ランダム平行移動(少し拡大して端の空白を隠す)
-    const shaking = p.shake > 0;
+    const shaking = p.shake > 0 || p.camZoom > .02;
     if (shaking) {
-      const os = 1 + p.shake * .04;
+      // シーンズーム: ゆっくり呼吸するような拡縮(動画映え演出)
+      const os = 1 + p.shake * .04 + Math.sin(t * .6) * p.camZoom * .22;
       ctx.save();
       ctx.translate(W / 2 + (Math.random() - .5) * p.shake * 16, H / 2 + (Math.random() - .5) * p.shake * 16);
       ctx.scale(os, os);
