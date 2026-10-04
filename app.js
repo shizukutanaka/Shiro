@@ -29,11 +29,11 @@ const ShiroLib = (() => {
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot'];
-  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky'];
+  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
@@ -607,6 +607,19 @@ const ShiroLib = (() => {
           k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
         }
         ctx.closePath(); ctx.fill();
+      } else if (es === 'crying') {
+        // 泣き目: ふつうの瞳 + 目尻側に涙滴(瞬きにも連動)
+        ctx.fillStyle = eyeCol;
+        ctx.beginPath();
+        ctx.ellipse(ex, ey, Math.max(1, hr * .09 * esz), Math.max(.5, hr * .09 * esz * eo), 0, 0, 7);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(130,175,255,0.85)';
+        const tx2 = ex + s * hr * .14, ty2 = ey + hr * .16;
+        ctx.beginPath();
+        ctx.moveTo(tx2, ty2 - hr * .05);
+        ctx.quadraticCurveTo(tx2 + hr * .07, ty2 + hr * .02, tx2, ty2 + hr * .09);
+        ctx.quadraticCurveTo(tx2 - hr * .07, ty2 + hr * .02, tx2, ty2 - hr * .05);
+        ctx.fill();
       } else {
         ctx.fillStyle = eyeCol;
         ctx.beginPath();
@@ -887,6 +900,20 @@ const ShiroLib = (() => {
         }
         break;
       }
+      case 'flower': {
+        // 花飾り: 頭の側面に5弁の花(accHueで花弁着色)
+        const fx2 = hx + hr * .62, fy2 = hy - hr * .55, pr3 = hr * .16;
+        ctx.fillStyle = acc2;
+        for (let k = 0; k < 5; k++) {
+          const a2 = k * Math.PI * 2 / 5;
+          ctx.beginPath();
+          ctx.ellipse(fx2 + Math.cos(a2) * pr3 * 1.15, fy2 + Math.sin(a2) * pr3 * 1.15, pr3, pr3 * .58, a2, 0, 7);
+          ctx.fill();
+        }
+        ctx.fillStyle = 'hsla(50,90%,60%,0.95)';
+        ctx.beginPath(); ctx.arc(fx2, fy2, pr3 * .45, 0, 7); ctx.fill(); // しべ
+        break;
+      }
     }
     ctx.restore();
   }
@@ -980,6 +1007,22 @@ if (typeof document !== 'undefined') (() => {
       c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.lineTo(W * .9, H * .95); c.lineTo(W * .1, H * .95);
       c.closePath(); c.fill();
       c.beginPath(); c.ellipse(W * .5, H * .88, W * .28, H * .07, 0, 0, 7); c.fill(); // 床の光り輪
+    } else if (pr === 'sky') {
+      // 青空: 晴れの空 + ゆっくり流れる雲(手続き描画)
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#2e7bd6'); gr.addColorStop(1, '#a8d4f0');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rng = L.mulberry32(77);
+      for (let i = 0; i < 5; i++) {
+        const bx = rng(), sp = .008 + .01 * rng(), cy = H * (.05 + rng() * .45);
+        const cxx = ((bx + t * sp) % 1) * W;
+        c.fillStyle = 'rgba(255,255,255,0.85)';
+        for (let k = -1; k <= 1; k++) {
+          c.beginPath();
+          c.ellipse(cxx + k * W * .05, cy + (k === 0 ? -H * .014 : 0), W * (.045 + .018 * rng()), H * .028, 0, 0, 7);
+          c.fill();
+        }
+      }
     } else defaultBackdrop(c);
     c.filter = 'none';
     if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
