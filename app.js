@@ -52,7 +52,7 @@ const ShiroLib = (() => {
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
     'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
     'rot', 'eyeGap', 'duo', 'hairHue', 'squash', 'frame', 'frameHue',
-    'subjSat', 'subjBright', 'titleSize', 'camZoom'];
+    'subjSat', 'subjBright', 'titleSize', 'camZoom', 'shine', 'shadowHue'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -75,6 +75,7 @@ const ShiroLib = (() => {
     ['frame', '額縁の太さ'], ['frameHue', '額縁の色'],
     ['subjSat', 'モデル彩度'], ['subjBright', 'モデル明度'], ['titleSize', 'タイトル大きさ'],
     ['camZoom', 'シーンズーム'],
+    ['shine', '光沢（テカリ）'], ['shadowHue', '影の色'],
   ];
 
   function defaultParams() {
@@ -91,6 +92,7 @@ const ShiroLib = (() => {
       rot: .5, eyeGap: .5, duo: 0, hairHue: .07, squash: 0,
       frame: 0, frameHue: .12,
       subjSat: .5, subjBright: .5, titleSize: .5, title: '', camZoom: 0,
+      shine: 0, shadowHue: .62,
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br', vidQ: 'std',
       eyeStyle: 'dot', acc: 'none', acc2: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
@@ -432,10 +434,10 @@ const ShiroLib = (() => {
   }
 
   // 接地影: キャラクターを背景に「着地」させる最重要の合成要素。
-  function contactShadow(ctx, cx, baseY, rx, alpha) {
+  function contactShadow(ctx, cx, baseY, rx, alpha, col) {
     if (alpha <= 0 || rx <= 0) return;
     const g = ctx.createRadialGradient(cx, baseY, 0, cx, baseY, rx);
-    g.addColorStop(0, `rgba(0,0,0,${alpha})`);
+    g.addColorStop(0, col || `rgba(0,0,0,${alpha})`);
     g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.save();
     ctx.fillStyle = g;
@@ -487,7 +489,7 @@ const ShiroLib = (() => {
     const limbW = hPix * (.045 + .02 * p.shoulder);
     const bodyW = hPix * (.10 + .06 * p.shoulder);
 
-    contactShadow(ctx, cx, baseY, hPix * (.16 + .07 * p.shoulder), p.shadow * .5);
+    contactShadow(ctx, cx, baseY, hPix * (.16 + .07 * p.shoulder), p.shadow * .5, `hsla(${Math.round((p.shadowHue == null ? .62 : p.shadowHue) * 360)},45%,12%,${p.shadow * .5})`);
 
     ctx.save();
     ctx.globalAlpha = p.opacity;
@@ -687,6 +689,22 @@ const ShiroLib = (() => {
   }
 
   // パーティクル: シーン全体の空気感エフェクト(雪/キラキラ/花びら)。seed決定論
+  // 光沢: 白い帯が被写体を左→右にテカテカとスイープ(source-atopでシルエット内のみ)
+  function shined(src, sctx, cv, t, amt) {
+    cv.width = Math.max(2, src.width); cv.height = Math.max(2, src.height);
+    sctx.clearRect(0, 0, cv.width, cv.height);
+    sctx.drawImage(src, 0, 0, cv.width, cv.height);
+    sctx.globalCompositeOperation = 'source-atop';
+    const ph = ((t * .45) % 2) - .5;
+    const gr = sctx.createLinearGradient(cv.width * (ph - .28), 0, cv.width * ph, cv.height * .65);
+    gr.addColorStop(0, 'rgba(255,255,255,0)');
+    gr.addColorStop(.5, `rgba(255,255,255,${.6 * amt})`);
+    gr.addColorStop(1, 'rgba(255,255,255,0)');
+    sctx.fillStyle = gr; sctx.fillRect(0, 0, cv.width, cv.height);
+    sctx.globalCompositeOperation = 'source-over';
+    return cv;
+  }
+
   function drawParticles(ctx, W, H, type, t, seed) {
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
     const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : 42;
@@ -839,7 +857,7 @@ const ShiroLib = (() => {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams, drawBubble,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, despill, blinkOpen, drawParticles, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory,
+    keyAlpha, erodeAlpha, despill, blinkOpen, drawParticles, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory, shined,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -976,7 +994,8 @@ if (typeof document !== 'undefined') (() => {
     if (state.media.kind === 'image') state.keyParams = cacheKey;
     return keyCv;
   }
-  function drawMedia(c) {
+  const shnCv = document.createElement('canvas'), snc = shnCv.getContext('2d');
+  function drawMedia(c, t) {
     const el = state.media.el;
     const iw = el.naturalWidth || el.videoWidth, ih = el.naturalHeight || el.videoHeight;
     if (!iw || !ih) return;
@@ -986,11 +1005,11 @@ if (typeof document !== 'undefined') (() => {
     const hPix = H * (0.25 + 0.7 * state.params.scale);
     const wPix = hPix * (sw / sh);
     const cx = state.params.x * W, baseY = state.params.y * H;
-    L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5);
+    L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5, `hsla(${Math.round(state.params.shadowHue * 360)},45%,12%,${state.params.shadow * .5})`);
     const silCache = state.media.kind === 'image';
     const glowCol = `hsla(${Math.round(state.params.glowHue * 360)},90%,70%,1)`;
     L.drawGlow(c, silhouetteOf(src, sw, sh, glowCol, glowCv, glowCtx, silCache), wPix, hPix, cx, baseY, state.params.glow);
-    L.drawCastShadow(c, silhouetteOf(src, sw, sh, null, null, null, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4, state.params.shadowSoft);
+    L.drawCastShadow(c, silhouetteOf(src, sw, sh, `hsla(${Math.round(state.params.shadowHue * 360)},45%,12%,1)`, null, null, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4, state.params.shadowSoft);
     L.drawRimLight(c, silhouetteOf(src, sw, sh, `hsla(${Math.round(state.params.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
     L.drawStickerOutline(c, silhouetteOf(src, sw, sh, '#ffffff', outCv, outCtx, silCache), wPix, hPix, cx, baseY, state.params.outline);
     L.drawReflection(c, src, cx, baseY, wPix, hPix, state.params.reflect);
@@ -1018,7 +1037,7 @@ if (typeof document !== 'undefined') (() => {
       c.imageSmoothingEnabled = false;
       drawSrc = pixCv;
     }
-    c.drawImage(drawSrc, cx - wPix / 2, baseY - hPix, wPix, hPix);
+    c.drawImage(state.params.shine > .02 ? L.shined(drawSrc, snc, shnCv, t, state.params.shine) : drawSrc, cx - wPix / 2, baseY - hPix, wPix, hPix);
     c.restore();
   }
 
@@ -1065,7 +1084,7 @@ if (typeof document !== 'undefined') (() => {
     if (state.media && xformed) {
       ctx.save(); ctx.translate(p.x * W, p.y * H); ctx.rotate(rotA); ctx.scale(sxx, syy); ctx.translate(-p.x * W, -p.y * H);
     }
-    if (state.media) drawMedia(ctx);
+    if (state.media) drawMedia(ctx, t);
     else {
       const hPix = H * (0.25 + 0.7 * p.scale), wPix = hPix * .55;
       // 歩行アニメはステージを横断してループ(反転で歩行方向を変える)
@@ -1087,12 +1106,12 @@ if (typeof document !== 'undefined') (() => {
         ctx.restore();
       }
       // マネキンをオフスクリーンに描き、シルエット化して影/リムに利用
-      if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0 || p.glow > 0) {
+      if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0 || p.glow > 0 || p.shine > .02) {
         modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix);
         mctx.clearRect(0, 0, modCv.width, modCv.height);
         L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, modCv.height);
         L.drawGlow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.glowHue * 360)},90%,70%,1)`, glowCv, glowCtx), wPix, hPix, cx, baseY, p.glow);
-        L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4, p.shadowSoft);
+        L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.shadowHue * 360)},45%,12%,1)`), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4, p.shadowSoft);
         L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hPix, cx, baseY, p.castDir, p.rim);
         L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, '#ffffff', outCv, outCtx), wPix, hPix, cx, baseY, p.outline);
         L.drawReflection(ctx, modCv, cx, baseY, wPix, hPix, p.reflect);
@@ -1127,7 +1146,11 @@ if (typeof document !== 'undefined') (() => {
           ctx.globalAlpha = 1;
         }
         ctx.globalAlpha = p.opacity;
-        L.drawMannequin(ctx, p, t, cx, baseY, hPix);
+        if (p.shine > .02) {
+          ctx.drawImage(L.shined(modCv, snc, shnCv, t, p.shine), cx - wPix / 2, baseY - hPix, wPix, hPix);
+        } else {
+          L.drawMannequin(ctx, p, t, cx, baseY, hPix);
+        }
         ctx.globalAlpha = 1;
         if (p.blend !== 'none') ctx.globalCompositeOperation = 'source-over';
         if (fx) ctx.filter = 'none';
