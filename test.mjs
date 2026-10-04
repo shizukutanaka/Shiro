@@ -1,0 +1,112 @@
+// node test.mjs — ShiroLib 純粋ロジックの検証ゲート
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
+
+const src = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
+const sandbox = { console };
+vm.createContext(sandbox);
+vm.runInContext(src, sandbox);
+const L = sandbox.ShiroLib;
+
+let pass = 0, fail = 0;
+const ok = (cond, name) => { cond ? pass++ : (fail++, console.error('FAIL:', name)); };
+const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name); } catch { pass++; } };
+
+// rng
+{
+  const r1 = L.mulberry32(42), r2 = L.mulberry32(42);
+  ok(r1() === r2() && r1() === r2(), 'mulberry32 deterministic');
+  const r = L.mulberry32(1); for (let i = 0; i < 100; i++) { const v = r(); ok(v >= 0 && v < 1, 'rng range'); }
+  ok(L.strSeed('shiro') === L.strSeed('shiro') && L.strSeed('a') !== L.strSeed('b'), 'strSeed');
+}
+
+// clampParams
+{
+  const p = L.clampParams({ height: 5, x: -1, anim: 'bogus', flip: 1, seed: 3.7 });
+  ok(p.height === 1 && p.x === 0, 'clamp numeric range');
+  ok(p.anim === 'idle', 'invalid anim falls back');
+  ok(p.flip === true && p.seed === 3, 'flip/seed normalized');
+  const d = L.clampParams(null);
+  for (const k of L.NUM_KEYS) ok(d[k] >= 0 && d[k] <= 1, `default ${k} in range`);
+  for (const k of L.NUM_KEYS) ok(d[k] === L.defaultParams()[k], `default ${k} matches`);
+}
+
+// randomParams
+{
+  for (let i = 0; i < 30; i++) {
+    const p = L.randomParams(L.mulberry32(i));
+    for (const k of L.NUM_KEYS) ok(p[k] >= 0 && p[k] <= 1, `random ${k} in range`);
+    ok(L.ANIMS.includes(p.anim), 'random anim valid');
+  }
+}
+
+// presets round-trip
+{
+  const p = L.randomParams(L.mulberry32(7));
+  const back = L.parsePreset(L.serializePreset('テスト', p));
+  ok(back.name === 'テスト' && JSON.stringify(back.params) === JSON.stringify(p), 'preset round-trip');
+  throws(() => L.parsePreset('{"v":2}'), 'bad version rejected');
+  throws(() => L.parsePreset('not json'), 'garbage rejected');
+  const list = L.parseFavList(JSON.stringify([{ name: 'a', params: p }, { bogus: 1 }, { name: 'b', params: { height: 9 } }]));
+  ok(list.length === 2 && list[1].params.height === 1, 'fav list filters and clamps');
+  throws(() => L.parseFavList('{}'), 'non-array fav list rejected');
+}
+
+// chroma key
+{
+  ok(L.keyAlpha(255, 255, 255, 0, .5) === 255, 'thresh=0 keeps pure white');
+  ok(L.keyAlpha(255, 255, 255, .8, 0) === 0, 'pure white keyed out');
+  ok(L.keyAlpha(20, 30, 40, .5, .3) === 255, 'dark pixel opaque');
+  const a = L.keyAlpha(150, 160, 170, .5, .8);
+  ok(a > 0 && a < 255, 'soft edge partial alpha');
+}
+
+// pose determinism
+{
+  const p = L.defaultParams();
+  for (const anim of L.ANIMS) {
+    p.anim = anim;
+    const a = L.mannequinPose(p, 1.234), b = L.mannequinPose(p, 1.234);
+    ok(JSON.stringify(a) === JSON.stringify(b), `pose ${anim} deterministic`);
+    for (const v of Object.values(a)) ok(Number.isFinite(v), `pose ${anim} finite`);
+  }
+}
+
+// skeleton sane
+{
+  const p = L.defaultParams();
+  const K = L.skeleton(p, L.mannequinPose(p, 0));
+  for (const [key, pt] of Object.entries(K)) {
+    if (!Array.isArray(pt)) continue;
+    ok(pt.every(Number.isFinite), `skeleton ${key} finite`);
+    ok(pt[1] >= -0.01 && pt[1] <= 1.2, `skeleton ${key} y range`);
+  }
+  ok(K.lAnk[1] > 0 && K.headC[1] > K.lAnk[1], 'head above ankles');
+}
+
+// drawMannequin with mock ctx: all coords finite, no throw
+{
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => {
+      for (const v of a) if (typeof v === 'number') calls.push(v);
+    },
+    set: () => true,
+  });
+  for (const anim of L.ANIMS) {
+    const p = L.defaultParams(); p.anim = anim;
+    L.drawMannequin(ctx, p, 2.5, 640, 600, 500);
+  }
+  ok(calls.length > 100, 'draw emits geometry');
+  ok(calls.every(Number.isFinite), 'draw coords finite');
+}
+
+// mime picker
+{
+  ok(L.pickMime(() => true).ext === 'mp4', 'mp4 preferred');
+  ok(L.pickMime(m => m.includes('webm')).ext === 'webm', 'webm fallback');
+  ok(L.pickMime(() => false) === null, 'no support -> null');
+}
+
+console.log(`${pass} pass / ${fail} fail`);
+process.exit(fail ? 1 : 0);
