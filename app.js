@@ -30,10 +30,11 @@ const ShiroLib = (() => {
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses'];
   const BGS = ['gradient', 'green', 'white', 'transparent'];
+  const EYES = ['dot', 'wink', 'closed', 'heart'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
     'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity',
-    'accHue', 'vidSpeed'];
+    'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -45,6 +46,7 @@ const ShiroLib = (() => {
     ['castDir', '影の向き'], ['rim', 'リムライト'], ['eyeHue', '目の色'],
     ['clothHue', '衣装色'], ['outline', '縁取り（ステッカー）'], ['vignette', 'ビネット'],
     ['wmOpacity', '透かしの濃さ'], ['accHue', 'アクセサリ色'], ['vidSpeed', '動画の速さ'],
+    ['blush', '頬の赤み'], ['headTilt', '頭の傾き'], ['bgSat', '背景の彩度'], ['bgContrast', '背景コントラスト'],
   ];
 
   function defaultParams() {
@@ -54,7 +56,8 @@ const ShiroLib = (() => {
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
       smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, clothHue: 0,
       outline: 0, vignette: 0, wmOpacity: .4, watermark: '',
-      accHue: .58, vidSpeed: .5, acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
+      accHue: .58, vidSpeed: .5, blush: 0, headTilt: .5, bgSat: .5, bgContrast: .5,
+      eyeStyle: 'dot', acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
 
@@ -69,6 +72,7 @@ const ShiroLib = (() => {
     o.acc = ACCS.includes(p && p.acc) ? p.acc : d.acc;
     o.bgPreset = BGS.includes(p && p.bgPreset) ? p.bgPreset : d.bgPreset;
     o.watermark = String(p && p.watermark || '').slice(0, 60);
+    o.eyeStyle = EYES.includes(p && p.eyeStyle) ? p.eyeStyle : d.eyeStyle;
     o.flip = !!(p && p.flip);
     const sv = p ? +p.seed : NaN;
     o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
@@ -80,13 +84,15 @@ const ShiroLib = (() => {
     for (const k of NUM_KEYS) p[k] = rng();
     p.anim = ANIMS[Math.floor(rng() * ANIMS.length)];
     p.acc = ACCS[Math.floor(rng() * ACCS.length)];
+    p.eyeStyle = EYES[Math.floor(rng() * EYES.length)];
     p.flip = rng() < .35;
     p.bgPreset = rng() < .75 ? 'gradient' : BGS[1 + Math.floor(rng() * 3)];
     p.x = .3 + rng() * .4; p.y = .6 + rng() * .35;
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
     p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
-    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7; p.vignette = rng() < .6 ? 0 : rng() * .6; p.watermark = ''; p.wmOpacity = .4; p.vidSpeed = .5;
+    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7; p.vignette = rng() < .6 ? 0 : rng() * .6; p.watermark = ''; p.wmOpacity = .4; p.vidSpeed = .5; p.blush = rng() * .6; p.headTilt = .35 + rng() * .3;
+    p.bgSat = .3 + rng() * .7; p.bgContrast = .35 + rng() * .5;
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -299,7 +305,7 @@ const ShiroLib = (() => {
     }
     K.neckB = [0, torsoTop - .01];
     K.neckT = [0, torsoTop + neck * .6];
-    K.headC = [Math.sin(q.headTilt) * headR, torsoTop + neck + headR];
+    K.headC = [Math.sin(q.headTilt + (p.headTilt - .5) * .5) * headR, torsoTop + neck + headR];
     K.pelvis = [0, legFrac + .02];
     K.torsoTop = [0, torsoTop];
     K.headR = headR; K.shHalf = shHalf; K.hipHalf = hipHalf;
@@ -327,6 +333,14 @@ const ShiroLib = (() => {
     ctx.translate(cx, baseY); ctx.scale(1, .24); ctx.translate(-cx, -baseY);
     ctx.beginPath(); ctx.arc(cx, baseY, rx, 0, 7); ctx.fill();
     ctx.restore();
+  }
+
+  function heartPath(ctx, x, y, s) {
+    ctx.beginPath();
+    ctx.moveTo(x, y + s * .6);
+    ctx.bezierCurveTo(x - s * 1.1, y - s * .3, x - s * .55, y - s * 1.05, x, y - s * .35);
+    ctx.bezierCurveTo(x + s * .55, y - s * 1.05, x + s * 1.1, y - s * .3, x, y + s * .6);
+    ctx.closePath();
   }
 
   // ctx に (cx, baseY) を足元・高さ hPix で描画。q は mannequinPose の結果。
@@ -376,12 +390,32 @@ const ShiroLib = (() => {
     ctx.beginPath(); ctx.arc(hx, hy, hr, 0, 7); ctx.fill();
     if (lw > 0) ctx.stroke();
     // eyes (素朴な2点、まばたきで縦につぶれる)
+    // eyes: スタイル別(ふつう2点/ウィンク/うっとり^^/ハート)。dotのみ瞬きでつぶれる
     const eo = Math.max(.12, blinkOpen(t, p.seed));
-    ctx.fillStyle = `hsla(${Math.round(p.eyeHue * 360)},65%,42%,0.9)`;
+    const eyeCol = `hsla(${Math.round(p.eyeHue * 360)},65%,42%,0.9)`;
+    const es = p.eyeStyle || 'dot';
     for (const s of [-1, 1]) {
-      ctx.beginPath();
-      ctx.ellipse(hx + s * hr * .38, hy - hr * .08, Math.max(1, hr * .09), Math.max(.5, hr * .09 * eo), 0, 0, 7);
-      ctx.fill();
+      const ex = hx + s * hr * .38, ey = hy - hr * .08;
+      if (es === 'closed' || (es === 'wink' && s === 1)) {
+        ctx.strokeStyle = 'rgba(60,64,74,0.85)'; ctx.lineWidth = Math.max(1, hr * .08);
+        ctx.beginPath(); ctx.arc(ex, ey, hr * .13, .15 * Math.PI, .85 * Math.PI); ctx.stroke();
+      } else if (es === 'heart') {
+        ctx.fillStyle = eyeCol; heartPath(ctx, ex, ey, hr * .15); ctx.fill();
+      } else {
+        ctx.fillStyle = eyeCol;
+        ctx.beginPath();
+        ctx.ellipse(ex, ey, Math.max(1, hr * .09), Math.max(.5, hr * .09 * eo), 0, 0, 7);
+        ctx.fill();
+      }
+    }
+    // 頬の赤み
+    if (p.blush > .02) {
+      ctx.fillStyle = `rgba(255,120,140,${p.blush * .4})`;
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.ellipse(hx + s * hr * .55, hy + hr * .18, hr * .16, hr * .09, 0, 0, 7);
+        ctx.fill();
+      }
     }
     // mouth: smile .5=直線、>で笑顔・<でしかめ面
     const mw = hr * .32, my = hy + hr * .38, curv = (p.smile - .5) * hr * .8;
@@ -435,7 +469,7 @@ const ShiroLib = (() => {
   }
 
   return {
-    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, NUM_KEYS, SLIDERS,
+    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
     keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, mannequinPose, skeleton, drawMannequin, drawAccessory,
@@ -468,21 +502,22 @@ if (typeof document !== 'undefined') (() => {
     g.addColorStop(0, '#2a3550'); g.addColorStop(.6, '#3b4a6b'); g.addColorStop(1, '#1d2230');
     c.fillStyle = g; c.fillRect(0, 0, W, H);
   }
-  function drawCover(c, img, fit, blurPx) {
+  function drawCover(c, img, fit, blurPx, sat, con) {
     const iw = img.naturalWidth || img.videoWidth, ih = img.naturalHeight || img.videoHeight;
     if (!iw || !ih) return;
     const s = fit === 'contain' ? Math.min(W / iw, H / ih) : Math.max(W / iw, H / ih);
     const dw = iw * s, dh = ih * s;
-    if (blurPx > 0) c.filter = `blur(${blurPx}px)`;
+    const f = `blur(${blurPx}px) saturate(${sat}) contrast(${con})`;
+    if (f !== 'blur(0px) saturate(1) contrast(1)') c.filter = f;
     c.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
-    if (blurPx > 0) c.filter = 'none';
+    c.filter = 'none';
   }
 
   // 背景グレーディング: 被写体を際立たせるため背景をぼかし・減光する(合成定番)
   // 画像なし時はプリセット背景: gradient=内蔵/green=グリーンスクリーン/white=白/transparent=透過PNG用
   function drawBackdrop(c, p) {
     if (state.bg) {
-      drawCover(c, state.bg, p.bgFit, p.bgBlur * 10);
+      drawCover(c, state.bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast);
       if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
       return;
     }
@@ -611,6 +646,7 @@ if (typeof document !== 'undefined') (() => {
     if (fromParams) {
       $('sel-anim').value = state.params.anim;
       $('sel-acc').value = state.params.acc;
+      $('sel-eyes').value = state.params.eyeStyle;
       $('sel-bgfit').value = state.params.bgFit;
       $('sel-bgpreset').value = state.params.bgPreset;
       $('chk-flip').checked = state.params.flip;
@@ -619,6 +655,7 @@ if (typeof document !== 'undefined') (() => {
   }
   $('sel-anim').addEventListener('change', e => { state.params.anim = e.target.value; touch(); });
   $('sel-acc').addEventListener('change', e => { state.params.acc = e.target.value; touch(); });
+  $('sel-eyes').addEventListener('change', e => { state.params.eyeStyle = e.target.value; touch(); });
   $('sel-bgfit').addEventListener('change', e => { state.params.bgFit = e.target.value; touch(); });
   $('sel-bgpreset').addEventListener('change', e => { state.params.bgPreset = e.target.value; touch(); });
   $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });

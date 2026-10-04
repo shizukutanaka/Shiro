@@ -166,6 +166,23 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.some(v => v === '@ume'), 'watermark text drawn');
 }
 
+// eyeStyle enum clamp + draw across all styles
+{
+  ok(L.clampParams({ eyeStyle: 'bogus' }).eyeStyle === 'dot', 'bad eyeStyle falls back');
+  for (const es of L.EYES || ['dot','wink','closed','heart']) {
+    const p = L.defaultParams(); p.eyeStyle = es;
+    const calls = [];
+    const ctx = new Proxy({}, {
+      get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+      set: () => true,
+    });
+    L.drawMannequin(ctx, p, 1.0, 640, 600, 500);
+    ok(calls.length > 50 && calls.every(Number.isFinite), `eyeStyle ${es} draws`);
+  }
+  const pr = L.randomParams(L.mulberry32(7));
+  ok(['dot','wink','closed','heart'].includes(pr.eyeStyle), 'random eyeStyle valid');
+}
+
 // blink cycle
 {
   ok(L.blinkOpen(1.0) === 1 && L.blinkOpen(1.0) === L.blinkOpen(1.0), 'blink deterministic/open by default');
