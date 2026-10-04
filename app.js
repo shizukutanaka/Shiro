@@ -51,7 +51,8 @@ const ShiroLib = (() => {
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
     'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
-    'rot', 'eyeGap', 'duo', 'hairHue', 'squash', 'frame', 'frameHue'];
+    'rot', 'eyeGap', 'duo', 'hairHue', 'squash', 'frame', 'frameHue',
+    'subjSat', 'subjBright', 'titleSize'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -72,6 +73,7 @@ const ShiroLib = (() => {
     ['bgDrift', '背景のゆっくりズーム'], ['rot', 'モデルの傾き'], ['eyeGap', '目の間隔'],
     ['duo', '相方（2体目）'], ['hairHue', '髪色'], ['squash', 'つぶし・伸び'],
     ['frame', '額縁の太さ'], ['frameHue', '額縁の色'],
+    ['subjSat', 'モデル彩度'], ['subjBright', 'モデル明度'], ['titleSize', 'タイトル大きさ'],
   ];
 
   function defaultParams() {
@@ -87,6 +89,7 @@ const ShiroLib = (() => {
       despill: .5, temp: .5, shadowSoft: .4, brow: .5, bgDrift: 0,
       rot: .5, eyeGap: .5, duo: 0, hairHue: .07, squash: 0,
       frame: 0, frameHue: .12,
+      subjSat: .5, subjBright: .5, titleSize: .5, title: '',
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br', vidQ: 'std',
       eyeStyle: 'dot', acc: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
@@ -104,6 +107,7 @@ const ShiroLib = (() => {
     o.bgPreset = BGS.includes(p && p.bgPreset) ? p.bgPreset : d.bgPreset;
     o.watermark = String(p && p.watermark || '').slice(0, 60);
     o.bubble = String(p && p.bubble || '').slice(0, 24);
+    o.title = String(p && p.title || '').slice(0, 40);
     o.eyeStyle = EYES.includes(p && p.eyeStyle) ? p.eyeStyle : d.eyeStyle;
     o.subjFx = SUBJFX.includes(p && p.subjFx) ? p.subjFx : d.subjFx;
     o.grade = GRADES.includes(p && p.grade) ? p.grade : d.grade;
@@ -951,6 +955,8 @@ if (typeof document !== 'undefined') (() => {
     c.globalAlpha = state.params.opacity;
     const fParts = [];
     if (state.params.subjHue !== .5) fParts.push(`hue-rotate(${Math.round((state.params.subjHue - .5) * 360)}deg)`);
+    if (state.params.subjSat !== .5) fParts.push(`saturate(${(state.params.subjSat * 2).toFixed(2)})`);
+    if (state.params.subjBright !== .5) fParts.push(`brightness(${(0.7 + state.params.subjBright * .6).toFixed(2)})`);
     if (state.params.temp !== .5) fParts.push(`sepia(${Math.abs(state.params.temp - .5) * .8}) hue-rotate(${(state.params.temp - .5) * -40}deg)`);
     if (state.params.subjFx !== 'none') fParts.push(SUBJFX_FILTERS[state.params.subjFx]);
     if (fParts.length) c.filter = fParts.join(' ');
@@ -1061,6 +1067,8 @@ if (typeof document !== 'undefined') (() => {
       } else {
         // 残像トレイル: 過去フレームのポーズを薄く残す(マネキンのみ・手続き描画なので安い)
         const fxParts = [];
+        if (p.subjSat !== .5) fxParts.push(`saturate(${(p.subjSat * 2).toFixed(2)})`);
+        if (p.subjBright !== .5) fxParts.push(`brightness(${(0.7 + p.subjBright * .6).toFixed(2)})`);
         if (p.temp !== .5) fxParts.push(`sepia(${Math.abs(p.temp - .5) * .8}) hue-rotate(${(p.temp - .5) * -40}deg)`);
         if (p.subjFx !== 'none') fxParts.push(SUBJFX_FILTERS[p.subjFx]);
         const fx = fxParts.join(' ');
@@ -1099,6 +1107,18 @@ if (typeof document !== 'undefined') (() => {
       ctx.globalAlpha = p.grain * .15;
       // オフセットをフレーム毎にずらして動くグレインに
       ctx.drawImage(grainCv(), -Math.random() * 64, -Math.random() * 64, W + 128, H + 128);
+      ctx.restore();
+    }
+    if (p.title) { // サムネイル向け大見出し(上部中央・白抜き太字)
+      const fs = 18 + p.titleSize * 66;
+      ctx.save();
+      ctx.font = `700 ${Math.round(fs)}px 'Hiragino Sans', system-ui, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = Math.max(2, fs * .14); ctx.strokeStyle = 'rgba(0,0,0,.78)';
+      ctx.lineJoin = 'round';
+      ctx.strokeText(p.title, W / 2, H * .12);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(p.title, W / 2, H * .12);
       ctx.restore();
     }
     L.drawVignette(ctx, W, H, p.vignette);
@@ -1148,6 +1168,7 @@ if (typeof document !== 'undefined') (() => {
       $('chk-flip').checked = state.params.flip;
       $('inp-watermark').value = state.params.watermark;
       $('inp-bubble').value = state.params.bubble;
+      $('inp-title').value = state.params.title;
     }
   }
   $('sel-anim').addEventListener('change', e => { state.params.anim = e.target.value; touch(); });
@@ -1166,6 +1187,7 @@ if (typeof document !== 'undefined') (() => {
   $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
   $('inp-watermark').addEventListener('input', e => { state.params.watermark = e.target.value.slice(0, 60); touch(); });
   $('inp-bubble').addEventListener('input', e => { state.params.bubble = e.target.value.slice(0, 24); touch(); });
+  $('inp-title').addEventListener('input', e => { state.params.title = e.target.value.slice(0, 40); touch(); });
   // 配置プリセット: モデルを9アンカーへ一発移動
   const PLACES = {
     tl: [.2, .62], tc: [.5, .62], tr: [.8, .62],
