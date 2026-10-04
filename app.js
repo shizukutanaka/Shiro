@@ -26,7 +26,7 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'still'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'crown', 'phones'];
   const BGS = ['gradient', 'green', 'white', 'transparent'];
@@ -310,6 +310,13 @@ const ShiroLib = (() => {
         q.lElb = .3; q.rElb = .3; q.lean = .03 * Math.sin(tt * 4);
         break;
       }
+      case 'nod': {
+        // うなずき: 頭を周期的に前後に傾けるあいづち動作
+        const n = Math.sin(tt * 2.4);
+        q.headTilt = .22 * n; q.bob = .008 * Math.abs(n);
+        q.lean = .02 * n; q.lArm = .1; q.rArm = .1;
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -473,6 +480,13 @@ const ShiroLib = (() => {
         ctx.beginPath();
         ctx.ellipse(ex, ey, Math.max(1, hr * .09 * esz), Math.max(.5, hr * .09 * esz * eo), 0, 0, 7);
         ctx.fill();
+        // 瞳のハイライト(キャッチライト): 生き生きした目にする白点
+        if (eo > .4) {
+          ctx.fillStyle = `rgba(255,255,255,${.85 * eo})`;
+          ctx.beginPath();
+          ctx.arc(ex - hr * .03 * esz, ey - hr * .035 * esz * eo, Math.max(.6, hr * .028 * esz), 0, 7);
+          ctx.fill();
+        }
       }
     }
     // 頬の赤み
@@ -490,6 +504,14 @@ const ShiroLib = (() => {
       ctx.strokeStyle = 'rgba(60,64,74,0.7)'; ctx.lineWidth = Math.max(1, hr * .07);
       ctx.beginPath(); ctx.moveTo(hx - mw, my);
       ctx.quadraticCurveTo(hx, my + curv * 2, hx + mw, my); ctx.stroke();
+    }
+    // 大きな笑顔(smile>.78)では口を開いて赤味を見せる表情に
+    if (p.smile > .78) {
+      const op = (p.smile - .78) / .22;
+      ctx.fillStyle = `rgba(120,40,45,${.55 * op})`;
+      ctx.beginPath();
+      ctx.ellipse(hx, my + curv * 1.1, mw * .5, Math.max(1, hr * .1 * op), 0, 0, 7);
+      ctx.fill();
     }
     drawAccessory(ctx, p.acc, hx, hy, hr, p.accHue);
     ctx.restore();
@@ -934,7 +956,7 @@ if (typeof document !== 'undefined') (() => {
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
   $('btn-png').addEventListener('click', () =>
-    stage.toBlob(b => b ? download(b, 'shiro.png') : err('PNG生成に失敗'), 'image/png'));
+    stage.toBlob(b => b ? download(b, `shiro-s${state.params.seed}.png`) : err('PNG生成に失敗'), 'image/png'));
   $('btn-png-copy').addEventListener('click', () => {
     if (!navigator.clipboard || !window.ClipboardItem) return err('このブラウザはコピーに未対応です');
     stage.toBlob(async b => {
