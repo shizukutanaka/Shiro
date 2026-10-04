@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark', 'wind'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat', 'wide'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp', 'braid'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -499,6 +499,17 @@ const ShiroLib = (() => {
         q.lThigh = -.7 * Math.max(0, ph2); q.lKnee = .9 * Math.max(0, ph2);
         q.rThigh = -.7 * Math.max(0, -ph2); q.rKnee = .9 * Math.max(0, -ph2);
         q.lArm = -.35 * ph2; q.rArm = .35 * ph2;
+        break;
+      }
+      case 'moonwalk': {
+        // ムーンウォーク: 低い膝の交互スライド+後傾で後ろに滑る
+        const w = Math.sin(tt * 4);
+        q.lThigh = .3 * w; q.rThigh = -.3 * w;
+        q.lKnee = Math.max(0, .35 * Math.sin(tt * 4 + Math.PI / 2));
+        q.rKnee = Math.max(0, .35 * Math.sin(tt * 4 - Math.PI / 2));
+        q.lean = -.08; q.sway = .02 * w;
+        q.lArm = .25 - .3 * w; q.rArm = .25 + .3 * w; q.lElb = .8; q.rElb = .8;
+        q.bob = .015 * Math.abs(Math.cos(tt * 4));
         break;
       }
       case 'still': break;
@@ -1228,6 +1239,18 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.arc(hx + hr * .95, hy - hr * .62, hr * .09, 0, 7); ctx.fill();
         break;
       }
+      case 'horns': {
+        // ツノ: 頭頂両端から外へ湾曲する小さな角
+        ctx.fillStyle = acc2;
+        for (const s of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(hx + s * hr * .45, hy - hr * .85);
+          ctx.quadraticCurveTo(hx + s * hr * 1.05, hy - hr * 1.05, hx + s * hr * .95, hy - hr * 1.55);
+          ctx.quadraticCurveTo(hx + s * hr * .8, hy - hr * 1.15, hx + s * hr * .62, hy - hr * .82);
+          ctx.closePath(); ctx.fill();
+        }
+        break;
+      }
       case 'goggles': {
         // ゴーグル: 額の帯+2つのレンズ
         ctx.strokeStyle = dk; ctx.lineWidth = hr * .1;
@@ -1407,6 +1430,40 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath();
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
+      }
+    } else if (pr === 'shrine') {
+      // 神社: 夕暮れ空 + 大きな鳥居シルエット + 灯籠の灯り + 遠山
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#2b2150'); gr.addColorStop(.5, '#8a3a5c'); gr.addColorStop(.75, '#e0703f'); gr.addColorStop(1, '#3a2030');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      // 遠山
+      c.fillStyle = 'rgba(40,25,45,0.7)';
+      c.beginPath(); c.moveTo(0, H * .78);
+      c.lineTo(W * .18, H * .58); c.lineTo(W * .4, H * .74); c.lineTo(W * .62, H * .6); c.lineTo(W * .85, H * .76); c.lineTo(W, H * .68);
+      c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
+      // 鳥居(朱色シルエット)
+      const tx = W * .5, ty = H * .34, tw = W * .34, th2 = H * .6, pw = W * .022;
+      c.fillStyle = '#c53d2e';
+      // 柱2本
+      c.fillRect(tx - tw * .4, ty + H * .05, pw, th2);
+      c.fillRect(tx + tw * .4 - pw, ty + H * .05, pw, th2);
+      // 貫(下の横梁)
+      c.fillRect(tx - tw * .38, ty + H * .16, tw * .76, H * .035);
+      // 笠木+島木(上の反った横梁): 両端を持ち上げた帯
+      c.beginPath();
+      c.moveTo(tx - tw * .52, ty + H * .02);
+      c.quadraticCurveTo(tx, ty - H * .05, tx + tw * .52, ty + H * .02);
+      c.lineTo(tx + tw * .52, ty + H * .07);
+      c.quadraticCurveTo(tx, ty, tx - tw * .52, ty + H * .07);
+      c.closePath(); c.fill();
+      c.fillRect(tx - pw / 2, ty - H * .01, pw, H * .18); // 額束(中央柱)
+      // 灯籠の灯り
+      const rng = L.mulberry32(99);
+      c.fillStyle = 'rgba(255,190,110,0.85)';
+      for (let i = 0; i < 8; i++) {
+        const lx = (rng() < .5 ? -1 : 1) * (W * .18 + rng() * W * .22) + W * .5;
+        const ly = H * (.72 + rng() * .18);
+        c.beginPath(); c.arc(lx, ly, 3 + rng() * 3, 0, 7); c.fill();
       }
     } else if (pr === 'snowfield') {
       // 雪原: 曇り空 + 白い起伏 + 遠景の針葉樹 + 降る雪
@@ -1872,10 +1929,11 @@ if (typeof document !== 'undefined') (() => {
       const hPix = H * (0.25 + 0.7 * p.scale), wPix = hPix * .55;
       // 歩行アニメはステージを横断してループ(反転で歩行方向を変える)
       let cx = p.x * W;
-      if (p.anim === 'walk' || p.anim === 'run') {
-        const spd = p.anim === 'run' ? .2 : .10;
+      if (p.anim === 'walk' || p.anim === 'run' || p.anim === 'moonwalk') {
+        const spd = p.anim === 'run' ? .2 : p.anim === 'moonwalk' ? .07 : .10;
         const ph = (t * spd * (0.5 + p.animSpeed) + .125) % 1.25;
-        cx = (p.flip ? 1.125 - ph : -.125 + ph) * W;
+        // moonwalk は向いている方向の逆へ滑る
+        cx = p.anim === 'moonwalk' ? (p.flip ? -.125 + ph : 1.125 - ph) * W : (p.flip ? 1.125 - ph : -.125 + ph) * W;
       }
       const baseY = p.y * H;
       if (xformed) {
