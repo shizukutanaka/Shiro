@@ -30,7 +30,7 @@ const ShiroLib = (() => {
   const FITS = ['cover', 'contain'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
-    'smile'];
+    'smile', 'bgDim', 'bgBlur'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -38,7 +38,7 @@ const ShiroLib = (() => {
     ['line', '輪郭の太さ'], ['animSpeed', '動きの速さ'], ['x', '位置 X'],
     ['y', '位置 Y'], ['scale', 'モデル倍率'], ['opacity', 'モデル不透明度'],
     ['keyThresh', '白抜き強度'], ['keySoft', '白抜きぼかし'], ['shadow', 'モデルの影'],
-    ['smile', '表情（笑顔）'],
+    ['smile', '表情（笑顔）'], ['bgDim', '背景を暗く'], ['bgBlur', '背景ぼかし'],
   ];
 
   function defaultParams() {
@@ -46,7 +46,7 @@ const ShiroLib = (() => {
       seed: 1, height: .5, headSize: .5, shoulder: .5, armLen: .5, legLen: .5,
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
-      smile: .6, bgFit: 'cover',
+      smile: .6, bgDim: 0, bgBlur: 0, bgFit: 'cover',
     };
   }
 
@@ -72,6 +72,7 @@ const ShiroLib = (() => {
     p.x = .3 + rng() * .4; p.y = .6 + rng() * .35;
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
+    p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -317,7 +318,7 @@ if (typeof document !== 'undefined') (() => {
   const L = ShiroLib;
   const $ = id => document.getElementById(id);
   const stage = $('stage'), ctx = stage.getContext('2d');
-  const W = stage.width, H = stage.height;
+  let W = stage.width, H = stage.height;
   const err = m => { $('err').textContent = m || ''; };
 
   const state = {
@@ -335,12 +336,25 @@ if (typeof document !== 'undefined') (() => {
     g.addColorStop(0, '#2a3550'); g.addColorStop(.6, '#3b4a6b'); g.addColorStop(1, '#1d2230');
     c.fillStyle = g; c.fillRect(0, 0, W, H);
   }
-  function drawCover(c, img, fit) {
+  function drawCover(c, img, fit, blurPx) {
     const iw = img.naturalWidth || img.videoWidth, ih = img.naturalHeight || img.videoHeight;
     if (!iw || !ih) return;
     const s = fit === 'contain' ? Math.min(W / iw, H / ih) : Math.max(W / iw, H / ih);
     const dw = iw * s, dh = ih * s;
+    if (blurPx > 0) c.filter = `blur(${blurPx}px)`;
     c.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    if (blurPx > 0) c.filter = 'none';
+  }
+
+  // 背景グレーディング: 被写体を際立たせるため背景をぼかし・減光する(合成定番)
+  function drawBackdrop(c, p) {
+    if (state.bg) drawCover(c, state.bg, p.bgFit, p.bgBlur * 10);
+    else {
+      if (p.bgBlur > 0) c.filter = `blur(${p.bgBlur * 10}px)`;
+      defaultBackdrop(c);
+      c.filter = 'none';
+    }
+    if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
   }
 
   // ---------- chroma-keyed media ----------
@@ -389,7 +403,7 @@ if (typeof document !== 'undefined') (() => {
     const t = (performance.now() - t0) / 1000;
     const p = state.params;
     ctx.clearRect(0, 0, W, H);
-    if (state.bg) drawCover(ctx, state.bg, p.bgFit); else defaultBackdrop(ctx);
+    drawBackdrop(ctx, p);
     if (state.media) drawMedia(ctx);
     else L.drawMannequin(ctx, p, t, p.x * W, p.y * H, H * (0.25 + 0.7 * p.scale));
     requestAnimationFrame(frame);
@@ -571,7 +585,16 @@ if (typeof document !== 'undefined') (() => {
     catch { err('コードを読み込めませんでした'); }
   });
 
+  // ---------- aspect presets ----------
+  const ASPECTS = { '16:9': [1280, 720], '1:1': [960, 960], '9:16': [720, 1280] };
+  $('sel-aspect').addEventListener('change', e => {
+    const [w, h] = ASPECTS[e.target.value] || ASPECTS['16:9'];
+    stage.width = w; stage.height = h; W = w; H = h;
+  });
+
   // ---------- init ----------
+  // 過度なモーションを避ける設定ではアニメを静止化(アクセシビリティ)
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) state.params.anim = 'still';
   syncUI();
   renderFavs();
   requestAnimationFrame(frame);
