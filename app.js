@@ -26,7 +26,8 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'still'];
+  const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'crown', 'phones', 'cape'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal'];
@@ -50,7 +51,7 @@ const ShiroLib = (() => {
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
     'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
-    'rot', 'eyeGap', 'duo', 'hairHue'];
+    'rot', 'eyeGap', 'duo', 'hairHue', 'squash'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -69,7 +70,7 @@ const ShiroLib = (() => {
     ['bgX', '背景位置 X'], ['bgY', '背景位置 Y'],
     ['despill', 'スピル除去'], ['temp', '色温度'], ['shadowSoft', '影の柔らかさ'], ['brow', '眉毛の角度'],
     ['bgDrift', '背景のゆっくりズーム'], ['rot', 'モデルの傾き'], ['eyeGap', '目の間隔'],
-    ['duo', '相方（2体目）'], ['hairHue', '髪色'],
+    ['duo', '相方（2体目）'], ['hairHue', '髪色'], ['squash', 'つぶし・伸び'],
   ];
 
   function defaultParams() {
@@ -83,8 +84,8 @@ const ShiroLib = (() => {
       rimHue: .62, reflect: 0, tOffset: .5, grain: 0, trail: 0, subjHue: .5, pixel: 0,
       shake: 0, glow: 0, glowHue: .55, eyeSize: .5, bgX: .5, bgY: .5,
       despill: .5, temp: .5, shadowSoft: .4, brow: .5, bgDrift: 0,
-      rot: .5, eyeGap: .5, duo: 0, hairHue: .07,
-      subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br',
+      rot: .5, eyeGap: .5, duo: 0, hairHue: .07, squash: 0,
+      subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br', vidQ: 'std',
       eyeStyle: 'dot', acc: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
@@ -108,6 +109,7 @@ const ShiroLib = (() => {
     o.particles = PARTICLES.includes(p && p.particles) ? p.particles : d.particles;
     o.wmPos = WMPOS.includes(p && p.wmPos) ? p.wmPos : d.wmPos;
     o.hair = HAIRS.includes(p && p.hair) ? p.hair : d.hair;
+    o.vidQ = VIDQS.includes(p && p.vidQ) ? p.vidQ : d.vidQ;
     o.flip = !!(p && p.flip);
     const sv = p ? +p.seed : NaN;
     o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
@@ -348,6 +350,12 @@ const ShiroLib = (() => {
         q.bob = .008 * Math.sin(tt * 2); q.lean = .015 * Math.sin(tt * 1.1);
         q.headTilt = .05 * Math.sin(tt * 2.7);
         q.lArm = .08; q.rArm = .08;
+        break;
+      }
+      case 'spin': {
+        // 回転: X方向スケールは描画側の座標変換で行う。体は腕を広げた軽いバウンス
+        q.bob = .02 * Math.abs(Math.sin(tt * 2.5));
+        q.lArm = .35; q.rArm = .35; q.lElb = .2; q.rElb = .2;
         break;
       }
       case 'bow': {
@@ -940,10 +948,14 @@ if (typeof document !== 'undefined') (() => {
       ctx.translate(-W / 2, -H / 2);
     }
     drawBackdrop(ctx, p, t);
-    // モデルの傾き: 被写体全体を足元を支点に回転(影・リム等も一体で傾く)
+    // モデルの傾き + 回転(spin) + つぶし・伸び(squash): 被写体を足元支点に変形(影等も一体)
     const rotA = (p.rot - .5) * .6;
-    if (state.media && Math.abs(rotA) > .001) {
-      ctx.save(); ctx.translate(p.x * W, p.y * H); ctx.rotate(rotA); ctx.translate(-p.x * W, -p.y * H);
+    const spinX = p.anim === 'spin' ? Math.cos(t * 2.5) : 1;
+    const sq = p.squash > .02 ? Math.sin(t * 3) * p.squash : 0;
+    const sxx = (1 + sq * .18) * spinX, syy = 1 - sq * .22;
+    const xformed = Math.abs(rotA) > .001 || Math.abs(sxx - 1) > .001 || Math.abs(syy - 1) > .001;
+    if (state.media && xformed) {
+      ctx.save(); ctx.translate(p.x * W, p.y * H); ctx.rotate(rotA); ctx.scale(sxx, syy); ctx.translate(-p.x * W, -p.y * H);
     }
     if (state.media) drawMedia(ctx);
     else {
@@ -956,8 +968,8 @@ if (typeof document !== 'undefined') (() => {
         cx = (p.flip ? 1.125 - ph : -.125 + ph) * W;
       }
       const baseY = p.y * H;
-      if (Math.abs(rotA) > .001) {
-        ctx.save(); ctx.translate(cx, baseY); ctx.rotate(rotA); ctx.translate(-cx, -baseY);
+      if (xformed) {
+        ctx.save(); ctx.translate(cx, baseY); ctx.rotate(rotA); ctx.scale(sxx, syy); ctx.translate(-cx, -baseY);
       }
       // 相方(duo): 後ろに小さく反転した2体目を描いてから本体
       if (p.duo > .05) {
@@ -1012,9 +1024,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // ふきだし: 頭頂の少し上に表示(回転の内側・本体と一緒に傾く)
       if (p.bubble) L.drawBubble(ctx, p.bubble, cx, baseY - hPix * 1.02, W, H);
-      if (Math.abs(rotA) > .001) ctx.restore();
+      if (xformed) ctx.restore();
     }
-    if (state.media && Math.abs(rotA) > .001) ctx.restore();
+    if (state.media && xformed) ctx.restore();
     if (p.particles !== 'none') L.drawParticles(ctx, W, H, p.particles, t, p.seed);
     // シーン全体の色調(グレード)。ウォーターマークより下に適用して文字は鮮明に残す
     const gs = GRADE_STYLES[p.grade];
@@ -1068,6 +1080,7 @@ if (typeof document !== 'undefined') (() => {
       $('sel-particles').value = state.params.particles;
       $('sel-wmpos').value = state.params.wmPos;
       $('sel-hair').value = state.params.hair;
+      $('sel-vidq').value = state.params.vidQ;
       $('chk-flip').checked = state.params.flip;
       $('inp-watermark').value = state.params.watermark;
       $('inp-bubble').value = state.params.bubble;
@@ -1084,6 +1097,7 @@ if (typeof document !== 'undefined') (() => {
   $('sel-particles').addEventListener('change', e => { state.params.particles = e.target.value; touch(); });
   $('sel-wmpos').addEventListener('change', e => { state.params.wmPos = e.target.value; touch(); });
   $('sel-hair').addEventListener('change', e => { state.params.hair = e.target.value; touch(); });
+  $('sel-vidq').addEventListener('change', e => { state.params.vidQ = e.target.value; touch(); });
   $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });
   $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
   $('inp-watermark').addEventListener('input', e => { state.params.watermark = e.target.value.slice(0, 60); touch(); });
@@ -1171,7 +1185,8 @@ if (typeof document !== 'undefined') (() => {
     if (state.recorder) { state.recorder.stop(); return; }
     const pick = L.pickMime(m => MediaRecorder.isTypeSupported(m));
     if (!pick) return err('このブラウザは動画録画に未対応です');
-    const rec = new MediaRecorder(stage.captureStream(30), { mimeType: pick.mime });
+    const bits = { low: 1500000, std: 4000000, high: 8000000 }[state.params.vidQ] || 4000000;
+    const rec = new MediaRecorder(stage.captureStream(30), { mimeType: pick.mime, videoBitsPerSecond: bits });
     const chunks = [];
     rec.ondataavailable = e => e.data.size && chunks.push(e.data);
     rec.onstop = () => {
