@@ -35,7 +35,7 @@ const ShiroLib = (() => {
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
     'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity',
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
-    'rimHue', 'reflect', 'tOffset'];
+    'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -49,6 +49,7 @@ const ShiroLib = (() => {
     ['wmOpacity', '透かしの濃さ'], ['accHue', 'アクセサリ色'], ['vidSpeed', '動画の速さ'],
     ['blush', '頬の赤み'], ['headTilt', '頭の傾き'], ['bgSat', '背景の彩度'], ['bgContrast', '背景コントラスト'],
     ['rimHue', 'リムライト色'], ['reflect', '床の反射'], ['tOffset', 'ポーズ位置（停止時）'],
+    ['grain', 'フィルムグレイン'], ['trail', '残像（トレイル）'], ['subjHue', 'モデル色相'],
   ];
 
   function defaultParams() {
@@ -59,7 +60,7 @@ const ShiroLib = (() => {
       smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, clothHue: 0,
       outline: 0, vignette: 0, wmOpacity: .4, watermark: '',
       accHue: .58, vidSpeed: .5, blush: 0, headTilt: .5, bgSat: .5, bgContrast: .5,
-      rimHue: .62, reflect: 0, tOffset: .5,
+      rimHue: .62, reflect: 0, tOffset: .5, grain: 0, trail: 0, subjHue: .5,
       eyeStyle: 'dot', acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
@@ -97,6 +98,7 @@ const ShiroLib = (() => {
     p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7; p.vignette = rng() < .6 ? 0 : rng() * .6; p.watermark = ''; p.wmOpacity = .4; p.vidSpeed = .5; p.blush = rng() * .6; p.headTilt = .35 + rng() * .3;
     p.bgSat = .3 + rng() * .7; p.bgContrast = .35 + rng() * .5;
     p.reflect = rng() < .6 ? 0 : rng() * .8; p.tOffset = .5;
+    p.grain = rng() < .7 ? 0 : rng() * .5; p.trail = rng() < .7 ? 0 : rng() * .7; p.subjHue = .4 + rng() * .2;
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -603,9 +605,25 @@ if (typeof document !== 'undefined') (() => {
     if (state.media.kind === 'video') el.playbackRate = .25 + state.params.vidSpeed * 1.5;
     c.save();
     c.globalAlpha = state.params.opacity;
+    if (state.params.subjHue !== .5) c.filter = `hue-rotate(${Math.round((state.params.subjHue - .5) * 360)}deg)`;
     if (state.params.flip) { c.translate(2 * cx, 0); c.scale(-1, 1); }
     c.drawImage(src, cx - wPix / 2, baseY - hPix, wPix, hPix);
     c.restore();
+  }
+
+  // ---------- film grain ----------
+  let _grainCv = null;
+  function grainCv() {
+    if (_grainCv) return _grainCv;
+    const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+    const x = cv.getContext('2d'), im = x.createImageData(128, 128), d = im.data;
+    const rng = L.mulberry32(12345);
+    for (let i = 0; i < d.length; i += 4) {
+      const v = 110 + rng() * 90;
+      d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
+    }
+    x.putImageData(im, 0, 0);
+    return _grainCv = cv;
   }
 
   // ---------- render loop ----------
@@ -637,7 +655,22 @@ if (typeof document !== 'undefined') (() => {
         L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, '#ffffff', outCv, outCtx), wPix, hPix, cx, baseY, p.outline);
         L.drawReflection(ctx, modCv, cx, baseY, wPix, hPix, p.reflect);
       }
+      // 残像トレイル: 過去フレームのポーズを薄く残す(マネキンのみ・手続き描画なので安い)
+      if (p.trail > 0) {
+        for (let i = 2; i >= 1; i--) {
+          ctx.globalAlpha = p.trail * .45 * (3 - i) / 3;
+          L.drawMannequin(ctx, p, t - i * .09, cx, baseY, hPix);
+        }
+        ctx.globalAlpha = 1;
+      }
       L.drawMannequin(ctx, p, t, cx, baseY, hPix);
+    }
+    if (p.grain > 0) {
+      ctx.save();
+      ctx.globalAlpha = p.grain * .15;
+      // オフセットをフレーム毎にずらして動くグレインに
+      ctx.drawImage(grainCv(), -Math.random() * 64, -Math.random() * 64, W + 128, H + 128);
+      ctx.restore();
     }
     L.drawVignette(ctx, W, H, p.vignette);
     L.drawWatermark(ctx, p.watermark, W, H, p.wmOpacity);
