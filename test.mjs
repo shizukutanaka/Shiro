@@ -147,6 +147,20 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(L.ACCS.includes(p.acc) && L.clampParams({ acc: 'x' }).acc === 'none', 'acc clamped/valid');
 }
 
+// cast shadow: directional only, finite args
+{
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: () => (...a) => { calls.push([...a]); return {}; },
+    set: () => true,
+  });
+  L.drawCastShadow(ctx, { width: 10, height: 10 }, 100, 200, 320, 600, 0, .4);
+  ok(calls.length > 0, 'cast shadow emitted when dir off-center');
+  const before = calls.length;
+  L.drawCastShadow(ctx, { width: 10, height: 10 }, 100, 200, 320, 600, .5, .4);
+  ok(calls.length === before, 'cast shadow skipped at center dir');
+}
+
 // mime picker
 {
   ok(L.pickMime(() => true).ext === 'mp4', 'mp4 preferred');
