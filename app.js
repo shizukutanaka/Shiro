@@ -26,15 +26,15 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat'];
-  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly'];
+  const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
   const GRADES = ['none', 'warm', 'cool', 'noir', 'vivid'];
@@ -466,6 +466,16 @@ const ShiroLib = (() => {
         q.lArm = .12; q.rArm = .12;
         break;
       }
+      case 'sneeze': {
+        // くしゃみ: 4秒周期 — ゆっくり身構え→急激な前のめり→戻る
+        const cyc = (tt % 4) / 4;
+        const wind = cyc < .55 ? cyc / .55 : 0;            // 0→1 ゆっくり
+        const snap = cyc >= .55 && cyc < .68 ? (cyc - .55) / .13 : cyc >= .68 ? Math.max(0, 1 - (cyc - .68) / .32) : 0;
+        q.lean = -.06 * wind + .3 * snap; q.headTilt = -.12 * wind + .5 * snap;
+        q.bob = -.01 * wind - .05 * snap;
+        q.lArm = .12 + .15 * snap; q.rArm = .12 + .15 * snap;
+        break;
+      }
       case 'still': break;
       default: // idle
         q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt);
@@ -670,6 +680,17 @@ const ShiroLib = (() => {
         ctx.arc(hx + Math.cos(a) * rr, hy - hr * .05 + Math.sin(a) * rr, hr * (.3 + rng2() * .14), 0, 7);
         ctx.fill();
       }
+    }
+    if (hs === 'pomp') {
+      // ポンパドール: 前髪を高く盛り上げたリーゼント風
+      ctx.fillStyle = hairC;
+      ctx.beginPath();
+      ctx.moveTo(hx - hr * .85, hy - hr * .45);
+      ctx.quadraticCurveTo(hx - hr * .7, hy - hr * 1.7, hx + hr * .25, hy - hr * 1.5);
+      ctx.quadraticCurveTo(hx + hr * .95, hy - hr * 1.3, hx + hr * .9, hy - hr * .4);
+      ctx.lineTo(hx + hr * .5, hy - hr * .55);
+      ctx.lineTo(hx - hr * .4, hy - hr * .5);
+      ctx.closePath(); ctx.fill();
     }
     if (hs === 'odango') {
       // お団子: 頭頂両サイドの丸いお団子
@@ -1278,6 +1299,31 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath();
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
+      }
+    } else if (pr === 'rainbow') {
+      // 虹: 淡い空 + 同心円弧の7色虹 + 両端の雲
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#bfe3ff'); gr.addColorStop(1, '#eaf6ff');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      const rcx = W * .5, rcy = H * .95, rmax = H * .78;
+      const cols = ['#ff5a5a', '#ff9f43', '#ffd43b', '#69db7c', '#4dabf7', '#748ffc', '#b197fc'];
+      for (let i = 0; i < 7; i++) {
+        c.strokeStyle = cols[i]; c.lineWidth = rmax / 7;
+        c.globalAlpha = .65;
+        c.beginPath();
+        c.arc(rcx, rcy, rmax - i * rmax / 7 - rmax / 14, Math.PI, Math.PI * 2);
+        c.stroke();
+      }
+      c.globalAlpha = 1;
+      // 雲(虹の両端)
+      const rng = L.mulberry32(63);
+      c.fillStyle = 'rgba(255,255,255,0.9)';
+      for (const cx of [rcx - rmax * .8, rcx + rmax * .8]) {
+        for (let k = 0; k < 5; k++) {
+          c.beginPath();
+          c.arc(cx + (rng() - .5) * W * .14, rcy - rng() * H * .06, 14 + rng() * 16, 0, 7);
+          c.fill();
+        }
       }
     } else if (pr === 'mtn') {
       // 山並み: 朝焼けの空 + 稜線シルエット2枚 + 朝日
