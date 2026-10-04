@@ -28,6 +28,7 @@ const ShiroLib = (() => {
   // ---------- params ----------
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'still'];
   const FITS = ['cover', 'contain'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
     'smile', 'bgDim', 'bgBlur'];
@@ -46,7 +47,7 @@ const ShiroLib = (() => {
       seed: 1, height: .5, headSize: .5, shoulder: .5, armLen: .5, legLen: .5,
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
-      smile: .6, bgDim: 0, bgBlur: 0, bgFit: 'cover',
+      smile: .6, bgDim: 0, bgBlur: 0, acc: 'none', bgFit: 'cover',
     };
   }
 
@@ -58,6 +59,7 @@ const ShiroLib = (() => {
     }
     o.anim = ANIMS.includes(p && p.anim) ? p.anim : d.anim;
     o.bgFit = FITS.includes(p && p.bgFit) ? p.bgFit : d.bgFit;
+    o.acc = ACCS.includes(p && p.acc) ? p.acc : d.acc;
     o.flip = !!(p && p.flip);
     const sv = p ? +p.seed : NaN;
     o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
@@ -68,6 +70,7 @@ const ShiroLib = (() => {
     const p = defaultParams();
     for (const k of NUM_KEYS) p[k] = rng();
     p.anim = ANIMS[Math.floor(rng() * ANIMS.length)];
+    p.acc = ACCS[Math.floor(rng() * ACCS.length)];
     p.flip = rng() < .35;
     p.x = .3 + rng() * .4; p.y = .6 + rng() * .35;
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
@@ -300,14 +303,55 @@ const ShiroLib = (() => {
       ctx.beginPath(); ctx.moveTo(hx - mw, my);
       ctx.quadraticCurveTo(hx, my + curv * 2, hx + mw, my); ctx.stroke();
     }
+    drawAccessory(ctx, p.acc, hx, hy, hr);
+    ctx.restore();
+  }
+
+  // アクセサリ: キャラクリ定番の頭部装飾を手続き描画
+  function drawAccessory(ctx, acc, hx, hy, hr) {
+    const dk = 'rgba(52,56,68,0.95)', acc2 = 'rgba(110,168,255,0.9)';
+    ctx.save();
+    switch (acc) {
+      case 'ribbon': {
+        ctx.fillStyle = acc2;
+        const bx = hx - hr * .7, by = hy - hr * .75, s = hr * .42;
+        for (const d of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx, by);
+          ctx.lineTo(bx + d * s, by - s * .6);
+          ctx.lineTo(bx + d * s, by + s * .6);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.fillStyle = dk;
+        ctx.beginPath(); ctx.arc(bx, by, s * .3, 0, 7); ctx.fill();
+        break;
+      }
+      case 'hat': {
+        ctx.fillStyle = dk;
+        ctx.beginPath(); ctx.ellipse(hx, hy - hr * .62, hr * 1.25, hr * .22, 0, 0, 7); ctx.fill(); // brim
+        ctx.beginPath(); ctx.ellipse(hx, hy - hr * .85, hr * .72, hr * .5, 0, Math.PI, 0); ctx.fill(); // dome
+        ctx.fillStyle = acc2;
+        ctx.fillRect(hx - hr * .72, hy - hr * .85, hr * 1.44, hr * .12); // band
+        break;
+      }
+      case 'glasses': {
+        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07);
+        for (const s of [-1, 1]) {
+          ctx.beginPath(); ctx.arc(hx + s * hr * .38, hy - hr * .08, hr * .26, 0, 7); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(hx + s * hr * .64, hy - hr * .08); ctx.lineTo(hx + s * hr * .95, hy - hr * .18); ctx.stroke(); // temple
+        }
+        ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * .1); ctx.lineTo(hx + hr * .12, hy - hr * .1); ctx.stroke(); // bridge
+        break;
+      }
+    }
     ctx.restore();
   }
 
   return {
-    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, NUM_KEYS, SLIDERS,
+    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, blinkOpen, contactShadow, mannequinPose, skeleton, drawMannequin,
+    keyAlpha, erodeAlpha, blinkOpen, contactShadow, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -427,11 +471,13 @@ if (typeof document !== 'undefined') (() => {
     }
     if (fromParams) {
       $('sel-anim').value = state.params.anim;
+      $('sel-acc').value = state.params.acc;
       $('sel-bgfit').value = state.params.bgFit;
       $('chk-flip').checked = state.params.flip;
     }
   }
   $('sel-anim').addEventListener('change', e => state.params.anim = e.target.value);
+  $('sel-acc').addEventListener('change', e => state.params.acc = e.target.value);
   $('sel-bgfit').addEventListener('change', e => state.params.bgFit = e.target.value);
   $('chk-flip').addEventListener('change', e => state.params.flip = e.target.checked);
 
@@ -475,8 +521,9 @@ if (typeof document !== 'undefined') (() => {
   }
   $('btn-png').addEventListener('click', () =>
     stage.toBlob(b => b ? download(b, 'shiro.png') : err('PNG生成に失敗'), 'image/png'));
+  // 録画はトグル式: クリックで開始、再クリックまたは15秒で停止
   $('btn-rec').addEventListener('click', () => {
-    if (state.recorder) return;
+    if (state.recorder) { state.recorder.stop(); return; }
     const pick = L.pickMime(m => MediaRecorder.isTypeSupported(m));
     if (!pick) return err('このブラウザは動画録画に未対応です');
     const rec = new MediaRecorder(stage.captureStream(30), { mimeType: pick.mime });
@@ -484,12 +531,13 @@ if (typeof document !== 'undefined') (() => {
     rec.ondataavailable = e => e.data.size && chunks.push(e.data);
     rec.onstop = () => {
       state.recorder = null;
+      clearTimeout(state.recTimer);
       download(new Blob(chunks, { type: pick.mime }), 'shiro.' + pick.ext);
-      $('btn-rec').textContent = '動画を保存（5秒）';
+      $('btn-rec').textContent = '動画 録画開始';
     };
     state.recorder = rec; rec.start();
-    $('btn-rec').textContent = '録画中…';
-    state.recTimer = setTimeout(() => rec.stop(), 5000);
+    $('btn-rec').textContent = '録画中… クリックで停止';
+    state.recTimer = setTimeout(() => state.recorder && state.recorder.stop(), 15000);
   });
   $('btn-share').addEventListener('click', async () => {
     try {

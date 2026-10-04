@@ -133,6 +133,20 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.length === before, 'zero alpha shadow skipped');
 }
 
+// accessories: all variants draw finite geometry
+{
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: () => (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return {}; },
+    set: () => true,
+  });
+  for (const acc of L.ACCS) L.drawAccessory(ctx, acc, 100, 100, 20);
+  ok(calls.length > 20, 'accessory draws geometry');
+  ok(calls.every(Number.isFinite), 'accessory coords finite');
+  const p = L.randomParams(L.mulberry32(3));
+  ok(L.ACCS.includes(p.acc) && L.clampParams({ acc: 'x' }).acc === 'none', 'acc clamped/valid');
+}
+
 // mime picker
 {
   ok(L.pickMime(() => true).ext === 'mp4', 'mp4 preferred');
