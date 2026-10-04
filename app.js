@@ -29,7 +29,8 @@ const ShiroLib = (() => {
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'still'];
   const FITS = ['cover', 'contain'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
-    'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow'];
+    'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
+    'smile'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -37,13 +38,15 @@ const ShiroLib = (() => {
     ['line', '輪郭の太さ'], ['animSpeed', '動きの速さ'], ['x', '位置 X'],
     ['y', '位置 Y'], ['scale', 'モデル倍率'], ['opacity', 'モデル不透明度'],
     ['keyThresh', '白抜き強度'], ['keySoft', '白抜きぼかし'], ['shadow', 'モデルの影'],
+    ['smile', '表情（笑顔）'],
   ];
 
   function defaultParams() {
     return {
       seed: 1, height: .5, headSize: .5, shoulder: .5, armLen: .5, legLen: .5,
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
-      scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5, bgFit: 'cover',
+      scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
+      smile: .6, bgFit: 'cover',
     };
   }
 
@@ -289,6 +292,13 @@ const ShiroLib = (() => {
       ctx.ellipse(hx + s * hr * .38, hy - hr * .08, Math.max(1, hr * .09), Math.max(.5, hr * .09 * eo), 0, 0, 7);
       ctx.fill();
     }
+    // mouth: smile .5=直線、>で笑顔・<でしかめ面
+    const mw = hr * .32, my = hy + hr * .38, curv = (p.smile - .5) * hr * .8;
+    if (Math.abs(curv) > hr * .03) {
+      ctx.strokeStyle = 'rgba(60,64,74,0.7)'; ctx.lineWidth = Math.max(1, hr * .07);
+      ctx.beginPath(); ctx.moveTo(hx - mw, my);
+      ctx.quadraticCurveTo(hx, my + curv * 2, hx + mw, my); ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -523,6 +533,42 @@ if (typeof document !== 'undefined') (() => {
       saveFavs(); renderFavs(); err('');
     }).catch(() => err('お気に入りファイルを読み込めませんでした'));
     e.target.value = '';
+  });
+
+  // ---------- canvas direct manipulation ----------
+  // キャンバス上のドラッグでモデル位置、ホイールで倍率を直接操作する。
+  let dragging = false;
+  const stageXY = e => {
+    const r = stage.getBoundingClientRect();
+    return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height];
+  };
+  stage.addEventListener('pointerdown', e => {
+    dragging = true; stage.setPointerCapture(e.pointerId);
+    const [nx, ny] = stageXY(e);
+    state.params.x = L.clamp01(nx); state.params.y = L.clamp01(ny); syncUI();
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const [nx, ny] = stageXY(e);
+    state.params.x = L.clamp01(nx); state.params.y = L.clamp01(ny); syncUI();
+  });
+  stage.addEventListener('pointerup', () => dragging = false);
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    state.params.scale = L.clamp01(state.params.scale - e.deltaY * .0008);
+    syncUI();
+  }, { passive: false });
+
+  // ---------- share code ----------
+  $('btn-code-copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(L.serializePreset('shared', state.params)); err(''); }
+    catch { err('コピーに失敗しました(ブラウザのクリップボード権限を確認)'); }
+  });
+  $('btn-code-load').addEventListener('click', () => {
+    const txt = prompt('パラメータコードを貼り付け');
+    if (txt === null) return;
+    try { state.params = L.parsePreset(txt).params; syncUI(); err(''); }
+    catch { err('コードを読み込めませんでした'); }
   });
 
   // ---------- init ----------
