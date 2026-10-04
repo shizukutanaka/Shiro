@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret'];
-  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts'];
+  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -412,6 +412,16 @@ const ShiroLib = (() => {
         q.lArm = -.55 + .3 * c; q.rArm = .55 + .3 * c;
         q.lElb = .85; q.rElb = .85;
         q.bob = .015 * Math.abs(c); q.headTilt = .08 * Math.sin(tt * 2);
+        break;
+      }
+      case 'peek': {
+        // のぞき: 4秒周期で体を左右に大きく傾けて交互に覗き込む
+        const ph = (tt % 4) / 4;
+        const d = Math.sin(ph * Math.PI * 2);           // -1..1 で左右往復
+        const e = Math.min(1, Math.abs(d) * 2.4);        // 端で急ぐ滑らかさ
+        q.lean = .3 * Math.sign(d) * e; q.sway = .09 * d;
+        q.headTilt = -.4 * Math.sign(d) * e;             // 首は逆に傾げてこちらを覗く
+        q.lArm = .14; q.rArm = .14;
         break;
       }
       case 'still': break;
@@ -815,7 +825,7 @@ const ShiroLib = (() => {
 
   function drawParticles(ctx, W, H, type, t, seed) {
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
-    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : type === 'notes' ? 18 : type === 'hearts' ? 20 : 42;
+    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : type === 'notes' ? 18 : type === 'hearts' ? 20 : type === 'spark' ? 46 : 42;
     ctx.save();
     for (let i = 0; i < N; i++) {
       if (type === 'snow') {
@@ -873,6 +883,19 @@ const ShiroLib = (() => {
         const a = Math.max(0, .15 + .8 * Math.sin(t * (1.2 + h(i, 2)) + h(i, 3) * 9));
         ctx.fillStyle = `rgba(200,255,120,${a})`;
         ctx.beginPath(); ctx.arc(x, y, 1.2 + 1.4 * h(i, 3), 0, 7); ctx.fill();
+      } else if (type === 'spark') {
+        // 火花: 一点から放射状に飛ぶ短い光条(火縄・スパーク演出)
+        const ox = W * (.2 + h(i, 0) * .6), oy = H * (.25 + h(i, 1) * .5);
+        const life = (h(i, 2) + t * (1.5 + h(i, 3))) % 1;          // 0→1 の短い生涯
+        const ang = h(i, 4) * 6.283 + i * .7;
+        const dist = life * (14 + 26 * h(i, 1));
+        const sx = ox + Math.cos(ang) * dist, sy = oy + Math.sin(ang) * dist + life * life * 10;
+        ctx.strokeStyle = `rgba(255,${200 - Math.round(life * 120)},90,${(1 - life) * .9})`;
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx - Math.cos(ang) * 5, sy - Math.sin(ang) * 5);
+        ctx.stroke();
       } else if (type === 'hearts') {
         // ハート: ♥マークがふわふわ昇る
         const x = h(i, 0) * W + Math.sin(t * .7 + i * 2.1) * W * .045;
@@ -1154,6 +1177,29 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath();
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
+      }
+    } else if (pr === 'forest') {
+      // 森: 深い緑の空 + 木漏れ日 + 針葉樹シルエット(決定論的)
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#12351f'); gr.addColorStop(.6, '#1d4d2a'); gr.addColorStop(1, '#0e2413');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      // 木漏れ日(柔らかい光斑)
+      const rng = L.mulberry32(313);
+      for (let i = 0; i < 10; i++) {
+        c.fillStyle = `rgba(230,255,190,${.05 + .08 * rng()})`;
+        c.beginPath(); c.arc(rng() * W, rng() * H * .5, 10 + rng() * 26, 0, 7); c.fill();
+      }
+      // 前景の針葉樹(2段三角)
+      for (let i = 0; i < 9; i++) {
+        const tx = rng() * W, th = H * (.3 + rng() * .28), tw = th * .42, ty = H;
+        c.fillStyle = `rgba(8,26,12,${.75 + .25 * rng()})`;
+        for (const [sy, sw] of [[1, 1], [.62, .72], [.3, .45]]) {
+          c.beginPath();
+          c.moveTo(tx, ty - th * sy - th * .3);
+          c.lineTo(tx - tw * sw, ty - th * sy + th * .34);
+          c.lineTo(tx + tw * sw, ty - th * sy + th * .34);
+          c.closePath(); c.fill();
+        }
       }
     } else if (pr === 'beach') {
       // 海辺: 空+太陽+海面+砂浜 + 揺れる波線(決定論的)
