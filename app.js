@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark', 'wind'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat', 'wide'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp', 'braid'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -546,6 +546,15 @@ const ShiroLib = (() => {
         q.lThigh = .3; q.rThigh = -.2; q.lKnee = .55; q.rKnee = .5;
         q.lArm = 1.1 + .15 * wv; q.rArm = .6 - .15 * wv; q.lElb = .3; q.rElb = .4;
         q.headTilt = -.1 * wv; q.bob = .015 * Math.abs(wv);
+        break;
+      }
+      case 'march': {
+        // マーチング: 膝を高く交互に上げて腕を大きく振る
+        const ph2 = tt * 3.4;
+        const lp = Math.max(0, Math.sin(ph2)), rp = Math.max(0, -Math.sin(ph2));
+        q.lThigh = .55 * lp; q.rThigh = -.55 * rp; q.lKnee = .9 * lp; q.rKnee = -.9 * rp;
+        q.lArm = .7 * lp; q.rArm = -.7 * rp; q.lElb = .3; q.rElb = -.3;
+        q.bob = .02 * Math.abs(Math.sin(ph2)); q.lean = .06;
         break;
       }
       case 'still': break;
@@ -1275,6 +1284,24 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.arc(hx + hr * .95, hy - hr * .62, hr * .09, 0, 7); ctx.fill();
         break;
       }
+      case 'chef': {
+        // コック帽: ふくらんだ白い頭頂+帯
+        ctx.fillStyle = 'rgba(240,242,246,0.97)';
+        ctx.beginPath();
+        ctx.ellipse(hx, hy - hr * 1.25, hr * .78, hr * .55, 0, Math.PI, 0);
+        ctx.closePath(); ctx.fill();
+        // 頭頂の3つの膨らみ
+        for (const dx of [-.45, 0, .45]) {
+          ctx.beginPath();
+          ctx.arc(hx + hr * dx, hy - hr * 1.55, hr * .3, 0, 7);
+          ctx.fill();
+        }
+        ctx.fillStyle = 'rgba(215,220,228,0.95)';
+        ctx.fillRect(hx - hr * .78, hy - hr * .92, hr * 1.56, hr * .2);
+        ctx.strokeStyle = dk; ctx.lineWidth = hr * .05;
+        ctx.strokeRect(hx - hr * .78, hy - hr * .92, hr * 1.56, hr * .2);
+        break;
+      }
       case 'cap': {
         // 野球帽: ドーム+前方の平つば+ボタン
         ctx.fillStyle = acc2;
@@ -1516,6 +1543,50 @@ if (typeof document !== 'undefined') (() => {
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
       }
+    } else if (pr === 'castle') {
+      // 城: 夕暮れ+塔2基+城壁+旗+窓の灯り
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#e89a5f'); gr.addColorStop(.55, '#c86a78'); gr.addColorStop(1, '#4a3050');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      // 太陽
+      c.fillStyle = 'rgba(255,215,150,0.9)';
+      c.beginPath(); c.arc(W * .72, H * .3, H * .09, 0, 7); c.fill();
+      const rng = L.mulberry32(55);
+      // 城壁+塔
+      c.fillStyle = '#3a2b42';
+      const wallY = H * .62, towerH = H * .34;
+      c.fillRect(0, wallY, W, H - wallY);
+      for (const tx of [W * .16, W * .84]) {
+        c.fillRect(tx - W * .07, wallY - towerH, W * .14, towerH + H * .1);
+        // 尖り屋根
+        c.beginPath();
+        c.moveTo(tx - W * .085, wallY - towerH);
+        c.lineTo(tx + W * .085, wallY - towerH);
+        c.lineTo(tx, wallY - towerH - H * .14);
+        c.closePath(); c.fill();
+        // 旗(なびく)
+        c.strokeStyle = '#3a2b42'; c.lineWidth = 2;
+        c.beginPath(); c.moveTo(tx, wallY - towerH - H * .14); c.lineTo(tx, wallY - towerH - H * .2); c.stroke();
+        c.fillStyle = '#c0303f';
+        const fw = Math.sin(t * 3 + tx) * W * .008;
+        c.beginPath();
+        c.moveTo(tx, wallY - towerH - H * .2);
+        c.lineTo(tx + W * .045 + fw, wallY - towerH - H * .185);
+        c.lineTo(tx, wallY - towerH - H * .17);
+        c.closePath(); c.fill();
+        c.fillStyle = '#3a2b42';
+      }
+      // 窓の灯り
+      c.fillStyle = 'rgba(255,210,120,0.85)';
+      for (let i = 0; i < 14; i++) {
+        const wx = W * (.1 + rng() * .8), wy = wallY + H * (.03 + rng() * .28);
+        c.fillRect(wx, wy, W * .008, H * .018);
+      }
+      // 門アーチ
+      c.fillStyle = 'rgba(20,12,26,0.8)';
+      c.beginPath();
+      c.arc(W * .5, H * .98, W * .06, Math.PI, 0);
+      c.fill();
     } else if (pr === 'cave') {
       // 洞窟: 暗い岩壁 + 天井の鍾乳石 + 差し込む光 + 水面の輝き
       const gr = c.createLinearGradient(0, 0, 0, H);
