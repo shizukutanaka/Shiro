@@ -211,6 +211,18 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   }
 }
 
+// despill: 半透明画素の彩度を落とす / 不透明・完全透過は無変更
+{
+  const d = new Uint8Array([255, 200, 200, 128,  100, 50, 200, 255,  10, 20, 30, 0]);
+  L.despill(d, 1);
+  ok(d[0] === d[1] && d[1] === d[2], 'semi-alpha pixel desaturated');
+  ok(d[4] === 100 && d[5] === 50 && d[6] === 200, 'opaque pixel untouched');
+  ok(d[8] === 10 && d[9] === 20 && d[10] === 30, 'transparent pixel untouched');
+  const d2 = new Uint8Array([255, 200, 200, 128]);
+  L.despill(d2, 0);
+  ok(d2[0] === 255, 'despill 0 no-op');
+}
+
 // drawReflection
 {
   const calls = [];
