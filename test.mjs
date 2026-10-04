@@ -211,6 +211,21 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   }
 }
 
+// drawParticles: 各タイプ描画できて座標は有限・画面内
+for (const type of ['snow', 'sparkle', 'petal']) {
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+    set: () => true,
+  });
+  L.drawParticles(ctx, 640, 360, type, 1.7, 42);
+  ok(calls.length > 20 && calls.every(Number.isFinite), `particles ${type} draws finite args`);
+}
+ok(L.clampParams({ particles: 'bogus' }).particles === 'none', 'particles invalid falls back to none');
+ok(L.clampParams({ particles: 'snow' }).particles === 'snow', 'particles snow kept');
+ok(L.clampParams({ acc: 'cape' }).acc === 'cape', 'cape accessory kept');
+ok(L.clampParams({ brow: 2 }).brow === 1 && L.clampParams({ brow: -1 }).brow === 0, 'brow clamped');
+
 // despill: 半透明画素の彩度を落とす / 不透明・完全透過は無変更
 {
   const d = new Uint8Array([255, 200, 200, 128,  100, 50, 200, 255,  10, 20, 30, 0]);
