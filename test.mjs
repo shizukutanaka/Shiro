@@ -171,6 +171,11 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(L.blinkOpen(1.0) === 1 && L.blinkOpen(1.0) === L.blinkOpen(1.0), 'blink deterministic/open by default');
   ok(L.blinkOpen(.09) < .5, 'blink closes mid-cycle');
   for (let i = 0; i < 200; i++) { const v = L.blinkOpen(i * .07); ok(v >= 0 && v <= 1, 'blink range'); }
+  // seed-personalized periods: deterministic per seed, differs across seeds somewhere in 0..8s
+  ok(L.blinkOpen(2.5, 42) === L.blinkOpen(2.5, 42), 'blink seed deterministic');
+  let differ = false;
+  for (let i = 0; i < 200; i++) if (L.blinkOpen(i * .04, 0) !== L.blinkOpen(i * .04, 96)) { differ = true; break; }
+  ok(differ, 'blink period varies by seed');
 }
 
 // erodeAlpha: opaque island loses its 1px border

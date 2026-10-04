@@ -32,7 +32,8 @@ const ShiroLib = (() => {
   const BGS = ['gradient', 'green', 'white', 'transparent'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
-    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity'];
+    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette', 'wmOpacity',
+    'accHue', 'vidSpeed'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -43,7 +44,7 @@ const ShiroLib = (() => {
     ['smile', '表情（笑顔）'], ['bgDim', '背景を暗く'], ['bgBlur', '背景ぼかし'],
     ['castDir', '影の向き'], ['rim', 'リムライト'], ['eyeHue', '目の色'],
     ['clothHue', '衣装色'], ['outline', '縁取り（ステッカー）'], ['vignette', 'ビネット'],
-    ['wmOpacity', '透かしの濃さ'],
+    ['wmOpacity', '透かしの濃さ'], ['accHue', 'アクセサリ色'], ['vidSpeed', '動画の速さ'],
   ];
 
   function defaultParams() {
@@ -53,7 +54,7 @@ const ShiroLib = (() => {
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
       smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, clothHue: 0,
       outline: 0, vignette: 0, wmOpacity: .4, watermark: '',
-      acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
+      accHue: .58, vidSpeed: .5, acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
 
@@ -85,7 +86,7 @@ const ShiroLib = (() => {
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
     p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
-    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7; p.vignette = rng() < .6 ? 0 : rng() * .6; p.watermark = ''; p.wmOpacity = .4;
+    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7; p.vignette = rng() < .6 ? 0 : rng() * .6; p.watermark = ''; p.wmOpacity = .4; p.vidSpeed = .5;
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -132,8 +133,9 @@ const ShiroLib = (() => {
   }
 
   // 瞬き: animSpeed に連動しない周期的なまばたき。1=開, 0=閉。
-  function blinkOpen(t) {
-    const ph = t % 3.9;
+  // seed で個体差のある周期(3.2〜4.6秒)を作る — 同じシードは常に同じリズム。
+  function blinkOpen(t, seed) {
+    const ph = t % (3.2 + ((seed || 0) % 97) / 97 * 1.4);
     if (ph >= .18) return 1;
     const s = Math.abs(ph - .09) / .09; // 0..1..0 の三角形
     return Math.min(1, s * 1.4);
@@ -374,7 +376,7 @@ const ShiroLib = (() => {
     ctx.beginPath(); ctx.arc(hx, hy, hr, 0, 7); ctx.fill();
     if (lw > 0) ctx.stroke();
     // eyes (素朴な2点、まばたきで縦につぶれる)
-    const eo = Math.max(.12, blinkOpen(t));
+    const eo = Math.max(.12, blinkOpen(t, p.seed));
     ctx.fillStyle = `hsla(${Math.round(p.eyeHue * 360)},65%,42%,0.9)`;
     for (const s of [-1, 1]) {
       ctx.beginPath();
@@ -388,13 +390,13 @@ const ShiroLib = (() => {
       ctx.beginPath(); ctx.moveTo(hx - mw, my);
       ctx.quadraticCurveTo(hx, my + curv * 2, hx + mw, my); ctx.stroke();
     }
-    drawAccessory(ctx, p.acc, hx, hy, hr);
+    drawAccessory(ctx, p.acc, hx, hy, hr, p.accHue);
     ctx.restore();
   }
 
-  // アクセサリ: キャラクリ定番の頭部装飾を手続き描画
-  function drawAccessory(ctx, acc, hx, hy, hr) {
-    const dk = 'rgba(52,56,68,0.95)', acc2 = 'rgba(110,168,255,0.9)';
+  // アクセサリ: キャラクリ定番の頭部装飾を手続き描画。accHue でアクセント色を着色
+  function drawAccessory(ctx, acc, hx, hy, hr, hue) {
+    const dk = 'rgba(52,56,68,0.95)', acc2 = `hsla(${Math.round((hue == null ? .58 : hue) * 360)},80%,64%,0.92)`;
     ctx.save();
     switch (acc) {
       case 'ribbon': {
@@ -547,6 +549,7 @@ if (typeof document !== 'undefined') (() => {
     L.drawCastShadow(c, silhouetteOf(src, sw, sh), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4);
     L.drawRimLight(c, silhouetteOf(src, sw, sh, '#dfe8ff', rimCv, rimCtx), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
     L.drawStickerOutline(c, silhouetteOf(src, sw, sh, '#ffffff', outCv, outCtx), wPix, hPix, cx, baseY, state.params.outline);
+    if (state.media.kind === 'video') el.playbackRate = .25 + state.params.vidSpeed * 1.5;
     c.save();
     c.globalAlpha = state.params.opacity;
     if (state.params.flip) { c.translate(2 * cx, 0); c.scale(-1, 1); }
@@ -732,6 +735,11 @@ if (typeof document !== 'undefined') (() => {
       d.querySelector('img').src = f.thumb || '';
       d.querySelector('span').textContent = f.name;
       d.addEventListener('click', () => { state.params = L.clampParams(f.params); syncUI(); });
+      d.querySelector('span').addEventListener('dblclick', ev => {
+        ev.stopPropagation();
+        const n = prompt('新しい名前', f.name);
+        if (n !== null) { f.name = n || f.name; saveFavs(); renderFavs(); }
+      });
       d.querySelector('.del').addEventListener('click', ev => {
         ev.stopPropagation();
         state.favs = state.favs.filter(x => x.id !== f.id);
