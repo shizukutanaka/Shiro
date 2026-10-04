@@ -183,6 +183,19 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(['dot','wink','closed','heart'].includes(pr.eyeStyle), 'random eyeStyle valid');
 }
 
+// drawReflection
+{
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+    set: () => true,
+  });
+  L.drawReflection(ctx, {}, 640, 600, 300, 500, 0);
+  ok(calls.length === 0, 'reflection off draws nothing');
+  L.drawReflection(ctx, {}, 640, 600, 300, 500, .8);
+  ok(calls.length === 8 && calls.every(Number.isFinite), 'reflection draws flipped image');
+}
+
 // blink cycle
 {
   ok(L.blinkOpen(1.0) === 1 && L.blinkOpen(1.0) === L.blinkOpen(1.0), 'blink deterministic/open by default');
