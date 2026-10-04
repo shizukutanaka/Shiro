@@ -30,10 +30,10 @@ const ShiroLib = (() => {
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
   const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask'];
-  const PARTICLES = ['none', 'snow', 'sparkle', 'petal'];
+  const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot'];
-  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp'];
+  const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
   const SUBJFX_FILTERS = { sepia: 'sepia(0.9)', mono: 'grayscale(1)', invert: 'invert(1) hue-rotate(180deg)' };
@@ -91,7 +91,7 @@ const ShiroLib = (() => {
       frame: 0, frameHue: .12,
       subjSat: .5, subjBright: .5, titleSize: .5, title: '',
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br', vidQ: 'std',
-      eyeStyle: 'dot', acc: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
+      eyeStyle: 'dot', acc: 'none', acc2: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
 
@@ -104,6 +104,7 @@ const ShiroLib = (() => {
     o.anim = ANIMS.includes(p && p.anim) ? p.anim : d.anim;
     o.bgFit = FITS.includes(p && p.bgFit) ? p.bgFit : d.bgFit;
     o.acc = ACCS.includes(p && p.acc) ? p.acc : d.acc;
+    o.acc2 = ACCS.includes(p && p.acc2) ? p.acc2 : d.acc2;
     o.bgPreset = BGS.includes(p && p.bgPreset) ? p.bgPreset : d.bgPreset;
     o.watermark = String(p && p.watermark || '').slice(0, 60);
     o.bubble = String(p && p.bubble || '').slice(0, 24);
@@ -127,6 +128,7 @@ const ShiroLib = (() => {
     for (const k of NUM_KEYS) p[k] = rng();
     p.anim = ANIMS[Math.floor(rng() * ANIMS.length)];
     p.acc = ACCS[Math.floor(rng() * ACCS.length)];
+    p.acc2 = rng() < .7 ? 'none' : ACCS[Math.floor(rng() * ACCS.length)];
     p.eyeStyle = EYES[Math.floor(rng() * EYES.length)];
     p.hair = HAIRS[Math.floor(rng() * HAIRS.length)];
     p.hairHue = rng();
@@ -577,6 +579,17 @@ const ShiroLib = (() => {
         ctx.stroke();
       } else if (es === 'heart') {
         ctx.fillStyle = eyeCol; heartPath(ctx, ex, ey, hr * .15 * esz); ctx.fill();
+      } else if (es === 'star') {
+        // 星目: 5点スター(アイドル/魔法少女系の定番)
+        ctx.fillStyle = eyeCol;
+        ctx.beginPath();
+        const sr = hr * .17 * esz;
+        for (let k = 0; k < 10; k++) {
+          const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? sr * .45 : sr;
+          const mx = ex + Math.cos(a) * rr, my2 = ey + Math.sin(a) * rr;
+          k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
+        }
+        ctx.closePath(); ctx.fill();
       } else {
         ctx.fillStyle = eyeCol;
         ctx.beginPath();
@@ -635,6 +648,7 @@ const ShiroLib = (() => {
       ctx.fill();
     }
     drawAccessory(ctx, p.acc, hx, hy, hr, p.accHue);
+    if (p.acc2 && p.acc2 !== 'none' && p.acc2 !== p.acc) drawAccessory(ctx, p.acc2, hx, hy, hr, p.accHue);
     ctx.restore();
   }
 
@@ -674,7 +688,7 @@ const ShiroLib = (() => {
   // パーティクル: シーン全体の空気感エフェクト(雪/キラキラ/花びら)。seed決定論
   function drawParticles(ctx, W, H, type, t, seed) {
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
-    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : 42;
+    const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : 42;
     ctx.save();
     for (let i = 0; i < N; i++) {
       if (type === 'snow') {
@@ -688,6 +702,21 @@ const ShiroLib = (() => {
         ctx.strokeStyle = `rgba(255,230,140,${a})`; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(x - r, y); ctx.lineTo(x + r, y);
         ctx.moveTo(x, y - r); ctx.lineTo(x, y + r); ctx.stroke();
+      } else if (type === 'rain') {
+        // 雨: 斜めの速いストリーク
+        const x = (h(i, 0) + t * .3) % 1 * W;
+        const y = ((h(i, 1) + t * (.5 + .3 * h(i, 2))) % 1) * H;
+        ctx.strokeStyle = `rgba(160,190,235,${.3 + .35 * h(i, 4)})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 3, y + 9 + 6 * h(i, 3)); ctx.stroke();
+      } else if (type === 'leaf') {
+        // 落ち葉: 揺れながら回転して舞い落ちる
+        const x = h(i, 0) * W + Math.sin(t * .7 + h(i, 1) * 8) * W * .06;
+        const y = ((h(i, 1) + t * (.04 + .03 * h(i, 2))) % 1) * H;
+        ctx.fillStyle = `hsla(${30 + 40 * h(i, 3)},60%,${35 + 25 * h(i, 4)}%,.8)`;
+        ctx.beginPath();
+        ctx.ellipse(x, y, 2.5 + 2.5 * h(i, 3), 1.2 + 1.2 * h(i, 3), Math.sin(t * 1.6 + i * 2) * 1.4, 0, 7);
+        ctx.fill();
       } else { // petal
         const x = h(i, 0) * W + Math.sin(t * .6 + h(i, 1) * 9) * W * .05;
         const y = ((h(i, 1) + t * (.03 + .03 * h(i, 2))) % 1) * H;
@@ -1165,6 +1194,7 @@ if (typeof document !== 'undefined') (() => {
       $('sel-wmpos').value = state.params.wmPos;
       $('sel-hair').value = state.params.hair;
       $('sel-vidq').value = state.params.vidQ;
+      $('sel-acc2').value = state.params.acc2;
       $('chk-flip').checked = state.params.flip;
       $('inp-watermark').value = state.params.watermark;
       $('inp-bubble').value = state.params.bubble;
@@ -1173,6 +1203,7 @@ if (typeof document !== 'undefined') (() => {
   }
   $('sel-anim').addEventListener('change', e => { state.params.anim = e.target.value; touch(); });
   $('sel-acc').addEventListener('change', e => { state.params.acc = e.target.value; touch(); });
+  $('sel-acc2').addEventListener('change', e => { state.params.acc2 = e.target.value; touch(); });
   $('sel-eyes').addEventListener('change', e => { state.params.eyeStyle = e.target.value; touch(); });
   $('sel-fx').addEventListener('change', e => { state.params.subjFx = e.target.value; touch(); });
   $('sel-grade').addEventListener('change', e => { state.params.grade = e.target.value; touch(); });
