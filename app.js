@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'hop', 'dab', 'side', 'twist', 'swim', 'bodyroll', 'charleston', 'vogue', 'stomp', 'krump', 'waltz', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'point', 'shake', 'sneeze', 'kick', 'float', 'skip', 'moonwalk', 'salute', 'balance', 'guard', 'surf', 'march', 'zombie', 'robot', 'hula', 'yoga', 'punch', 'shuffle', 'lunge', 'cossack', 'hop', 'dab', 'side', 'twist', 'swim', 'bodyroll', 'charleston', 'vogue', 'stomp', 'krump', 'waltz', 'tarantella', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero', 'ushanka', 'laurel', 'nightcap', 'jester', 'tiara', 'flowercrown', 'bowler', 'fedora', 'newsboy', 'tricorne', 'turban'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle', 'bunny', 'cat-ear', 'bandana', 'goggles', 'horns', 'straw', 'earmuff', 'wizard', 'cap', 'chef', 'top', 'santa', 'headband', 'antler', 'bowtie', 'viking', 'fez', 'sombrero', 'ushanka', 'laurel', 'nightcap', 'jester', 'tiara', 'flowercrown', 'bowler', 'fedora', 'newsboy', 'tricorne', 'turban', 'matador'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark', 'wind'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier', 'ruins', 'sakura', 'moon', 'harbor', 'terraces', 'bridge', 'wheatfield', 'pagoda', 'geyser', 'coral', 'vineyard'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea', 'space', 'mtn', 'rainbow', 'volcano', 'meadow', 'snowfield', 'shrine', 'lake', 'cloudsea', 'fireworks', 'cave', 'castle', 'canyon', 'bamboo', 'savanna', 'oasis', 'falls', 'autumn', 'fjord', 'glacier', 'ruins', 'sakura', 'moon', 'harbor', 'terraces', 'bridge', 'wheatfield', 'pagoda', 'geyser', 'coral', 'vineyard', 'lavender'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat', 'wide'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush', 'curly', 'pomp', 'braid'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -757,6 +757,18 @@ const ShiroLib = (() => {
         q.lElb = .5; q.rElb = .5;
         q.lKnee = .2 * Math.max(0, Math.sin(wz * 3)); q.rKnee = -.2 * Math.max(0, Math.sin(wz * 3 + Math.PI));
         q.headTilt = .1 * Math.sin(wz);
+        break;
+      }
+      case 'tarantella': {
+        // タランテラ: 両腕を頭上で振りながら速い足捌き+回るような揺れ
+        const ta = tt * 4.5;
+        q.lArm = 1.3 + .25 * Math.sin(ta); q.rArm = 1.3 - .25 * Math.sin(ta);
+        q.lElb = .5; q.rElb = .5;
+        const lp2 = Math.max(0, Math.sin(ta * 1.5)), rp2 = Math.max(0, Math.sin(ta * 1.5 + Math.PI));
+        q.lKnee = .4 * lp2; q.rKnee = -.4 * rp2;
+        q.sway = .09 * Math.sin(ta * .5);
+        q.lean = .06 * Math.sin(ta * .5 + 1);
+        q.bob = .025 * Math.abs(Math.sin(ta));
         break;
       }
       case 'still': break;
@@ -1486,6 +1498,26 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.arc(hx + hr * .95, hy - hr * .62, hr * .09, 0, 7); ctx.fill();
         break;
       }
+      case 'matador': {
+        // 闘牛士帽(モンテラ): 黒い帽子+両サイドの膨らみ
+        ctx.fillStyle = '#241f26';
+        // 両サイドの耳状の膨らみ
+        for (const s of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(hx + s * hr * .75, hy - hr * .75, hr * .32, hr * .38, s * .25, 0, 7);
+          ctx.fill();
+        }
+        // 中央の冠部
+        ctx.beginPath();
+        ctx.ellipse(hx, hy - hr * .85, hr * .5, hr * .28, 0, Math.PI, 0);
+        ctx.closePath(); ctx.fill();
+        // 縁取り(銀の筋)
+        ctx.strokeStyle = '#b8b8c8'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(hx, hy - hr * .88, hr * .5, hr * .26, 0, Math.PI * 1.1, Math.PI * 1.9);
+        ctx.stroke();
+        break;
+      }
       case 'turban': {
         // ターバン: 巻いた布(重なる帯)+前の宝石
         ctx.fillStyle = acc2;
@@ -2113,6 +2145,45 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath();
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
+      }
+    } else if (pr === 'lavender') {
+      // ラベンダー畑: 夕空+紫の列+蜂+遠景の木
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#e8c8d8'); gr.addColorStop(.5, '#b890c8'); gr.addColorStop(1, '#6a4a78');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      c.fillStyle = 'rgba(255,220,180,0.85)';
+      c.beginPath(); c.arc(W * .7, H * .25, H * .08, 0, 7); c.fill();
+      const rng = L.mulberry32(57);
+      // 遠景の木(プロヴァンス風の糸杉)
+      c.fillStyle = '#4a5038';
+      for (let i = 0; i < 4; i++) {
+        const tx = W * (.15 + rng() * .7);
+        c.beginPath();
+        c.ellipse(tx, H * .5, W * .012, H * .05, 0, 0, 7);
+        c.fill();
+      }
+      // ラベンダーの列(紫の帯+穂の点)
+      for (let row = 0; row < 5; row++) {
+        const ry = H * (.58 + row * .085);
+        c.fillStyle = ['#8a5aa8', '#7a4a98', '#9a6ab8'][row % 3];
+        c.beginPath();
+        c.moveTo(0, ry + H * .03);
+        for (let x = 0; x <= 16; x++) c.lineTo(W * x / 16, ry + Math.sin(x * .7 + row) * 4);
+        c.lineTo(W, ry + H * .09); c.lineTo(0, ry + H * .09);
+        c.closePath(); c.fill();
+        // 穂
+        for (let i = 0; i < 40 - row * 5; i++) {
+          const hx2 = rng() * W;
+          c.fillStyle = '#a878c8';
+          c.fillRect(hx2, ry + rng() * H * .04 - 4, 2.5, 5 + row);
+        }
+      }
+      // 飛ぶ蜂
+      c.fillStyle = '#e8c830';
+      for (let i = 0; i < 5; i++) {
+        const bx = ((rng() + t * .05 * (i % 2 ? 1 : -1)) % 1 + 1) % 1 * W;
+        const by = H * (.55 + (i % 3) * .12) + Math.sin(t * 3 + i * 2) * H * .03;
+        c.beginPath(); c.ellipse(bx, by, W * .006, H * .004, 0, 0, 7); c.fill();
       }
     } else if (pr === 'vineyard') {
       // 葡萄畑: 秋空+ぶどう棚の列+房+遠山
