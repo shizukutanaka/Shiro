@@ -29,7 +29,7 @@ const ShiroLib = (() => {
   const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'crown', 'phones', 'cape', 'beard', 'mask'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
   const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot'];
@@ -51,7 +51,7 @@ const ShiroLib = (() => {
     'accHue', 'vidSpeed', 'blush', 'headTilt', 'bgSat', 'bgContrast',
     'rimHue', 'reflect', 'tOffset', 'grain', 'trail', 'subjHue', 'pixel', 'shake',
     'glow', 'glowHue', 'eyeSize', 'bgX', 'bgY', 'despill', 'temp', 'shadowSoft', 'brow', 'bgDrift',
-    'rot', 'eyeGap', 'duo', 'hairHue', 'squash'];
+    'rot', 'eyeGap', 'duo', 'hairHue', 'squash', 'frame', 'frameHue'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -71,6 +71,7 @@ const ShiroLib = (() => {
     ['despill', 'スピル除去'], ['temp', '色温度'], ['shadowSoft', '影の柔らかさ'], ['brow', '眉毛の角度'],
     ['bgDrift', '背景のゆっくりズーム'], ['rot', 'モデルの傾き'], ['eyeGap', '目の間隔'],
     ['duo', '相方（2体目）'], ['hairHue', '髪色'], ['squash', 'つぶし・伸び'],
+    ['frame', '額縁の太さ'], ['frameHue', '額縁の色'],
   ];
 
   function defaultParams() {
@@ -85,6 +86,7 @@ const ShiroLib = (() => {
       shake: 0, glow: 0, glowHue: .55, eyeSize: .5, bgX: .5, bgY: .5,
       despill: .5, temp: .5, shadowSoft: .4, brow: .5, bgDrift: 0,
       rot: .5, eyeGap: .5, duo: 0, hairHue: .07, squash: 0,
+      frame: 0, frameHue: .12,
       subjFx: 'none', grade: 'none', blend: 'none', particles: 'none', wmPos: 'br', vidQ: 'std',
       eyeStyle: 'dot', acc: 'none', hair: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
@@ -721,6 +723,17 @@ const ShiroLib = (() => {
         ctx.fillRect(hx - hr * .72, hy - hr * .85, hr * 1.44, hr * .12); // band
         break;
       }
+      case 'shades': {
+        ctx.fillStyle = 'rgba(20,20,24,0.88)';
+        for (const s of [-1, 1]) {
+          ctx.beginPath(); ctx.arc(hx + s * hr * .38, hy - hr * .08, hr * .26, 0, 7); ctx.fill();
+          ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07);
+          ctx.beginPath(); ctx.moveTo(hx + s * hr * .64, hy - hr * .08); ctx.lineTo(hx + s * hr * .95, hy - hr * .18); ctx.stroke();
+        }
+        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07);
+        ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * .1); ctx.lineTo(hx + hr * .12, hy - hr * .1); ctx.stroke();
+        break;
+      }
       case 'glasses': {
         ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07);
         for (const s of [-1, 1]) {
@@ -1089,6 +1102,13 @@ if (typeof document !== 'undefined') (() => {
       ctx.restore();
     }
     L.drawVignette(ctx, W, H, p.vignette);
+    if (p.frame > .02) { // 額縁: ポラロイド/ポストカード風の枠線を最前面に
+      const b = 4 + p.frame * 44;
+      ctx.fillStyle = `hsla(${Math.round(p.frameHue * 360)},45%,${p.frameHue < .08 ? 14 : 90}%,0.96)`;
+      ctx.beginPath();
+      ctx.rect(0, 0, W, H); ctx.rect(b, b, W - 2 * b, H - 2 * b);
+      ctx.fill('evenodd');
+    }
     L.drawWatermark(ctx, p.watermark, W, H, p.wmOpacity, p.wmPos);
     requestAnimationFrame(frame);
   }
@@ -1156,6 +1176,19 @@ if (typeof document !== 'undefined') (() => {
     const pt = PLACES[e.target.value]; e.target.value = '';
     if (!pt) return;
     state.params.x = pt[0]; state.params.y = pt[1]; syncUI();
+  });
+  // 表情プリセット: 目+口+眉を一発切替(配置プリセット同様非保持)
+  const FACES = {
+    happy: { eyeStyle: 'closed', smile: .95, brow: .7 },
+    surprise: { eyeStyle: 'dot', smile: .9, brow: .9 },
+    angry: { eyeStyle: 'sharp', smile: .15, brow: .15 },
+    sleepy: { eyeStyle: 'closed', smile: .45, brow: .5 },
+    wink: { eyeStyle: 'wink', smile: .8, brow: .6 },
+  };
+  $('sel-face').addEventListener('change', e => {
+    const f = FACES[e.target.value]; e.target.value = '';
+    if (!f) return;
+    Object.assign(state.params, f); syncUI();
   });
   $('chk-freeze').addEventListener('change', e => {
     // 撮影用ポーズ固定: アニメーション時間を現在値で止める(動画素材も一時停止)
