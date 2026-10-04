@@ -180,7 +180,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     ok(calls.length > 50 && calls.every(Number.isFinite), `eyeStyle ${es} draws`);
   }
   const pr = L.randomParams(L.mulberry32(7));
-  ok(['dot','wink','closed','heart'].includes(pr.eyeStyle), 'random eyeStyle valid');
+  ok(['dot','wink','closed','heart','sharp'].includes(pr.eyeStyle), 'random eyeStyle valid');
   ok(['none','sepia','mono','invert'].includes(pr.subjFx), 'random subjFx valid');
   ok(['none','warm','cool','noir','vivid'].includes(pr.grade), 'random grade valid');
   ok(L.clampParams({ subjFx: 'x', grade: 'y' }).subjFx === 'none' && L.clampParams({ subjFx: 'x', grade: 'y' }).grade === 'none', 'bad fx/grade fall back');
