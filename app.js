@@ -32,7 +32,7 @@ const ShiroLib = (() => {
   const BGS = ['gradient', 'green', 'white', 'transparent'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
-    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue'];
+    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -42,7 +42,7 @@ const ShiroLib = (() => {
     ['keyThresh', '白抜き強度'], ['keySoft', '白抜きぼかし'], ['shadow', 'モデルの影'],
     ['smile', '表情（笑顔）'], ['bgDim', '背景を暗く'], ['bgBlur', '背景ぼかし'],
     ['castDir', '影の向き'], ['rim', 'リムライト'], ['eyeHue', '目の色'],
-    ['clothHue', '衣装色'],
+    ['clothHue', '衣装色'], ['outline', '縁取り（ステッカー）'],
   ];
 
   function defaultParams() {
@@ -51,7 +51,7 @@ const ShiroLib = (() => {
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
       smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, clothHue: 0,
-      acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
+      outline: 0, acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
 
@@ -82,7 +82,7 @@ const ShiroLib = (() => {
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
     p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
-    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng();
+    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7;
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -160,6 +160,22 @@ const ShiroLib = (() => {
     c.filter = `blur(${Math.max(1, wPix * .05)}px)`;
     c.globalAlpha = strength * .55;
     c.drawImage(silCanvas, cx - wPix / 2 + dx - (wPix * g - wPix) / 2, baseY - hPix * g - hPix * .015, wPix * g, hPix * g);
+    c.restore();
+  }
+
+  // ステッカー縁取り: 白色シルエットを全方向にずらして重ね、被写体の周りに輪郭を作る。
+  // silCanvas は #ffffff 着色済みのシルエット。2重リングで隙間なく塗る。
+  function drawStickerOutline(c, silCanvas, wPix, hPix, cx, baseY, strength) {
+    if (strength <= 0) return;
+    const r = Math.max(1, Math.round(strength * wPix * .045));
+    c.save();
+    c.globalAlpha = Math.min(1, strength * 1.5);
+    for (let i = 0; i < 16; i++) {
+      const a = i / 16 * Math.PI * 2;
+      const dx = Math.cos(a) * r, dy = Math.sin(a) * r;
+      c.drawImage(silCanvas, cx - wPix / 2 + dx, baseY - hPix + dy, wPix, hPix);
+      c.drawImage(silCanvas, cx - wPix / 2 + dx * .55, baseY - hPix + dy * .55, wPix, hPix);
+    }
     c.restore();
   }
 
@@ -395,7 +411,7 @@ const ShiroLib = (() => {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, mannequinPose, skeleton, drawMannequin, drawAccessory,
+    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -456,6 +472,7 @@ if (typeof document !== 'undefined') (() => {
   const shCv = document.createElement('canvas'), shCtx = shCv.getContext('2d');
   const modCv = document.createElement('canvas'), mctx = modCv.getContext('2d');
   const rimCv = document.createElement('canvas'), rimCtx = rimCv.getContext('2d');
+  const outCv = document.createElement('canvas'), outCtx = outCv.getContext('2d');
   function silhouetteOf(src, w, h, color, cv, cctx) {
     cv = cv || shCv; cctx = cctx || shCtx;
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
@@ -503,6 +520,7 @@ if (typeof document !== 'undefined') (() => {
     L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5);
     L.drawCastShadow(c, silhouetteOf(src, sw, sh), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4);
     L.drawRimLight(c, silhouetteOf(src, sw, sh, '#dfe8ff', rimCv, rimCtx), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
+    L.drawStickerOutline(c, silhouetteOf(src, sw, sh, '#ffffff', outCv, outCtx), wPix, hPix, cx, baseY, state.params.outline);
     c.save();
     c.globalAlpha = state.params.opacity;
     if (state.params.flip) { c.translate(2 * cx, 0); c.scale(-1, 1); }
@@ -528,12 +546,13 @@ if (typeof document !== 'undefined') (() => {
       }
       const baseY = p.y * H;
       // マネキンをオフスクリーンに描き、シルエット化して影/リムに利用
-      if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0) {
+      if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0) {
         modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix);
         mctx.clearRect(0, 0, modCv.width, modCv.height);
         L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, modCv.height);
         L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4);
         L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, '#dfe8ff', rimCv, rimCtx), wPix, hPix, cx, baseY, p.castDir, p.rim);
+        L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, '#ffffff', outCv, outCtx), wPix, hPix, cx, baseY, p.outline);
       }
       L.drawMannequin(ctx, p, t, cx, baseY, hPix);
     }
@@ -552,6 +571,7 @@ if (typeof document !== 'undefined') (() => {
     sDiv.appendChild(lab); sDiv.appendChild(inp);
   }
   function syncUI(fromParams = true) {
+    touch();
     for (const [key] of L.SLIDERS) {
       if (fromParams) $('sl-' + key).value = state.params[key];
       $('out-' + key).textContent = (+state.params[key]).toFixed(2);
@@ -564,11 +584,12 @@ if (typeof document !== 'undefined') (() => {
       $('chk-flip').checked = state.params.flip;
     }
   }
-  $('sel-anim').addEventListener('change', e => state.params.anim = e.target.value);
-  $('sel-acc').addEventListener('change', e => state.params.acc = e.target.value);
-  $('sel-bgfit').addEventListener('change', e => state.params.bgFit = e.target.value);
-  $('sel-bgpreset').addEventListener('change', e => state.params.bgPreset = e.target.value);
-  $('chk-flip').addEventListener('change', e => state.params.flip = e.target.checked);
+  $('sel-anim').addEventListener('change', e => { state.params.anim = e.target.value; touch(); });
+  $('sel-acc').addEventListener('change', e => { state.params.acc = e.target.value; touch(); });
+  $('sel-bgfit').addEventListener('change', e => { state.params.bgFit = e.target.value; touch(); });
+  $('sel-bgpreset').addEventListener('change', e => { state.params.bgPreset = e.target.value; touch(); });
+  $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });
+  $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
 
   $('btn-random').addEventListener('click', () => {
     state.params = L.randomParams(L.mulberry32((Math.random() * 4294967296) >>> 0));
@@ -733,10 +754,32 @@ if (typeof document !== 'undefined') (() => {
 
   // ---------- aspect presets ----------
   const ASPECTS = { '16:9': [1280, 720], '1:1': [960, 960], '9:16': [720, 1280] };
-  $('sel-aspect').addEventListener('change', e => {
-    const [w, h] = ASPECTS[e.target.value] || ASPECTS['16:9'];
+  function applyAspect(v) {
+    const [w, h] = ASPECTS[v] || ASPECTS['16:9'];
     stage.width = w; stage.height = h; W = w; H = h;
-  });
+  }
+  $('sel-aspect').addEventListener('change', e => { applyAspect(e.target.value); touch(); });
+
+  // ---------- session persistence ----------
+  // リロードで作業を失わないよう、パラメータとアスペクトを localStorage に自動保存する
+  const SES_KEY = 'shiro.session.v1';
+  let dirty = false;
+  function touch() { dirty = true; }
+  setInterval(() => {
+    if (!dirty) return; dirty = false;
+    try {
+      localStorage.setItem(SES_KEY, JSON.stringify({ v: 1, params: state.params, aspect: $('sel-aspect').value }));
+    } catch (e) {}
+  }, 1200);
+  function restoreSession() {
+    try {
+      const s = JSON.parse(localStorage.getItem(SES_KEY) || 'null');
+      if (!s || s.v !== 1 || !s.params) return false;
+      state.params = L.clampParams(s.params);
+      if (s.aspect) { $('sel-aspect').value = s.aspect; applyAspect(s.aspect); }
+      return true;
+    } catch (e) { return false; }
+  }
 
   // ---------- shortcuts ----------
   document.addEventListener('keydown', e => {
@@ -745,8 +788,9 @@ if (typeof document !== 'undefined') (() => {
   });
 
   // ---------- init ----------
-  // 過度なモーションを避ける設定ではアニメを静止化(アクセシビリティ)
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) state.params.anim = 'still';
+  const restored = restoreSession();
+  // 過度なモーションを避ける設定ではアニメを静止化(アクセシビリティ)。復元セッションがある場合は尊重する
+  if (!restored && matchMedia('(prefers-reduced-motion: reduce)').matches) state.params.anim = 'still';
   syncUI();
   renderFavs();
   requestAnimationFrame(frame);
