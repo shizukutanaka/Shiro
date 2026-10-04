@@ -26,13 +26,13 @@ const ShiroLib = (() => {
   }
 
   // ---------- params ----------
-  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'still'];
+  const ANIMS = ['idle', 'wave', 'walk', 'dance', 'jump', 'nod', 'run', 'talk', 'bow', 'spin', 'stretch', 'sleep', 'flip', 'clap', 'peek', 'cheer', 'sad', 'sit', 'still'];
   const VIDQS = ['low', 'std', 'high'];
   const FITS = ['cover', 'contain'];
-  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie'];
+  const ACCS = ['none', 'ribbon', 'hat', 'glasses', 'shades', 'crown', 'phones', 'cape', 'beard', 'mask', 'halo', 'flower', 'scarf', 'beret', 'tie', 'monocle'];
   const PARTICLES = ['none', 'snow', 'sparkle', 'petal', 'rain', 'leaf', 'ember', 'bubble', 'confetti', 'firefly', 'bokeh', 'notes', 'hearts', 'spark'];
   const WMPOS = ['br', 'bl', 'tr', 'tl'];
-  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert'];
+  const BGS = ['gradient', 'green', 'white', 'transparent', 'sunset', 'night', 'spot', 'sky', 'city', 'pastel', 'grid', 'beach', 'forest', 'aurora', 'desert', 'sea'];
   const EYES = ['dot', 'wink', 'closed', 'heart', 'sharp', 'star', 'crying', 'dizzy', 'xx', 'cat'];
   const HAIRS = ['none', 'short', 'bob', 'twin', 'long', 'ahoge', 'mohawk', 'odango', 'pony', 'mush'];
   const SUBJFX = ['none', 'sepia', 'mono', 'invert'];
@@ -439,6 +439,15 @@ const ShiroLib = (() => {
         const sigh = Math.max(0, Math.sin(tt * .9)) ** 3;      // 長い周期で0→1
         q.headTilt = .38 + .1 * sigh; q.lean = .12; q.bob = -.03 - .02 * sigh;
         q.lArm = .16; q.rArm = .16; q.lElb = .12; q.rElb = .12;
+        break;
+      }
+      case 'sit': {
+        // おすわり: 体育座り(膝を抱えてゆらゆら)
+        q.lThigh = q.rThigh = -1.1; q.lKnee = q.rKnee = 1.15;
+        q.lArm = -.9; q.rArm = .9; q.lElb = .7; q.rElb = .7;
+        q.bob = -.05 + .012 * Math.sin(tt * 1.6);
+        q.lean = .08 + .02 * Math.sin(tt * 1.1);
+        q.headTilt = .1 * Math.sin(tt * .8);
         break;
       }
       case 'still': break;
@@ -1081,6 +1090,17 @@ const ShiroLib = (() => {
         ctx.closePath(); ctx.fill();
         break;
       }
+      case 'monocle': {
+        // モノクル: 右眼の円レンズ + 顎下へ下がるチェーン
+        ctx.strokeStyle = `hsla(${Math.round((hue == null ? .12 : hue) * 360)},75%,60%,0.95)`;
+        ctx.lineWidth = Math.max(1.2, hr * .05);
+        ctx.beginPath(); ctx.arc(hx + hr * .38, hy - hr * .12, hr * .26, 0, 7); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(hx + hr * .38, hy + hr * .14);
+        ctx.quadraticCurveTo(hx + hr * .75, hy + hr * .6, hx + hr * .5, hy + hr * 1.05);
+        ctx.stroke();
+        break;
+      }
       case 'flower': {
         // 花飾り: 頭の側面に5弁の花(accHueで花弁着色)
         const fx2 = hx + hr * .62, fy2 = hy - hr * .55, pr3 = hr * .16;
@@ -1216,6 +1236,30 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath();
         c.arc(rng() * W, rng() * H, 3 + rng() * 9, 0, 7);
         c.fill();
+      }
+    } else if (pr === 'sea') {
+      // 海中: 深い青 + 差し込む光の柱 + 昇る泡(決定論的)
+      const gr = c.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, '#0a4d7a'); gr.addColorStop(.6, '#0b3a63'); gr.addColorStop(1, '#061f38');
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      // 光の柱(斜めの柔らかい帯)
+      for (let i = 0; i < 5; i++) {
+        const lx = W * (.15 + i * .18);
+        const g2 = c.createLinearGradient(lx, 0, lx + W * .12, H);
+        g2.addColorStop(0, 'rgba(180,230,255,0.18)'); g2.addColorStop(1, 'rgba(180,230,255,0)');
+        c.fillStyle = g2;
+        c.beginPath();
+        c.moveTo(lx, 0); c.lineTo(lx + W * .05, 0);
+        c.lineTo(lx + W * .05 + W * .14, H); c.lineTo(lx + W * .14, H);
+        c.closePath(); c.fill();
+      }
+      // 昇る泡
+      const rng = L.mulberry32(202);
+      for (let i = 0; i < 22; i++) {
+        const bx = rng() * W, r2 = 1.5 + rng() * 4;
+        const by = (1 - ((rng() + t * (.03 + .03 * rng())) % 1)) * H;
+        c.strokeStyle = 'rgba(200,235,255,0.5)'; c.lineWidth = 1;
+        c.beginPath(); c.arc(bx + Math.sin(t + i) * 4, by, r2, 0, 7); c.stroke();
       }
     } else if (pr === 'desert') {
       // 砂漠: 空+大きな太陽+うねる砂丘(決定論的)
