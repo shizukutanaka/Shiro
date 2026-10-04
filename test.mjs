@@ -137,6 +137,19 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.every(Number.isFinite), 'outline coords finite');
 }
 
+// vignette: no-op at 0, draws rect when active
+{
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+    set: () => true,
+  });
+  L.drawVignette(ctx, 1280, 720, 0);
+  ok(calls.length === 0, 'vignette 0 draws nothing');
+  L.drawVignette(ctx, 1280, 720, .5);
+  ok(calls.length > 0 && calls.every(Number.isFinite), 'vignette coords finite');
+}
+
 // blink cycle
 {
   ok(L.blinkOpen(1.0) === 1 && L.blinkOpen(1.0) === L.blinkOpen(1.0), 'blink deterministic/open by default');

@@ -32,7 +32,7 @@ const ShiroLib = (() => {
   const BGS = ['gradient', 'green', 'white', 'transparent'];
   const NUM_KEYS = ['height', 'headSize', 'shoulder', 'armLen', 'legLen', 'tone',
     'line', 'animSpeed', 'x', 'y', 'scale', 'opacity', 'keyThresh', 'keySoft', 'shadow',
-    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline'];
+    'smile', 'bgDim', 'bgBlur', 'castDir', 'rim', 'eyeHue', 'clothHue', 'outline', 'vignette'];
 
   const SLIDERS = [
     ['height', 'モデル身長'], ['headSize', '頭の大きさ'], ['shoulder', '肩幅'],
@@ -42,7 +42,7 @@ const ShiroLib = (() => {
     ['keyThresh', '白抜き強度'], ['keySoft', '白抜きぼかし'], ['shadow', 'モデルの影'],
     ['smile', '表情（笑顔）'], ['bgDim', '背景を暗く'], ['bgBlur', '背景ぼかし'],
     ['castDir', '影の向き'], ['rim', 'リムライト'], ['eyeHue', '目の色'],
-    ['clothHue', '衣装色'], ['outline', '縁取り（ステッカー）'],
+    ['clothHue', '衣装色'], ['outline', '縁取り（ステッカー）'], ['vignette', 'ビネット'],
   ];
 
   function defaultParams() {
@@ -51,7 +51,7 @@ const ShiroLib = (() => {
       tone: .25, line: .4, anim: 'idle', animSpeed: .5, x: .5, y: .84,
       scale: .6, opacity: 1, flip: false, keyThresh: 0, keySoft: .3, shadow: .5,
       smile: .6, bgDim: 0, bgBlur: 0, castDir: .5, rim: 0, eyeHue: .62, clothHue: 0,
-      outline: 0, acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
+      outline: 0, vignette: 0, acc: 'none', bgFit: 'cover', bgPreset: 'gradient',
     };
   }
 
@@ -82,7 +82,7 @@ const ShiroLib = (() => {
     p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4;
     p.keyThresh = rng() < .5 ? 0 : rng() * .6;
     p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6;
-    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7;
+    p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7; p.vignette = rng() < .6 ? 0 : rng() * .6;
     p.seed = Math.floor(rng() * 4294967295);
     return clampParams(p);
   }
@@ -177,6 +177,15 @@ const ShiroLib = (() => {
       c.drawImage(silCanvas, cx - wPix / 2 + dx * .55, baseY - hPix + dy * .55, wPix, hPix);
     }
     c.restore();
+  }
+
+  // ビネット: 画面端を落とすレンズ効果。最後にフレーム全体へ重ねる。
+  function drawVignette(c, w, h, strength) {
+    if (strength <= 0) return;
+    const g = c.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .35, w / 2, h / 2, Math.max(w, h) * .78);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, `rgba(0,0,0,${strength * .45})`);
+    c.save(); c.fillStyle = g; c.fillRect(0, 0, w, h); c.restore();
   }
 
   // ---------- recorder ----------
@@ -411,7 +420,7 @@ const ShiroLib = (() => {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, mannequinPose, skeleton, drawMannequin, drawAccessory,
+    keyAlpha, erodeAlpha, blinkOpen, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, mannequinPose, skeleton, drawMannequin, drawAccessory,
     MIME_CANDIDATES, pickMime,
   };
 })();
@@ -432,6 +441,7 @@ if (typeof document !== 'undefined') (() => {
     favs: loadFavs(),
     keySrc: null, keyParams: '',
     recorder: null, recTimer: 0,
+    frozenT: null,           // アニメ一時停止時の固定時刻(null=再生中)
   };
 
   // ---------- backdrop / model source ----------
@@ -531,7 +541,8 @@ if (typeof document !== 'undefined') (() => {
   // ---------- render loop ----------
   const t0 = performance.now();
   function frame() {
-    const t = (performance.now() - t0) / 1000;
+    const liveT = (performance.now() - t0) / 1000;
+    const t = state.frozenT !== null ? state.frozenT : liveT;
     const p = state.params;
     ctx.clearRect(0, 0, W, H);
     drawBackdrop(ctx, p);
@@ -556,6 +567,7 @@ if (typeof document !== 'undefined') (() => {
       }
       L.drawMannequin(ctx, p, t, cx, baseY, hPix);
     }
+    L.drawVignette(ctx, W, H, p.vignette);
     requestAnimationFrame(frame);
   }
 
@@ -590,6 +602,12 @@ if (typeof document !== 'undefined') (() => {
   $('sel-bgpreset').addEventListener('change', e => { state.params.bgPreset = e.target.value; touch(); });
   $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });
   $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
+  $('chk-freeze').addEventListener('change', e => {
+    // 撮影用ポーズ固定: アニメーション時間を現在値で止める(動画素材も一時停止)
+    state.frozenT = e.target.checked ? (performance.now() - t0) / 1000 : null;
+    const v = state.media && state.media.kind === 'video' ? state.media.el : null;
+    if (v) e.target.checked ? v.pause() : v.play().catch(() => {});
+  });
 
   $('btn-random').addEventListener('click', () => {
     state.params = L.randomParams(L.mulberry32((Math.random() * 4294967296) >>> 0));
@@ -762,9 +780,40 @@ if (typeof document !== 'undefined') (() => {
 
   // ---------- session persistence ----------
   // リロードで作業を失わないよう、パラメータとアスペクトを localStorage に自動保存する
+  // ---------- undo / redo ----------
+  // パラメータ変更を700ms単位でスナップショット化。Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y。
+  let undoStack = [], redoStack = [], lastSnap = '', lastT = 0, suppressHist = false;
+  function histTouch() {
+    if (lastSnap === '') lastSnap = JSON.stringify(state.params);
+    const now = performance.now();
+    if (now - lastT > 700) {
+      const cur = JSON.stringify(state.params);
+      if (cur !== lastSnap) { undoStack.push(lastSnap); if (undoStack.length > 60) undoStack.shift(); }
+      redoStack = [];
+    }
+    lastT = now; lastSnap = JSON.stringify(state.params);
+  }
+  function applySnap(s) {
+    suppressHist = true;
+    state.params = L.clampParams(JSON.parse(s));
+    syncUI();
+    suppressHist = false;
+    lastSnap = s; lastT = 0;
+  }
+  function undo() {
+    if (!undoStack.length) return;
+    redoStack.push(JSON.stringify(state.params));
+    applySnap(undoStack.pop());
+  }
+  function redo() {
+    if (!redoStack.length) return;
+    undoStack.push(JSON.stringify(state.params));
+    applySnap(redoStack.pop());
+  }
+
   const SES_KEY = 'shiro.session.v1';
   let dirty = false;
-  function touch() { dirty = true; }
+  function touch() { dirty = true; if (!suppressHist) histTouch(); }
   setInterval(() => {
     if (!dirty) return; dirty = false;
     try {
@@ -785,6 +834,11 @@ if (typeof document !== 'undefined') (() => {
   document.addEventListener('keydown', e => {
     if (/^(input|select|textarea)$/i.test(e.target.tagName)) return;
     if (e.key === 'r' || e.key === 'R') $('btn-random').click();
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
+    if (/^[1-9]$/.test(e.key) && state.favs[+e.key - 1]) {
+      state.params = L.clampParams(state.favs[+e.key - 1].params); syncUI();
+    }
   });
 
   // ---------- init ----------
