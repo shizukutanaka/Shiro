@@ -8537,6 +8537,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   });
   stage.addEventListener('pointerup', () => dragging = false);
   stage.addEventListener('wheel', e => {
+    if (e.ctrlKey) return;
     e.preventDefault(); state.params.scale = L.clamp01(state.params.scale - e.deltaY * .0008); syncUI()
   }, { passive: false });
 
