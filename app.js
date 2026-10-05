@@ -241,6 +241,7 @@ const ShiroLib = (() => {
   // 正面図の関節人形。y は足元=0・上向き正、全長 1.0 の正規化空間。
   function mannequinPose(p, t) {
     const s = .4 + p.animSpeed * 2.2, tt = t * s;
+    const S = f => Math.sin(tt * f), C = f => Math.cos(tt * f), A = f => Math.abs(S(f));
     const q = {
       bob: 0, sway: 0, lean: 0, headTilt: 0,
       lThigh: 0, rThigh: 0, lKnee: 0, rKnee: 0, lShin: 0, rShin: 0,
@@ -248,43 +249,43 @@ const ShiroLib = (() => {
     };
     switch (p.anim) {
       case 'wave':
-        q.bob = .012 * Math.sin(tt * 2); q.lean = .04 * Math.sin(tt); q.rArm = 2.5; q.rElb = .5 * Math.sin(tt * 6) + .3; q.lArm = .12; q.headTilt = .1 * Math.sin(tt * 2);
+        q.bob = .012 * S(2); q.lean = .04 * Math.sin(tt); q.rArm = 2.5; q.rElb = .5 * S(6) + .3; q.lArm = .12; q.headTilt = .1 * S(2);
         break;
       case 'walk': {
-        const w = Math.sin(tt * 3); q.lThigh = .55 * w; q.rThigh = -.55 * w; q.lKnee = Math.max(0, .7 * Math.sin(tt * 3 + Math.PI / 2)); q.rKnee = Math.max(0, .7 * Math.sin(tt * 3 - Math.PI / 2)); q.lArm = .1 - .4 * w; q.rArm = .1 + .4 * w; q.bob = .02 * Math.abs(Math.cos(tt * 3)); q.sway = .01 * w;
+        const w = S(3); q.lThigh = .55 * w; q.rThigh = -.55 * w; q.lKnee = Math.max(0, .7 * Math.sin(tt * 3 + Math.PI / 2)); q.rKnee = Math.max(0, .7 * Math.sin(tt * 3 - Math.PI / 2)); q.lArm = .1 - .4 * w; q.rArm = .1 + .4 * w; q.bob = .02 * Math.abs(C(3)); q.sway = .01 * w;
         break;
       }
       case 'dance': {
-        const w = Math.sin(tt * 4); q.sway = .05 * w; q.bob = .03 * Math.abs(w); q.lArm = 1.2 + .9 * Math.sin(tt * 4); q.rArm = 1.2 - .9 * Math.sin(tt * 4); q.lElb = .5; q.rElb = .5; q.lean = .06 * w; q.headTilt = .15 * w; q.lThigh = .15 * w; q.rThigh = -.15 * w;
+        const w = S(4); q.sway = .05 * w; q.bob = .03 * Math.abs(w); q.lArm = 1.2 + .9 * S(4); q.rArm = 1.2 - .9 * S(4); q.lElb = .5; q.rElb = .5; q.lean = .06 * w; q.headTilt = .15 * w; q.lThigh = .15 * w; q.rThigh = -.15 * w;
         break;
       }
       case 'jump': {
-        const air = Math.sin((tt % 1) * Math.PI); q.bob = .13 * air; q.lThigh = q.rThigh = -.1 * air; q.lKnee = q.rKnee = .9 * air; q.lArm = .1 - 1.9 * air; q.rArm = .1 + 1.9 * air; q.lElb = .3; q.rElb = .3; q.lean = .03 * Math.sin(tt * 4); // 0→1→0 の放物線で1秒周期の跳躍 // 両腕を上げる
+        const air = Math.sin((tt % 1) * Math.PI); q.bob = .13 * air; q.lThigh = q.rThigh = -.1 * air; q.lKnee = q.rKnee = .9 * air; q.lArm = .1 - 1.9 * air; q.rArm = .1 + 1.9 * air; q.lElb = .3; q.rElb = .3; q.lean = .03 * S(4); // 0→1→0 の放物線で1秒周期の跳躍 // 両腕を上げる
         break;
       }
       case 'nod': {
         // うなずき: 頭を周期的に前後に傾けるあいづち動作
-        const n = Math.sin(tt * 2.4); q.headTilt = .22 * n; q.bob = .008 * Math.abs(n); q.lean = .02 * n; q.lArm = .1; q.rArm = .1;
+        const n = S(2.4); q.headTilt = .22 * n; q.bob = .008 * Math.abs(n); q.lean = .02 * n; q.lArm = .1; q.rArm = .1;
         break;
       }
       case 'run': {
         // 走る: 歩行の2倍弱の脚回転 + 前傾 + 肘を畳む
-        const w = Math.sin(tt * 5); q.lThigh = .8 * w; q.rThigh = -.8 * w; q.lKnee = Math.max(0, 1.1 * Math.sin(tt * 5 + Math.PI / 2)); q.rKnee = Math.max(0, 1.1 * Math.sin(tt * 5 - Math.PI / 2)); q.lArm = .3 - .7 * w; q.rArm = .3 + .7 * w; q.lElb = 1.1; q.rElb = 1.1; q.bob = .04 * Math.abs(Math.cos(tt * 5)); q.lean = .12;
+        const w = S(5); q.lThigh = .8 * w; q.rThigh = -.8 * w; q.lKnee = Math.max(0, 1.1 * Math.sin(tt * 5 + Math.PI / 2)); q.rKnee = Math.max(0, 1.1 * Math.sin(tt * 5 - Math.PI / 2)); q.lArm = .3 - .7 * w; q.rArm = .3 + .7 * w; q.lElb = 1.1; q.rElb = 1.1; q.bob = .04 * Math.abs(C(5)); q.lean = .12;
         break;
       }
       case 'talk': {
         // おしゃべり: ゆるい待機 + 会話っぽい小さな頭の動き(口の開閉は描画側で処理)
-        q.bob = .008 * Math.sin(tt * 2); q.lean = .015 * Math.sin(tt * 1.1); q.headTilt = .05 * Math.sin(tt * 2.7); q.lArm = .08; q.rArm = .08;
+        q.bob = .008 * S(2); q.lean = .015 * S(1.1); q.headTilt = .05 * S(2.7); q.lArm = .08; q.rArm = .08;
         break;
       }
       case 'spin': {
         // 回転: X方向スケールは描画側の座標変換で行う。体は腕を広げた軽いバウンス
-        q.bob = .02 * Math.abs(Math.sin(tt * 2.5)); q.lArm = .35; q.rArm = .35; q.lElb = .2; q.rElb = .2;
+        q.bob = .02 * A(2.5); q.lArm = .35; q.rArm = .35; q.lElb = .2; q.rElb = .2;
         break;
       }
       case 'bow': {
         // おじぎ: 頭を深く垂れて体ごと少し沈む敬礼動作(1.4s弱周期で往復)
-        const b = Math.pow(Math.max(0, Math.sin(tt * 1.4)), .7); q.headTilt = b * .55; q.bob = -b * .05; q.lArm = .05; q.rArm = .05; q.lElb = 0; q.rElb = 0;
+        const b = Math.pow(Math.max(0, S(1.4)), .7); q.headTilt = b * .55; q.bob = -b * .05; q.lArm = .05; q.rArm = .05; q.lElb = 0; q.rElb = 0;
         break;
       }
       case 'stretch': {
@@ -299,12 +300,12 @@ const ShiroLib = (() => {
       }
       case 'flip': {
         // 宙返り: Y反転は描画側の座標変換(cos(t*2.5))で行う。体は浮き上がり+脚タック
-        const u = .5 + .5 * Math.sin(tt * 2.5); q.bob = .08 * u; q.lKnee = q.rKnee = .7 * u; q.lThigh = q.rThigh = -.15 * u; q.lArm = .5; q.rArm = .5; q.lElb = .4; q.rElb = .4;
+        const u = .5 + .5 * S(2.5); q.bob = .08 * u; q.lKnee = q.rKnee = .7 * u; q.lThigh = q.rThigh = -.15 * u; q.lArm = .5; q.rArm = .5; q.lElb = .4; q.rElb = .4;
         break;
       }
       case 'clap': {
         // 拍手: 両腕を胸の前で交互に合わせる(2.5Hzの往復)
-        const c = Math.sin(tt * 8); q.lArm = -.55 + .3 * c; q.rArm = .55 + .3 * c; q.lElb = .85; q.rElb = .85; q.bob = .015 * Math.abs(c); q.headTilt = .08 * Math.sin(tt * 2);
+        const c = S(8); q.lArm = -.55 + .3 * c; q.rArm = .55 + .3 * c; q.lElb = .85; q.rElb = .85; q.bob = .015 * Math.abs(c); q.headTilt = .08 * S(2);
         break;
       }
       case 'peek': {
@@ -314,30 +315,30 @@ const ShiroLib = (() => {
       }
       case 'cheer': {
         // バンザイ: 両手を頭上に振り上げながら小刻みに跳ねる
-        const j = Math.abs(Math.sin(tt * 4)); q.bob = .09 * j; q.lArm = -.25 - .6 * j; q.rArm = .25 + .6 * j; q.lElb = .25; q.rElb = .25; q.lThigh = -.15 * j; q.rThigh = -.15 * j; q.lKnee = q.rKnee = .5 * j; q.headTilt = .12 * Math.sin(tt * 2); // 腕は跳ねに合わせて上げ下げ
+        const j = A(4); q.bob = .09 * j; q.lArm = -.25 - .6 * j; q.rArm = .25 + .6 * j; q.lElb = .25; q.rElb = .25; q.lThigh = -.15 * j; q.rThigh = -.15 * j; q.lKnee = q.rKnee = .5 * j; q.headTilt = .12 * S(2); // 腕は跳ねに合わせて上げ下げ
         break;
       }
       case 'sad': {
         // しょんぼり: うなだれ + 時々ため息(肩が落ちて戻る)
-        const sigh = Math.max(0, Math.sin(tt * .9)) ** 3; q.headTilt = .38 + .1 * sigh; q.lean = .12; q.bob = -.03 - .02 * sigh; q.lArm = .16; q.rArm = .16; q.lElb = .12; q.rElb = .12; // 長い周期で0→1
+        const sigh = Math.max(0, S(.9)) ** 3; q.headTilt = .38 + .1 * sigh; q.lean = .12; q.bob = -.03 - .02 * sigh; q.lArm = .16; q.rArm = .16; q.lElb = .12; q.rElb = .12; // 長い周期で0→1
         break;
       }
       case 'sit': {
         // おすわり: 体育座り(膝を抱えてゆらゆら)
-        q.lThigh = q.rThigh = -1.1; q.lKnee = q.rKnee = 1.15; q.lArm = -.9; q.rArm = .9; q.lElb = .7; q.rElb = .7; q.bob = -.05 + .012 * Math.sin(tt * 1.6); q.lean = .08 + .02 * Math.sin(tt * 1.1); q.headTilt = .1 * Math.sin(tt * .8);
+        q.lThigh = q.rThigh = -1.1; q.lKnee = q.rKnee = 1.15; q.lArm = -.9; q.rArm = .9; q.lElb = .7; q.rElb = .7; q.bob = -.05 + .012 * S(1.6); q.lean = .08 + .02 * S(1.1); q.headTilt = .1 * S(.8);
         break;
       }
       case 'point': {
         // 指差し: 右腕を前へ突き出してキメる(2秒ごとに左右交互)
-        const alt = Math.sin(tt * Math.PI) > 0 ? 1 : -1;
+        const alt = S(Math.PI) > 0 ? 1 : -1;
         if (alt > 0) { q.rArm = .95; q.rElb = .05; q.lArm = .12; }
         else { q.lArm = -.95; q.lElb = .05; q.rArm = .12; }
-        q.lean = .06 * alt; q.headTilt = .1 * alt; q.bob = .015 * Math.sin(tt * 3);
+        q.lean = .06 * alt; q.headTilt = .1 * alt; q.bob = .015 * S(3);
         break;
       }
       case 'shake': {
         // 首振り: 「いやいや」と頭を左右に速く振る
-        const w2 = Math.sin(tt * 7); q.headTilt = .32 * w2; q.sway = .02 * w2; q.lArm = .12; q.rArm = .12;
+        const w2 = S(7); q.headTilt = .32 * w2; q.sway = .02 * w2; q.lArm = .12; q.rArm = .12;
         break;
       }
       case 'sneeze': {
@@ -347,22 +348,22 @@ const ShiroLib = (() => {
       }
       case 'kick': {
         // キック: 右脚をパルスで突き出す(バランスのため後傾)
-        const kk = Math.pow(Math.abs(Math.sin(tt * 3)), 3); q.rThigh = -1.3 * kk; q.rKnee = .3; q.lean = -.12 * kk; q.lArm = -.3 * kk; q.rArm = .3 * kk; q.headTilt = -.08 * kk;
+        const kk = Math.pow(A(3), 3); q.rThigh = -1.3 * kk; q.rKnee = .3; q.lean = -.12 * kk; q.lArm = -.3 * kk; q.rArm = .3 * kk; q.headTilt = -.08 * kk;
         break;
       }
       case 'float': {
         // 浮遊: 大きく上下にホバー、脚はだらんと垂れる
-        q.bob = -.09 * Math.sin(tt * 2); q.sway = .03 * Math.sin(tt * .9); q.lean = .05 * Math.sin(tt * 1.4); q.lArm = .45 + .1 * Math.sin(tt * 2); q.rArm = .45 - .1 * Math.sin(tt * 2); q.lThigh = .15; q.rThigh = .18; q.lKnee = .5; q.rKnee = .55;
+        q.bob = -.09 * S(2); q.sway = .03 * S(.9); q.lean = .05 * S(1.4); q.lArm = .45 + .1 * S(2); q.rArm = .45 - .1 * S(2); q.lThigh = .15; q.rThigh = .18; q.lKnee = .5; q.rKnee = .55;
         break;
       }
       case 'skip': {
         // スキップ: 交互に膝を上げて小刻みに跳ねる
-        const ph2 = Math.sin(tt * 6); q.bob = -.04 * Math.abs(Math.sin(tt * 6)); q.lThigh = -.7 * Math.max(0, ph2); q.lKnee = .9 * Math.max(0, ph2); q.rThigh = -.7 * Math.max(0, -ph2); q.rKnee = .9 * Math.max(0, -ph2); q.lArm = -.35 * ph2; q.rArm = .35 * ph2;
+        const ph2 = S(6); q.bob = -.04 * A(6); q.lThigh = -.7 * Math.max(0, ph2); q.lKnee = .9 * Math.max(0, ph2); q.rThigh = -.7 * Math.max(0, -ph2); q.rKnee = .9 * Math.max(0, -ph2); q.lArm = -.35 * ph2; q.rArm = .35 * ph2;
         break;
       }
       case 'moonwalk': {
         // ムーンウォーク: 低い膝の交互スライド+後傾で後ろに滑る
-        const w = Math.sin(tt * 4); q.lThigh = .3 * w; q.rThigh = -.3 * w; q.lKnee = Math.max(0, .35 * Math.sin(tt * 4 + Math.PI / 2)); q.rKnee = Math.max(0, .35 * Math.sin(tt * 4 - Math.PI / 2)); q.lean = -.08; q.sway = .02 * w; q.lArm = .25 - .3 * w; q.rArm = .25 + .3 * w; q.lElb = .8; q.rElb = .8; q.bob = .015 * Math.abs(Math.cos(tt * 4));
+        const w = S(4); q.lThigh = .3 * w; q.rThigh = -.3 * w; q.lKnee = Math.max(0, .35 * Math.sin(tt * 4 + Math.PI / 2)); q.rKnee = Math.max(0, .35 * Math.sin(tt * 4 - Math.PI / 2)); q.lean = -.08; q.sway = .02 * w; q.lArm = .25 - .3 * w; q.rArm = .25 + .3 * w; q.lElb = .8; q.rElb = .8; q.bob = .015 * Math.abs(C(4));
         break;
       }
       case 'salute': {
@@ -372,17 +373,17 @@ const ShiroLib = (() => {
       }
       case 'balance': {
         // 片足バランス: 右脚を横に上げ、両腕を広げてフラつく
-        const wb = Math.sin(tt * 3.2); q.rThigh = -1.1; q.rKnee = -.4; q.lArm = 1.35 + .12 * wb; q.rArm = 1.35 - .12 * wb; q.lElb = .1; q.rElb = .1; q.lean = .09 * wb; q.sway = .04 * wb; q.headTilt = -.08 * wb; // 右膝を外側に折る // 水平に広げる
+        const wb = S(3.2); q.rThigh = -1.1; q.rKnee = -.4; q.lArm = 1.35 + .12 * wb; q.rArm = 1.35 - .12 * wb; q.lElb = .1; q.rElb = .1; q.lean = .09 * wb; q.sway = .04 * wb; q.headTilt = -.08 * wb; // 右膝を外側に折る // 水平に広げる
         break;
       }
       case 'guard': {
         // 構え: ボクシングのガード(両拳を顔の前、小刻みに踏む)
-        const st = Math.abs(Math.sin(tt * 5)); q.lArm = .95; q.rArm = .95; q.lElb = 1.8; q.rElb = 1.8; q.lean = .06; q.sway = .03 * Math.sin(tt * 5); q.lThigh = .15; q.rThigh = -.15; q.lKnee = .3; q.rKnee = .3; q.bob = .015 * st; q.headTilt = .04 * Math.sin(tt * 2.5);
+        const st = A(5); q.lArm = .95; q.rArm = .95; q.lElb = 1.8; q.rElb = 1.8; q.lean = .06; q.sway = .03 * S(5); q.lThigh = .15; q.rThigh = -.15; q.lKnee = .3; q.rKnee = .3; q.bob = .015 * st; q.headTilt = .04 * S(2.5);
         break;
       }
       case 'surf': {
         // サーフィン: 膝を落として横乗り、両腕でバランス(波に揺れる)
-        const wv = Math.sin(tt * 2.4); q.lean = .18 + .08 * wv; q.sway = .05 * Math.sin(tt * 1.6); q.lThigh = .3; q.rThigh = -.2; q.lKnee = .55; q.rKnee = .5; q.lArm = 1.1 + .15 * wv; q.rArm = .6 - .15 * wv; q.lElb = .3; q.rElb = .4; q.headTilt = -.1 * wv; q.bob = .015 * Math.abs(wv);
+        const wv = S(2.4); q.lean = .18 + .08 * wv; q.sway = .05 * S(1.6); q.lThigh = .3; q.rThigh = -.2; q.lKnee = .55; q.rKnee = .5; q.lArm = 1.1 + .15 * wv; q.rArm = .6 - .15 * wv; q.lElb = .3; q.rElb = .4; q.headTilt = -.1 * wv; q.bob = .015 * Math.abs(wv);
         break;
       }
       case 'march': {
@@ -392,7 +393,7 @@ const ShiroLib = (() => {
       }
       case 'zombie': {
         // ゾンビ: 両腕を前に突き出して左右に揺れながら引き摺る
-        const zw = Math.sin(tt * 1.8); q.lean = .1 + .05 * zw; q.sway = .12 * zw; q.headTilt = .2 * zw; q.lArm = .9; q.rArm = .9; q.lElb = .15; q.rElb = .15; q.lThigh = .15 * Math.max(0, zw); q.rThigh = -.15 * Math.max(0, -zw); q.lKnee = .3; q.rKnee = -.3; q.bob = .01;
+        const zw = S(1.8); q.lean = .1 + .05 * zw; q.sway = .12 * zw; q.headTilt = .2 * zw; q.lArm = .9; q.rArm = .9; q.lElb = .15; q.rElb = .15; q.lThigh = .15 * Math.max(0, zw); q.rThigh = -.15 * Math.max(0, -zw); q.lKnee = .3; q.rKnee = -.3; q.bob = .01;
         break;
       }
       case 'robot': {
@@ -408,7 +409,7 @@ const ShiroLib = (() => {
       }
       case 'yoga': {
         // ヨガ(木のポーズ): 片足立ち+合掌+呼吸する上下
-        const br = Math.sin(tt * 1.4); q.rThigh = -.9; q.rKnee = -.9; q.lArm = 1.5; q.rArm = 1.5; q.lElb = 1.4; q.rElb = 1.4; q.lean = .04 * br; q.sway = .05 * Math.sin(tt * .9); q.bob = .02 * br; q.headTilt = .04 * br;
+        const br = S(1.4); q.rThigh = -.9; q.rKnee = -.9; q.lArm = 1.5; q.rArm = 1.5; q.lElb = 1.4; q.rElb = 1.4; q.lean = .04 * br; q.sway = .05 * S(.9); q.bob = .02 * br; q.headTilt = .04 * br;
         break;
       }
       case 'punch': {
@@ -433,22 +434,22 @@ const ShiroLib = (() => {
       }
       case 'hop': {
         // ぴょんぴょん: 両足で小刻みに跳ねる(膝を揃えて曲げ伸ばし)
-        const hp = Math.abs(Math.sin(tt * 5)); q.bob = .05 * hp; q.lKnee = .5 * hp; q.rKnee = -.5 * hp; q.lThigh = .2 * hp; q.rThigh = -.2 * hp; q.lArm = .25 * hp; q.rArm = .25 * hp; q.lElb = .4; q.rElb = .4; q.lean = .04;
+        const hp = A(5); q.bob = .05 * hp; q.lKnee = .5 * hp; q.rKnee = -.5 * hp; q.lThigh = .2 * hp; q.rThigh = -.2 * hp; q.lArm = .25 * hp; q.rArm = .25 * hp; q.lElb = .4; q.rElb = .4; q.lean = .04;
         break;
       }
       case 'dab': {
         // ダブ: 右腕を斜め上へ、頭を左肘にうずめる決めポーズ(微振動)
-        const db = Math.sin(tt * 4) * .03; q.rArm = 1.3 + db; q.rElb = .3; q.lArm = .9; q.lElb = 1.7; q.headTilt = .5 + db; q.lean = .12; q.bob = .015 * Math.abs(Math.sin(tt * 4));
+        const db = S(4) * .03; q.rArm = 1.3 + db; q.rElb = .3; q.lArm = .9; q.lElb = 1.7; q.headTilt = .5 + db; q.lean = .12; q.bob = .015 * A(4);
         break;
       }
       case 'side': {
         // サイドステップ: 左右へ交互にステップ、腰を横に揺らす
-        const sd = Math.sin(tt * 3.2); q.sway = .12 * sd; q.lean = .08 * sd; q.lThigh = Math.max(0, sd) * .35; q.rThigh = -Math.max(0, -sd) * .35; q.lKnee = Math.max(0, sd) * .25; q.rKnee = -Math.max(0, -sd) * .25; q.lArm = .4 + .2 * sd; q.rArm = .4 - .2 * sd; q.lElb = .5; q.rElb = .5;
+        const sd = S(3.2); q.sway = .12 * sd; q.lean = .08 * sd; q.lThigh = Math.max(0, sd) * .35; q.rThigh = -Math.max(0, -sd) * .35; q.lKnee = Math.max(0, sd) * .25; q.rKnee = -Math.max(0, -sd) * .25; q.lArm = .4 + .2 * sd; q.rArm = .4 - .2 * sd; q.lElb = .5; q.rElb = .5;
         break;
       }
       case 'twist': {
         // ツイスト: 腰を交互にひねるダンス(膝を交互に)
-        const tw = Math.sin(tt * 6); q.sway = .05 * tw; q.lThigh = Math.max(0, tw) * .3; q.rThigh = -Math.max(0, -tw) * .3; q.lKnee = Math.max(0, tw) * .35; q.rKnee = -Math.max(0, -tw) * .35; q.lArm = .5 - .15 * tw; q.rArm = .5 + .15 * tw; q.lElb = .8; q.rElb = .8; q.lean = .04 * tw; q.bob = .02 * Math.abs(tw);
+        const tw = S(6); q.sway = .05 * tw; q.lThigh = Math.max(0, tw) * .3; q.rThigh = -Math.max(0, -tw) * .3; q.lKnee = Math.max(0, tw) * .35; q.rKnee = -Math.max(0, -tw) * .35; q.lArm = .5 - .15 * tw; q.rArm = .5 + .15 * tw; q.lElb = .8; q.rElb = .8; q.lean = .04 * tw; q.bob = .02 * Math.abs(tw);
         break;
       }
       case 'swim': {
@@ -463,7 +464,7 @@ const ShiroLib = (() => {
       }
       case 'charleston': {
         // チャールストン: 膝を内↔外交互に、腕を左右に振る
-        const ch = Math.sin(tt * 5); q.lKnee = .3 + .3 * ch; q.rKnee = -(.3 - .3 * ch); q.lThigh = .15 * ch; q.rThigh = -.15 * ch; q.lArm = .5 - .3 * ch; q.rArm = .5 + .3 * ch; q.lElb = .7; q.rElb = .7; q.lean = .06 * ch; q.bob = .02 * Math.abs(ch);
+        const ch = S(5); q.lKnee = .3 + .3 * ch; q.rKnee = -(.3 - .3 * ch); q.lThigh = .15 * ch; q.rThigh = -.15 * ch; q.lArm = .5 - .3 * ch; q.rArm = .5 + .3 * ch; q.lElb = .7; q.rElb = .7; q.lean = .06 * ch; q.bob = .02 * Math.abs(ch);
         break;
       }
       case 'vogue': {
@@ -478,7 +479,7 @@ const ShiroLib = (() => {
       }
       case 'krump': {
         // クランプ: 胸を弾く爆発的な動き+腕を大きく振る
-        const kp = Math.sin(tt * 7); const pop = Math.max(0, Math.sin(tt * 3.5)) ** 3; q.bob = -.04 * pop; q.lean = .1 * kp; q.lArm = .8 + .4 * kp; q.rArm = .8 - .4 * kp; q.lElb = 1.1; q.rElb = 1.1; q.lThigh = .2 * pop; q.rThigh = -.2 * pop; q.headTilt = .15 * kp;
+        const kp = S(7); const pop = Math.max(0, S(3.5)) ** 3; q.bob = -.04 * pop; q.lean = .1 * kp; q.lArm = .8 + .4 * kp; q.rArm = .8 - .4 * kp; q.lElb = 1.1; q.rElb = 1.1; q.lThigh = .2 * pop; q.rThigh = -.2 * pop; q.headTilt = .15 * kp;
         break;
       }
       case 'waltz': {
@@ -602,7 +603,7 @@ const ShiroLib = (() => {
       }
       case 'bourree': {
         // ブーレ: つま先で刻む小さな横ステップ+腕を流れるように
-        const br = tt * 4.4; const st = Math.sin(br); const drift = Math.sin(tt * .8) * .12; q.sway = .1 * st; q.bob = .025 * Math.abs(st); q.lThigh = -.15 - .2 * Math.max(0, st); q.rThigh = -.15 - .2 * Math.max(0, -st); q.lKnee = .25 + .15 * Math.max(0, st); q.rKnee = .25 + .15 * Math.max(0, -st); q.lArm = -.9 - .3 * Math.sin(br * .5); q.rArm = -.9 - .3 * Math.sin(br * .5 + 1.5); q.lElb = -.5; q.rElb = -.5; q.lean = .05 * st + drift * .3; q.headTilt = .06 * Math.sin(br * .5); // 横への流れ // つま先立ち気味(膝小さめ) // 優雅な流れる腕
+        const br = tt * 4.4; const st = Math.sin(br); const drift = S(.8) * .12; q.sway = .1 * st; q.bob = .025 * Math.abs(st); q.lThigh = -.15 - .2 * Math.max(0, st); q.rThigh = -.15 - .2 * Math.max(0, -st); q.lKnee = .25 + .15 * Math.max(0, st); q.rKnee = .25 + .15 * Math.max(0, -st); q.lArm = -.9 - .3 * Math.sin(br * .5); q.rArm = -.9 - .3 * Math.sin(br * .5 + 1.5); q.lElb = -.5; q.rElb = -.5; q.lean = .05 * st + drift * .3; q.headTilt = .06 * Math.sin(br * .5); // 横への流れ // つま先立ち気味(膝小さめ) // 優雅な流れる腕
         break;
       }
       case 'sarabande': {
@@ -707,22 +708,22 @@ const ShiroLib = (() => {
       }
       case 'kolo': {
         // コロ: セルビアの輪踊り — 小刻みな横ステップ+膝の弾み
-        const ko = tt * 5.2; const st = Math.sin(ko); q.lThigh = -.3 * Math.max(0, st); q.rThigh = -.3 * Math.max(0, -st); q.lKnee = .35 * Math.abs(st); q.rKnee = .35 * Math.abs(st); q.lArm = -.75; q.rArm = -.75; q.lElb = -.5; q.rElb = -.5; q.bob = .04 * Math.abs(Math.sin(ko * 1.5)); q.sway = .1 * st; q.lean = .05 * st; q.spin = .25 * Math.sin(tt * 2.0); q.headTilt = .05 * Math.sin(ko * .5); // 膝の弾み // 腰に繋ぐ腕
+        const ko = tt * 5.2; const st = Math.sin(ko); q.lThigh = -.3 * Math.max(0, st); q.rThigh = -.3 * Math.max(0, -st); q.lKnee = .35 * Math.abs(st); q.rKnee = .35 * Math.abs(st); q.lArm = -.75; q.rArm = -.75; q.lElb = -.5; q.rElb = -.5; q.bob = .04 * Math.abs(Math.sin(ko * 1.5)); q.sway = .1 * st; q.lean = .05 * st; q.spin = .25 * S(2.0); q.headTilt = .05 * Math.sin(ko * .5); // 膝の弾み // 腰に繋ぐ腕
         break;
       }
       case 'dabke': {
         // ダブケ: レバントの連踊り — 強い踏み込み+跳ね上げる脚
-        const dk2 = tt * 5.0; const st = Math.sin(dk2); q.lThigh = -.5 * Math.max(0, st); q.rThigh = -.5 * Math.max(0, -st); q.lKnee = .5 * Math.max(0, -st); q.rKnee = .5 * Math.max(0, st); q.bob = .045 * Math.abs(st); q.lArm = -.85; q.rArm = -.85; q.lElb = -.35; q.rElb = -.35; q.sway = .09 * st; q.lean = .07 * st; q.spin = .2 * Math.sin(tt * 1.8); q.headTilt = .05 * st; // 踏み込みの沈み // 肩を組む腕
+        const dk2 = tt * 5.0; const st = Math.sin(dk2); q.lThigh = -.5 * Math.max(0, st); q.rThigh = -.5 * Math.max(0, -st); q.lKnee = .5 * Math.max(0, -st); q.rKnee = .5 * Math.max(0, st); q.bob = .045 * Math.abs(st); q.lArm = -.85; q.rArm = -.85; q.lElb = -.35; q.rElb = -.35; q.sway = .09 * st; q.lean = .07 * st; q.spin = .2 * S(1.8); q.headTilt = .05 * st; // 踏み込みの沈み // 肩を組む腕
         break;
       }
       case 'sardana': {
         // サルダナ: カタルーニャの輪踊り — 挙げた腕+軽やかな足運び
-        const sd = tt * 4.0; const st = Math.sin(sd); q.lThigh = -.3 * Math.max(0, st); q.rThigh = -.3 * Math.max(0, -st); q.lKnee = .3 * Math.max(0, -st); q.rKnee = .3 * Math.max(0, st); q.lArm = -1.5 - .2 * st; q.rArm = -1.5 - .2 * -st; q.lElb = -.2; q.rElb = -.2; q.bob = .025 * Math.abs(st); q.sway = .1 * st; q.lean = .04 * st; q.spin = .35 * Math.sin(tt * 1.6); q.headTilt = .04 * Math.sin(sd * .5); // 肩より高く円を作る腕 // 輪の周回
+        const sd = tt * 4.0; const st = Math.sin(sd); q.lThigh = -.3 * Math.max(0, st); q.rThigh = -.3 * Math.max(0, -st); q.lKnee = .3 * Math.max(0, -st); q.rKnee = .3 * Math.max(0, st); q.lArm = -1.5 - .2 * st; q.rArm = -1.5 - .2 * -st; q.lElb = -.2; q.rElb = -.2; q.bob = .025 * Math.abs(st); q.sway = .1 * st; q.lean = .04 * st; q.spin = .35 * S(1.6); q.headTilt = .04 * Math.sin(sd * .5); // 肩より高く円を作る腕 // 輪の周回
         break;
       }
       case 'zeybek': {
         // ゼイベク: トルコの勇士踊り — 鷹のように横に張った腕+ゆっくり膝を深く
-        const zb = tt * 3.6; const st = Math.sin(zb); q.lArm = -1.15; q.rArm = -1.15; q.lElb = -.1; q.rElb = -.1; q.lThigh = -.45 * Math.max(0, st); q.rThigh = -.45 * Math.max(0, -st); q.lKnee = .55 * Math.abs(st); q.rKnee = .55 * Math.abs(st); q.bob = .05 * Math.abs(st); q.sway = .12 * st; q.lean = .1 * st; q.spin = .18 * Math.sin(tt * 1.4); q.headTilt = .06 * st; // 水平に張る腕 // 片膝を深く // 深く沈む // 左右に大きく寄せる
+        const zb = tt * 3.6; const st = Math.sin(zb); q.lArm = -1.15; q.rArm = -1.15; q.lElb = -.1; q.rElb = -.1; q.lThigh = -.45 * Math.max(0, st); q.rThigh = -.45 * Math.max(0, -st); q.lKnee = .55 * Math.abs(st); q.rKnee = .55 * Math.abs(st); q.bob = .05 * Math.abs(st); q.sway = .12 * st; q.lean = .1 * st; q.spin = .18 * S(1.4); q.headTilt = .06 * st; // 水平に張る腕 // 片膝を深く // 深く沈む // 左右に大きく寄せる
         break;
       }
       case 'tsamiko': {
@@ -1121,7 +1122,7 @@ const ShiroLib = (() => {
       }
       case 'otea': {
         // オテア: タヒチの祭典踊り — 激しい腰シミー+深い膝+優美な腕
-        const ot = tt * 3; const shimmy = Math.sin(tt * 9); const st = Math.sin(ot); q.bob = .04 + .015 * Math.abs(shimmy); q.lThigh = -.3; q.rThigh = -.3; q.lKnee = .35; q.rKnee = .35; q.lShin = .05; q.rShin = .05; // 高速の腰シミー // 深い膝の低姿勢
+        const ot = tt * 3; const shimmy = S(9); const st = Math.sin(ot); q.bob = .04 + .015 * Math.abs(shimmy); q.lThigh = -.3; q.rThigh = -.3; q.lKnee = .35; q.rKnee = .35; q.lShin = .05; q.rShin = .05; // 高速の腰シミー // 深い膝の低姿勢
         // 腰の高速シミー(体の横振り)
         q.sway = .12 * shimmy; q.lean = .03;
         // 優美な両腕(頭を囲む丸いフレーム+小さな揺れ)
@@ -1207,7 +1208,7 @@ const ShiroLib = (() => {
       }
       case 'still': break;
       default: // idle
-        q.bob = .012 * Math.sin(tt * 2); q.lean = .02 * Math.sin(tt); q.lArm = .1 + .05 * Math.sin(tt * 1.3); q.rArm = .1 - .05 * Math.sin(tt * 1.3); q.headTilt = .06 * Math.sin(tt * .7);
+        q.bob = .012 * S(2); q.lean = .02 * Math.sin(tt); q.lArm = .1 + .05 * S(1.3); q.rArm = .1 - .05 * S(1.3); q.headTilt = .06 * S(.7);
     }
     return q;
   }
@@ -1468,6 +1469,7 @@ const ShiroLib = (() => {
   }
 
   function drawParticles(ctx, W, H, type, t, seed) {
+    const S = f => Math.sin(t * f), A = f => Math.abs(S(f));
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
     const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : type === 'notes' ? 18 : type === 'hearts' ? 20 : type === 'spark' ? 46 : type === 'wind' ? 14 : 42; ctx.save();
     for (let i = 0; i < N; i++) {
@@ -1552,20 +1554,23 @@ const ShiroLib = (() => {
       const ell = (x, y, rx, ry, rot) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, 7); ctx.fill(); };
       const ells = (x, y, rx, ry, rot) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, 7); ctx.stroke(); };
       const dots = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke(); };
+      const LW = (v, m) => Math.max(m || 1, hr * v);
+      const times = (n, f) => { for (let i = 0; i < n; i++) f(i); };
+      const scat = (seed, n, f) => { const r = mulberry32(seed); times(n, i => f(r, i)); };
     const dot = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); };
     ctx.save();
     switch (acc) {
       case 'halo': {
         // 天使の輪: 頭上に浮く発光リング(accHueで着色、わずかに傾ける)
         ctx.strokeStyle = `hsla(${Math.round((hue == null ? .13 : hue) * 360)},85%,65%,0.95)`;
-        ctx.lineWidth = Math.max(2, hr * .13); ells(hx, hy - hr * 1.5, hr * .62, hr * .17, -.06);
+        ctx.lineWidth = LW(.13, 2); ells(hx, hy - hr * 1.5, hr * .62, hr * .17, -.06);
         break;
       }
       case 'ribbon': {
         ctx.fillStyle = acc2; const bx = hx - hr * .7, by = hy - hr * .75, s = hr * .42;
-        for (const d of [-1, 1]) {
+        ([-1, 1]).forEach(d => {
           ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + d * s, by - s * .6); ctx.lineTo(bx + d * s, by + s * .6); ctx.closePath(); ctx.closePath(); ctx.fill();
-        }
+        });
         ctx.fillStyle = dk; dot(bx,by,s * .3);
         break;
       }
@@ -1575,33 +1580,33 @@ const ShiroLib = (() => {
       }
       case 'shades': {
         ctx.fillStyle = 'rgba(20,20,24,0.88)';
-        for (const s of [-1, 1]) {
-          dot(hx + s * hr * .38,hy - hr * .08,hr * .26); ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07); ctx.beginPath(); ctx.moveTo(hx + s * hr * .64, hy - hr * .08); ctx.lineTo(hx + s * hr * .95, hy - hr * .18); ctx.stroke();
-        }
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07); ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * .1); ctx.lineTo(hx + hr * .12, hy - hr * .1); ctx.stroke();
+        ([-1, 1]).forEach(s => {
+          dot(hx + s * hr * .38,hy - hr * .08,hr * .26); ctx.strokeStyle = dk; ctx.lineWidth = LW(.07); ctx.beginPath(); ctx.moveTo(hx + s * hr * .64, hy - hr * .08); ctx.lineTo(hx + s * hr * .95, hy - hr * .18); ctx.stroke();
+        });
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.07); ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * .1); ctx.lineTo(hx + hr * .12, hy - hr * .1); ctx.stroke();
         break;
       }
       case 'glasses': {
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07);
-        for (const s of [-1, 1]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.07);
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.beginPath(); ctx.arc(hx + s * hr * .38, hy - hr * .08, hr * .26, 0, 7); dots(hx + s * hr * .38, hy - hr * .08, hr * .26); ctx.beginPath(); ctx.beginPath(); ctx.moveTo(hx + s * hr * .64, hy - hr * .08); ctx.beginPath(); ctx.moveTo(hx + s * hr * .64, hy - hr * .08); ctx.lineTo(hx + s * hr * .95, hy - hr * .18); ctx.beginPath(); ctx.moveTo(hx + s * hr * .64, hy - hr * .08); ctx.lineTo(hx + s * hr * .95, hy - hr * .18); ctx.stroke(); // temple
-        }
+        });
         ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * .1); ctx.lineTo(hx + hr * .12, hy - hr * .1); ctx.stroke(); // bridge
         break;
       }
       case 'crown': {
         ctx.fillStyle = acc2; const cy = hy - hr * .62, cw = hr * .9; ctx.beginPath(); ctx.moveTo(hx - cw, cy);
-        for (let i = 0; i < 3; i++) {
+        times(3, i => {
           const px = hx - cw + (i * 2 + 1) * cw / 3; ctx.lineTo(px - cw / 3, cy - hr * .5); ctx.lineTo(px + cw / 3, cy);
-        }
+        });
         ctx.closePath(); ctx.fill(); ctx.fillStyle = dk; ctx.fillRect(hx - cw, cy, cw * 2, hr * .14); // base band
         break;
       }
       case 'phones': {
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .1); ctx.beginPath(); ctx.arc(hx, hy - hr * .35, hr * .95, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); ctx.fillStyle = acc2; // headband
-        for (const s of [-1, 1]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.1, 1.5); ctx.beginPath(); ctx.arc(hx, hy - hr * .35, hr * .95, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); ctx.fillStyle = acc2; // headband
+        ([-1, 1]).forEach(s => {
           ell(hx + s * hr * .95,hy - hr * .1,hr * .16,hr * .28); // ear cups
-        }
+        });
         break;
       }
       case 'beard': {
@@ -1610,9 +1615,9 @@ const ShiroLib = (() => {
       }
       case 'mask': {
         ctx.fillStyle = dk; ell(hx,hy - hr * .12,hr * .92,hr * .34); ctx.fillStyle = '#fdfdfd'; // 眼帯バンド
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ell(hx + s * hr * .4,hy - hr * .1,hr * .22,hr * .16); // 目穴
-        }
+        });
         break;
       }
       case 'scarf': {
@@ -1622,7 +1627,7 @@ const ShiroLib = (() => {
       }
       case 'beret': {
         // ベレー帽: 頭頂に斜め被せた円盤 + 茎
-        ctx.fillStyle = acc2; ctx.save(); ctx.translate(hx - hr * .12, hy - hr * .92); ctx.rotate(-.22); ell(0,0,hr * .95,hr * .4); ctx.restore(); ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1.5, hr * .06); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * 1.28); ctx.lineTo(hx - hr * .12, hy - hr * 1.05); ctx.stroke();
+        ctx.fillStyle = acc2; ctx.save(); ctx.translate(hx - hr * .12, hy - hr * .92); ctx.rotate(-.22); ell(0,0,hr * .95,hr * .4); ctx.restore(); ctx.strokeStyle = acc2; ctx.lineWidth = LW(.06, 1.5); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * 1.28); ctx.lineTo(hx - hr * .12, hy - hr * 1.05); ctx.stroke();
         break;
       }
       case 'tie': {
@@ -1633,7 +1638,7 @@ const ShiroLib = (() => {
       case 'monocle': {
         // モノクル: 右眼の円レンズ + 顎下へ下がるチェーン
         ctx.strokeStyle = `hsla(${Math.round((hue == null ? .12 : hue) * 360)},75%,60%,0.95)`;
-        ctx.lineWidth = Math.max(1.2, hr * .05); ctx.beginPath(); ctx.beginPath(); ctx.arc(hx + hr * .38, hy - hr * .12, hr * .26, 0, 7); dots(hx + hr * .38, hy - hr * .12, hr * .26); ctx.beginPath(); ctx.moveTo(hx + hr * .38, hy + hr * .14); ctx.quadraticCurveTo(hx + hr * .75, hy + hr * .6, hx + hr * .5, hy + hr * 1.05); ctx.stroke();
+        ctx.lineWidth = LW(.05, 1.2); ctx.beginPath(); ctx.beginPath(); ctx.arc(hx + hr * .38, hy - hr * .12, hr * .26, 0, 7); dots(hx + hr * .38, hy - hr * .12, hr * .26); ctx.beginPath(); ctx.moveTo(hx + hr * .38, hy + hr * .14); ctx.quadraticCurveTo(hx + hr * .75, hy + hr * .6, hx + hr * .5, hy + hr * 1.05); ctx.stroke();
         break;
       }
       case 'bandana': {
@@ -1649,22 +1654,22 @@ const ShiroLib = (() => {
         ctx.fillStyle = '#8a7050'; ell(hx + hr * .75, hy + hr * .3, hr * .18, hr * .55, .3);
         // 尻尾の縞
         ctx.fillStyle = '#4a3a28';
-        for (let i = 0; i < 3; i++) {
+        times(3, i => {
           ell(hx + hr * (.68 + i * .06), hy + hr * (0 + i * .28), hr * .14, hr * .09, .3);
-        }
+        });
         // 毛皮ドーム
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .5, hr * .78, hr * .55, 0, Math.PI, Math.PI * 2); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 縁
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .08); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .5, hr * .78, hr * .55, 0, Math.PI * .05, Math.PI * .95); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.08, 1.5); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .5, hr * .78, hr * .55, 0, Math.PI * .05, Math.PI * .95); ctx.stroke();
         break;
       }
       case 'wimple': {
         // ウィンプル: 頭・顎・首を包む中世の頭布(顔だけ開口)
         ctx.beginPath(); ctx.ellipse(hx, hy + hr * .35, hr * .82, hr * 1.05, 0, 0, 7); ctx.ellipse(hx, hy + hr * .1, hr * .55, hr * .62, 0, 0, 7); ctx.fillStyle = acc2; ctx.fill('evenodd'); // 頭+首の覆い // 顔の開口
         // 布の縁取り
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.2, hr * .06); ctx.beginPath(); ctx.ellipse(hx, hy + hr * .1, hr * .55, hr * .62, 0, Math.PI * .7, Math.PI * 1.3); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.06, 1.2); ctx.beginPath(); ctx.ellipse(hx, hy + hr * .1, hr * .55, hr * .62, 0, Math.PI * .7, Math.PI * 1.3); ctx.stroke();
         // 顎下の巻き縁
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .08); ctx.beginPath(); ctx.ellipse(hx, hy + hr * .5, hr * .68, hr * .35, 0, Math.PI * .15, Math.PI * .85); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.08, 1.5); ctx.beginPath(); ctx.ellipse(hx, hy + hr * .5, hr * .68, hr * .35, 0, Math.PI * .15, Math.PI * .85); ctx.stroke();
         break;
       }
       case 'sariki': {
@@ -1673,9 +1678,9 @@ const ShiroLib = (() => {
         // 額の帯(頭を一周する巻き布)
         ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .95); ctx.quadraticCurveTo(hx, hy - hr * 1.15, hx + hr * .55, hy - hr * .95); ctx.lineTo(hx + hr * .5, hy - hr * .65); ctx.quadraticCurveTo(hx, hy - hr * .85, hx - hr * .5, hy - hr * .65); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 巻きの筋(2本の畝)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .045); ctx.beginPath(); ctx.moveTo(hx - hr * .52, hy - hr * .9); ctx.quadraticCurveTo(hx, hy - hr * 1.08, hx + hr * .52, hy - hr * .9); ctx.moveTo(hx - hr * .5, hy - hr * .75); ctx.quadraticCurveTo(hx, hy - hr * .93, hx + hr * .5, hy - hr * .75); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.045); ctx.beginPath(); ctx.moveTo(hx - hr * .52, hy - hr * .9); ctx.quadraticCurveTo(hx, hy - hr * 1.08, hx + hr * .52, hy - hr * .9); ctx.moveTo(hx - hr * .5, hy - hr * .75); ctx.quadraticCurveTo(hx, hy - hr * .93, hx + hr * .5, hy - hr * .75); ctx.stroke();
         // 額に垂れる房(中央の短い房5本)
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1.5, hr * .06);
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.06, 1.5);
         for (let i = -2; i <= 2; i++) {
           ctx.beginPath(); ctx.moveTo(hx + i * hr * .12, hy - hr * .68); ctx.lineTo(hx + i * hr * .13, hy - hr * .5); ctx.stroke();
         }
@@ -1691,12 +1696,12 @@ const ShiroLib = (() => {
         // 巻き上げ縁(太いベーグル状の帯)
         ctx.fillStyle = dk; ell(hx, hy - hr * .72, hr * .66, hr * .22);
         // 縁の巻き筋(明色の畝3本)
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1, hr * .05);
-        for (const oy of [-.78, -.7, -.62]) {
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.05);
+        ([-.78, -.7, -.62]).forEach(oy => {
           ctx.beginPath(); ctx.ellipse(hx, hy - hr * .72 + (oy + .72) * hr, hr * .66, hr * .12, 0, 3.4, 6.1); ctx.stroke();
-        }
+        });
         // ドームの折り目(羊毛の皺)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .035); ctx.beginPath(); ctx.moveTo(hx - hr * .3, hy - hr * 1.0); ctx.quadraticCurveTo(hx, hy - hr * 1.12, hx + hr * .28, hy - hr * 1.02); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.035); ctx.beginPath(); ctx.moveTo(hx - hr * .3, hy - hr * 1.0); ctx.quadraticCurveTo(hx, hy - hr * 1.12, hx + hr * .28, hy - hr * 1.02); ctx.stroke();
         break;
       }
       case 'songkok': {
@@ -1707,7 +1712,7 @@ const ShiroLib = (() => {
         // 平らな天辺(楕円の面)
         ctx.fillStyle = acc2; ell(hx, hy - hr * 1.05, hr * .58, hr * .1);
         // ビロードの光沢(側面の淡い筋)
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1, hr * .04); ctx.beginPath(); ctx.moveTo(hx - hr * .4, hy - hr * .95); ctx.quadraticCurveTo(hx - hr * .44, hy - hr * .8, hx - hr * .4, hy - hr * .72); ctx.moveTo(hx + hr * .4, hy - hr * .95); ctx.quadraticCurveTo(hx + hr * .44, hy - hr * .8, hx + hr * .4, hy - hr * .72); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.04); ctx.beginPath(); ctx.moveTo(hx - hr * .4, hy - hr * .95); ctx.quadraticCurveTo(hx - hr * .44, hy - hr * .8, hx - hr * .4, hy - hr * .72); ctx.moveTo(hx + hr * .4, hy - hr * .95); ctx.quadraticCurveTo(hx + hr * .44, hy - hr * .8, hx + hr * .4, hy - hr * .72); ctx.stroke();
         // 下縁の折り返し
         ctx.fillStyle = acc2; ell(hx, hy - hr * .7, hr * .53, hr * .07);
         break;
@@ -1725,7 +1730,7 @@ const ShiroLib = (() => {
           ell(hx + i * hr * .18, hy - hr * .78, hr * .035, hr * .035);
         }
         // 巻きの筋(水平の畝)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .04); ctx.beginPath(); ctx.moveTo(hx - hr * .56, hy - hr * .9); ctx.quadraticCurveTo(hx, hy - hr * 1.05, hx + hr * .56, hy - hr * .9); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.04); ctx.beginPath(); ctx.moveTo(hx - hr * .56, hy - hr * .9); ctx.quadraticCurveTo(hx, hy - hr * 1.05, hx + hr * .56, hy - hr * .9); ctx.stroke();
         break;
       }
       case 'gibus': {
@@ -1736,7 +1741,7 @@ const ShiroLib = (() => {
         // 高い筒(わずかに台形)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .6); ctx.lineTo(hx - hr * .46, hy - hr * 1.5); ctx.quadraticCurveTo(hx, hy - hr * 1.56, hx + hr * .46, hy - hr * 1.5); ctx.lineTo(hx + hr * .5, hy - hr * .6); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 折りたたみ蝶番(冠の中段の襞線2本)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .04); ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * .95); ctx.lineTo(hx + hr * .48, hy - hr * .95); ctx.moveTo(hx - hr * .47, hy - hr * 1.1); ctx.lineTo(hx + hr * .47, hy - hr * 1.1); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.04); ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * .95); ctx.lineTo(hx + hr * .48, hy - hr * .95); ctx.moveTo(hx - hr * .47, hy - hr * 1.1); ctx.lineTo(hx + hr * .47, hy - hr * 1.1); ctx.stroke();
         // 天辺
         ctx.fillStyle = dk; ell(hx, hy - hr * 1.5, hr * .46, hr * .08);
         break;
@@ -1749,14 +1754,14 @@ const ShiroLib = (() => {
         // 頂のポンポン
         ctx.fillStyle = dk; ell(hx, hy - hr * 1.38, hr * .16, hr * .14);
         // ポンポンの毛先(放射の短筋)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .03);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.03);
         for (let i = -3; i <= 3; i++) {
           ctx.beginPath(); ctx.moveTo(hx + i * hr * .04, hy - hr * 1.38); ctx.lineTo(hx + i * hr * .06, hy - hr * 1.52); ctx.stroke();
         }
         // 折り返しリブ帯(額の厚い帯)
         ctx.fillStyle = dk; ctx.beginPath(); ctx.moveTo(hx - hr * .58, hy - hr * .75); ctx.lineTo(hx - hr * .55, hy - hr * .6); ctx.quadraticCurveTo(hx, hy - hr * .5, hx + hr * .55, hy - hr * .6); ctx.lineTo(hx + hr * .58, hy - hr * .75); ctx.quadraticCurveTo(hx, hy - hr * .65, hx - hr * .58, hy - hr * .75); ctx.closePath(); ctx.closePath(); ctx.fill();
         // リブの縦目(編み筋)
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1, hr * .028);
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.028);
         for (let i = -3; i <= 3; i++) {
           ctx.beginPath(); ctx.moveTo(hx + i * hr * .14, hy - hr * .73); ctx.lineTo(hx + i * hr * .15, hy - hr * .62); ctx.stroke();
         }
@@ -1770,14 +1775,14 @@ const ShiroLib = (() => {
         // 先端の小さな尖り
         ctx.beginPath(); ctx.moveTo(hx - hr * .06, hy - hr * 1.13); ctx.lineTo(hx, hy - hr * 1.3); ctx.lineTo(hx + hr * .06, hy - hr * 1.13); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 編みの同心線(瓢箪の筋)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .025);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.025);
         for (let i = 1; i <= 3; i++) {
           ctx.beginPath(); ctx.ellipse(hx, hy - hr * (1.15 - i * .14), hr * (.28 + i * .16), hr * (.05 + i * .03), 0, 0, Math.PI); ctx.stroke();
         }
         // 笠の縁
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .035); ctx.beginPath(); ctx.moveTo(hx - hr * .85, hy - hr * .55); ctx.quadraticCurveTo(hx, hy - hr * .4, hx + hr * .85, hy - hr * .55); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.035); ctx.beginPath(); ctx.moveTo(hx - hr * .85, hy - hr * .55); ctx.quadraticCurveTo(hx, hy - hr * .4, hx + hr * .85, hy - hr * .55); ctx.stroke();
         // 顎紐
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .03); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .52); ctx.quadraticCurveTo(hx, hy + hr * .5, hx + hr * .55, hy - hr * .52); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.03); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .52); ctx.quadraticCurveTo(hx, hy + hr * .5, hx + hr * .55, hy - hr * .52); ctx.stroke();
         break;
       }
       case 'barretina': {
@@ -1801,7 +1806,7 @@ const ShiroLib = (() => {
         // 赤い天板(平たい楕円)
         ctx.fillStyle = acc2; ell(hx, hy - hr * .95, hr * .48, hr * .1);
         // 天板の金縁(内側の細円)
-        ctx.strokeStyle = '#c8a838'; ctx.lineWidth = Math.max(1, hr * .03); ells(hx, hy - hr * .95, hr * .4, hr * .07);
+        ctx.strokeStyle = '#c8a838'; ctx.lineWidth = LW(.03); ells(hx, hy - hr * .95, hr * .4, hr * .07);
         // 金縁の波模様(小さな弧)
         for (let i = -2; i <= 2; i++) {
           ctx.beginPath(); ctx.arc(hx + i * hr * .15, hy - hr * .95, hr * .04, Math.PI, 0); ctx.stroke();
@@ -1820,7 +1825,7 @@ const ShiroLib = (() => {
         // 帯(冠の根本の暗帯)
         ctx.fillStyle = dk; ctx.beginPath(); ctx.moveTo(hx - hr * .38, hy - hr * .72); ctx.quadraticCurveTo(hx, hy - hr * .62, hx + hr * .38, hy - hr * .72); ctx.lineTo(hx + hr * .38, hy - hr * .8); ctx.quadraticCurveTo(hx, hy - hr * .7, hx - hr * .38, hy - hr * .8); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 麦わらの編み目(つばの放射筋)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.02);
         for (let i = -4; i <= 4; i++) {
           ctx.beginPath(); ctx.moveTo(hx + i * hr * .16, hy - hr * .68); ctx.lineTo(hx + i * hr * .22, hy - hr * .58); ctx.stroke();
         }
@@ -1832,7 +1837,7 @@ const ShiroLib = (() => {
         // 高い円筒(上部がわずかに広い)
         ctx.beginPath(); ctx.moveTo(hx - hr * .52, hy - hr * .6); ctx.lineTo(hx - hr * .56, hy - hr * 1.55); ctx.quadraticCurveTo(hx, hy - hr * 1.62, hx + hr * .56, hy - hr * 1.55); ctx.lineTo(hx + hr * .52, hy - hr * .6); ctx.quadraticCurveTo(hx, hy - hr * .5, hx - hr * .52, hy - hr * .6); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 毛皮の質感(縦の短い筋)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .022);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.022);
         for (let i = -5; i <= 5; i++) {
           const fx = hx + i * hr * .1; ctx.beginPath(); ctx.moveTo(fx, hy - hr * .75); ctx.lineTo(fx + Math.sin(i) * hr * .02, hy - hr * 1.45); ctx.stroke();
         }
@@ -1846,16 +1851,15 @@ const ShiroLib = (() => {
         // 低い丸冠(中央のドーム)
         ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy - hr * .62); ctx.quadraticCurveTo(hx - hr * .42, hy - hr * .95, hx, hy - hr * .95); ctx.quadraticCurveTo(hx + hr * .42, hy - hr * .95, hx + hr * .42, hy - hr * .62); ctx.quadraticCurveTo(hx, hy - hr * .52, hx - hr * .42, hy - hr * .62); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 左右の角(外側に突き出す三日月)
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .4, hy - hr * .7); ctx.quadraticCurveTo(hx + s * hr * .8, hy - hr * .75, hx + s * hr * .78, hy - hr * .98); ctx.quadraticCurveTo(hx + s * hr * .7, hy - hr * .8, hx + s * hr * .42, hy - hr * .8); ctx.closePath(); ctx.closePath(); ctx.fill();
-        }
+        });
         // アストラカン(毛皮の粒点)
-        ctx.fillStyle = acc2; const rngM = mulberry32(31);
-        for (let i = 0; i < 18; i++) {
+        ctx.fillStyle = acc2; scat(31, 18, (rngM, i) => {
           const ax = hx + (rngM() - .5) * hr * .75; const ay = hy - hr * (.62 + rngM() * .3); ell(ax, ay, hr * .015, hr * .012);
-        }
+        });
         // 顎紐
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .03); ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy - hr * .6); ctx.quadraticCurveTo(hx, hy + hr * .45, hx + hr * .42, hy - hr * .6); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.03); ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy - hr * .6); ctx.quadraticCurveTo(hx, hy + hr * .45, hx + hr * .42, hy - hr * .6); ctx.stroke();
         break;
       }
       case 'akubra': {
@@ -1863,16 +1867,16 @@ const ShiroLib = (() => {
         // つば(先端でやや下がる広楕円)
         ctx.fillStyle = dk; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .68, hr * .72, hr * .15, 0, 0, 7); ctx.ellipse(hx, hy - hr * .68, hr * .72, hr * .15, 0, 0, 7); ctx.fill();
         // つばの垂れ(両端を下げる)
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ell(hx + s * hr * .68, hy - hr * .64, hr * .1, hr * .08, s * .5);
-        }
+        });
         // 冠(低いドーム)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy - hr * .68); ctx.quadraticCurveTo(hx - hr * .4, hy - hr * 1.05, hx, hy - hr * 1.05); ctx.quadraticCurveTo(hx + hr * .4, hy - hr * 1.05, hx + hr * .42, hy - hr * .68); ctx.quadraticCurveTo(hx, hy - hr * .58, hx - hr * .42, hy - hr * .68); ctx.closePath(); ctx.closePath(); ctx.fill();
         // つまみ(冠の前後のくぼみ線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .025);
-        for (const s of [-1, 1]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.025);
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .12, hy - hr * 1.03); ctx.quadraticCurveTo(hx + s * hr * .14, hy - hr * .95, hx + s * hr * .2, hy - hr * .9); ctx.stroke();
-        }
+        });
         // 革帯
         ctx.fillStyle = '#3a2a1a'; ctx.fillRect(hx - hr * .41, hy - hr * .78, hr * .82, hr * .07);
         break;
@@ -1884,14 +1888,14 @@ const ShiroLib = (() => {
         // 冠(中央折れの台形)
         ctx.beginPath(); ctx.moveTo(hx - hr * .4, hy - hr * .68); ctx.lineTo(hx - hr * .36, hy - hr * 1.0); ctx.lineTo(hx + hr * .36, hy - hr * 1.0); ctx.lineTo(hx + hr * .4, hy - hr * .68); ctx.quadraticCurveTo(hx, hy - hr * .58, hx - hr * .4, hy - hr * .68); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 中央の折り目(冠を縦に割る窪み)
-        ctx.strokeStyle = '#b8a888'; ctx.lineWidth = Math.max(1, hr * .03); ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.0); ctx.lineTo(hx, hy - hr * .78); ctx.stroke();
+        ctx.strokeStyle = '#b8a888'; ctx.lineWidth = LW(.03); ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.0); ctx.lineTo(hx, hy - hr * .78); ctx.stroke();
         // 黒い帯
         ctx.fillStyle = dk; ctx.fillRect(hx - hr * .4, hy - hr * .78, hr * .8, hr * .08);
         // 麦わらの編み目(横線)
         ctx.strokeStyle = 'rgba(160,140,110,0.4)'; ctx.lineWidth = 1;
-        for (let i = 0; i < 3; i++) {
+        times(3, i => {
           ctx.beginPath(); ctx.ellipse(hx, hy - hr * (.7 + i * .04), hr * (.55 + i * .04), hr * .04, 0, 0, Math.PI); ctx.stroke();
-        }
+        });
         break;
       }
       case 'tiroler': {
@@ -1899,13 +1903,13 @@ const ShiroLib = (() => {
         // つば(後ろが反り上がる窄み楕円)
         ctx.fillStyle = '#3a5a3a'; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .66, hr * .55, hr * .11, 0, 0, 7); ctx.ellipse(hx, hy - hr * .66, hr * .55, hr * .11, 0, 0, 7); ctx.fill();
         // つばの後反り(両端を上げる)
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ell(hx + s * hr * .52, hy - hr * .7, hr * .09, hr * .07, s * -.4);
-        }
+        });
         // 冠(中央にくぼみのある台形)
         ctx.beginPath(); ctx.moveTo(hx - hr * .38, hy - hr * .66); ctx.lineTo(hx - hr * .34, hy - hr * .95); ctx.quadraticCurveTo(hx, hy - hr * 1.02, hx + hr * .34, hy - hr * .95); ctx.lineTo(hx + hr * .38, hy - hr * .66); ctx.quadraticCurveTo(hx, hy - hr * .56, hx - hr * .38, hy - hr * .66); ctx.closePath(); ctx.closePath(); ctx.fill();
         // つまみの窪み(冠の中央を縦に押さえる線)
-        ctx.strokeStyle = '#2a4228'; ctx.lineWidth = Math.max(1, hr * .03); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .99); ctx.lineTo(hx, hy - hr * .8); ctx.stroke();
+        ctx.strokeStyle = '#2a4228'; ctx.lineWidth = LW(.03); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .99); ctx.lineTo(hx, hy - hr * .8); ctx.stroke();
         // 紐帯
         ctx.fillStyle = '#6a4a28'; ctx.fillRect(hx - hr * .37, hy - hr * .74, hr * .74, hr * .05);
         // 羽飾り(右側に立つシャモアの房)
@@ -1918,9 +1922,9 @@ const ShiroLib = (() => {
         ctx.fillStyle = dk; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .66, hr * .58, hr * .12, 0, 0, 7); ctx.ellipse(hx, hy - hr * .66, hr * .58, hr * .12, 0, 0, 7); ctx.fill();
         // 巻きつば(両端の細い弧)
         ctx.strokeStyle = dk; ctx.lineWidth = hr * .05;
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.arc(hx + s * hr * .5, hy - hr * .66, hr * .09, s > 0 ? Math.PI * 1.2 : Math.PI * 1.8, s > 0 ? Math.PI * 2.4 : Math.PI * 0.6); ctx.stroke();
-        }
+        });
         // 冠(中央窪み = センターデント)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .38, hy - hr * .66); ctx.quadraticCurveTo(hx - hr * .36, hy - hr * 1.0, hx - hr * .08, hy - hr * .95); ctx.quadraticCurveTo(hx, hy - hr * .88, hx + hr * .08, hy - hr * .95); ctx.quadraticCurveTo(hx + hr * .36, hy - hr * 1.0, hx + hr * .38, hy - hr * .66); ctx.quadraticCurveTo(hx, hy - hr * .56, hx - hr * .38, hy - hr * .66); ctx.closePath(); ctx.closePath(); ctx.fill();
         // グログラン帯+左の蝶結び
@@ -1932,7 +1936,7 @@ const ShiroLib = (() => {
         // 本体(前後が尖った楔形)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .6); ctx.lineTo(hx - hr * .42, hy - hr * .88); ctx.lineTo(hx, hy - hr * .8); ctx.lineTo(hx + hr * .42, hy - hr * .88); ctx.lineTo(hx + hr * .5, hy - hr * .6); ctx.quadraticCurveTo(hx, hy - hr * .5, hx - hr * .5, hy - hr * .6); ctx.closePath(); ctx.closePath(); ctx.fill(); // 中央の頂点
         // 菱模様(連なるダイヤ)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.02);
         for (let i = -2; i <= 2; i++) {
           const dx = hx + i * hr * .18; ctx.beginPath(); ctx.moveTo(dx, hy - hr * .72); ctx.lineTo(dx + hr * .07, hy - hr * .8); ctx.lineTo(dx, hy - hr * .88); ctx.lineTo(dx - hr * .07, hy - hr * .8); ctx.closePath(); ctx.closePath(); ctx.stroke();
         }
@@ -1944,7 +1948,7 @@ const ShiroLib = (() => {
         // ガンジー帽: 白い折り畳み帽 — 斜めに傾けた舟形
         ctx.save(); ctx.translate(hx, hy - hr * .75); ctx.rotate(-.18); ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.moveTo(-hr * .55, 0); ctx.quadraticCurveTo(-hr * .45, -hr * .22, -hr * .1, -hr * .28); ctx.lineTo(hr * .5, -hr * .05); ctx.quadraticCurveTo(hr * .55, 0, hr * .5, 0); ctx.closePath(); ctx.closePath(); ctx.fill(); // 右に傾ける // 前後の尖り
         // 折り目(中央の折り線)
-        ctx.strokeStyle = '#b8b0a0'; ctx.lineWidth = Math.max(1, hr * .02); ctx.beginPath(); ctx.moveTo(-hr * .45, -hr * .03); ctx.quadraticCurveTo(-hr * .1, -hr * .2, hr * .45, -hr * .04); ctx.stroke();
+        ctx.strokeStyle = '#b8b0a0'; ctx.lineWidth = LW(.02); ctx.beginPath(); ctx.moveTo(-hr * .45, -hr * .03); ctx.quadraticCurveTo(-hr * .1, -hr * .2, hr * .45, -hr * .04); ctx.stroke();
         // 縁の影
         ctx.fillStyle = 'rgba(120,110,90,0.3)'; ctx.beginPath(); ctx.moveTo(-hr * .5, -hr * .02); ctx.quadraticCurveTo(0, hr * .04, hr * .5, -hr * .02); ctx.lineTo(hr * .5, 0); ctx.quadraticCurveTo(0, hr * .08, -hr * .5, 0); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.restore();
         break;
@@ -1954,7 +1958,7 @@ const ShiroLib = (() => {
         // 巻き布(頭を包む帯状のベース)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .55); ctx.quadraticCurveTo(hx - hr * .5, hy - hr * .8, hx, hy - hr * .85); ctx.quadraticCurveTo(hx + hr * .5, hy - hr * .8, hx + hr * .5, hy - hr * .55); ctx.quadraticCurveTo(hx, hy - hr * .45, hx - hr * .5, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 布の襞(巻き筋の斜線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.02);
         for (let i = -2; i <= 2; i++) {
           ctx.beginPath(); ctx.moveTo(hx + i * hr * .18, hy - hr * .84); ctx.quadraticCurveTo(hx + i * hr * .22, hy - hr * .7, hx + i * hr * .2, hy - hr * .56); ctx.stroke();
         }
@@ -1969,7 +1973,7 @@ const ShiroLib = (() => {
         // 巻き布(額から後頭部へ包む)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .52, hy - hr * .5); ctx.quadraticCurveTo(hx - hr * .52, hy - hr * .85, hx, hy - hr * .9); ctx.quadraticCurveTo(hx + hr * .52, hy - hr * .85, hx + hr * .52, hy - hr * .5); ctx.quadraticCurveTo(hx, hy - hr * .4, hx - hr * .52, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 襞(扇状に開く巻き筋)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.02);
         for (let i = -2; i <= 2; i++) {
           ctx.beginPath(); ctx.moveTo(hx + i * hr * .2, hy - hr * .5); ctx.quadraticCurveTo(hx + i * hr * .15, hy - hr * .7, hx + i * hr * .12, hy - hr * .88); ctx.stroke();
         }
@@ -1984,7 +1988,7 @@ const ShiroLib = (() => {
         // 円筒の胴
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .55); ctx.lineTo(hx - hr * .42, hy - hr * .95); ctx.lineTo(hx + hr * .42, hy - hr * .95); ctx.lineTo(hx + hr * .45, hy - hr * .55); ctx.quadraticCurveTo(hx, hy - hr * .45, hx - hr * .45, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 平天の蓋
-        ell(hx, hy - hr * .95, hr * .42, hr * .07); ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02); ells(hx, hy - hr * .95, hr * .42, hr * .07);
+        ell(hx, hy - hr * .95, hr * .42, hr * .07); ctx.strokeStyle = dk; ctx.lineWidth = LW(.02); ells(hx, hy - hr * .95, hr * .42, hr * .07);
         // 刺繍帯(縁の連続◆文様)
         ctx.fillStyle = dk;
         for (let i = -3; i <= 3; i++) {
@@ -2015,9 +2019,9 @@ const ShiroLib = (() => {
         ctx.fillStyle = dk; ctx.beginPath(); ctx.moveTo(hx - hr * .06, hy - hr * 1.16); ctx.lineTo(hx, hy - hr * 1.4); ctx.lineTo(hx + hr * .06, hy - hr * 1.16); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 耳飾りの垂飾(両側の花飾)
         ctx.fillStyle = acc2;
-        for (const sx of [-1, 1]) {
+        ([-1, 1]).forEach(sx => {
           ell(hx + sx * hr * .45, hy - hr * .4, hr * .05, hr * .07); ell(hx + sx * hr * .45, hy - hr * .28, hr * .035, hr * .04);
-        }
+        });
         break;
       }
       case 'isicholo': {
@@ -2031,7 +2035,7 @@ const ShiroLib = (() => {
         // 円盤の中央の穴(平らな輪)
         ctx.fillStyle = dk; ell(hx, hy - hr * .79, hr * .28, hr * .06);
         // 円盤の縁(白い飾り筋)
-        ctx.strokeStyle = '#e8e0d0'; ctx.lineWidth = Math.max(1, hr * .02); ells(hx, hy - hr * .78, hr * .62, hr * .13);
+        ctx.strokeStyle = '#e8e0d0'; ctx.lineWidth = LW(.02); ells(hx, hy - hr * .78, hr * .62, hr * .13);
         break;
       }
       case 'maasai': {
@@ -2049,19 +2053,19 @@ const ShiroLib = (() => {
         }
         // 額の垂れ珠(3本の飾り)
         ctx.fillStyle = '#f0e8d8';
-        for (const bx of [-.2, 0, .2]) {
+        ([-.2, 0, .2]).forEach(bx => {
           ell(hx + bx * hr, hy - hr * .48, hr * .025, hr * .04);
-        }
+        });
         // ダチョウの羽(後ろ上に立つ白い羽毛)
-        ctx.strokeStyle = '#e8e0d0'; ctx.lineWidth = Math.max(1.5, hr * .03); ctx.beginPath(); ctx.moveTo(hx + hr * .15, hy - hr * .65); ctx.quadraticCurveTo(hx + hr * .28, hy - hr * 1.1, hx + hr * .35, hy - hr * 1.4); ctx.stroke();
+        ctx.strokeStyle = '#e8e0d0'; ctx.lineWidth = LW(.03, 1.5); ctx.beginPath(); ctx.moveTo(hx + hr * .15, hy - hr * .65); ctx.quadraticCurveTo(hx + hr * .28, hy - hr * 1.1, hx + hr * .35, hy - hr * 1.4); ctx.stroke();
         // 羽の房(枝分かれの羽枝)
-        ctx.lineWidth = Math.max(.8, hr * .015);
-        for (let i = 0; i < 5; i++) {
+        ctx.lineWidth = LW(.015, .8);
+        times(5, i => {
           ctx.beginPath(); ctx.moveTo(hx + hr * (.15 + i * .04), hy - hr * (.65 + i * .14));
           ctx.quadraticCurveTo(hx + hr * (.28 + i * .02), hy - hr * (.7 + i * .14),
             hx + hr * (.32 + i * .01), hy - hr * (.68 + i * .14));
           ctx.stroke();
-        }
+        });
         break;
       }
       case 'netela': {
@@ -2069,12 +2073,12 @@ const ShiroLib = (() => {
         // 頭から肩へ掛ける白い布
         ctx.fillStyle = '#f0ebe0'; ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy + hr * .3); ctx.quadraticCurveTo(hx - hr * .6, hy - hr * .5, hx - hr * .4, hy - hr * .75); ctx.quadraticCurveTo(hx, hy - hr * .95, hx + hr * .4, hy - hr * .75); ctx.quadraticCurveTo(hx + hr * .6, hy - hr * .5, hx + hr * .55, hy + hr * .3); ctx.quadraticCurveTo(hx + hr * .4, hy + hr * .15, hx + hr * .3, hy - hr * .2); ctx.quadraticCurveTo(hx, hy - hr * .35, hx - hr * .3, hy - hr * .2); ctx.quadraticCurveTo(hx - hr * .4, hy + hr * .15, hx - hr * .55, hy + hr * .3); ctx.closePath(); ctx.closePath(); ctx.fill(); // 左肩の端
         // 布の襞(垂れ筋)
-        ctx.strokeStyle = '#c8beb0'; ctx.lineWidth = Math.max(1, hr * .02);
-        for (const fx of [-.45, -.2, .2, .45]) {
+        ctx.strokeStyle = '#c8beb0'; ctx.lineWidth = LW(.02);
+        ([-.45, -.2, .2, .45]).forEach(fx => {
           ctx.beginPath(); ctx.moveTo(hx + fx * hr, hy + hr * .25); ctx.quadraticCurveTo(hx + fx * hr * .9, hy - hr * .1, hx + fx * hr * .7, hy - hr * .5); ctx.stroke();
-        }
+        });
         // 彩りの縁(ティベブ — 裾の二色帯)
-        ctx.strokeStyle = '#c04038'; ctx.lineWidth = Math.max(1.5, hr * .04); ctx.beginPath(); ctx.moveTo(hx - hr * .52, hy + hr * .26); ctx.quadraticCurveTo(hx, hy + hr * .05, hx + hr * .52, hy + hr * .26); ctx.stroke(); ctx.strokeStyle = '#d8a028'; ctx.lineWidth = Math.max(1, hr * .02); ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy + hr * .2); ctx.quadraticCurveTo(hx, hy + hr * .0, hx + hr * .5, hy + hr * .2); ctx.stroke();
+        ctx.strokeStyle = '#c04038'; ctx.lineWidth = LW(.04, 1.5); ctx.beginPath(); ctx.moveTo(hx - hr * .52, hy + hr * .26); ctx.quadraticCurveTo(hx, hy + hr * .05, hx + hr * .52, hy + hr * .26); ctx.stroke(); ctx.strokeStyle = '#d8a028'; ctx.lineWidth = LW(.02); ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy + hr * .2); ctx.quadraticCurveTo(hx, hy + hr * .0, hx + hr * .5, hy + hr * .2); ctx.stroke();
         break;
       }
       case 'burnous': {
@@ -2082,12 +2086,12 @@ const ShiroLib = (() => {
         // 尖ったフード(頭上の長いとんがり)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .4); ctx.quadraticCurveTo(hx - hr * .45, hy - hr * .8, hx - hr * .15, hy - hr * .85); ctx.quadraticCurveTo(hx + hr * .05, hy - hr * 1.05, hx + hr * .08, hy - hr * 1.35); ctx.quadraticCurveTo(hx + hr * .12, hy - hr * .95, hx + hr * .35, hy - hr * .8); ctx.quadraticCurveTo(hx + hr * .55, hy - hr * .7, hx + hr * .5, hy - hr * .4); ctx.quadraticCurveTo(hx, hy - hr * .3, hx - hr * .5, hy - hr * .4); ctx.closePath(); ctx.closePath(); ctx.fill(); // 尖り
         // フードの垂れ襞
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02);
-        for (const fx of [-.3, -.1, .15, .35]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.02);
+        ([-.3, -.1, .15, .35]).forEach(fx => {
           ctx.beginPath(); ctx.moveTo(hx + fx * hr, hy - hr * .38); ctx.quadraticCurveTo(hx + fx * hr * .9, hy - hr * .55, hx + fx * hr * .8, hy - hr * .75); ctx.stroke();
-        }
+        });
         // 縁の飾り(フード口の白い縫い筋)
-        ctx.strokeStyle = '#e8e0d0'; ctx.lineWidth = Math.max(1, hr * .025); ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy - hr * .45); ctx.quadraticCurveTo(hx, hy - hr * .3, hx + hr * .42, hy - hr * .45); ctx.stroke();
+        ctx.strokeStyle = '#e8e0d0'; ctx.lineWidth = LW(.025); ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy - hr * .45); ctx.quadraticCurveTo(hx, hy - hr * .3, hx + hr * .42, hy - hr * .45); ctx.stroke();
         // 先端の房飾り
         ctx.fillStyle = dk; ell(hx + hr * .08, hy - hr * 1.38, hr * .045, hr * .05);
         break;
@@ -2101,12 +2105,12 @@ const ShiroLib = (() => {
         // 右角
         ctx.beginPath(); ctx.moveTo(hx + hr * .4, hy - hr * .3); ctx.quadraticCurveTo(hx + hr * .55, hy - hr * .6, hx + hr * .5, hy - hr * .85); ctx.quadraticCurveTo(hx + hr * .35, hy - hr * .65, hx + hr * .2, hy - hr * .4); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 布の折り筋(暗い線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02); ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .32); ctx.quadraticCurveTo(hx, hy - hr * .45, hx + hr * .45, hy - hr * .32); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.02); ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .32); ctx.quadraticCurveTo(hx, hy - hr * .45, hx + hr * .45, hy - hr * .32); ctx.stroke();
         // 帯の文様(菱形列)
         ctx.fillStyle = dk;
-        for (const fx of [-.3, -.1, .1, .3]) {
+        ([-.3, -.1, .1, .3]).forEach(fx => {
           ctx.beginPath(); ctx.moveTo(hx + fx * hr, hy - hr * .28); ctx.lineTo(hx + (fx + .05) * hr, hy - hr * .24); ctx.lineTo(hx + fx * hr, hy - hr * .2); ctx.lineTo(hx + (fx - .05) * hr, hy - hr * .24); ctx.closePath(); ctx.closePath(); ctx.fill();
-        }
+        });
         break;
       }
       case 'saputangan': {
@@ -2114,13 +2118,13 @@ const ShiroLib = (() => {
         // 頭を包む布(三角形に折った布の包み)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .25); ctx.quadraticCurveTo(hx - hr * .5, hy - hr * .7, hx - hr * .25, hy - hr * .8); ctx.quadraticCurveTo(hx, hy - hr * .9, hx + hr * .25, hy - hr * .8); ctx.quadraticCurveTo(hx + hr * .5, hy - hr * .7, hx + hr * .5, hy - hr * .25); ctx.lineTo(hx + hr * .45, hy - hr * .15); ctx.quadraticCurveTo(hx, hy - hr * .3, hx - hr * .45, hy - hr * .15); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 格子模様(布のチェック筋)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .015);
-        for (const fx of [-.3, -.1, .1, .3]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.015);
+        ([-.3, -.1, .1, .3]).forEach(fx => {
           ctx.beginPath(); ctx.moveTo(hx + fx * hr, hy - hr * .7); ctx.lineTo(hx + fx * hr, hy - hr * .22); ctx.stroke();
-        }
-        for (const fy of [-.6, -.45, -.3]) {
+        });
+        ([-.6, -.45, -.3]).forEach(fy => {
           ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy + fy * hr); ctx.quadraticCurveTo(hx, hy + (fy - .08) * hr, hx + hr * .42, hy + fy * hr); ctx.stroke();
-        }
+        });
         // 前面の結び目(額の中央の玉+垂れる端)
         ctx.fillStyle = dk; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .55, hr * .08, hr * .06, 0, 0, 7); ctx.ellipse(hx, hy - hr * .55, hr * .08, hr * .06, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(hx - hr * .03, hy - hr * .52); ctx.lineTo(hx - hr * .1, hy - hr * .35); ctx.lineTo(hx - hr * .05, hy - hr * .32); ctx.lineTo(hx + hr * .01, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
         break;
@@ -2130,15 +2134,15 @@ const ShiroLib = (() => {
         // 頭を包む布(尖った天辺)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .3); ctx.quadraticCurveTo(hx - hr * .5, hy - hr * .6, hx - hr * .3, hy - hr * .7); ctx.lineTo(hx - hr * .05, hy - hr * 1.0); ctx.lineTo(hx + hr * .2, hy - hr * .7); ctx.quadraticCurveTo(hx + hr * .5, hy - hr * .6, hx + hr * .5, hy - hr * .3); ctx.quadraticCurveTo(hx, hy - hr * .25, hx - hr * .5, hy - hr * .3); ctx.closePath(); ctx.closePath(); ctx.fill(); // 尖り
         // 左右に垂れる襞(肩まで届く布端)
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .45, hy - hr * .4); ctx.lineTo(hx + s * hr * .55, hy + hr * .15); ctx.lineTo(hx + s * hr * .4, hy + hr * .12); ctx.lineTo(hx + s * hr * .35, hy - hr * .35); ctx.closePath(); ctx.closePath(); ctx.fill(); // 肩のあたりまで
-        }
+        });
         // 額の縁取り(布の端の線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02); ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy - hr * .35); ctx.quadraticCurveTo(hx, hy - hr * .45, hx + hr * .42, hy - hr * .35); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.02); ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy - hr * .35); ctx.quadraticCurveTo(hx, hy - hr * .45, hx + hr * .42, hy - hr * .35); ctx.stroke();
         // 襞の筋
-        for (const fx of [-.38, -.15, .15, .38]) {
+        ([-.38, -.15, .15, .38]).forEach(fx => {
           ctx.beginPath(); ctx.moveTo(hx + fx * hr, hy - hr * .3); ctx.quadraticCurveTo(hx + fx * hr * 1.1, hy - hr * .45, hx + fx * hr * .9, hy - hr * .62); ctx.stroke();
-        }
+        });
         break;
       }
       case 'telpek': {
@@ -2147,14 +2151,14 @@ const ShiroLib = (() => {
         // 本体(大きな楕円の毛皮帽)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .7, hr * .58, hr * .42, 0, 0, 7); ctx.ellipse(hx, hy - hr * .7, hr * .58, hr * .42, 0, 0, 7); ctx.fill();
         // 起毛の質感(短い毛の筋)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .012);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.012);
         for (let i = 0; i < 40; i++) {
           const fx = hx + (tr2() - .5) * hr * 1.0; const fy = hy - hr * .7 + (tr2() - .5) * hr * .7;
           if (((fx - hx) / (hr * .58)) ** 2 + ((fy - hy + hr * .7) / (hr * .42)) ** 2 > 1) continue;
           ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + (tr2() - .5) * hr * .08, fy - hr * .05 - tr2() * hr * .05); ctx.stroke();
         }
         // 下縁の暗い帯(毛の重なり)
-        ctx.strokeStyle = 'rgba(30,32,40,0.5)'; ctx.lineWidth = Math.max(1.5, hr * .04); ctx.beginPath(); ctx.moveTo(hx - hr * .52, hy - hr * .5); ctx.quadraticCurveTo(hx, hy - hr * .32, hx + hr * .52, hy - hr * .5); ctx.stroke();
+        ctx.strokeStyle = 'rgba(30,32,40,0.5)'; ctx.lineWidth = LW(.04, 1.5); ctx.beginPath(); ctx.moveTo(hx - hr * .52, hy - hr * .5); ctx.quadraticCurveTo(hx, hy - hr * .32, hx + hr * .52, hy - hr * .5); ctx.stroke();
         break;
       }
       case 'sjuhatt': {
@@ -2168,9 +2172,9 @@ const ShiroLib = (() => {
         }
         // 彩りの帯(青・赤・黄の横帯)
         const cols = ['#2848a0', '#c03028', '#e0b028'];
-        for (let i = 0; i < 3; i++) {
+        times(3, i => {
           ctx.fillStyle = cols[i]; ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * (.5 + i * .06)); ctx.lineTo(hx + hr * .48, hy - hr * (.5 + i * .06)); ctx.lineTo(hx + hr * .48, hy - hr * (.55 + i * .06)); ctx.lineTo(hx - hr * .48, hy - hr * (.55 + i * .06)); ctx.closePath(); ctx.closePath(); ctx.fill();
-        }
+        });
         break;
       }
       case 'gat': {
@@ -2178,17 +2182,17 @@ const ShiroLib = (() => {
         // 広い平つば(楕円)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .45, hr * .95, hr * .18, 0, 0, 7); ctx.ellipse(hx, hy - hr * .45, hr * .95, hr * .18, 0, 0, 7); ctx.fill();
         // つばの縁(細い線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .015); ells(hx, hy - hr * .45, hr * .95, hr * .18);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.015); ells(hx, hy - hr * .45, hr * .95, hr * .18);
         // 高い円筒冠(馬毛の黒い筒)
         ctx.beginPath(); ctx.moveTo(hx - hr * .3, hy - hr * .45); ctx.lineTo(hx - hr * .3, hy - hr * 1.05); ctx.quadraticCurveTo(hx, hy - hr * 1.15, hx + hr * .3, hy - hr * 1.05); ctx.lineTo(hx + hr * .3, hy - hr * .45); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 冠の縦筋(編みの目)
-        for (const fx of [-.2, 0, .2]) {
+        ([-.2, 0, .2]).forEach(fx => {
           ctx.beginPath(); ctx.moveTo(hx + fx * hr, hy - hr * .45); ctx.lineTo(hx + fx * hr, hy - hr * 1.05); ctx.stroke();
-        }
+        });
         // 顎紐(垂れる紐)
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .3, hy - hr * .4); ctx.quadraticCurveTo(hx + s * hr * .35, hy + hr * .1, hx + s * hr * .25, hy + hr * .3); ctx.stroke();
-        }
+        });
         break;
       }
       case 'toortsog': {
@@ -2200,7 +2204,7 @@ const ShiroLib = (() => {
         // 頂の珠(冠の飾り玉)
         ctx.fillStyle = '#c03028'; ctx.beginPath(); ctx.ellipse(hx, hy - hr * 1.02, hr * .07, hr * .07, 0, 0, 7); ctx.ellipse(hx, hy - hr * 1.02, hr * .07, hr * .07, 0, 0, 7); ctx.fill();
         // 冠の帯(飾り線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02); ctx.beginPath(); ctx.moveTo(hx - hr * .32, hy - hr * .58); ctx.quadraticCurveTo(hx, hy - hr * .68, hx + hr * .32, hy - hr * .58); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.02); ctx.beginPath(); ctx.moveTo(hx - hr * .32, hy - hr * .58); ctx.quadraticCurveTo(hx, hy - hr * .68, hx + hr * .32, hy - hr * .58); ctx.stroke();
         break;
       }
       case 'nemes': {
@@ -2209,21 +2213,21 @@ const ShiroLib = (() => {
         // 冠(頭を包む平らな梯形)
         ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .45); ctx.lineTo(hx - hr * .45, hy - hr * .9); ctx.quadraticCurveTo(hx, hy - hr * .98, hx + hr * .45, hy - hr * .9); ctx.lineTo(hx + hr * .5, hy - hr * .45); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 両側の垂れ襞(大きな側板)
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .5, hy - hr * .45); ctx.quadraticCurveTo(hx + s * hr * .65, hy - hr * .2, hx + s * hr * .55, hy + hr * .15); ctx.lineTo(hx + s * hr * .35, hy + hr * .2); ctx.quadraticCurveTo(hx + s * hr * .4, hy - hr * .15, hx + s * hr * .4, hy - hr * .45); ctx.closePath(); ctx.closePath(); ctx.fill();
           // 襞の縞(横線)
-          ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .015);
-          for (const ly of [-.1, .02, .12]) {
+          ctx.strokeStyle = dk; ctx.lineWidth = LW(.015);
+          ([-.1, .02, .12]).forEach(ly => {
             ctx.beginPath(); ctx.moveTo(hx + s * hr * .4, hy + ly * hr); ctx.lineTo(hx + s * hr * .6, hy + (ly - .05) * hr); ctx.stroke();
-          }
-        }
+          });
+        });
         // 額帯(ウラエウスの帯)
         ctx.fillStyle = '#c09020'; ctx.fillRect(hx - hr * .48, hy - hr * .52, hr * .96, hr * .07);
         // 頂の縞(縦筋)
         ctx.strokeStyle = dk;
-        for (const fx of [-.3, -.15, 0, .15, .3]) {
+        ([-.3, -.15, 0, .15, .3]).forEach(fx => {
           ctx.beginPath(); ctx.moveTo(hx + fx * hr, hy - hr * .5); ctx.quadraticCurveTo(hx + fx * hr, hy - hr * .9, hx + fx * hr * .8, hy - hr * .95); ctx.stroke();
-        }
+        });
         break;
       }
       case 'kavuk': {
@@ -2232,30 +2236,30 @@ const ShiroLib = (() => {
         // 高い芯柱(中央の尖った柱)
         ctx.beginPath(); ctx.moveTo(hx - hr * .18, hy - hr * .45); ctx.lineTo(hx - hr * .15, hy - hr * 1.15); ctx.quadraticCurveTo(hx, hy - hr * 1.22, hx + hr * .15, hy - hr * 1.15); ctx.lineTo(hx + hr * .18, hy - hr * .45); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 巻き布(渦巻きの帯を3段)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .04);
-        for (const wy of [-.55, -.75, -.95]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.04, 1.5);
+        ([-.55, -.75, -.95]).forEach(wy => {
           ctx.beginPath(); ctx.moveTo(hx - hr * (.45 - (wy + .95) * .3), hy + wy * hr); ctx.quadraticCurveTo(hx, hy + (wy + .08) * hr, hx + hr * (.45 - (wy + .95) * .3), hy + wy * hr); ctx.stroke();
-        }
+        });
         // 下帯(額の帯+垂れ布)
         ctx.fillStyle = acc2; ctx.fillRect(hx - hr * .48, hy - hr * .55, hr * .96, hr * .12); ctx.beginPath(); ctx.moveTo(hx + hr * .48, hy - hr * .5); ctx.quadraticCurveTo(hx + hr * .6, hy - hr * .2, hx + hr * .5, hy + hr * .1); ctx.lineTo(hx + hr * .38, hy + hr * .05); ctx.quadraticCurveTo(hx + hr * .45, hy - hr * .2, hx + hr * .4, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 帯の縁(細線)
-        ctx.strokeStyle = '#c09020'; ctx.lineWidth = Math.max(1, hr * .015); ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * .52); ctx.lineTo(hx + hr * .48, hy - hr * .52); ctx.stroke();
+        ctx.strokeStyle = '#c09020'; ctx.lineWidth = LW(.015); ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * .52); ctx.lineTo(hx + hr * .48, hy - hr * .52); ctx.stroke();
         break;
       }
       case 'penacho': {
         // ペナチョ: アステカの羽冠 — 放射状の長羽+金の額帯
         // 長羽(放射状5本: 緑のケツァール羽)
         const fe = ['#28a058', '#30b868', '#28a058', '#38c878', '#28a058']; const fa = [-0.6, -0.3, 0, 0.3, 0.6]; ctx.strokeStyle = dk;
-        for (let i = 0; i < 5; i++) {
+        times(5, i => {
           const ax = hx + fa[i] * hr * .9; const topX = hx + fa[i] * hr * 2.1; const topY = hy - hr * (1.7 - Math.abs(fa[i]) * .4); ctx.fillStyle = fe[i]; ctx.beginPath(); ctx.moveTo(ax, hy - hr * .4); ctx.quadraticCurveTo(topX + hr * .08, topY + hr * .3, topX, topY); ctx.quadraticCurveTo(topX - hr * .08, topY + hr * .3, ax, hy - hr * .4); ctx.closePath(); ctx.closePath(); ctx.fill();
           // 羽軸(中央線)
-          ctx.lineWidth = Math.max(1, hr * .015); ctx.beginPath(); ctx.moveTo(ax, hy - hr * .4); ctx.quadraticCurveTo((ax + topX) / 2, (hy + topY) / 2, topX, topY); ctx.stroke();
-        }
+          ctx.lineWidth = LW(.015); ctx.beginPath(); ctx.moveTo(ax, hy - hr * .4); ctx.quadraticCurveTo((ax + topX) / 2, (hy + topY) / 2, topX, topY); ctx.stroke();
+        });
         // 金の額帯(飾り板+点飾り)
         ctx.fillStyle = '#c89828'; ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .42); ctx.lineTo(hx + hr * .55, hy - hr * .42); ctx.lineTo(hx + hr * .5, hy - hr * .58); ctx.lineTo(hx - hr * .5, hy - hr * .58); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.fillStyle = dk;
-        for (const bx of [-.3, 0, .3]) {
+        ([-.3, 0, .3]).forEach(bx => {
           ell(hx + bx * hr, hy - hr * .5, hr * .04, hr * .04);
-        }
+        });
         break;
       }
       case 'cangaceiro': {
@@ -2269,12 +2273,12 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.moveTo(hx - hr * .32, hy - hr * .48); ctx.quadraticCurveTo(hx - hr * .3, hy - hr * .8, hx, hy - hr * .85); ctx.quadraticCurveTo(hx + hr * .3, hy - hr * .8, hx + hr * .32, hy - hr * .48); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 星の飾り(冠の中央)
         ctx.fillStyle = '#d8b828'; ctx.beginPath();
-        for (let i = 0; i < 5; i++) {
+        times(5, i => {
           const a = -Math.PI / 2 + i * Math.PI * 2 / 5; const bx = hx + Math.cos(a) * hr * .1; const by = hy - hr * .66 + Math.sin(a) * hr * .1; i === 0 ? ctx.moveTo(bx, by) : ctx.lineTo(bx, by); const a2 = a + Math.PI / 5; ctx.lineTo(hx + Math.cos(a2) * hr * .045, hy - hr * .66 + Math.sin(a2) * hr * .045);
-        }
+        });
         ctx.closePath(); ctx.fill();
         // 革の縫い目(つばの縁線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .015); ctx.beginPath(); ctx.moveTo(hx - hr * .6, hy - hr * .42); ctx.quadraticCurveTo(hx, hy - hr * .52, hx + hr * .6, hy - hr * .42); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.015); ctx.beginPath(); ctx.moveTo(hx - hr * .6, hy - hr * .42); ctx.quadraticCurveTo(hx, hy - hr * .52, hx + hr * .6, hy - hr * .42); ctx.stroke();
         break;
       }
       case 'tuiga': {
@@ -2282,22 +2286,22 @@ const ShiroLib = (() => {
         // 額帯(前面の飾り板)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .42); ctx.lineTo(hx + hr * .5, hy - hr * .42); ctx.lineTo(hx + hr * .45, hy - hr * .6); ctx.lineTo(hx - hr * .45, hy - hr * .6); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 骨組み(放射状の木の柱: 扇状5本)
-        ctx.strokeStyle = '#8a6a48'; ctx.lineWidth = Math.max(1.5, hr * .025);
-        for (const ta of [-.7, -.35, 0, .35, .7]) {
+        ctx.strokeStyle = '#8a6a48'; ctx.lineWidth = LW(.025, 1.5);
+        ([-.7, -.35, 0, .35, .7]).forEach(ta => {
           ctx.beginPath(); ctx.moveTo(hx + ta * hr * .3, hy - hr * .55); ctx.lineTo(hx + ta * hr * .9, hy - hr * (1.4 - Math.abs(ta) * .35)); ctx.stroke();
-        }
+        });
         // 骨組みの横繋ぎ(扇の骨の弧)
-        ctx.lineWidth = Math.max(1, hr * .018); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .95); ctx.quadraticCurveTo(hx, hy - hr * 1.25, hx + hr * .55, hy - hr * .95); ctx.stroke();
+        ctx.lineWidth = LW(.018); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .95); ctx.quadraticCurveTo(hx, hy - hr * 1.25, hx + hr * .55, hy - hr * .95); ctx.stroke();
         // 赤い羽房(頂の房飾り)
         ctx.fillStyle = '#c03028';
-        for (const tx of [-.5, -.25, 0, .25, .5]) {
+        ([-.5, -.25, 0, .25, .5]).forEach(tx => {
           ell(hx + tx * hr, hy - hr * (1.1 - Math.abs(tx) * .15), hr * .07, hr * .16);
-        }
+        });
         // 帯の点飾り(装飾珠)
         ctx.fillStyle = dk;
-        for (const bx of [-.3, 0, .3]) {
+        ([-.3, 0, .3]).forEach(bx => {
           ell(hx + bx * hr, hy - hr * .51, hr * .035, hr * .035);
-        }
+        });
         break;
       }
       case 'zhawa': {
@@ -2308,17 +2312,17 @@ const ShiroLib = (() => {
         // 毛皮の反り縁(額の起毛帯)
         ctx.fillStyle = '#e8d8b0'; ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * .48); ctx.quadraticCurveTo(hx, hy - hr * .62, hx + hr * .48, hy - hr * .48); ctx.lineTo(hx + hr * .48, hy - hr * .38); ctx.quadraticCurveTo(hx, hy - hr * .52, hx - hr * .48, hy - hr * .38); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 起毛の点描(毛先の質感)
-        ctx.strokeStyle = '#c0a878'; ctx.lineWidth = Math.max(1, hr * .012);
-        for (const fx of [-.35, -.18, 0, .18, .35]) {
+        ctx.strokeStyle = '#c0a878'; ctx.lineWidth = LW(.012);
+        ([-.35, -.18, 0, .18, .35]).forEach(fx => {
           ctx.beginPath(); ctx.moveTo(hx + fx * hr, hy - hr * .55); ctx.lineTo(hx + fx * hr, hy - hr * .42); ctx.stroke();
-        }
+        });
         // 耳当て(両側の垂れ毛皮)
         ctx.fillStyle = '#d8c8a0';
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .4, hy - hr * .5); ctx.quadraticCurveTo(hx + s * hr * .55, hy - hr * .3, hx + s * hr * .5, hy + hr * .1); ctx.lineTo(hx + s * hr * .35, hy + hr * .15); ctx.quadraticCurveTo(hx + s * hr * .4, hy - hr * .2, hx + s * hr * .35, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
-        }
+        });
         // 冠の帯(飾り線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .018); ctx.beginPath(); ctx.moveTo(hx - hr * .36, hy - hr * .62); ctx.quadraticCurveTo(hx, hy - hr * .72, hx + hr * .36, hy - hr * .62); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.018); ctx.beginPath(); ctx.moveTo(hx - hr * .36, hy - hr * .62); ctx.quadraticCurveTo(hx, hy - hr * .72, hx + hr * .36, hy - hr * .62); ctx.stroke();
         break;
       }
       case 'glengarry': {
@@ -2327,16 +2331,16 @@ const ShiroLib = (() => {
         // 本体(両端の尖った舟形: 前低く後ろ高い)
         ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .55); ctx.quadraticCurveTo(hx - hr * .5, hy - hr * .85, hx - hr * .25, hy - hr * .92); ctx.quadraticCurveTo(hx, hy - hr * .78, hx + hr * .25, hy - hr * .92); ctx.quadraticCurveTo(hx + hr * .5, hy - hr * .85, hx + hr * .45, hy - hr * .55); ctx.quadraticCurveTo(hx, hy - hr * .45, hx - hr * .45, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 中央の折り目(窪み線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02); ctx.beginPath(); ctx.moveTo(hx - hr * .3, hy - hr * .68); ctx.quadraticCurveTo(hx, hy - hr * .62, hx + hr * .3, hy - hr * .68); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.02); ctx.beginPath(); ctx.moveTo(hx - hr * .3, hy - hr * .68); ctx.quadraticCurveTo(hx, hy - hr * .62, hx + hr * .3, hy - hr * .68); ctx.stroke();
         // グログラン縁帯(本体の下縁)
         ctx.strokeStyle = dk; ctx.lineWidth = hr * .08; ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .55); ctx.quadraticCurveTo(hx, hy - hr * .45, hx + hr * .45, hy - hr * .55); ctx.stroke();
         // 後ろの垂れリボン(2筋)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .05);
-        for (const rx of [.18, .3]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05);
+        ([.18, .3]).forEach(rx => {
           ctx.beginPath(); ctx.moveTo(hx + rx * hr, hy - hr * .5); ctx.quadraticCurveTo(hx + rx * hr + hr * .08, hy - hr * .1, hx + rx * hr - hr * .03, hy + hr * .3); ctx.stroke();
-        }
+        });
         // ロゼット(側面の飾り)
-        ctx.fillStyle = '#c03028'; dot(hx - hr * .32, hy - hr * .5, hr * .06); ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .015); dots(hx - hr * .32, hy - hr * .5, hr * .06);
+        ctx.fillStyle = '#c03028'; dot(hx - hr * .32, hy - hr * .5, hr * .06); ctx.strokeStyle = dk; ctx.lineWidth = LW(.015); dots(hx - hr * .32, hy - hr * .5, hr * .06);
         break;
       }
       case 'satroka': {
@@ -2349,10 +2353,10 @@ const ShiroLib = (() => {
         // 飾り帯(冠の裾の帯)
         ctx.fillStyle = '#c03828'; ctx.beginPath(); ctx.moveTo(hx - hr * .33, hy - hr * .58); ctx.lineTo(hx + hr * .33, hy - hr * .58); ctx.lineTo(hx + hr * .3, hy - hr * .5); ctx.lineTo(hx - hr * .3, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 縫い目線(冠のパネル)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .015);
-        for (const sxx of [-.12, .12]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.015);
+        ([-.12, .12]).forEach(sxx => {
           ctx.beginPath(); ctx.moveTo(hx + sxx * hr, hy - hr * .9); ctx.lineTo(hx + sxx * hr * 1.6, hy - hr * .55); ctx.stroke();
-        }
+        });
         // 頂のボタン
         ctx.fillStyle = '#c03828'; ell(hx, hy - hr * .98, hr * .05, hr * .04);
         break;
@@ -2363,17 +2367,17 @@ const ShiroLib = (() => {
         // 巻き布(頭を包む帯状)
         ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy - hr * .45); ctx.quadraticCurveTo(hx - hr * .48, hy - hr * .8, hx - hr * .2, hy - hr * .95); ctx.quadraticCurveTo(hx, hy - hr * 1.02, hx + hr * .2, hy - hr * .95); ctx.quadraticCurveTo(hx + hr * .48, hy - hr * .8, hx + hr * .42, hy - hr * .45); ctx.quadraticCurveTo(hx, hy - hr * .35, hx - hr * .42, hy - hr * .45); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 折り線(巻きの襞)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .015);
-        for (const fy of [-.6, -.75, -.9]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.015);
+        ([-.6, -.75, -.9]).forEach(fy => {
           ctx.beginPath(); ctx.moveTo(hx - hr * .35, hy + fy * hr); ctx.quadraticCurveTo(hx, hy + (fy - .06) * hr, hx + hr * .35, hy + fy * hr); ctx.stroke();
-        }
+        });
         // 横結び(右側の布のたまり)
-        ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx + hr * .38, hy - hr * .7); ctx.quadraticCurveTo(hx + hr * .62, hy - hr * .75, hx + hr * .55, hy - hr * .45); ctx.quadraticCurveTo(hx + hr * .62, hy - hr * .25, hx + hr * .42, hy - hr * .4); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .015); ctx.beginPath(); ctx.moveTo(hx + hr * .42, hy - hr * .55); ctx.quadraticCurveTo(hx + hr * .55, hy - hr * .6, hx + hr * .52, hy - hr * .4); ctx.stroke();
+        ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx + hr * .38, hy - hr * .7); ctx.quadraticCurveTo(hx + hr * .62, hy - hr * .75, hx + hr * .55, hy - hr * .45); ctx.quadraticCurveTo(hx + hr * .62, hy - hr * .25, hx + hr * .42, hy - hr * .4); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.strokeStyle = dk; ctx.lineWidth = LW(.015); ctx.beginPath(); ctx.moveTo(hx + hr * .42, hy - hr * .55); ctx.quadraticCurveTo(hx + hr * .55, hy - hr * .6, hx + hr * .52, hy - hr * .4); ctx.stroke();
         // ハイビスカス(結び目の花)
         ctx.fillStyle = '#e85878';
-        for (const pa of [0, 1.26, 2.52, 3.77, 5.03]) {
+        ([0, 1.26, 2.52, 3.77, 5.03]).forEach(pa => {
           const px2 = hx + hr * .48 + Math.cos(pa) * hr * .07; const py2 = hy - hr * .52 + Math.sin(pa) * hr * .07; ell(px2, py2, hr * .05, hr * .035, pa);
-        }
+        });
         ctx.fillStyle = '#f8d858'; dot(hx + hr * .48, hy - hr * .52, hr * .03);
         break;
       }
@@ -2381,15 +2385,15 @@ const ShiroLib = (() => {
         // サルサル: フィジーの花冠 — プルメリアの輪+後ろのシダ葉
         // シダの葉(冠の後ろの扇状の葉)
         ctx.fillStyle = '#3a7838';
-        for (const fa of [-.9, -.45, 0, .45, .9]) {
+        ([-.9, -.45, 0, .45, .9]).forEach(fa => {
           ctx.save(); ctx.translate(hx, hy - hr * .5); ctx.rotate(fa * .5); ell(0, -hr * .3, hr * .09, hr * .35); ctx.restore();
-        }
+        });
         // プルメリアの花の輪(頭を囲む)
         for (const [fx, fy] of [[-.4, -.55], [-.2, -.68], [0, -.72], [.2, -.68], [.4, -.55]]) {
           const cx2 = hx + fx * hr, cy2 = hy + fy * hr; ctx.fillStyle = '#f8f4e8';
-          for (const pa of [0, 1.26, 2.52, 3.77, 5.03]) {
+          ([0, 1.26, 2.52, 3.77, 5.03]).forEach(pa => {
             ell(cx2 + Math.cos(pa) * hr * .055, cy2 + Math.sin(pa) * hr * .055, hr * .045, hr * .03, pa);
-          }
+          });
           ctx.fillStyle = '#f0c030'; dot(cx2, cy2, hr * .028);
         }
         break;
@@ -2399,16 +2403,16 @@ const ShiroLib = (() => {
         // 額帯(黒い紐帯)
         ctx.strokeStyle = dk; ctx.lineWidth = hr * .07; ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .5); ctx.quadraticCurveTo(hx, hy - hr * .6, hx + hr * .45, hy - hr * .5); ctx.stroke();
         // 貝の円盤(中央の大きな白貝)
-        ctx.fillStyle = '#f0ead8'; dot(hx, hy - hr * .78, hr * .28); ctx.strokeStyle = '#a89878'; ctx.lineWidth = Math.max(1, hr * .015); dots(hx, hy - hr * .78, hr * .28);
+        ctx.fillStyle = '#f0ead8'; dot(hx, hy - hr * .78, hr * .28); ctx.strokeStyle = '#a89878'; ctx.lineWidth = LW(.015); dots(hx, hy - hr * .78, hr * .28);
         // 同心の彫り紋(2輪)
-        ctx.strokeStyle = '#b0a080'; ctx.lineWidth = Math.max(1, hr * .012);
-        for (const rr of [.18, .1]) {
+        ctx.strokeStyle = '#b0a080'; ctx.lineWidth = LW(.012);
+        ([.18, .1]).forEach(rr => {
           dots(hx, hy - hr * .78, hr * rr);
-        }
+        });
         // 中心の点(彫りの芯)
         ctx.fillStyle = '#a89878'; dot(hx,hy - hr * .78,hr * .03);
         // 紐の垂れ(円盤と帯をつなぐ)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .02); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .5); ctx.lineTo(hx, hy - hr * .52); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.02); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .5); ctx.lineTo(hx, hy - hr * .52); ctx.stroke();
         break;
       }
       case 'tekiteki': {
@@ -2417,13 +2421,13 @@ const ShiroLib = (() => {
         ctx.strokeStyle = dk; ctx.lineWidth = hr * .08; ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * .52); ctx.quadraticCurveTo(hx, hy - hr * .62, hx + hr * .48, hy - hr * .52); ctx.stroke();
         // 帯の編み模様(小さな点)
         ctx.fillStyle = '#c8b888';
-        for (const bx of [-.3, -.15, 0, .15, .3]) {
+        ([-.3, -.15, 0, .15, .3]).forEach(bx => {
           dot(hx + bx * hr, hy - hr * .57, hr * .02);
-        }
+        });
         // 直立の羽房(中央に立つ白い羽+赤い根元)
         ctx.fillStyle = '#e8e0d0'; ctx.beginPath(); ctx.moveTo(hx - hr * .04, hy - hr * .58); ctx.quadraticCurveTo(hx - hr * .14, hy - hr * 1.0, hx, hy - hr * 1.05); ctx.quadraticCurveTo(hx + hr * .14, hy - hr * 1.0, hx + hr * .04, hy - hr * .58); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 羽軸(中央の筋)
-        ctx.strokeStyle = '#a89878'; ctx.lineWidth = Math.max(1, hr * .015); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .58); ctx.lineTo(hx, hy - hr * 1.02); ctx.stroke();
+        ctx.strokeStyle = '#a89878'; ctx.lineWidth = LW(.015); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .58); ctx.lineTo(hx, hy - hr * 1.02); ctx.stroke();
         // 赤い根元(帯の上の飾り紐)
         ctx.strokeStyle = '#c03028'; ctx.lineWidth = hr * .05; ctx.beginPath(); ctx.moveTo(hx - hr * .08, hy - hr * .55); ctx.lineTo(hx + hr * .08, hy - hr * .55); ctx.stroke();
         break;
@@ -2434,16 +2438,16 @@ const ShiroLib = (() => {
         // 平つば(広い楕円)
         ell(hx, hy - hr * .5, hr * .62, hr * .16);
         // つばの編み筋(同心の細線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .012);
-        for (const rr of [.45, .32]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.012);
+        ([.45, .32]).forEach(rr => {
           ells(hx, hy - hr * .5, hr * rr, hr * rr * .26);
-        }
+        });
         // 低い冠(つばの上の浅いドーム)
         ctx.beginPath(); ctx.moveTo(hx - hr * .3, hy - hr * .5); ctx.quadraticCurveTo(hx - hr * .32, hy - hr * .8, hx - hr * .12, hy - hr * .88); ctx.quadraticCurveTo(hx, hy - hr * .92, hx + hr * .12, hy - hr * .88); ctx.quadraticCurveTo(hx + hr * .32, hy - hr * .8, hx + hr * .3, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 冠の編み筋(3本の弧)
-        for (const wy of [-.6, -.7, -.8]) {
+        ([-.6, -.7, -.8]).forEach(wy => {
           ctx.beginPath(); ctx.moveTo(hx - hr * .28, hy + wy * hr); ctx.quadraticCurveTo(hx, hy + (wy - .05) * hr, hx + hr * .28, hy + wy * hr); ctx.stroke();
-        }
+        });
         // 帯(冠の裾の細帯)
         ctx.strokeStyle = '#c03828'; ctx.lineWidth = hr * .04; ctx.beginPath(); ctx.moveTo(hx - hr * .3, hy - hr * .54); ctx.quadraticCurveTo(hx, hy - hr * .62, hx + hr * .3, hy - hr * .54); ctx.stroke();
         break;
@@ -2467,14 +2471,14 @@ const ShiroLib = (() => {
         ctx.fillStyle = '#d0d8e0'; ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .62); ctx.quadraticCurveTo(hx, hy - hr * .74, hx + hr * .5, hy - hr * .62); ctx.lineTo(hx + hr * .46, hy - hr * .5); ctx.quadraticCurveTo(hx, hy - hr * .6, hx - hr * .46, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 帯の文様(3つの石)
         ctx.fillStyle = '#a03030';
-        for (const sx of [-.22, 0, .22]) {
+        ([-.22, 0, .22]).forEach(sx => {
           dot(hx + sx * hr, hy - hr * .58, hr * .03);
-        }
+        });
         // 垂れる貨幣鎖(両側のチェーン+金貨)
-        ctx.strokeStyle = '#c8a848'; ctx.lineWidth = Math.max(1, hr * .015);
-        for (const s of [-1, 1]) {
+        ctx.strokeStyle = '#c8a848'; ctx.lineWidth = LW(.015);
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .46, hy - hr * .56); ctx.quadraticCurveTo(hx + s * hr * .5, hy - hr * .3, hx + s * hr * .42, hy - hr * .1); ctx.stroke(); ctx.fillStyle = '#e0b840'; dot(hx + s * hr * .42, hy - hr * .08, hr * .05);
-        }
+        });
         // ベール(後ろに垂れる薄布)
         ctx.fillStyle = 'rgba(240,240,245,0.35)'; ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * .5); ctx.quadraticCurveTo(hx - hr * .55, hy + hr * .3, hx - hr * .4, hy + hr * .6); ctx.lineTo(hx + hr * .4, hy + hr * .6); ctx.quadraticCurveTo(hx + hr * .55, hy + hr * .3, hx + hr * .48, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 頂の小さな飾り(十字形の宝飾)
@@ -2487,10 +2491,10 @@ const ShiroLib = (() => {
         // 頭を包む布(滑らかなドーム)
         ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .25); ctx.quadraticCurveTo(hx - hr * .58, hy - hr * .85, hx, hy - hr * .95); ctx.quadraticCurveTo(hx + hr * .58, hy - hr * .85, hx + hr * .55, hy - hr * .25); ctx.quadraticCurveTo(hx, hy - hr * .1, hx - hr * .55, hy - hr * .25); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 幾何学的な縁模様(帯の上のひし形)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .015); ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * .32); ctx.quadraticCurveTo(hx, hy - hr * .16, hx + hr * .48, hy - hr * .32); ctx.stroke();
-        for (const dx of [-.36, -.18, 0, .18, .36]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.015); ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * .32); ctx.quadraticCurveTo(hx, hy - hr * .16, hx + hr * .48, hy - hr * .32); ctx.stroke();
+        ([-.36, -.18, 0, .18, .36]).forEach(dx => {
           ctx.beginPath(); ctx.moveTo(hx + dx * hr, hy - hr * .3); ctx.lineTo(hx + dx * hr + hr * .04, hy - hr * .26); ctx.lineTo(hx + dx * hr, hy - hr * .22); ctx.lineTo(hx + dx * hr - hr * .04, hy - hr * .26); ctx.closePath(); ctx.closePath(); ctx.stroke();
-        }
+        });
         // 後ろの垂れ襞(背中への布のたわみ)
         ctx.beginPath(); ctx.moveTo(hx + hr * .45, hy - hr * .6); ctx.quadraticCurveTo(hx + hr * .62, hy - hr * .4, hx + hr * .55, hy - hr * .12); ctx.lineTo(hx + hr * .42, hy - hr * .15); ctx.quadraticCurveTo(hx + hr * .5, hy - hr * .45, hx + hr * .38, hy - hr * .58); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 房(垂れ襞の先の小さな結び)
@@ -2501,9 +2505,9 @@ const ShiroLib = (() => {
         // アガール: 二重の黒い頭の紐 — 二つの輪+垂れる房
         ctx.strokeStyle = dk;
         // 二重の輪(頭頂の黒い紐帯)
-        for (const oy of [.72, .8]) {
+        ([.72, .8]).forEach(oy => {
           ctx.lineWidth = hr * .05; ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - oy * hr); ctx.quadraticCurveTo(hx, hy - (oy + .1) * hr, hx + hr * .5, hy - oy * hr); ctx.stroke();
-        }
+        });
         // 輪の留め結び(背面の小さな結び目)
         ctx.lineWidth = hr * .04; ctx.beginPath(); ctx.moveTo(hx + hr * .48, hy - hr * .7); ctx.quadraticCurveTo(hx + hr * .52, hy - hr * .6, hx + hr * .48, hy - hr * .5); ctx.stroke();
         // 垂れる房(2本の細い紐の先端)
@@ -2524,10 +2528,10 @@ const ShiroLib = (() => {
         // 平らな天(上の平円)
         ctx.fillStyle = '#d03830'; ell(hx, hy - hr * .82, hr * .38, hr * .1);
         // 側面の編み筋(縦の細線)
-        ctx.strokeStyle = '#8a2020'; ctx.lineWidth = Math.max(1, hr * .012);
-        for (const vx of [-.3, -.15, 0, .15, .3]) {
+        ctx.strokeStyle = '#8a2020'; ctx.lineWidth = LW(.012);
+        ([-.3, -.15, 0, .15, .3]).forEach(vx => {
           ctx.beginPath(); ctx.moveTo(hx + vx * hr, hy - hr * .5); ctx.lineTo(hx + vx * hr * 1.05, hy - hr * .78); ctx.stroke();
-        }
+        });
         // 裾の帯(下部の暗い帯)
         ctx.strokeStyle = dk; ctx.lineWidth = hr * .04; ctx.beginPath(); ctx.moveTo(hx - hr * .42, hy - hr * .48); ctx.quadraticCurveTo(hx, hy - hr * .38, hx + hr * .42, hy - hr * .48); ctx.stroke();
         break;
@@ -2543,14 +2547,14 @@ const ShiroLib = (() => {
         ctx.strokeStyle = '#5a4030'; ctx.lineWidth = hr * .09; ctx.beginPath(); ctx.moveTo(hx - hr * .48, hy - hr * .55); ctx.quadraticCurveTo(hx, hy - hr * .68, hx + hr * .48, hy - hr * .55); ctx.stroke();
         // 帯の金属帯の金属飾り(銀の丸)
         ctx.fillStyle = '#c8c8c8';
-        for (const bx of [-.24, -.08, .08, .24]) {
+        ([-.24, -.08, .08, .24]).forEach(bx => {
           dot(hx + bx * hr, hy - hr * .6, hr * .025);
-        }
+        });
         // 帯の下の編み紐(垂れる2本の革紐)
-        ctx.strokeStyle = '#5a4030'; ctx.lineWidth = Math.max(1, hr * .02);
-        for (const sx of [-.4, .4]) {
+        ctx.strokeStyle = '#5a4030'; ctx.lineWidth = LW(.02);
+        ([-.4, .4]).forEach(sx => {
           ctx.beginPath(); ctx.moveTo(hx + sx * hr, hy - hr * .5); ctx.lineTo(hx + sx * hr * 1.1, hy - hr * .2); ctx.stroke();
-        }
+        });
         break;
       }
       case 'jok': {
@@ -2559,19 +2563,19 @@ const ShiroLib = (() => {
         // 大きな円錐の本体(広い三角)
         ctx.beginPath(); ctx.moveTo(hx - hr * .75, hy - hr * .3); ctx.lineTo(hx, hy - hr * 1.05); ctx.lineTo(hx + hr * .75, hy - hr * .3); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 円錐の編み筋(放射の細線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .012);
-        for (const ax2 of [-.5, -.25, 0, .25, .5]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.012);
+        ([-.5, -.25, 0, .25, .5]).forEach(ax2 => {
           ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.02); ctx.lineTo(hx + ax2 * hr, hy - hr * .32); ctx.stroke();
-        }
+        });
         // 縁の帯(下部の編み端)
         ctx.strokeStyle = dk; ctx.lineWidth = hr * .035; ctx.beginPath(); ctx.moveTo(hx - hr * .75, hy - hr * .3); ctx.quadraticCurveTo(hx, hy - hr * .22, hx + hr * .75, hy - hr * .3); ctx.stroke();
         // 先端の尖り(小さな飾り)
         ctx.fillStyle = '#c84838'; dot(hx, hy - hr * 1.02, hr * .035);
         // 顎紐(両側の垂れ紐)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .015);
-        for (const sx of [-.55, .55]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.015);
+        ([-.55, .55]).forEach(sx => {
           ctx.beginPath(); ctx.moveTo(hx + sx * hr, hy - hr * .28); ctx.lineTo(hx + sx * hr * .8, hy + hr * .2); ctx.stroke();
-        }
+        });
         break;
       }
       case 'clop': {
@@ -2602,7 +2606,7 @@ const ShiroLib = (() => {
         // 冠の帯(色差し)
         ctx.fillStyle = acc2; ctx.fillRect(hx - hr * .47, hy - hr * .75, hr * .94, hr * .12);
         // 飾り紐の結び目(右側)+垂れ紐
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1.5, hr * .06); dots(hx + hr * .45, hy - hr * .68, hr * .08); ctx.beginPath(); ctx.moveTo(hx + hr * .48, hy - hr * .62); ctx.lineTo(hx + hr * .5, hy - hr * .4); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.06, 1.5); dots(hx + hr * .45, hy - hr * .68, hr * .08); ctx.beginPath(); ctx.moveTo(hx + hr * .48, hy - hr * .62); ctx.lineTo(hx + hr * .5, hy - hr * .4); ctx.stroke();
         // 片側の小さな羽根飾り
         ell(hx - hr * .4, hy - hr * .85, hr * .05, hr * .18, -.3);
         break;
@@ -2632,7 +2636,7 @@ const ShiroLib = (() => {
         // 縁の帯(段)
         ctx.fillStyle = dk; ctx.fillRect(hx - hr * .52, hy - hr * .55, hr * 1.04, hr * .12);
         // 高さの筋(毛並み)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .04);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.04);
         for (let i = -2; i <= 2; i++) {
           ctx.beginPath(); ctx.moveTo(hx + i * hr * .2, hy - hr * .5); ctx.lineTo(hx + i * hr * .22, hy - hr * 1.25); ctx.stroke();
         }
@@ -2641,38 +2645,38 @@ const ShiroLib = (() => {
       case 'venok': {
         // ヴェーノク: スラヴの花冠 — 大花の輪+後ろに垂れる長いリボン
         const cols = [acc2, '#d04838', '#e8c838', '#4898d0'];
-        for (let i = 0; i < 7; i++) {
+        times(7, i => {
           const a = Math.PI + Math.PI * (i / 6) - .05; const fxp = hx + Math.cos(a) * hr * .95; const fyp = hy - hr * .15 + Math.sin(a) * hr * .9; ctx.fillStyle = cols[i % 4];
           // 花弁(5枚)
-          for (let p2 = 0; p2 < 5; p2++) {
+          times(5, p2 => {
             const pa = p2 * Math.PI * 2 / 5; ctx.beginPath();
             ctx.ellipse(fxp + Math.cos(pa) * hr * .07, fyp + Math.sin(pa) * hr * .07,
               hr * .06, hr * .04, pa, 0, 7);
             ctx.fill();
-          }
+          });
           ctx.fillStyle = '#e8c848'; dot(fxp,fyp,hr * .04);
-        }
+        });
         // 後ろに垂れる長いリボン(左右)
-        for (const s of [-1, 1]) {
-          ctx.strokeStyle = cols[s > 0 ? 1 : 3]; ctx.lineWidth = Math.max(2, hr * .1); ctx.beginPath(); ctx.moveTo(hx + s * hr * .7, hy - hr * .3);
+        ([-1, 1]).forEach(s => {
+          ctx.strokeStyle = cols[s > 0 ? 1 : 3]; ctx.lineWidth = LW(.1, 2); ctx.beginPath(); ctx.moveTo(hx + s * hr * .7, hy - hr * .3);
           ctx.quadraticCurveTo(hx + s * hr * .95, hy + hr * .3,
             hx + s * hr * .85, hy + hr * 1.1);
           ctx.stroke();
-        }
+        });
         break;
       }
       case 'borla': {
         // ボルラ: ラージプートの額飾り — 髪際から垂れる球形の飾り+鎖
         const tx = hx, ty = hy - hr * .5;
         // 鎖
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1, hr * .05); ctx.beginPath(); ctx.moveTo(tx, hy - hr * 1.05); ctx.lineTo(tx, ty - hr * .12); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.05); ctx.beginPath(); ctx.moveTo(tx, hy - hr * 1.05); ctx.lineTo(tx, ty - hr * .12); ctx.stroke();
         // 球形の飾り(リング付き)
         ctx.fillStyle = acc2; dot(tx,ty,hr * .16);
         // 球の輪郭の筋(南瓜状の畝)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .035);
-        for (const off of [-.08, 0, .08]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.035);
+        ([-.08, 0, .08]).forEach(off => {
           ells(tx + off * hr, ty, hr * (.1 - Math.abs(off) * .5), hr * .15);
-        }
+        });
         // 頂と底の環
         ctx.fillStyle = dk; dot(tx,ty - hr * .17,hr * .04); dot(tx,ty + hr * .17,hr * .04);
         break;
@@ -2684,14 +2688,14 @@ const ShiroLib = (() => {
         // 中央の立つ宝飾(菱形+上珠)
         ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.3); ctx.lineTo(hx - hr * .14, hy - hr * 1.05); ctx.lineTo(hx, hy - hr * .85); ctx.lineTo(hx + hr * .14, hy - hr * 1.05); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.fillStyle = dk; dot(hx,hy - hr * 1.05,hr * .06);
         // 頂の羽根飾り
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(2, hr * .07); ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.3); ctx.quadraticCurveTo(hx + hr * .1, hy - hr * 1.55, hx + hr * .2, hy - hr * 1.6); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.07, 2); ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.3); ctx.quadraticCurveTo(hx + hr * .1, hy - hr * 1.55, hx + hr * .2, hy - hr * 1.6); ctx.stroke();
         // 両脇に垂れる珠飾り(3粒×2)
         ctx.fillStyle = acc2;
-        for (const s of [-1, 1]) {
-          for (let i = 0; i < 3; i++) {
+        ([-1, 1]).forEach(s => {
+          times(3, i => {
             dot(hx + s * hr * .25, hy - hr * (.68 - i * .12), hr * .045);
-          }
-        }
+          });
+        });
         break;
       }
       case 'pheta': {
@@ -2702,10 +2706,10 @@ const ShiroLib = (() => {
         // 後ろの角張った折り(シンデー: 扇形に立つ尾)
         ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .6); ctx.lineTo(hx - hr * .85, hy - hr * 1.05); ctx.lineTo(hx - hr * .7, hy - hr * 1.15); ctx.lineTo(hx - hr * .45, hy - hr * .8); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 巻き目の筋
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .045);
-        for (let i = 0; i < 3; i++) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.045);
+        times(3, i => {
           ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * (.58 + i * .15)); ctx.quadraticCurveTo(hx, hy - hr * (.66 + i * .16), hx + hr * .5, hy - hr * (.56 + i * .15)); ctx.stroke();
-        }
+        });
         // 巻きの先の結び目
         ctx.beginPath(); ctx.arc(hx - hr * .68, hy - hr * 1.0, hr * .07, 0, 7); ctx.fillStyle = dk; ctx.fill();
         break;
@@ -2716,7 +2720,7 @@ const ShiroLib = (() => {
         // 広い浅い円錐
         ctx.beginPath(); ctx.moveTo(hx - hr * 1.1, hy - hr * .55); ctx.lineTo(hx, hy - hr * 1.45); ctx.lineTo(hx + hr * 1.1, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 幾何学の編み筋(同心弧+放射)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .04);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.04);
         for (let i = 1; i <= 3; i++) {
           ctx.beginPath(); ctx.moveTo(hx - hr * (1.1 - i * .25), hy - hr * (.55 + i * .22)); ctx.quadraticCurveTo(hx, hy - hr * (.62 + i * .22), hx + hr * (1.1 - i * .25), hy - hr * (.55 + i * .22)); ctx.stroke();
         }
@@ -2729,7 +2733,7 @@ const ShiroLib = (() => {
       }
       case 'tilak': {
         // ティラカ: 額の聖印 — 眉間のU字+垂れ線+珠
-        const tx = hx, ty = hy - hr * .55; ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1.5, hr * .07); ctx.lineCap = 'round';
+        const tx = hx, ty = hy - hr * .55; ctx.strokeStyle = acc2; ctx.lineWidth = LW(.07, 1.5); ctx.lineCap = 'round';
         // ウールドワ・プンドラ(U字: 外側2本)
         ctx.beginPath(); ctx.moveTo(tx - hr * .1, ty + hr * .12); ctx.quadraticCurveTo(tx - hr * .12, ty - hr * .08, tx - hr * .08, ty - hr * .18); ctx.stroke(); ctx.beginPath(); ctx.moveTo(tx + hr * .1, ty + hr * .12); ctx.quadraticCurveTo(tx + hr * .12, ty - hr * .08, tx + hr * .08, ty - hr * .18); ctx.stroke();
         // 中央の垂れ線
@@ -2745,7 +2749,7 @@ const ShiroLib = (() => {
         // 開く羽根(3本)
         const pcols = ['#286848', '#386858', '#286848'];
         for (let i = -1; i <= 1; i++) {
-          const ang = i * .5; const px2 = hx + Math.sin(ang) * hr * 1.1; const py2 = hy - hr * .75 - Math.cos(ang) * hr * .9; ctx.strokeStyle = '#3a5040'; ctx.lineWidth = Math.max(1.5, hr * .06); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .75); ctx.quadraticCurveTo(hx + Math.sin(ang) * hr * .5, hy - hr * 1.2, px2, py2); ctx.stroke();
+          const ang = i * .5; const px2 = hx + Math.sin(ang) * hr * 1.1; const py2 = hy - hr * .75 - Math.cos(ang) * hr * .9; ctx.strokeStyle = '#3a5040'; ctx.lineWidth = LW(.06, 1.5); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .75); ctx.quadraticCurveTo(hx + Math.sin(ang) * hr * .5, hy - hr * 1.2, px2, py2); ctx.stroke();
           // 目玉紋(外→内)
           ctx.fillStyle = pcols[i + 1]; ell(px2, py2, hr * .16, hr * .2, ang); ctx.fillStyle = '#205890'; ell(px2, py2 - hr * .03, hr * .09, hr * .12, ang); ctx.fillStyle = dk; ell(px2, py2 - hr * .03, hr * .045, hr * .06, ang);
         }
@@ -2760,16 +2764,16 @@ const ShiroLib = (() => {
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.arc(jx, jy, hr * .22, .5, 5.3); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.fillStyle = dk; dot(jx + hr * .08, jy - hr * .05, hr * .15);
         // 垂れる珠の房(3列)
         ctx.fillStyle = acc2;
-        for (let i = 0; i < 3; i++) {
+        times(3, i => {
           const dx = jx - hr * .18 + i * hr * .14;
-          for (let j2 = 0; j2 < 3 - i; j2++) {
+          times(3 - i, j2 => {
             dot(dx, jy + hr * (.2 + j2 * .16), hr * .045);
-          }
+          });
           // 房の先の涙珠
           dot(dx, jy + hr * (.2 + (3 - i) * .16), hr * .06);
-        }
+        });
         // 頭頂への鎖
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1, hr * .04); ctx.beginPath(); ctx.moveTo(jx, jy - hr * .2); ctx.quadraticCurveTo(hx - hr * .3, hy - hr * 1.0, hx, hy - hr * 1.1); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.04); ctx.beginPath(); ctx.moveTo(jx, jy - hr * .2); ctx.quadraticCurveTo(hx - hr * .3, hy - hr * 1.0, hx, hy - hr * 1.1); ctx.stroke();
         break;
       }
       case 'mukut': {
@@ -2780,10 +2784,10 @@ const ShiroLib = (() => {
         // 高い尖塔の冠(3段に細くなる)
         ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .75); ctx.quadraticCurveTo(hx - hr * .3, hy - hr * 1.1, hx - hr * .15, hy - hr * 1.3); ctx.quadraticCurveTo(hx, hy - hr * 1.65, hx + hr * .15, hy - hr * 1.3); ctx.quadraticCurveTo(hx + hr * .3, hy - hr * 1.1, hx + hr * .45, hy - hr * .75); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 段の筋
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .04);
-        for (const yy of [.95, 1.15, 1.35]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.04);
+        ([.95, 1.15, 1.35]).forEach(yy => {
           const ww = hr * (.42 - (yy - .95) * .7); ctx.beginPath(); ctx.moveTo(hx - ww, hy - hr * yy); ctx.lineTo(hx + ww, hy - hr * yy); ctx.stroke();
-        }
+        });
         // 頂の宝珠
         ctx.fillStyle = dk; dot(hx,hy - hr * 1.62,hr * .08);
         // 帯の中央飾り
@@ -2796,25 +2800,25 @@ const ShiroLib = (() => {
         // 大きな前盛り(ファン型の折りたたみ)
         ctx.beginPath(); ctx.moveTo(hx - hr * .6, hy - hr * .5); ctx.quadraticCurveTo(hx - hr * .5, hy - hr * 1.35, hx + hr * .25, hy - hr * 1.3); ctx.quadraticCurveTo(hx + hr * .75, hy - hr * 1.2, hx + hr * .62, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 巻き布の層の筋(斜めの織り目)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .04); ctx.beginPath();
-        for (let i = 0; i < 4; i++) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.04); ctx.beginPath();
+        times(4, i => {
           ctx.moveTo(hx - hr * .55, hy - hr * (.55 + i * .16)); ctx.quadraticCurveTo(hx, hy - hr * (.68 + i * .18), hx + hr * .58, hy - hr * (.52 + i * .16));
-        }
+        });
         ctx.stroke();
         // 中央の立つ折り目(タカ)
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(2, hr * .1); ctx.beginPath(); ctx.moveTo(hx - hr * .1, hy - hr * .75); ctx.quadraticCurveTo(hx + hr * .05, hy - hr * 1.45, hx + hr * .2, hy - hr * 1.5); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.1, 2); ctx.beginPath(); ctx.moveTo(hx - hr * .1, hy - hr * .75); ctx.quadraticCurveTo(hx + hr * .05, hy - hr * 1.45, hx + hr * .2, hy - hr * 1.5); ctx.stroke();
         // 飾り珠
         ctx.fillStyle = dk; dot(hx + hr * .15,hy - hr * .85,hr * .09);
         break;
       }
       case 'tikka': {
         // ティッカ(マーング・ティッカ): インドの額飾り — 髪生え際への鎖+垂れる宝石+珠
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1, hr * .05); ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.05); ctx.lineTo(hx, hy - hr * .68); ctx.stroke(); // 髪の生え際から // 額の中央へ鎖
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.05); ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.05); ctx.lineTo(hx, hy - hr * .68); ctx.stroke(); // 髪の生え際から // 額の中央へ鎖
         // 鎖の珠(3粒)
         ctx.fillStyle = acc2;
-        for (let i = 0; i < 3; i++) {
+        times(3, i => {
           dot(hx, hy - hr * (1.0 - i * .12), hr * .045);
-        }
+        });
         // 垂れる宝石(涙型)
         ctx.beginPath(); ctx.moveTo(hx, hy - hr * .72); ctx.quadraticCurveTo(hx - hr * .14, hy - hr * .55, hx, hy - hr * .42); ctx.quadraticCurveTo(hx + hr * .14, hy - hr * .55, hx, hy - hr * .72); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 宝石の輝き
@@ -2827,10 +2831,10 @@ const ShiroLib = (() => {
         // カラクル帽(ジンナー帽): ペルシャ羊毛の wedge 帽 — 丸みのある楔型+起毛の質感
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .6, hy - hr * .5); ctx.quadraticCurveTo(hx - hr * .55, hy - hr * 1.15, hx, hy - hr * 1.2); ctx.quadraticCurveTo(hx + hr * .55, hy - hr * 1.15, hx + hr * .6, hy - hr * .5); ctx.quadraticCurveTo(hx, hy - hr * .72, hx - hr * .6, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 起毛の縁(短い筋)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .035); ctx.beginPath();
-        for (let i = 0; i < 10; i++) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.035); ctx.beginPath();
+        times(10, i => {
           const fx = hx - hr * .5 + i * hr * .11; const fy = hy - hr * (.5 + .04 * Math.sin(i * 3)); ctx.moveTo(fx, fy); ctx.lineTo(fx + hr * .04, fy - hr * .07);
-        }
+        });
         ctx.stroke();
         // 前の縫い目
         ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.18); ctx.quadraticCurveTo(hx + hr * .05, hy - hr * .85, hx, hy - hr * .68); ctx.stroke();
@@ -2842,7 +2846,7 @@ const ShiroLib = (() => {
         // 側面の結び目
         ctx.fillStyle = dk; dot(hx + hr * .82, hy - hr * .32, hr * .12);
         // 立つ羽根
-        ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx + hr * .85, hy - hr * .35); ctx.quadraticCurveTo(hx + hr * .75, hy - hr * 1.1, hx + hr * .95, hy - hr * 1.35); ctx.quadraticCurveTo(hx + hr * .95, hy - hr * .9, hx + hr * .9, hy - hr * .35); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .03); ctx.beginPath(); ctx.moveTo(hx + hr * .87, hy - hr * .35); ctx.lineTo(hx + hr * .92, hy - hr * 1.3); ctx.stroke();
+        ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx + hr * .85, hy - hr * .35); ctx.quadraticCurveTo(hx + hr * .75, hy - hr * 1.1, hx + hr * .95, hy - hr * 1.35); ctx.quadraticCurveTo(hx + hr * .95, hy - hr * .9, hx + hr * .9, hy - hr * .35); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.strokeStyle = dk; ctx.lineWidth = LW(.03); ctx.beginPath(); ctx.moveTo(hx + hr * .87, hy - hr * .35); ctx.lineTo(hx + hr * .92, hy - hr * 1.3); ctx.stroke();
         // 中央の宝石
         ctx.fillStyle = '#e0c040'; ctx.beginPath(); ctx.moveTo(hx, hy - hr * .5); ctx.lineTo(hx + hr * .09, hy - hr * .32); ctx.lineTo(hx, hy - hr * .14); ctx.lineTo(hx - hr * .09, hy - hr * .32); ctx.closePath(); ctx.closePath(); ctx.fill();
         break;
@@ -2857,7 +2861,7 @@ const ShiroLib = (() => {
         // 帯
         ctx.fillStyle = dk; ctx.fillRect(hx - hr * .5, hy - hr * .66, hr, hr * .13);
         // つばの縁
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .04); ells(hx, hy - hr * .5, hr * .95, hr * .17);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.04); ells(hx, hy - hr * .5, hr * .95, hr * .17);
         break;
       }
       case 'chullo': {
@@ -2868,13 +2872,13 @@ const ShiroLib = (() => {
         // 耳あて(両側に垂れる)
         ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .45); ctx.lineTo(hx - hr * .6, hy + hr * .3); ctx.lineTo(hx - hr * .45, hy + hr * .35); ctx.lineTo(hx - hr * .4, hy - hr * .45); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(hx + hr * .55, hy - hr * .45); ctx.lineTo(hx + hr * .6, hy + hr * .3); ctx.lineTo(hx + hr * .45, hy + hr * .35); ctx.lineTo(hx + hr * .4, hy - hr * .45); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 幾何学の縞(ダイヤ模様)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.2, hr * .05); ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .7); ctx.moveTo(hx - hr * .45, hy - hr * .7); ctx.lineTo(hx + hr * .45, hy - hr * .7); ctx.moveTo(hx - hr * .35, hy - hr * .9); ctx.moveTo(hx - hr * .35, hy - hr * .9); ctx.lineTo(hx + hr * .35, hy - hr * .9); ctx.stroke(); ctx.beginPath();
-        for (let i = 0; i < 5; i++) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05, 1.2); ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .7); ctx.moveTo(hx - hr * .45, hy - hr * .7); ctx.lineTo(hx + hr * .45, hy - hr * .7); ctx.moveTo(hx - hr * .35, hy - hr * .9); ctx.moveTo(hx - hr * .35, hy - hr * .9); ctx.lineTo(hx + hr * .35, hy - hr * .9); ctx.stroke(); ctx.beginPath();
+        times(5, i => {
           const dx = hx - hr * .36 + i * hr * .18; ctx.moveTo(dx, hy - hr * .85); ctx.moveTo(dx, hy - hr * .85); ctx.lineTo(dx + hr * .08, hy - hr * .75); ctx.lineTo(dx + hr * .16, hy - hr * .85);
-        }
+        });
         ctx.stroke();
         // 房ひも
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1.5, hr * .05); ctx.beginPath(); ctx.moveTo(hx - hr * .52, hy + hr * .32); ctx.lineTo(hx - hr * .55, hy + hr * .6); ctx.moveTo(hx + hr * .52, hy + hr * .32); ctx.lineTo(hx + hr * .55, hy + hr * .6); ctx.stroke(); ctx.fillStyle = dk; ctx.beginPath(); ctx.arc(hx - hr * .55, hy + hr * .62, hr * .07, 0, 7); ctx.arc(hx + hr * .55, hy + hr * .62, hr * .07, 0, 7); ctx.fill();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.05, 1.5); ctx.beginPath(); ctx.moveTo(hx - hr * .52, hy + hr * .32); ctx.lineTo(hx - hr * .55, hy + hr * .6); ctx.moveTo(hx + hr * .52, hy + hr * .32); ctx.lineTo(hx + hr * .55, hy + hr * .6); ctx.stroke(); ctx.fillStyle = dk; ctx.beginPath(); ctx.arc(hx - hr * .55, hy + hr * .62, hr * .07, 0, 7); ctx.arc(hx + hr * .55, hy + hr * .62, hr * .07, 0, 7); ctx.fill();
         break;
       }
       case 'pith': {
@@ -2885,7 +2889,7 @@ const ShiroLib = (() => {
         // 広い平つば
         ell(hx, hy - hr * .5, hr * .95, hr * .18);
         // つばの縁(やや下がり)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .04); ells(hx, hy - hr * .5, hr * .95, hr * .18);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.04); ells(hx, hy - hr * .5, hr * .95, hr * .18);
         // 帯
         ctx.fillStyle = dk; ctx.fillRect(hx - hr * .55, hy - hr * .62, hr * 1.1, hr * .14);
         // ドーム頂のボタン
@@ -2901,7 +2905,7 @@ const ShiroLib = (() => {
         // 水平のつば
         ctx.fillStyle = dk; ell(hx, hy - hr * .4, hr * .68, hr * .11);
         // 額の帯+側面の筋
-        ctx.fillRect(hx - hr * .58, hy - hr * .62, hr * 1.18, hr * .14); ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .04); ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .5); ctx.moveTo(hx - hr * .5, hy - hr * .5); ctx.lineTo(hx - hr * .44, hy - hr * .95); ctx.moveTo(hx + hr * .58, hy - hr * .5); ctx.moveTo(hx + hr * .58, hy - hr * .5); ctx.lineTo(hx + hr * .52, hy - hr * .95); ctx.stroke();
+        ctx.fillRect(hx - hr * .58, hy - hr * .62, hr * 1.18, hr * .14); ctx.strokeStyle = dk; ctx.lineWidth = LW(.04); ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .5); ctx.moveTo(hx - hr * .5, hy - hr * .5); ctx.lineTo(hx - hr * .44, hy - hr * .95); ctx.moveTo(hx + hr * .58, hy - hr * .5); ctx.moveTo(hx + hr * .58, hy - hr * .5); ctx.lineTo(hx + hr * .52, hy - hr * .95); ctx.stroke();
         break;
       }
       case 'pamela': {
@@ -2932,16 +2936,16 @@ const ShiroLib = (() => {
         // 黒い編み帯(つばとドームの境)
         ctx.strokeStyle = dk; ctx.lineWidth = hr * .1; ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .52); ctx.lineTo(hx + hr * .55, hy - hr * .52); ctx.stroke();
         // ジグザグ編み模様
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .045); ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.045); ctx.beginPath();
+        times(6, i => {
           const zx = hx - hr * .42 + i * hr * .15; ctx.moveTo(zx, hy - hr * .95); ctx.lineTo(zx + hr * .08, hy - hr * .7);
-        }
+        });
         ctx.stroke();
         // つばの編み文様
         ctx.beginPath();
-        for (let i = 0; i < 8; i++) {
+        times(8, i => {
           const zx = hx - hr * .85 + i * hr * .24; ctx.moveTo(zx, hy - hr * .55); ctx.lineTo(zx + hr * .12, hy - hr * .6);
-        }
+        });
         ctx.stroke();
         break;
       }
@@ -2953,7 +2957,7 @@ const ShiroLib = (() => {
         // 広いつば
         ctx.fillStyle = dk; ell(hx, hy - hr * .5, hr * .9, hr * .16);
         // 帯+バックル
-        ctx.fillStyle = dk; ctx.fillRect(hx - hr * .47, hy - hr * .75, hr * .94, hr * .16); ctx.strokeStyle = '#d0a030'; ctx.lineWidth = Math.max(1.2, hr * .05); ctx.strokeRect(hx - hr * .09, hy - hr * .78, hr * .18, hr * .22);
+        ctx.fillStyle = dk; ctx.fillRect(hx - hr * .47, hy - hr * .75, hr * .94, hr * .16); ctx.strokeStyle = '#d0a030'; ctx.lineWidth = LW(.05, 1.2); ctx.strokeRect(hx - hr * .09, hy - hr * .78, hr * .18, hr * .22);
         break;
       }
       case 'capirote': {
@@ -2964,7 +2968,7 @@ const ShiroLib = (() => {
         // 高い円錐
         ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .3); ctx.lineTo(hx, hy - hr * 1.9); ctx.lineTo(hx + hr * .45, hy - hr * .3); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 円錐の縁
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.2, hr * .05); ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .3); ctx.lineTo(hx, hy - hr * 1.9); ctx.lineTo(hx + hr * .45, hy - hr * .3); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05, 1.2); ctx.beginPath(); ctx.moveTo(hx - hr * .45, hy - hr * .3); ctx.lineTo(hx, hy - hr * 1.9); ctx.lineTo(hx + hr * .45, hy - hr * .3); ctx.stroke();
         // 目の孔
         ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.ellipse(hx - hr * .22, hy - hr * .05, hr * .09, hr * .12, 0, 0, 7); ctx.ellipse(hx + hr * .22, hy - hr * .05, hr * .09, hr * .12, 0, 0, 7); ctx.fill();
         break;
@@ -2977,7 +2981,7 @@ const ShiroLib = (() => {
         // 縁帯
         ctx.fillStyle = dk; ell(hx, hy - hr * .12, hr * .58, hr * .12);
         // 頂の十字文様
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.2, hr * .06); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .7); ctx.moveTo(hx, hy - hr * .7); ctx.lineTo(hx, hy - hr * .5); ctx.moveTo(hx - hr * .12, hy - hr * .6); ctx.moveTo(hx - hr * .12, hy - hr * .6); ctx.lineTo(hx + hr * .12, hy - hr * .6); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.06, 1.2); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .7); ctx.moveTo(hx, hy - hr * .7); ctx.lineTo(hx, hy - hr * .5); ctx.moveTo(hx - hr * .12, hy - hr * .6); ctx.moveTo(hx - hr * .12, hy - hr * .6); ctx.lineTo(hx + hr * .12, hy - hr * .6); ctx.stroke();
         // 四隅の点文様
         ctx.fillStyle = dk;
         for (const [ox, oy] of [[-.3, -.62], [.3, -.62], [-.35, -.35], [.35, -.35]]) {
@@ -2993,7 +2997,7 @@ const ShiroLib = (() => {
         // 翻った縁帯
         ctx.fillStyle = dk; ell(hx, hy - hr * .32, hr * .62, hr * .16);
         // 冠の装飾縫い筋
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.2, hr * .05); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .5); ctx.moveTo(hx, hy - hr * .5); ctx.lineTo(hx, hy - hr * 1.2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(hx - hr * .2, hy - hr * .48); ctx.moveTo(hx - hr * .2, hy - hr * .48); ctx.lineTo(hx - hr * .15, hy - hr * 1.18); ctx.moveTo(hx + hr * .2, hy - hr * .48); ctx.moveTo(hx + hr * .2, hy - hr * .48); ctx.lineTo(hx + hr * .15, hy - hr * 1.18); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05, 1.2); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .5); ctx.moveTo(hx, hy - hr * .5); ctx.lineTo(hx, hy - hr * 1.2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(hx - hr * .2, hy - hr * .48); ctx.moveTo(hx - hr * .2, hy - hr * .48); ctx.lineTo(hx - hr * .15, hy - hr * 1.18); ctx.moveTo(hx + hr * .2, hy - hr * .48); ctx.moveTo(hx + hr * .2, hy - hr * .48); ctx.lineTo(hx + hr * .15, hy - hr * 1.18); ctx.stroke();
         break;
       }
       case 'tagelmust': {
@@ -3006,14 +3010,14 @@ const ShiroLib = (() => {
         // 目の開口
         ctx.fillStyle = '#e8c8a8'; ell(hx, hy - hr * .12, hr * .5, hr * .1);
         // 巻き筋
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.2, hr * .05); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .4, hr * .72, hr * .5, 0, Math.PI * .9, Math.PI * 1.5); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05, 1.2); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .4, hr * .72, hr * .5, 0, Math.PI * .9, Math.PI * 1.5); ctx.stroke();
         break;
       }
       case 'caubeen': {
         // コービーン: アイルランドの帽 — 片側に傾く緑のベレー+羽根飾り
         ctx.save(); ctx.translate(hx, hy - hr * .55); ctx.rotate(-.18); ctx.fillStyle = acc2; ctx.beginPath(); ctx.ellipse(0, 0, hr * .72, hr * .42, 0, Math.PI, Math.PI * 2); ctx.lineTo(hr * .72, 0); ctx.quadraticCurveTo(0, hr * .18, -hr * .72, 0); ctx.closePath(); ctx.closePath(); ctx.fill(); // 左に傾ける
         // 中央の茎
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .07); ctx.beginPath(); ctx.moveTo(0, -hr * .4); ctx.moveTo(0, -hr * .4); ctx.lineTo(0, -hr * .58); ctx.stroke(); ctx.restore();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.07, 1.5); ctx.beginPath(); ctx.moveTo(0, -hr * .4); ctx.moveTo(0, -hr * .4); ctx.lineTo(0, -hr * .58); ctx.stroke(); ctx.restore();
         // 左側の羽根飾り
         ctx.fillStyle = dk; ell(hx - hr * .55, hy - hr * .75, hr * .09, hr * .38, .35);
         break;
@@ -3028,7 +3032,7 @@ const ShiroLib = (() => {
         // 後ろの長い垂れ(首を覆う)
         ctx.beginPath(); ctx.moveTo(hx - hr * .6, hy - hr * .3); ctx.quadraticCurveTo(hx - hr * .95, hy + hr * .3, hx - hr * .5, hy + hr * .8); ctx.lineTo(hx - hr * .15, hy + hr * .7); ctx.quadraticCurveTo(hx - hr * .5, hy + hr * .25, hx - hr * .25, hy - hr * .28); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 縁
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.2, hr * .06); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .55, hr * .6, hr * .5, 0, Math.PI * .05, Math.PI * .95); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.06, 1.2); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .55, hr * .6, hr * .5, 0, Math.PI * .05, Math.PI * .95); ctx.stroke();
         break;
       }
       case 'petasos': {
@@ -3039,9 +3043,9 @@ const ShiroLib = (() => {
         // 低い円錐冠
         ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .32); ctx.lineTo(hx, hy - hr * 1.1); ctx.lineTo(hx + hr * .5, hy - hr * .32); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 縁
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .08); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .3, hr * 1.15, hr * .25, 0, Math.PI * .05, Math.PI * .95); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.08, 1.5); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .3, hr * 1.15, hr * .25, 0, Math.PI * .05, Math.PI * .95); ctx.stroke();
         // 顎紐
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .05); ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .3); ctx.quadraticCurveTo(hx, hy + hr * 1.0, hx + hr * .5, hy - hr * .3); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05); ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .3); ctx.quadraticCurveTo(hx, hy + hr * 1.0, hx + hr * .5, hy - hr * .3); ctx.stroke();
         break;
       }
       case 'busby': {
@@ -3049,7 +3053,7 @@ const ShiroLib = (() => {
         // 本体: 頭より高い円柱
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .7, hr * .55, hr * .95, 0, Math.PI, Math.PI * 2); ctx.lineTo(hx + hr * .55, hy - hr * .2); ctx.quadraticCurveTo(hx, hy, hx - hr * .55, hy - hr * .2); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 裾の縁
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .08); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .2, hr * .55, hr * .1, 0, Math.PI * .05, Math.PI * .95); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.08, 1.5); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .2, hr * .55, hr * .1, 0, Math.PI * .05, Math.PI * .95); ctx.stroke();
         // 右側の羽根飾り
         ctx.fillStyle = dk; ell(hx + hr * .62, hy - hr * .6, hr * .12, hr * .4, -.15);
         break;
@@ -3064,10 +3068,10 @@ const ShiroLib = (() => {
         // 前立てのドーム
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .6, hr * .7, hr * .45, 0, Math.PI, Math.PI * 2); ctx.closePath(); ctx.closePath(); ctx.fill();
         // レースの縁飾り(点線)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .035);
-        for (const s of [1, .8]) {
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.035);
+        ([1, .8]).forEach(s => {
           ctx.beginPath(); ctx.ellipse(hx, hy - hr * (s === 1 ? 1.6 : 1.3), hr * .55 * s, hr * .4 * s, 0, Math.PI, Math.PI * 2); ctx.stroke();
-        }
+        });
         // 前面のリボン
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.15); ctx.lineTo(hx - hr * .15, hy - hr * 1.0); ctx.lineTo(hx, hy - hr * .85); ctx.lineTo(hx + hr * .15, hy - hr * 1.0); ctx.closePath(); ctx.closePath(); ctx.fill();
         break;
@@ -3077,7 +3081,7 @@ const ShiroLib = (() => {
         // 顎の帯
         ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.moveTo(hx - hr * .62, hy - hr * .3); ctx.quadraticCurveTo(hx - hr * .65, hy + hr * .6, hx, hy + hr * .75); ctx.quadraticCurveTo(hx + hr * .65, hy + hr * .6, hx + hr * .62, hy - hr * .3); ctx.lineTo(hx + hr * .5, hy - hr * .28); ctx.quadraticCurveTo(hx + hr * .52, hy + hr * .5, hx, hy + hr * .62); ctx.quadraticCurveTo(hx - hr * .52, hy + hr * .5, hx - hr * .5, hy - hr * .28); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 頭頂の輪(フィレット)
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(2, hr * .14); ells(hx, hy - hr * .62, hr * .7, hr * .25);
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.14, 2); ells(hx, hy - hr * .62, hr * .7, hr * .25);
         // 輪の飾り石
         ctx.fillStyle = dk; dot(hx,hy - hr * .85,hr * .06);
         break;
@@ -3086,7 +3090,7 @@ const ShiroLib = (() => {
         // アティフェ: ハート型にへこむ前立ての頭飾り(未亡人帽)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .6, hy - hr * .3); ctx.quadraticCurveTo(hx - hr * .7, hy - hr * 1.3, hx - hr * .3, hy - hr * 1.45); ctx.quadraticCurveTo(hx, hy - hr * 1.0, hx + hr * .3, hy - hr * 1.45); ctx.quadraticCurveTo(hx + hr * .7, hy - hr * 1.3, hx + hr * .6, hy - hr * .3); ctx.quadraticCurveTo(hx, hy - hr * .55, hx - hr * .6, hy - hr * .3); ctx.closePath(); ctx.closePath(); ctx.fill(); // 左の峰 // 中央の谷(ハート型) // 右の峰
         // 縁の飾り筋
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .05); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .38); ctx.quadraticCurveTo(hx, hy - hr * .62, hx + hr * .55, hy - hr * .38); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .38); ctx.quadraticCurveTo(hx, hy - hr * .62, hx + hr * .55, hy - hr * .38); ctx.stroke();
         // 谷の頂に小さな宝玉
         ctx.fillStyle = '#e8d8a0'; dot(hx,hy - hr * 1.05,hr * .06);
         break;
@@ -3100,7 +3104,7 @@ const ShiroLib = (() => {
         // ドームの頂の小突起
         ctx.fillStyle = dk; ctx.fillRect(hx - hr * .03, hy - hr * 1.18, hr * .06, hr * .1);
         // つばの縁
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.2, hr * .05); ells(hx, hy - hr * .5, hr * 1.15, hr * .28);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05, 1.2); ells(hx, hy - hr * .5, hr * 1.15, hr * .28);
         break;
       }
       case 'chaperon': {
@@ -3108,7 +3112,7 @@ const ShiroLib = (() => {
         // 顔の開口は evenodd で抜く
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .4, hr * .85, hr * .95, 0, Math.PI, Math.PI * 2); ctx.quadraticCurveTo(hx + hr * .7, hy + hr * .3, hx + hr * .4, hy + hr * .5); ctx.quadraticCurveTo(hx, hy + hr * .35, hx - hr * .4, hy + hr * .5); ctx.quadraticCurveTo(hx - hr * .7, hy + hr * .3, hx - hr * .85, hy - hr * .4); ctx.closePath(); ctx.ellipse(hx, hy + hr * .1, hr * .58, hr * .5, 0, 0, 7); ctx.fill('evenodd');
         // リリパイプ(肩に垂れる長い紐)
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(2, hr * .12); ctx.beginPath(); ctx.moveTo(hx + hr * .55, hy - hr * .1); ctx.quadraticCurveTo(hx + hr * .85, hy + hr * .6, hx + hr * .6, hy + hr * 1.3); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.12, 2); ctx.beginPath(); ctx.moveTo(hx + hr * .55, hy - hr * .1); ctx.quadraticCurveTo(hx + hr * .85, hy + hr * .6, hx + hr * .6, hy + hr * 1.3); ctx.stroke();
         break;
       }
       case 'hennin': {
@@ -3118,7 +3122,7 @@ const ShiroLib = (() => {
         // 円錐
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .55); ctx.lineTo(hx, hy - hr * 1.95); ctx.lineTo(hx + hr * .5, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 縁の帯
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .09); ctx.beginPath(); ctx.moveTo(hx - hr * .51, hy - hr * .56); ctx.lineTo(hx + hr * .51, hy - hr * .56); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.09, 1.5); ctx.beginPath(); ctx.moveTo(hx - hr * .51, hy - hr * .56); ctx.lineTo(hx + hr * .51, hy - hr * .56); ctx.stroke();
         // 先端の飾り
         ctx.fillStyle = '#e8d8a0'; dot(hx,hy - hr * 1.95,hr * .06);
         break;
@@ -3127,7 +3131,7 @@ const ShiroLib = (() => {
         // ココーシニク: 扇形に広がる高い頭飾り(ロシア)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .75, hy - hr * .5); ctx.quadraticCurveTo(hx - hr * .9, hy - hr * 1.9, hx, hy - hr * 2.0); ctx.quadraticCurveTo(hx + hr * .9, hy - hr * 1.9, hx + hr * .75, hy - hr * .5); ctx.quadraticCurveTo(hx, hy - hr * .95, hx - hr * .75, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 縁の装飾線
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .05); ctx.beginPath(); ctx.moveTo(hx - hr * .68, hy - hr * .62); ctx.quadraticCurveTo(hx, hy - hr * .98, hx + hr * .68, hy - hr * .62); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05); ctx.beginPath(); ctx.moveTo(hx - hr * .68, hy - hr * .62); ctx.quadraticCurveTo(hx, hy - hr * .98, hx + hr * .68, hy - hr * .62); ctx.stroke();
         // 珠の列
         ctx.fillStyle = '#e8d8a0';
         for (let i = -3; i <= 3; i++) {
@@ -3139,28 +3143,28 @@ const ShiroLib = (() => {
         // ビレッタ帽: 四角い天辺+3つの稜線+頂の房(聖職者帽)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .55); ctx.lineTo(hx - hr * .45, hy - hr * 1.05); ctx.lineTo(hx + hr * .45, hy - hr * 1.05); ctx.lineTo(hx + hr * .55, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill(); // 縁 // 左上 // 右上
         // 3つの稜線(立体的な峰)
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .045);
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.045);
         for (let i = -1; i <= 1; i++) {
           const rx = hx + i * hr * .35; ctx.beginPath(); ctx.moveTo(rx, hy - hr * 1.05); ctx.lineTo(rx + i * hr * .08, hy - hr * 1.3); ctx.stroke();
         }
         // 頂の房
         ctx.fillStyle = dk; dot(hx,hy - hr * 1.34,hr * .07);
         // 縁の帯
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1.5, hr * .1); ctx.beginPath(); ctx.moveTo(hx - hr * .56, hy - hr * .58); ctx.lineTo(hx + hr * .56, hy - hr * .58); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.1, 1.5); ctx.beginPath(); ctx.moveTo(hx - hr * .56, hy - hr * .58); ctx.lineTo(hx + hr * .56, hy - hr * .58); ctx.stroke();
         break;
       }
       case 'calot': {
         // カロット帽(船形帽): 片側に傾けた兵隊の室内帽
         ctx.save(); ctx.translate(hx, hy - hr * .85); ctx.rotate(-.28); ctx.fillStyle = acc2; ell(0, 0, hr * .78, hr * .32); // 右に傾ける
         // 折り返しの縁
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.2, hr * .07); ctx.beginPath(); ctx.ellipse(0, 0, hr * .78, hr * .32, 0, Math.PI * .05, Math.PI * .95); ctx.stroke(); ctx.restore();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.07, 1.2); ctx.beginPath(); ctx.ellipse(0, 0, hr * .78, hr * .32, 0, Math.PI * .05, Math.PI * .95); ctx.stroke(); ctx.restore();
         break;
       }
       case 'phrygian': {
         // フリジア帽: 前方に垂れる柔らかい円錐+帯(自由の帽)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .7, hy - hr * .55); ctx.quadraticCurveTo(hx - hr * .55, hy - hr * 1.6, hx + hr * .2, hy - hr * 1.7); ctx.quadraticCurveTo(hx + hr * .9, hy - hr * 1.75, hx + hr * .95, hy - hr * 1.15); ctx.quadraticCurveTo(hx + hr * .7, hy - hr * 1.35, hx + hr * .4, hy - hr * 1.15); ctx.quadraticCurveTo(hx + hr * .75, hy - hr * .95, hx + hr * .7, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill(); // 先端が前に垂れる
         // 帯
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .09); ctx.beginPath(); ctx.moveTo(hx - hr * .71, hy - hr * .6); ctx.lineTo(hx + hr * .71, hy - hr * .6); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.09, 1.5); ctx.beginPath(); ctx.moveTo(hx - hr * .71, hy - hr * .6); ctx.lineTo(hx + hr * .71, hy - hr * .6); ctx.stroke();
         // 帽章(小さな円)
         ctx.fillStyle = '#e8c860'; dot(hx + hr * .3,hy - hr * .85,hr * .08);
         break;
@@ -3175,20 +3179,20 @@ const ShiroLib = (() => {
           ctx.beginPath(); ctx.moveTo(hx + hr * .5 + i * hr * .2, hy - hr * .9); ctx.lineTo(hx + hr * .5 + i * hr * .2, hy + hr * .1); ctx.stroke(); ctx.beginPath(); ctx.moveTo(hx, hy - hr * .35 + i * hr * .18); ctx.lineTo(hx + hr, hy - hr * .35 + i * hr * .18); ctx.stroke();
         }
         // 頭の帯
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1.5, hr * .1); ctx.beginPath(); ctx.moveTo(hx - hr * .9, hy - hr * .45); ctx.quadraticCurveTo(hx, hy - hr * 1.15, hx + hr * .9, hy - hr * .45); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.1, 1.5); ctx.beginPath(); ctx.moveTo(hx - hr * .9, hy - hr * .45); ctx.quadraticCurveTo(hx, hy - hr * 1.15, hx + hr * .9, hy - hr * .45); ctx.stroke();
         break;
       }
       case 'mitre': {
         // 司教冠: 高い双頭の冠+帯+垂れるリボン(ラペット)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .55); ctx.lineTo(hx - hr * .55, hy - hr * 1.1); ctx.quadraticCurveTo(hx - hr * .5, hy - hr * 1.75, hx, hy - hr * 1.85); ctx.quadraticCurveTo(hx + hr * .5, hy - hr * 1.75, hx + hr * .55, hy - hr * 1.1); ctx.lineTo(hx + hr * .55, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 冠の割れ目
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .05); ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.82); ctx.lineTo(hx, hy - hr * 1.1); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05); ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.82); ctx.lineTo(hx, hy - hr * 1.1); ctx.stroke();
         // 帯
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .1); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .62); ctx.lineTo(hx + hr * .55, hy - hr * .62); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.1, 1.5); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .62); ctx.lineTo(hx + hr * .55, hy - hr * .62); ctx.stroke();
         // 帯の宝石
         ctx.fillStyle = '#e8c860'; dot(hx,hy - hr * .62,hr * .07);
         // ラペット(後ろに垂れる2本)
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1.5, hr * .09); ctx.beginPath(); ctx.moveTo(hx - hr * .2, hy - hr * 1.6); ctx.quadraticCurveTo(hx - hr * .35, hy - hr * .4, hx - hr * .3, hy + hr * .2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(hx + hr * .2, hy - hr * 1.6); ctx.quadraticCurveTo(hx + hr * .35, hy - hr * .4, hx + hr * .3, hy + hr * .2); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.09, 1.5); ctx.beginPath(); ctx.moveTo(hx - hr * .2, hy - hr * 1.6); ctx.quadraticCurveTo(hx - hr * .35, hy - hr * .4, hx - hr * .3, hy + hr * .2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(hx + hr * .2, hy - hr * 1.6); ctx.quadraticCurveTo(hx + hr * .35, hy - hr * .4, hx + hr * .3, hy + hr * .2); ctx.stroke();
         break;
       }
       case 'cowboy': {
@@ -3196,9 +3200,9 @@ const ShiroLib = (() => {
         // つば(両端カール)
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * 1.45, hy - hr * .55); ctx.quadraticCurveTo(hx - hr * .7, hy - hr * .95, hx, hy - hr * .9); ctx.quadraticCurveTo(hx + hr * .7, hy - hr * .95, hx + hr * 1.45, hy - hr * .55); ctx.quadraticCurveTo(hx + hr * .9, hy - hr * .65, hx, hy - hr * .6); ctx.quadraticCurveTo(hx - hr * .9, hy - hr * .65, hx - hr * 1.45, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 冠(中央のへこみ)
-        ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .75); ctx.quadraticCurveTo(hx - hr * .45, hy - hr * 1.5, hx, hy - hr * 1.5); ctx.quadraticCurveTo(hx + hr * .45, hy - hr * 1.5, hx + hr * .55, hy - hr * .75); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .05); ctx.beginPath(); ctx.moveTo(hx - hr * .15, hy - hr * 1.5); ctx.quadraticCurveTo(hx, hy - hr * 1.6, hx + hr * .15, hy - hr * 1.5); ctx.stroke(); // へこみ筋
+        ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .75); ctx.quadraticCurveTo(hx - hr * .45, hy - hr * 1.5, hx, hy - hr * 1.5); ctx.quadraticCurveTo(hx + hr * .45, hy - hr * 1.5, hx + hr * .55, hy - hr * .75); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.strokeStyle = dk; ctx.lineWidth = LW(.05); ctx.beginPath(); ctx.moveTo(hx - hr * .15, hy - hr * 1.5); ctx.quadraticCurveTo(hx, hy - hr * 1.6, hx + hr * .15, hy - hr * 1.5); ctx.stroke(); // へこみ筋
         // 帯
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1.5, hr * .09); ctx.beginPath(); ctx.moveTo(hx - hr * .56, hy - hr * .82); ctx.lineTo(hx + hr * .56, hy - hr * .82); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.09, 1.5); ctx.beginPath(); ctx.moveTo(hx - hr * .56, hy - hr * .82); ctx.lineTo(hx + hr * .56, hy - hr * .82); ctx.stroke();
         break;
       }
       case 'eboshi': {
@@ -3209,7 +3213,7 @@ const ShiroLib = (() => {
         // 尾(後ろへ水平に突き出す)
         ctx.beginPath(); ctx.moveTo(hx + hr * .5, hy - hr * 1.6); ctx.quadraticCurveTo(hx + hr * 1.5, hy - hr * 1.55, hx + hr * 1.7, hy - hr * 1.2); ctx.quadraticCurveTo(hx + hr * 1.2, hy - hr * 1.25, hx + hr * .58, hy - hr * 1.05); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 顎紐
-        ctx.strokeStyle = '#181a20'; ctx.lineWidth = Math.max(1, hr * .04); ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .55); ctx.quadraticCurveTo(hx, hy + hr * .9, hx + hr * .5, hy - hr * .55); ctx.stroke();
+        ctx.strokeStyle = '#181a20'; ctx.lineWidth = LW(.04); ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .55); ctx.quadraticCurveTo(hx, hy + hr * .9, hx + hr * .5, hy - hr * .55); ctx.stroke();
         break;
       }
       case 'topknot': {
@@ -3224,9 +3228,9 @@ const ShiroLib = (() => {
       }
       case 'kippah': {
         // キッパ: 頭頂に乗る小さな半円帽+縁取り
-        ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .72); ctx.quadraticCurveTo(hx, hy - hr * 1.45, hx + hr * .55, hy - hr * .72); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .05); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .72); ctx.quadraticCurveTo(hx, hy - hr * 1.45, hx + hr * .55, hy - hr * .72); ctx.stroke();
+        ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .72); ctx.quadraticCurveTo(hx, hy - hr * 1.45, hx + hr * .55, hy - hr * .72); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.strokeStyle = dk; ctx.lineWidth = LW(.05); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .72); ctx.quadraticCurveTo(hx, hy - hr * 1.45, hx + hr * .55, hy - hr * .72); ctx.stroke();
         // 縁の帯
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .07); ctx.beginPath(); ctx.moveTo(hx - hr * .56, hy - hr * .73); ctx.lineTo(hx + hr * .56, hy - hr * .73); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.07); ctx.beginPath(); ctx.moveTo(hx - hr * .56, hy - hr * .73); ctx.lineTo(hx + hr * .56, hy - hr * .73); ctx.stroke();
         break;
       }
       case 'coif': {
@@ -3235,7 +3239,7 @@ const ShiroLib = (() => {
         // 顔の開口部(偶奇規則で抜く)
         ctx.ellipse(hx, hy + hr * .15, hr * .62, hr * .68, 0, 0, 7); ctx.fill('evenodd');
         // 顎下の結び紐
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1, hr * .06); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy + hr * .8); ctx.quadraticCurveTo(hx, hy + hr * 1.05, hx + hr * .55, hy + hr * .8); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.06); ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy + hr * .8); ctx.quadraticCurveTo(hx, hy + hr * 1.05, hx + hr * .55, hy + hr * .8); ctx.stroke();
         break;
       }
       case 'mantilla': {
@@ -3246,7 +3250,7 @@ const ShiroLib = (() => {
         for (let i = -3; i <= 3; i++) {
           ctx.moveTo(hx + i * hr * .16, hy - hr * .9); ctx.lineTo(hx + i * hr * .28, hy - hr * 1.55);
         }
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(1, hr * .05); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.05); ctx.stroke();
         // 櫛の上縁アーチ
         ctx.beginPath(); ctx.moveTo(hx - hr * .9, hy - hr * 1.5); ctx.quadraticCurveTo(hx, hy - hr * 2, hx + hr * .9, hy - hr * 1.5); ctx.stroke();
         // レースのベール(顔の後ろに垂れる)
@@ -3259,7 +3263,7 @@ const ShiroLib = (() => {
         // 菅笠: 円錐の編み笠+顎紐
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx - hr * 1.15, hy - hr * .55); ctx.lineTo(hx, hy - hr * 1.6); ctx.lineTo(hx + hr * 1.15, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 放射状の編み筋
-        ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = Math.max(1, hr * .035);
+        ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = LW(.035);
         for (let i = -4; i <= 4; i++) {
           ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.6); ctx.lineTo(hx + i * hr * .28, hy - hr * .55); ctx.stroke();
         }
@@ -3268,7 +3272,7 @@ const ShiroLib = (() => {
           ctx.beginPath(); ctx.ellipse(hx, hy - hr * (1.6 - i * .3), hr * .95 * i / 3.5, hr * .08, 0, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
         }
         // 顎紐
-        ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .05); ctx.beginPath(); ctx.moveTo(hx - hr * .6, hy - hr * .5); ctx.quadraticCurveTo(hx, hy + hr * 1.1, hx + hr * .6, hy - hr * .5); ctx.stroke();
+        ctx.strokeStyle = dk; ctx.lineWidth = LW(.05); ctx.beginPath(); ctx.moveTo(hx - hr * .6, hy - hr * .5); ctx.quadraticCurveTo(hx, hy + hr * 1.1, hx + hr * .6, hy - hr * .5); ctx.stroke();
         break;
       }
       case 'crown2': {
@@ -3277,7 +3281,7 @@ const ShiroLib = (() => {
         // 帯(額に沿う)
         ctx.beginPath(); ctx.ellipse(hx, hy - hr * .78, hr * .68, hr * .16, 0, Math.PI, 0); ctx.ellipse(hx, hy - hr * .78, hr * .68, hr * .16, 0, Math.PI, 0); ctx.fill();
         // 2本のアーチ(頭の後ろで交差)
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(2, hr * .09); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .75); ctx.quadraticCurveTo(hx - hr * .3, hy - hr * 1.8, hx, hy - hr * 1.85); ctx.stroke(); ctx.beginPath(); ctx.moveTo(hx + hr * .55, hy - hr * .75); ctx.quadraticCurveTo(hx + hr * .3, hy - hr * 1.8, hx, hy - hr * 1.85); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.09, 2); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx - hr * .55, hy - hr * .75); ctx.quadraticCurveTo(hx - hr * .3, hy - hr * 1.8, hx, hy - hr * 1.85); ctx.stroke(); ctx.beginPath(); ctx.moveTo(hx + hr * .55, hy - hr * .75); ctx.quadraticCurveTo(hx + hr * .3, hy - hr * 1.8, hx, hy - hr * 1.85); ctx.stroke();
         // 頂の玉+帯の宝石
         ctx.fillStyle = '#d8c050'; dot(hx,hy - hr * 1.85,hr * .1); ctx.fillStyle = '#c04060'; dot(hx,hy - hr * .78,hr * .09);
         break;
@@ -3288,7 +3292,7 @@ const ShiroLib = (() => {
         // 折り返し(帯)
         ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .62, hr * .74, hr * .16, 0, 0, 7); ctx.ellipse(hx, hy - hr * .62, hr * .74, hr * .16, 0, 0, 7); ctx.fill();
         // 編み目の縦筋
-        ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = Math.max(1, hr * .03);
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = LW(.03);
         for (let i = -3; i <= 3; i++) {
           ctx.beginPath(); ctx.moveTo(hx + i * hr * .18, hy - hr * 1.25); ctx.quadraticCurveTo(hx + i * hr * .2, hy - hr * .95, hx + i * hr * .2, hy - hr * .68); ctx.stroke();
         }
@@ -3302,7 +3306,7 @@ const ShiroLib = (() => {
         // 四角い板(斜めに置いた正方形)
         ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.55); ctx.lineTo(hx + hr * 1.05, hy - hr * 1.05); ctx.lineTo(hx, hy - hr * .55); ctx.lineTo(hx - hr * 1.05, hy - hr * 1.05); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 房(右上から垂れる)
-        ctx.strokeStyle = '#d8b040'; ctx.lineWidth = Math.max(1.5, hr * .06); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx + hr * .5, hy - hr * 1.05); ctx.quadraticCurveTo(hx + hr * .85, hy - hr * .5, hx + hr * .8, hy - hr * .1); ctx.stroke(); ctx.fillStyle = '#d8b040'; dot(hx + hr * .8,hy - hr * .05,hr * .1);
+        ctx.strokeStyle = '#d8b040'; ctx.lineWidth = LW(.06, 1.5); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx + hr * .5, hy - hr * 1.05); ctx.quadraticCurveTo(hx + hr * .85, hy - hr * .5, hx + hr * .8, hy - hr * .1); ctx.stroke(); ctx.fillStyle = '#d8b040'; dot(hx + hr * .8,hy - hr * .05,hr * .1);
         break;
       }
       case 'bicorne': {
@@ -3342,10 +3346,10 @@ const ShiroLib = (() => {
         // 縁の帯
         ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .7, hr * .9, hr * .12, .06, 0, Math.PI); ctx.ellipse(hx, hy - hr * .7, hr * .9, hr * .12, .06, 0, Math.PI); ctx.fill();
         // 中央の房
-        ctx.fillStyle = dk; dot(hx,hy - hr * 1.25,hr * .12); ctx.strokeStyle = dk; ctx.lineWidth = Math.max(1, hr * .04); ctx.lineCap = 'round';
-        for (let i = 0; i < 5; i++) {
+        ctx.fillStyle = dk; dot(hx,hy - hr * 1.25,hr * .12); ctx.strokeStyle = dk; ctx.lineWidth = LW(.04); ctx.lineCap = 'round';
+        times(5, i => {
           const a = i * 1.256; ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.25); ctx.lineTo(hx + Math.cos(a) * hr * .18, hy - hr * 1.25 + Math.sin(a) * hr * .18); ctx.stroke();
-        }
+        });
         break;
       }
       case 'sailor': {
@@ -3369,7 +3373,7 @@ const ShiroLib = (() => {
           ctx.beginPath(); ctx.moveTo(hx + i * hr * .3, hy - hr * 1.1); ctx.lineTo(hx + i * hr * .3, hy - hr * .3); ctx.stroke();
         }
         // アガール(2重の黒い輪)
-        ctx.strokeStyle = '#2a2a2e'; ctx.lineWidth = Math.max(2, hr * .07); ctx.beginPath(); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .72, hr * .68, hr * .22, 0, Math.PI, 0); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .72, hr * .68, hr * .22, 0, Math.PI, 0); ctx.stroke(); ctx.beginPath(); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .62, hr * .7, hr * .22, 0, Math.PI, 0); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .62, hr * .7, hr * .22, 0, Math.PI, 0); ctx.stroke();
+        ctx.strokeStyle = '#2a2a2e'; ctx.lineWidth = LW(.07, 2); ctx.beginPath(); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .72, hr * .68, hr * .22, 0, Math.PI, 0); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .72, hr * .68, hr * .22, 0, Math.PI, 0); ctx.stroke(); ctx.beginPath(); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .62, hr * .7, hr * .22, 0, Math.PI, 0); ctx.beginPath(); ctx.ellipse(hx, hy - hr * .62, hr * .7, hr * .22, 0, Math.PI, 0); ctx.stroke();
         break;
       }
       case 'sunvisor': {
@@ -3386,11 +3390,11 @@ const ShiroLib = (() => {
         // ふっくら冠
         ctx.beginPath(); ctx.ellipse(hx, hy - hr * .68, hr * .62, hr * .4, 0, Math.PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill();
         // フリル縁(連なる半円)
-        for (let i = 0; i < 9; i++) {
+        times(9, i => {
           const fa = Math.PI + (i / 8) * Math.PI; const fx = hx + Math.cos(fa) * hr * .68; const fy = hy - hr * .68 + Math.sin(fa) * hr * .42; dot(fx,fy,hr * .11);
-        }
+        });
         // 後ろのリボン
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(2, hr * .06); ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .5); ctx.quadraticCurveTo(hx - hr * .8, hy - hr * .2, hx - hr * .7, hy + hr * .2); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.06, 2); ctx.beginPath(); ctx.moveTo(hx - hr * .5, hy - hr * .5); ctx.quadraticCurveTo(hx - hr * .8, hy - hr * .2, hx - hr * .7, hy + hr * .2); ctx.stroke();
         break;
       }
       case 'bonnet': {
@@ -3401,7 +3405,7 @@ const ShiroLib = (() => {
         // 深い日除けつば(前に大きく張り出す)
         ctx.beginPath(); ctx.ellipse(hx + hr * .15, hy - hr * .55, hr * 1.05, hr * .4, -.15, Math.PI * .95, Math.PI * 1.95); ctx.lineTo(hx - hr * .55, hy - hr * .45); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 顎下のリボン
-        ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(2, hr * .06); ctx.beginPath(); ctx.moveTo(hx - hr * .6, hy - hr * .4); ctx.quadraticCurveTo(hx, hy + hr * .6, hx + hr * .6, hy - hr * .4); ctx.stroke();
+        ctx.strokeStyle = acc2; ctx.lineWidth = LW(.06, 2); ctx.beginPath(); ctx.moveTo(hx - hr * .6, hy - hr * .4); ctx.quadraticCurveTo(hx, hy + hr * .6, hx + hr * .6, hy - hr * .4); ctx.stroke();
         // リボン結び目
         ctx.fillStyle = dk; dot(hx,hy + hr * .55,hr * .09);
         break;
@@ -3412,9 +3416,9 @@ const ShiroLib = (() => {
         // ドーム
         ctx.beginPath(); ctx.ellipse(hx, hy - hr * .65, hr * .72, hr * .42, 0, Math.PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 前後のつば
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ell(hx + s * hr * .55, hy - hr * .52, hr * .35, hr * .12, s * .3);
-        }
+        });
         // 頭頂の結び目
         ctx.fillStyle = '#6a5a42'; ell(hx, hy - hr * 1.02, hr * .16, hr * .09); dot(hx,hy - hr * .98,hr * .06);
         // 側面の耳当て筋
@@ -3448,35 +3452,35 @@ const ShiroLib = (() => {
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .88, hr * .4, hr * .18, 0, Math.PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 布(半透明、左右に垂れる)
         ctx.fillStyle = acc2.replace(/,[\d.]+\)$/, ',0.35)');
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .1, hy - hr * .8);
           ctx.quadraticCurveTo(hx + s * hr * .95, hy - hr * .3,
             hx + s * hr * .75, hy + hr * 1.2);
           ctx.lineTo(hx + s * hr * .45, hy + hr * 1.2); ctx.quadraticCurveTo(hx + s * hr * .55, hy - hr * .3, hx, hy - hr * .7); ctx.closePath(); ctx.closePath(); ctx.fill();
-        }
+        });
         break;
       }
       case 'plume': {
         // 羽飾り: 帯+立つ羽根2本(羽軸と羽枝)
         ctx.fillStyle = dk; ctx.fillRect(hx - hr * .8, hy - hr * .8, hr * 1.6, hr * .16);
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           const fbx = hx + s * hr * .15, fby = hy - hr * .8;
           // 羽軸
-          ctx.strokeStyle = acc2; ctx.lineWidth = Math.max(2, hr * .05); ctx.beginPath(); ctx.moveTo(fbx, fby); ctx.quadraticCurveTo(fbx + s * hr * .3, fby - hr * .8, fbx + s * hr * .5, fby - hr * 1.05); ctx.stroke();
+          ctx.strokeStyle = acc2; ctx.lineWidth = LW(.05, 2); ctx.beginPath(); ctx.moveTo(fbx, fby); ctx.quadraticCurveTo(fbx + s * hr * .3, fby - hr * .8, fbx + s * hr * .5, fby - hr * 1.05); ctx.stroke();
           // 羽枝(楕円の塊)
           ctx.fillStyle = acc2; ell(fbx + s * hr * .35, fby - hr * .7, hr * .14, hr * .42, s * .4);
           // 先端の色違い
           ctx.fillStyle = '#e8d058'; ell(fbx + s * hr * .48, fby - hr * 1.0, hr * .09, hr * .14, s * .4);
-        }
+        });
         break;
       }
       case 'matador': {
         // 闘牛士帽(モンテラ): 黒い帽子+両サイドの膨らみ
         ctx.fillStyle = '#241f26';
         // 両サイドの耳状の膨らみ
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ell(hx + s * hr * .75, hy - hr * .75, hr * .32, hr * .38, s * .25);
-        }
+        });
         // 中央の冠部
         ctx.beginPath(); ctx.ellipse(hx, hy - hr * .85, hr * .5, hr * .28, 0, Math.PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 縁取り(銀の筋)
@@ -3487,10 +3491,10 @@ const ShiroLib = (() => {
         // ターバン: 巻いた布(重なる帯)+前の宝石
         ctx.fillStyle = acc2; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .68, hr * .82, hr * .5, 0, Math.PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 巻き筋(斜めの帯)
-        ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = Math.max(2, hr * .07);
-        for (let i = 0; i < 3; i++) {
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = LW(.07, 2);
+        times(3, i => {
           ctx.beginPath(); ctx.moveTo(hx - hr * .75, hy - hr * (.55 + i * .18)); ctx.quadraticCurveTo(hx, hy - hr * (.8 + i * .18), hx + hr * .75, hy - hr * (.6 + i * .18)); ctx.stroke();
-        }
+        });
         // 前の宝石(縦長+枠)
         ctx.fillStyle = '#e8d058'; ctx.beginPath(); ctx.moveTo(hx, hy - hr * .95); ctx.moveTo(hx, hy - hr * .95); ctx.lineTo(hx + hr * .1, hy - hr * .75); ctx.lineTo(hx, hy - hr * .6); ctx.lineTo(hx, hy - hr * .6); ctx.lineTo(hx - hr * .1, hy - hr * .75); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#d04060'; dot(hx,hy - hr * .78,hr * .06);
         break;
@@ -3513,9 +3517,9 @@ const ShiroLib = (() => {
         ctx.fillStyle = '#6a5a48'; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .62, hr * .8, hr * .48, 0, Math.PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill();
         // パネル線
         ctx.strokeStyle = '#554838'; ctx.lineWidth = 2;
-        for (const dx of [-.4, 0, .4]) {
+        ([-.4, 0, .4]).forEach(dx => {
           ctx.beginPath(); ctx.moveTo(hx + dx * hr, hy - hr * .95); ctx.quadraticCurveTo(hx + dx * hr * 1.3, hy - hr * .75, hx + dx * hr * 1.6, hy - hr * .62); ctx.stroke();
-        }
+        });
         // つば
         ctx.fillStyle = '#554838'; ell(hx + hr * .15, hy - hr * .58, hr * .7, hr * .14, .08);
         // 頂ボタン
@@ -3544,22 +3548,22 @@ const ShiroLib = (() => {
       }
       case 'flowercrown': {
         // 花冠: 頭を取り巻く小さな花の輪+緑の葉
-        for (let i = 0; i < 9; i++) {
+        times(9, i => {
           const a = Math.PI * (1.08 + i * .105); const fx = hx + Math.cos(a) * hr * .82; const fy = hy - hr * .5 + Math.sin(a) * hr * .42;
           // 葉
           ctx.fillStyle = '#5a8a4a'; ell(fx + hr * .06, fy + hr * .05, hr * .07, hr * .03, .5);
           // 花(5弁+中心)
           ctx.fillStyle = ['#f090a8', '#f5c8d5', '#e8e0a0'][i % 3];
-          for (let p = 0; p < 5; p++) {
+          times(5, p => {
             const pa = p / 5 * Math.PI * 2; ell(fx + Math.cos(pa) * hr * .05, fy + Math.sin(pa) * hr * .05, hr * .045, hr * .028, pa);
-          }
+          });
           ctx.fillStyle = '#e8c840'; dot(fx,fy,hr * .03);
-        }
+        });
         break;
       }
       case 'tiara': {
         // ティアラ: 額の細い帯+3つの尖り+中央の宝石
-        ctx.strokeStyle = '#e8d058'; ctx.lineWidth = Math.max(2, hr * .06); ctx.beginPath(); ctx.arc(hx, hy - hr * .5, hr * .75, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+        ctx.strokeStyle = '#e8d058'; ctx.lineWidth = LW(.06, 2); ctx.beginPath(); ctx.arc(hx, hy - hr * .5, hr * .75, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
         for (const [dx, s] of [[-hr * .45, .7], [0, 1], [hr * .45, .7]]) {
           ctx.fillStyle = '#e8d058'; ctx.beginPath(); ctx.moveTo(hx + dx - hr * .09, hy - hr * .62); ctx.lineTo(hx + dx, hy - hr * (.62 + .3 * s)); ctx.lineTo(hx + dx + hr * .09, hy - hr * .62); ctx.closePath(); ctx.closePath(); ctx.fill();
         }
@@ -3573,11 +3577,11 @@ const ShiroLib = (() => {
         // 帽子本体(前半円)
         ctx.beginPath(); ctx.arc(hx, hy - hr * .55, hr * .8, Math.PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 3本の尖り
-        for (const dx of [-hr * .75, 0, hr * .75]) {
+        ([-hr * .75, 0, hr * .75]).forEach(dx => {
           const tipX = hx + dx * 1.6, tipY = hy - hr * (dx === 0 ? 1.5 : 1.1); ctx.beginPath(); ctx.moveTo(hx + dx * .9, hy - hr * .6); ctx.quadraticCurveTo(hx + dx * 1.2, hy - hr * 1.1, tipX, tipY); ctx.quadraticCurveTo(hx + dx * .7, hy - hr * 1.0, hx + dx * .5, hy - hr * .55); ctx.closePath(); ctx.closePath(); ctx.fill();
           // 鈴
           ctx.fillStyle = '#e8d058'; dot(tipX,tipY,hr * .09); ctx.fillStyle = acc2;
-        }
+        });
         // 帯
         ctx.fillStyle = dk; ctx.fillRect(hx - hr * .8, hy - hr * .65, hr * 1.6, hr * .16);
         break;
@@ -3595,11 +3599,11 @@ const ShiroLib = (() => {
       case 'laurel': {
         // 月桂冠: 左右から頭を囲む葉の輪
         ctx.fillStyle = '#4a7a3a';
-        for (const s of [-1, 1]) {
-          for (let i = 0; i < 6; i++) {
+        ([-1, 1]).forEach(s => {
+          times(6, i => {
             const a = Math.PI * (1.15 + i * .14); const lx = hx + Math.cos(a) * hr * .95 * s; const ly = hy - Math.abs(Math.sin(a)) * hr * 1.05 + hr * .1; ctx.save(); ctx.translate(lx, ly); ctx.rotate(s * (.5 - i * .15)); ell(0,0,hr * .14,hr * .05); ctx.restore();
-          }
-        }
+          });
+        });
         break;
       }
       case 'ushanka': {
@@ -3609,9 +3613,9 @@ const ShiroLib = (() => {
         ctx.fillStyle = '#a8988a'; ctx.beginPath(); ctx.ellipse(hx, hy - hr * .68, hr * .9, hr * .28, 0, Math.PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 耳の垂れ(両サイド)
         ctx.fillStyle = '#8a7a68';
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ell(hx + s * hr * .82, hy - hr * .1, hr * .22, hr * .5);
-        }
+        });
         break;
       }
       case 'sombrero': {
@@ -3633,26 +3637,26 @@ const ShiroLib = (() => {
         ctx.fillStyle = '#6a7080'; ctx.beginPath(); ctx.arc(hx, hy - hr * .6, hr * .85, Math.PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#8a92a2'; ctx.fillRect(hx - hr * .12, hy - hr * 1.45, hr * .24, hr * .9);
         // 角(外へ湾曲)
         ctx.fillStyle = 'rgba(235,225,200,0.95)';
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .8, hy - hr * .75); ctx.quadraticCurveTo(hx + s * hr * 1.6, hy - hr * 1.1, hx + s * hr * 1.45, hy - hr * 1.8); ctx.quadraticCurveTo(hx + s * hr * 1.15, hy - hr * 1.15, hx + s * hr * .65, hy - hr * .95); ctx.closePath(); ctx.closePath(); ctx.fill();
-        }
+        });
         break;
       }
       case 'bowtie': {
         // 蝶ネクタイ: あご下の左右三角+中央結び目
         const by = hy + hr * 1.15; ctx.fillStyle = acc2;
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx, by); ctx.lineTo(hx + s * hr * .55, by - hr * .28); ctx.lineTo(hx + s * hr * .55, by + hr * .28); ctx.closePath(); ctx.closePath(); ctx.fill();
-        }
+        });
         ctx.fillStyle = dk; dot(hx,by,hr * .12);
         break;
       }
       case 'antler': {
         // トナカイの角: 左右に分岐する枝角
         ctx.strokeStyle = '#8a6a48'; ctx.lineWidth = hr * .12; ctx.lineCap = 'round';
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .4, hy - hr * .7); ctx.quadraticCurveTo(hx + s * hr * .7, hy - hr * 1.3, hx + s * hr * 1.1, hy - hr * 1.7); ctx.stroke(); ctx.lineWidth = hr * .08; ctx.beginPath(); ctx.moveTo(hx + s * hr * .62, hy - hr * 1.15); ctx.lineTo(hx + s * hr * .5, hy - hr * 1.55); ctx.stroke(); ctx.beginPath(); ctx.moveTo(hx + s * hr * .9, hy - hr * 1.45); ctx.lineTo(hx + s * hr * 1.05, hy - hr * 1.9); ctx.stroke(); ctx.lineWidth = hr * .12;
-        }
+        });
         break;
       }
       case 'headband': {
@@ -3678,9 +3682,9 @@ const ShiroLib = (() => {
         // コック帽: ふくらんだ白い頭頂+帯
         ctx.fillStyle = 'rgba(240,242,246,0.97)'; ctx.beginPath(); ctx.ellipse(hx, hy - hr * 1.25, hr * .78, hr * .55, 0, Math.PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 頭頂の3つの膨らみ
-        for (const dx of [-.45, 0, .45]) {
+        ([-.45, 0, .45]).forEach(dx => {
           dot(hx + hr * dx, hy - hr * 1.55, hr * .3);
-        }
+        });
         ctx.fillStyle = 'rgba(215,220,228,0.95)'; ctx.fillRect(hx - hr * .78, hy - hr * .92, hr * 1.56, hr * .2); ctx.strokeStyle = dk; ctx.lineWidth = hr * .05; ctx.strokeRect(hx - hr * .78, hy - hr * .92, hr * 1.56, hr * .2);
         break;
       }
@@ -3699,9 +3703,9 @@ const ShiroLib = (() => {
       case 'earmuff': {
         // イヤーマフ: 頭頂の帯+両耳の丸いカップ
         ctx.strokeStyle = acc2; ctx.lineWidth = hr * .14; ctx.beginPath(); ctx.arc(hx, hy - hr * .15, hr * 1.08, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); ctx.fillStyle = acc2;
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           dot(hx + s * hr * 1.05,hy - hr * .05,hr * .38); ctx.fillStyle = 'rgba(255,255,255,0.35)'; dot(hx + s * hr * 1.05,hy - hr * .05,hr * .22); ctx.fillStyle = acc2;
-        }
+        });
         break;
       }
       case 'straw': {
@@ -3712,40 +3716,40 @@ const ShiroLib = (() => {
       case 'horns': {
         // ツノ: 頭頂両端から外へ湾曲する小さな角
         ctx.fillStyle = acc2;
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); ctx.moveTo(hx + s * hr * .45, hy - hr * .85); ctx.quadraticCurveTo(hx + s * hr * 1.05, hy - hr * 1.05, hx + s * hr * .95, hy - hr * 1.55); ctx.quadraticCurveTo(hx + s * hr * .8, hy - hr * 1.15, hx + s * hr * .62, hy - hr * .82); ctx.closePath(); ctx.closePath(); ctx.fill();
-        }
+        });
         break;
       }
       case 'goggles': {
         // ゴーグル: 額の帯+2つのレンズ
         ctx.strokeStyle = dk; ctx.lineWidth = hr * .1; ctx.beginPath(); ctx.moveTo(hx - hr * 1.02, hy - hr * .62); ctx.lineTo(hx + hr * 1.02, hy - hr * .62); ctx.stroke(); ctx.lineWidth = hr * .07; ctx.strokeStyle = acc2; ctx.fillStyle = 'rgba(160,220,255,0.55)';
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.beginPath(); dot(hx + s * hr * .42, hy - hr * .62, hr * .3); ctx.fill(); ctx.stroke();
-        }
+        });
         ctx.beginPath(); ctx.moveTo(hx - hr * .12, hy - hr * .62); ctx.lineTo(hx + hr * .12, hy - hr * .62); ctx.stroke();
         break;
       }
       case 'cat-ear': {
         // 猫耳: 頭頂両端の三角形(内側は淡ピンク)
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.fillStyle = acc2; ctx.beginPath(); ctx.moveTo(hx + s * hr * .3, hy - hr * .95); ctx.lineTo(hx + s * hr * .78, hy - hr * .85); ctx.lineTo(hx + s * hr * .6, hy - hr * 1.45); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.fillStyle = 'rgba(255,190,205,0.85)'; ctx.beginPath(); ctx.moveTo(hx + s * hr * .42, hy - hr * .95); ctx.lineTo(hx + s * hr * .68, hy - hr * .9); ctx.lineTo(hx + s * hr * .58, hy - hr * 1.28); ctx.closePath(); ctx.closePath(); ctx.fill();
-        }
+        });
         break;
       }
       case 'bunny': {
         // うさ耳: 頭頂から2本の長い耳(内側は淡色)
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ctx.fillStyle = acc2; ell(hx + s * hr * .42, hy - hr * 1.62, hr * .2, hr * .75, s * .12); ctx.fillStyle = 'rgba(255,190,205,0.85)'; ell(hx + s * hr * .42, hy - hr * 1.6, hr * .1, hr * .5, s * .12);
-        }
+        });
         break;
       }
       case 'flower': {
         // 花飾り: 頭の側面に5弁の花(accHueで花弁着色)
         const fx2 = hx + hr * .62, fy2 = hy - hr * .55, pr3 = hr * .16; ctx.fillStyle = acc2;
-        for (let k = 0; k < 5; k++) {
+        times(5, k => {
           const a2 = k * Math.PI * 2 / 5; ell(fx2 + Math.cos(a2) * pr3 * 1.15, fy2 + Math.sin(a2) * pr3 * 1.15, pr3, pr3 * .58, a2);
-        }
+        });
         ctx.fillStyle = 'hsla(50,90%,60%,0.95)'; dot(fx2,fy2,pr3 * .45); // しべ
         break;
       }
@@ -3799,7 +3803,7 @@ if (typeof document !== 'undefined') (() => {
   function drawBackdrop(c, p, t) {
     if (state.bg) {
       // 背景のゆっくりズーム(Ken Burns): 1→1+bgDrift*.15 をゆるく往復
-      const z = p.bgDrift * .15 * (.5 + .5 * Math.sin(t * .12)); drawCover(c, state.bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast, p.bgX, p.bgY, z);
+      const z = p.bgDrift * .15 * (.5 + .5 * S(.12)); drawCover(c, state.bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast, p.bgX, p.bgY, z);
       if (p.bgDim > 0) { c.fillStyle = `rgba(8,10,16,${p.bgDim * .55})`; c.fillRect(0, 0, W, H); }
       return;
     }
@@ -3815,6 +3819,9 @@ if (typeof document !== 'undefined') (() => {
       const ellPS = (x, y, rx, ry, rot) => { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, 7); c.stroke(); };
       const dotPS = (x, y, r) => { c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke(); };
       const dotP = (x, y, r) => { c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); };
+      const times = (n, f) => { for (let i = 0; i < n; i++) f(i); };
+      const scat = (seed, n, f) => { const r = L.mulberry32(seed); times(n, i => f(r, i)); };
+      const S = f => Math.sin(t * f), C = f => Math.cos(t * f), A = f => Math.abs(S(f));
     const dot = (x, y, r) => { c.beginPath(); c.arc(W * x, H * y, r, 0, 7); c.fill(); };
     if (pr === 'transparent') return; // アルファを残す(ディムもかけない)
     if (p.bgBlur > 0) c.filter = `blur(${p.bgBlur * 10}px)`;
@@ -3823,30 +3830,28 @@ if (typeof document !== 'undefined') (() => {
     else if (pr === 'sunset') {
       sky([[0,'#2b2f6e'],[.55,'#c9526a'],[1,'#ffb56b']]); c.fillStyle = 'rgba(255,190,90,0.92)'; dot(.5,.6,H * .15); // 夕日
     } else if (pr === 'night') {
-      sky([[0,'#0a0d24'],[1,'#1c2347']]); const rng = L.mulberry32(999);
-      for (let i = 0; i < 90; i++) {
+      sky([[0,'#0a0d24'],[1,'#1c2347']]); scat(999, 90, (rng, i) => {
         const sx = rng() * W, sy = rng() * H * .85, sr = rng() * 1.4 + .4; const tw = .3 + .65 * Math.abs(Math.sin(t * (.4 + rng() * 1.6) + rng() * 9));
         c.fillStyle = `rgba(255,255,255,${tw})`;
         dotP(sx, sy, sr);
-      }
+      });
       c.fillStyle = 'rgba(240,240,220,0.95)'; dot(.8,.18,H * .07); // 月
     } else if (pr === 'spot') {
       c.fillStyle = '#0b0c10'; c.fillRect(0, 0, W, H); const g = c.createRadialGradient(W * .5, H * .86, 10, W * .5, H * .86, W * .5); g.addColorStop(0, 'rgba(255,240,200,0.55)'); g.addColorStop(1, 'rgba(255,240,200,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(W * .44, 0); c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.lineTo(W * .9, H * .95); c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.lineTo(W * .9, H * .95); c.lineTo(W * .1, H * .95); c.closePath(); c.closePath(); c.fill(); ell(.5,.88,W * .28,H * .07); // 床の光り輪
     } else if (pr === 'sky') {
       // 青空: 晴れの空 + ゆっくり流れる雲(手続き描画)
-      sky([[0,'#2e7bd6'],[1,'#a8d4f0']]); const rng = L.mulberry32(77);
-      for (let i = 0; i < 5; i++) {
+      sky([[0,'#2e7bd6'],[1,'#a8d4f0']]); scat(77, 5, (rng, i) => {
         const bx = rng(), sp = .008 + .01 * rng(), cy = H * (.05 + rng() * .45); const cxx = ((bx + t * sp) % 1) * W; c.fillStyle = 'rgba(255,255,255,0.85)';
         for (let k = -1; k <= 1; k++) {
           ellP(cxx + k * W * .05, cy + (k === 0 ? -H * .014 : 0), W * (.045 + .018 * rng()), H * .028);
         }
-      }
+      });
     } else if (pr === 'pastel') {
       // パステル虹: ふんわりした虹色グラデーション + 白い光斑
       const gr = c.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#ffd9e8'); gr.addColorStop(.35, '#ffe9c9'); gr.addColorStop(.65, '#d9f2e3'); gr.addColorStop(1, '#c9e3ff'); c.fillStyle = gr; c.fillRect(0, 0, W, H); const rng = L.mulberry32(4242); c.fillStyle = 'rgba(255,255,255,0.5)';
-      for (let i = 0; i < 24; i++) {
+      times(24, i => {
         dotP(rng() * W, rng() * H, 3 + rng() * 9);
-      }
+      });
     } else if (pr === 'santorini') {
       // サントリーニ: カルデラの青い海+白い家並み+青いドーム
       sky([[0,'#78b8e8'],[.5,'#a8d0f0'],[1,'#3868a8']]);
@@ -3855,10 +3860,9 @@ if (typeof document !== 'undefined') (() => {
       // エーゲ海(深い青)
       const sg = c.createLinearGradient(0, H * .5, 0, H); sg.addColorStop(0, '#2a5a98'); sg.addColorStop(1, '#183a68'); c.fillStyle = sg; c.fillRect(0, H * .5, W, H * .5);
       // 海の光の揺らぎ
-      c.fillStyle = 'rgba(255,255,255,0.25)'; const rng = L.mulberry32(518);
-      for (let i = 0; i < 14; i++) {
+      c.fillStyle = 'rgba(255,255,255,0.25)'; scat(518, 14, (rng, i) => {
         c.fillRect(rng() * W, H * (.55 + rng() * .4), W * .04, H * .004);
-      }
+      });
       // 断崖の上の白い家々(箱の積み重なり)
       const houses = [
         [.05, .38, .09, .1], [.13, .35, .08, .13], [.2, .38, .1, .1],
@@ -3873,18 +3877,18 @@ if (typeof document !== 'undefined') (() => {
         c.fillRect(W * (hx2 + .02), H * (hy2 + .03), W * .015, H * .025); c.fillRect(W * (hx2 + .05), H * (hy2 + .06), W * .015, H * .035);
       }
       // 青いドーム(2基)
-      for (const dx of [.19, .38]) {
+      ([.19, .38]).forEach(dx => {
         c.beginPath(); c.arc(W * dx + W * .045, H * .36 - W * .045, W * .045, Math.PI, 0); c.fill(); c.fillStyle = '#f4f2ea'; c.fillRect(W * dx, H * .36 - W * .045, W * .09, H * .1); c.fillStyle = '#3868a8';
-      }
+      });
       // 断崖(右側の茶色い斜面)
       c.fillStyle = '#8a6848'; c.beginPath(); c.moveTo(W * .55, H * .5); c.lineTo(W * .75, H * .5); c.lineTo(W, H); c.lineTo(W * .5, H); c.closePath(); c.closePath(); c.fill();
       // 断崖にも家(崖に食い込む)
       c.fillStyle = '#f4f2ea'; c.fillRect(W * .62, H * .55, W * .07, H * .08); c.fillRect(W * .7, H * .62, W * .08, H * .1);
       // 飛ぶカモメ
       c.strokeStyle = '#f0f0e8'; c.lineWidth = 1.5;
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const bx = W * (.6 + i * .12 + Math.sin(t * .5 + i) * .02); const by = H * (.15 + (i % 2) * .07); c.beginPath(); c.moveTo(bx - 6, by); c.moveTo(bx - 6, by); c.quadraticCurveTo(bx, by - 5, bx + 6, by); c.stroke();
-      }
+      });
     } else if (pr === 'cappadocia') {
       // カッパドキア: 奇岩の妖精の煙突+朝焼け+気球の群れ
       sky([[0,'#e8a878'],[.45,'#f0c090'],[1,'#c89068']]);
@@ -3896,9 +3900,9 @@ if (typeof document !== 'undefined') (() => {
       const balloons = [
         [.15, .18, .045, '#d84848'], [.32, .3, .03, '#4878c8'], [.55, .12, .038, '#e8a038'],
         [.7, .28, .025, '#68a848'], [.88, .15, .05, '#a848a8']];
-      for (let i = 0; i < balloons.length; i++) {
+      times(balloons.length, i => {
         const [bx, by, br, col] = balloons[i]; const yy = H * (by + Math.sin(t * .3 + i * 1.7) * .012); c.fillStyle = col; dotP(W * bx, yy, W * br); c.strokeStyle = '#704828'; c.lineWidth = 1; c.beginPath(); c.moveTo(W * bx - W * br * .4, yy + W * br * .8); c.lineTo(W * bx - W * br * .25, yy + W * br * 1.35); c.moveTo(W * bx + W * br * .4, yy + W * br * .8); c.lineTo(W * bx + W * br * .25, yy + W * br * 1.35); c.stroke(); c.fillStyle = '#704828'; c.fillRect(W * bx - W * br * .3, yy + W * br * 1.35, W * br * .6, W * br * .35);
-      }
+      });
       // 妖精の煙突(先細りの岩柱+濃い笠石) — 高さを変えて並べる
       const chim = [
         [.06, .6, .05, .34], [.14, .62, .04, .26], [.24, .58, .055, .38],
@@ -3910,51 +3914,46 @@ if (typeof document !== 'undefined') (() => {
         // 笠石(濃い三角錐)
         c.fillStyle = '#785038'; c.beginPath(); c.moveTo(W * (cx - cw * .55), H * (1 - ch)); c.lineTo(W * cx, H * (1 - ch) - H * ch * .28); c.lineTo(W * (cx + cw * .55), H * (1 - ch)); c.closePath(); c.closePath(); c.fill();
         // 側面の陰影(縦筋)
-        c.strokeStyle = 'rgba(80,50,30,0.35)'; c.lineWidth = 1.5; const rng2 = L.mulberry32(Math.floor(cx * 1000));
-        for (let k = 0; k < 3; k++) {
+        c.strokeStyle = 'rgba(80,50,30,0.35)'; c.lineWidth = 1.5; scat(Math.floor(cx * 1000), 3, (rng2, k) => {
           const ox = cx - cw * .4 + rng2() * cw * .8; c.beginPath(); c.moveTo(W * ox, H * (1 - ch)); c.lineTo(W * (ox - cw * .25), H); c.stroke();
-        }
+        });
       }
       // 谷間のテント村(小さな三角屋根)
-      c.fillStyle = '#e8d8c0'; const rng3 = L.mulberry32(777);
-      for (let i = 0; i < 6; i++) {
+      c.fillStyle = '#e8d8c0'; scat(777, 6, (rng3, i) => {
         const tx = W * (.1 + rng3() * .8), ty = H * (.82 + rng3() * .12); c.beginPath(); c.moveTo(tx - W * .015, ty); c.moveTo(tx - W * .015, ty); c.lineTo(tx, ty - H * .02); c.moveTo(tx - W * .015, ty); c.lineTo(tx, ty - H * .02); c.lineTo(tx + W * .015, ty); c.closePath(); c.closePath(); c.fill();
-      }
+      });
     } else if (pr === 'redwoods') {
       // レッドウッド林: 巨木の幹+差し込む光柱+シダの下生え
       sky([[0,'#2a4a30'],[.5,'#4a6a40'],[1,'#6a7a48']]);
       // 奥の巨木(遠景、色を薄く)
-      c.fillStyle = '#4a5c38'; const rng4 = L.mulberry32(314);
-      for (let i = 0; i < 7; i++) {
+      c.fillStyle = '#4a5c38'; scat(314, 7, (rng4, i) => {
         const tx = W * (.08 + rng4() * .84), tw = W * (.012 + rng4() * .018); c.fillRect(tx, H * .05, tw, H);
-      }
+      });
       // 差し込む光柱(斜めの半透明ビーム)
       c.fillStyle = 'rgba(250,240,200,0.16)';
-      for (const bx of [.3, .55, .8]) {
+      ([.3, .55, .8]).forEach(bx => {
         c.beginPath(); c.moveTo(W * bx, 0); c.lineTo(W * (bx + .1), 0); c.lineTo(W * (bx + .02), H); c.lineTo(W * (bx - .08), H); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 手前の巨木(左右の大きな幹+縦筋樹皮)
       for (const [tx, tw] of [[0, .13], [.9, .14], [.42, .07]]) {
-        c.fillStyle = '#5a3a26'; c.fillRect(W * tx, 0, W * tw, H); c.strokeStyle = '#3a2418'; c.lineWidth = 2; const rng5 = L.mulberry32(Math.floor(tx * 100));
-        for (let k = 0; k < 4; k++) {
+        c.fillStyle = '#5a3a26'; c.fillRect(W * tx, 0, W * tw, H); c.strokeStyle = '#3a2418'; c.lineWidth = 2; scat(Math.floor(tx * 100), 4, (rng5, k) => {
           const gx = W * (tx + rng5() * tw * .9); c.beginPath(); c.moveTo(gx, H * .05); c.quadraticCurveTo(gx + W * .006, H * .5, gx - W * .004, H); c.stroke();
-        }
+        });
       }
       // 枝張り(巨木から横に伸びる枝+針葉の塊)
       c.fillStyle = '#2f4a28'; c.beginPath(); c.ellipse(W * .1, H * .12, W * .12, H * .05, -.2, 0, 7); c.ellipse(W * .1, H * .12, W * .12, H * .05, -.2, 0, 7); c.fill(); c.beginPath(); c.ellipse(W * .95, H * .18, W * .11, H * .05, .2, 0, 7); c.ellipse(W * .95, H * .18, W * .11, H * .05, .2, 0, 7); c.fill(); c.beginPath(); c.ellipse(W * .46, H * .08, W * .1, H * .04, 0, 0, 7); c.ellipse(W * .46, H * .08, W * .1, H * .04, 0, 0, 7); c.fill();
       // 林床(暗い土+シダの葉)
-      c.fillStyle = '#3a3020'; c.fillRect(0, H * .9, W, H * .1); c.strokeStyle = '#5a7a3a'; c.lineWidth = 1.5; const rng6 = L.mulberry32(555);
-      for (let i = 0; i < 16; i++) {
+      c.fillStyle = '#3a3020'; c.fillRect(0, H * .9, W, H * .1); c.strokeStyle = '#5a7a3a'; c.lineWidth = 1.5; scat(555, 16, (rng6, i) => {
         const fx = W * rng6(), fy = H * (.88 + rng6() * .1);
         for (let k = -2; k <= 2; k++) {
           c.beginPath(); c.moveTo(fx, fy); c.quadraticCurveTo(fx + W * .012 * k, fy - H * .03, fx + W * .018 * k, fy - H * .05); c.stroke();
         }
-      }
+      });
       // 舞う胞子(光る点)
       c.fillStyle = 'rgba(255,240,190,0.5)';
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const px = W * ((i * .1 + t * .004) % 1); const py = H * (.3 + .35 * Math.sin(t * .4 + i * 2.1)); c.fillRect(px, py, 2, 2);
-      }
+      });
     } else if (pr === 'slotcanyon') {
       // スロットキャニオン: 波打つ赤岩の壁+頭上の隙間+差し込む光柱+砂の床
       sky([[0,'#f0c080'],[.3,'#c86838'],[1,'#803818']]);
@@ -3964,22 +3963,21 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#8a3a18'; c.beginPath(); c.moveTo(W, 0); c.moveTo(W, 0); c.lineTo(W * .6, 0); c.bezierCurveTo(W * .78, H * .2, W * .55, H * .38, W * .7, H * .58); c.bezierCurveTo(W * .82, H * .78, W * .68, H * .9, W * .78, H); c.lineTo(W, H); c.closePath(); c.closePath(); c.fill();
       // 岩の縞(波状の明縞 — 壁面に沿う流線)
       c.strokeStyle = 'rgba(240,180,120,0.4)'; c.lineWidth = 3;
-      for (const off of [.08, .18, .3, .44]) {
+      ([.08, .18, .3, .44]).forEach(off => {
         c.beginPath(); c.moveTo(W * off, 0); c.bezierCurveTo(W * (off - .06), H * .3, W * (off + .12), H * .5, W * (off - .04), H); c.stroke();
-      }
+      });
       c.strokeStyle = 'rgba(60,20,10,0.45)'; c.lineWidth = 2;
-      for (const off of [.62, .74, .86]) {
+      ([.62, .74, .86]).forEach(off => {
         c.beginPath(); c.moveTo(W * off, 0); c.bezierCurveTo(W * (off + .08), H * .3, W * (off - .1), H * .55, W * (off + .05), H); c.stroke();
-      }
+      });
       // 頭上の隙間(天井の細い開口)
       c.fillStyle = '#f8e0a8'; c.beginPath(); c.moveTo(W * .45, 0); c.moveTo(W * .45, 0); c.lineTo(W * .56, 0); c.lineTo(W * .5, H * .07); c.lineTo(W * .5, H * .07); c.closePath(); c.lineTo(W * .5, H * .07); c.closePath(); c.fill();
       // 差し込む光柱(中央の柔らかい柱)
       const lg = c.createLinearGradient(0, 0, 0, H * .85); lg.addColorStop(0, 'rgba(255,230,170,0.55)'); lg.addColorStop(1, 'rgba(255,230,170,0)'); c.fillStyle = lg; c.beginPath(); c.moveTo(W * .46, 0); c.moveTo(W * .46, 0); c.lineTo(W * .55, 0); c.lineTo(W * .62, H * .85); c.lineTo(W * .62, H * .85); c.lineTo(W * .4, H * .85); c.closePath(); c.closePath(); c.fill();
       // 光の中の塵(ゆらめく点)
-      c.fillStyle = 'rgba(255,240,200,0.6)'; const rng7 = L.mulberry32(909);
-      for (let i = 0; i < 12; i++) {
+      c.fillStyle = 'rgba(255,240,200,0.6)'; scat(909, 12, (rng7, i) => {
         const px = W * (.44 + rng7() * .14) + Math.sin(t * .7 + i) * 3; const py = H * (.1 + rng7() * .6); c.fillRect(px, py, 1.5, 1.5);
-      }
+      });
       // 砂の床(照らされた細砂)
       const sg = c.createLinearGradient(0, H * .82, 0, H); sg.addColorStop(0, '#d8a060'); sg.addColorStop(1, '#a06030'); c.fillStyle = sg; c.beginPath(); c.moveTo(0, H); c.quadraticCurveTo(W * .5, H * .82, W, H); c.closePath(); c.closePath(); c.fill();
     } else if (pr === 'angkor') {
@@ -4001,9 +3999,9 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath(); c.moveTo(bx - bw * .55, H * .62); c.lineTo(bx - bw * .5, top + bw * .5); c.quadraticCurveTo(bx - bw * .3, top + bw * .15, bx, top); c.quadraticCurveTo(bx + bw * .3, top + bw * .15, bx + bw * .5, top + bw * .5); c.lineTo(bx + bw * .55, H * .62); c.closePath(); c.closePath(); c.fill();
         // 蕾の節(横筋)
         c.strokeStyle = '#3a2a1c'; c.lineWidth = 1.5;
-        for (const ry of [.3, .45, .58]) {
+        ([.3, .45, .58]).forEach(ry => {
           c.beginPath(); c.moveTo(bx - bw * .4, top + bw * ry * 2); c.lineTo(bx + bw * .4, top + bw * ry * 2); c.stroke();
-        }
+        });
       }
       // 基壇(塔の土台)
       c.fillStyle = '#4a3626'; c.fillRect(0, H * .58, W, H * .05);
@@ -4016,14 +4014,13 @@ if (typeof document !== 'undefined') (() => {
       }
       // 水面の光の揺らぎ
       c.fillStyle = 'rgba(255,220,170,0.3)';
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const py = H * (.66 + i * .03); const pw = W * (.15 + .05 * Math.sin(t + i)); c.fillRect(W * .5 - pw / 2 + Math.sin(t * .5 + i * 2) * 8, py, pw, 1.5);
-      }
+      });
       // 水面の睡蓮
-      c.fillStyle = '#48704a'; const rng9 = L.mulberry32(42);
-      for (let i = 0; i < 8; i++) {
+      c.fillStyle = '#48704a'; scat(42, 8, (rng9, i) => {
         ell((.08 + rng9() * .84), (.7 + rng9() * .25), W * .02, H * .008);
-      }
+      });
     } else if (pr === 'pantanal') {
       // パンタナル: 湿原の水面+浮草+ジャビルの群れ+緑の水辺林
       sky([[0,'#e8c878'],[.4,'#c8b068'],[1,'#5a7a50']]);
@@ -4038,15 +4035,14 @@ if (typeof document !== 'undefined') (() => {
       // 湿原の水面
       const wg = c.createLinearGradient(0, H * .58, 0, H); wg.addColorStop(0, '#7a8a58'); wg.addColorStop(1, '#4a5c40'); c.fillStyle = wg; c.fillRect(0, H * .58, W, H * .42);
       // 浮草のパッチ(明るい円形の葉群)
-      c.fillStyle = '#6a8a48'; const rngB = L.mulberry32(471);
-      for (let i = 0; i < 14; i++) {
+      c.fillStyle = '#6a8a48'; scat(471, 14, (rngB, i) => {
         ell(rngB(), (.62 + rngB() * .32), W * (.02 + rngB() * .04), H * (.006 + rngB() * .01));
-      }
+      });
       // 夕日の映り込み(水面の光筋)
       c.fillStyle = 'rgba(240,150,80,0.35)';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const py = H * (.62 + i * .04); const pw = W * (.1 + .03 * Math.sin(t + i * 2)); c.fillRect(W * .62 - pw / 2 + Math.sin(t * .6 + i) * 6, py, pw, 1.5);
-      }
+      });
       // ジャビル(首の長いコウノトリ — 水中に佇む3羽)
       const storks = [[.18, .68, .09], [.3, .74, .07], [.82, .66, .1]];
       for (const [sx, sy, ss] of storks) {
@@ -4060,9 +4056,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 飛ぶ鳥の群れ(小さなV字)
       c.strokeStyle = '#4a3a28'; c.lineWidth = 1.5;
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const bx = W * ((i * .17 + t * .008) % 1); const by = H * (.12 + (i % 3) * .06); c.beginPath(); c.moveTo(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
-      }
+      });
       // カピバラの影(水際に座る)
       c.fillStyle = '#5a4028'; c.beginPath(); c.ellipse(W * .55, H * .6, W * .03, H * .02, 0, 0, 7); c.ellipse(W * .55, H * .6, W * .03, H * .02, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(W * .57, H * .585, W * .012, H * .012, 0, 0, 7); c.ellipse(W * .57, H * .585, W * .012, H * .012, 0, 0, 7); c.fill();
     } else if (pr === 'deadvlei') {
@@ -4087,31 +4083,29 @@ if (typeof document !== 'undefined') (() => {
         c.strokeStyle = '#181410'; c.lineWidth = Math.max(1.5, sc * .05); c.beginPath(); c.moveTo(bx, by); const topX = bx + (rngT() - .5) * sc * .3; const topY = by - sc; c.lineTo(topX, topY); c.stroke();
         // 枝(3〜4本の分岐)
         const nb = 3 + Math.floor(rngT() * 2);
-        for (let b = 0; b < nb; b++) {
+        times(nb, b => {
           const byf = .35 + b * .18; const sx = bx + (topX - bx) * byf; const sy = by + (topY - by) * byf; const dir = b % 2 ? 1 : -1; c.lineWidth = Math.max(1, sc * .03); c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx + dir * sc * (.3 + rngT() * .25), sy - sc * (.15 + rngT() * .2)); c.stroke();
           // 小枝
           c.lineWidth = Math.max(1, sc * .015); c.beginPath(); c.moveTo(sx + dir * sc * .2, sy - sc * .12); c.lineTo(sx + dir * sc * .38, sy - sc * .05); c.stroke();
-        }
+        });
         // 木の影(盤上の薄い伸び影)
         c.fillStyle = 'rgba(120,100,80,0.3)'; ellP(bx + sc * .5, by + 2, sc * .6, sc * .04);
       }
       // 盤のひび(乾燥した土の割れ目)
-      c.strokeStyle = 'rgba(150,135,115,0.5)'; c.lineWidth = 1; const rngC = L.mulberry32(21);
-      for (let i = 0; i < 10; i++) {
+      c.strokeStyle = 'rgba(150,135,115,0.5)'; c.lineWidth = 1; scat(21, 10, (rngC, i) => {
         const cx0 = W * rngC(), cy0 = H * (.6 + rngC() * .35); c.beginPath(); c.moveTo(cx0, cy0); c.lineTo(cx0 + (rngC() - .5) * W * .04, cy0 + H * .02 * rngC()); c.stroke();
-      }
+      });
     } else if (pr === 'uyuni') {
       // ウユニ鏡張り: 星空と天の川を完全に写す薄水の塩原
       const gr = c.createLinearGradient(0, 0, 0, H * .5); gr.addColorStop(0, '#12082e'); gr.addColorStop(1, '#3a2058'); c.fillStyle = gr; c.fillRect(0, 0, W, H * .5);
       // 天の川(斜めの淡い帯+密集星)
       c.fillStyle = 'rgba(200,180,230,0.08)'; c.save(); c.translate(W * .5, H * .22); c.rotate(-.3); c.fillRect(-W, -H * .06, W * 2, H * .12); c.restore();
       // 星(上部の密集帯+散りばめ)
-      const rngU = L.mulberry32(777);
-      for (let i = 0; i < 90; i++) {
+      scat(777, 90, (rngU, i) => {
         const sx = W * rngU(); const sy = H * .48 * Math.pow(rngU(), 1.4);
         c.fillStyle = `rgba(255,250,240,${.3 + rngU() * .7})`;
         c.fillRect(sx, sy, 1.5, 1.5);
-      }
+      });
       // 大きな星(きらめき十字)
       for (const [bx, by] of [[.2, .08], [.55, .15], [.8, .3]]) {
         c.fillStyle = '#fff8e8'; c.fillRect(W * bx - 3, H * by, 7, 1.5); c.fillRect(W * bx, H * by - 3, 1.5, 7);
@@ -4121,12 +4115,11 @@ if (typeof document !== 'undefined') (() => {
       // 鏡の水面(下半 — 空の反転グラデ)
       const mg = c.createLinearGradient(0, H * .5, 0, H); mg.addColorStop(0, '#3a2058'); mg.addColorStop(1, '#150a30'); c.fillStyle = mg; c.fillRect(0, H * .5, W, H * .5);
       // 星の映り込み(下部)
-      const rngV = L.mulberry32(777);
-      for (let i = 0; i < 90; i++) {
+      scat(777, 90, (rngV, i) => {
         const sx = W * rngV(); const sy = H - H * .48 * Math.pow(rngV(), 1.4);
         c.fillStyle = `rgba(255,250,240,${.15 + rngV() * .35})`;
         c.fillRect(sx, sy, 1.5, 1.5);
-      }
+      });
       // 天の川の映り込み
       c.fillStyle = 'rgba(200,180,230,0.05)'; c.save(); c.translate(W * .5, H * .78); c.rotate(-.3); c.fillRect(-W, -H * .06, W * 2, H * .12); c.restore();
       // 水面の横筋(薄い波紋 — ゆらめく)
@@ -4167,9 +4160,9 @@ if (typeof document !== 'undefined') (() => {
       const gg = c.createLinearGradient(0, H * .62, 0, H); gg.addColorStop(0, '#4a3228'); gg.addColorStop(1, '#241410'); c.fillStyle = gg; c.fillRect(0, H * .62, W, H * .38);
       // 霧の帯2枚(塔の間を漂う)
       c.fillStyle = 'rgba(230,180,140,0.15)';
-      for (let i = 0; i < 2; i++) {
+      times(2, i => {
         ell((.3 + i * .4 + .02 * Math.sin(t * .3 + i)), (.58 + i * .05), W * .25, H * .03);
-      }
+      });
     } else if (pr === 'torres') {
       // トーレス・デル・パイネ: 花崗岩の3塔+ターコイズ湖+グアナコ
       sky([[0,'#c0d8e8'],[.45,'#8aa8c0'],[1,'#3a5c68']]);
@@ -4199,9 +4192,9 @@ if (typeof document !== 'undefined') (() => {
       const guanacos = [[.22, .665, .05], [.7, .655, .04]];
       for (const [gx, gy, gs] of guanacos) {
         const bx = W * gx, by = H * gy, sc = H * gs; c.fillStyle = '#3a2a1a'; c.beginPath(); c.ellipse(bx, by, sc * .55, sc * .3, 0, 0, 7); c.ellipse(bx, by, sc * .55, sc * .3, 0, 0, 7); c.fill(); c.strokeStyle = '#3a2a1a'; c.lineWidth = sc * .12; c.beginPath(); c.moveTo(bx + sc * .3, by - sc * .1); c.lineTo(bx + sc * .5, by - sc * .75); c.stroke(); c.beginPath(); c.ellipse(bx + sc * .52, by - sc * .78, sc * .14, sc * .1, 0, 0, 7); c.ellipse(bx + sc * .52, by - sc * .78, sc * .14, sc * .1, 0, 0, 7); c.fill(); c.strokeStyle = '#3a2a1a'; c.lineWidth = sc * .06; // 体 // 長い首 // 頭
-        for (const lx of [-.3, -.1, .15, .35]) {
+        ([-.3, -.1, .15, .35]).forEach(lx => {
           c.beginPath(); c.moveTo(bx + lx * sc, by + sc * .2); c.lineTo(bx + lx * sc, by + sc * .7); c.stroke(); // 4本脚
-        }
+        });
       }
     } else if (pr === 'lauterbrunnen') {
       // ラウターブルンネン: 氷河のU字谷 — 断崖の滝群+緑の谷床+教会
@@ -4212,15 +4205,15 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#42403a'; c.beginPath(); c.moveTo(W, 0); c.moveTo(W, 0); c.lineTo(W * .86, 0); c.lineTo(W * .8, H * .35); c.lineTo(W * .85, H * .62); c.lineTo(W, H * .72); c.closePath(); c.closePath(); c.fill();
       // 崖の岩目(横筋)
       c.strokeStyle = 'rgba(120,115,105,0.5)'; c.lineWidth = 1;
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const ry = H * (.08 + i * .08); c.beginPath(); c.moveTo(0, ry + i * 3); c.lineTo(W * .16, ry); c.stroke(); c.beginPath(); c.moveTo(W, ry + i * 2); c.lineTo(W * .84, ry); c.stroke();
-      }
+      });
       // 遠くの谷奥(明るい開口)
       c.fillStyle = '#c8d8d0'; c.beginPath(); c.moveTo(W * .18, H * .3); c.lineTo(W * .8, H * .35); c.lineTo(W * .75, H * .5); c.lineTo(W * .25, H * .5); c.closePath(); c.closePath(); c.fill();
       // スタウバッハの滝(細い白い帯 — 流れ落ちる)
-      c.strokeStyle = 'rgba(240,245,250,0.85)'; c.lineWidth = W * .008; c.beginPath(); c.moveTo(W * .155, H * .28); c.quadraticCurveTo(W * .17 + Math.sin(t * 2) * 2, H * .42, W * .16, H * .58); c.stroke();
+      c.strokeStyle = 'rgba(240,245,250,0.85)'; c.lineWidth = W * .008; c.beginPath(); c.moveTo(W * .155, H * .28); c.quadraticCurveTo(W * .17 + S(2) * 2, H * .42, W * .16, H * .58); c.stroke();
       // 滝の飛沫(底部の白い霧)
-      c.fillStyle = 'rgba(240,245,250,0.4)'; ell(.16, .58, W * .03, H * .015 + Math.sin(t * 3) * 2);
+      c.fillStyle = 'rgba(240,245,250,0.4)'; ell(.16, .58, W * .03, H * .015 + S(3) * 2);
       // 第2の滝(右側の細筋)
       c.strokeStyle = 'rgba(240,245,250,0.7)'; c.lineWidth = W * .005; c.beginPath(); c.moveTo(W * .82, H * .3); c.quadraticCurveTo(W * .84, H * .45, W * .83, H * .58); c.stroke();
       // 谷床の牧草地
@@ -4231,9 +4224,9 @@ if (typeof document !== 'undefined') (() => {
       const cx0 = W * .55, cy0 = H * .7; c.fillStyle = '#e8e0d0'; c.fillRect(cx0 - W * .02, cy0, W * .04, H * .05); c.beginPath(); c.moveTo(cx0 - W * .025, cy0); c.lineTo(cx0, cy0 - H * .05); c.lineTo(cx0 + W * .025, cy0); c.closePath(); c.closePath(); c.fill(); // 塔の身 // 尖塔
       // 周辺の家々(小さな屋根)
       c.fillStyle = '#7a5a40';
-      for (const hx2 of [.48, .63, .7]) {
+      ([.48, .63, .7]).forEach(hx2 => {
         c.beginPath(); c.moveTo(W * hx2, cy0 + H * .02); c.lineTo(W * (hx2 + .015), cy0 + H * .005); c.lineTo(W * (hx2 + .03), cy0 + H * .02); c.lineTo(W * (hx2 + .03), cy0 + H * .045); c.lineTo(W * hx2, cy0 + H * .045); c.closePath(); c.closePath(); c.fill();
-      }
+      });
     } else if (pr === 'hallstatt') {
       // ハルシュタット: 湖畔の山村 — 彩色の家々+教会の尖塔+山影+白鳥
       sky([[0,'#b8d4e0'],[.5,'#8aaabb'],[1,'#4a6878']]);
@@ -4297,11 +4290,11 @@ if (typeof document !== 'undefined') (() => {
       c.beginPath(); c.arc(tx, ty + th * .1, tw * .08, 0, 7); c.arc(tx, ty + th * .1, tw * .08, 0, 7); c.fill();
       // 柱6本(正面の列柱)
       c.fillStyle = '#e8b088';
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const px = tx - tw * .4 + i * tw * .16; c.fillRect(px, ty + th * .3, tw * .05, th * .6);
         // 柱頭(小さな横帯)
         c.fillRect(px - tw * .01, ty + th * .28, tw * .07, th * .03);
-      }
+      });
       // 入口(中央の黒い開口)
       c.fillStyle = '#3a2418'; c.fillRect(tx - tw * .06, ty + th * .72, tw * .12, th * .28);
       // 岩の緑(シークの隙間の草)
@@ -4319,9 +4312,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#5a8858'; c.beginPath(); c.moveTo(0, H * .62); c.quadraticCurveTo(W * .3, H * .5, W * .55, H * .56); c.quadraticCurveTo(W * .7, H * .6, W, H * .58); c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // 段々畑(等高線の緑の段)
       c.fillStyle = '#7aa860';
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const ty = H * (.64 + i * .05); c.beginPath(); c.moveTo(0, ty); c.quadraticCurveTo(W * .35, ty - H * .02, W * .6, ty + H * .01); c.lineTo(W * .6, ty + H * .02); c.quadraticCurveTo(W * .35, ty, 0, ty + H * .025); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 石の街(尾根の灰色の塊+方形の壁)
       c.fillStyle = '#8a8878'; const blocks = [[.3, .52, .06], [.4, .5, .05], [.48, .53, .055], [.56, .51, .045]];
       for (const [bx, by, bs] of blocks) {
@@ -4331,9 +4324,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 流れる雲(峰を巻く白い帯)
       const cl = (t * .03) % 1; c.fillStyle = 'rgba(235,240,240,0.5)';
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const cx = W * ((.6 + i * .15 + cl) % 1.2 - .1); ellP(cx, H * (.3 + i * .08), W * (.06 + i * .015), H * .012);
-      }
+      });
     } else if (pr === 'dolomites') {
       // ドロミテ: 灰白色の鋸歯岩峰+緑の高山草地+針葉樹+山小屋
       sky([[0,'#a8c8e0'],[.5,'#c8d8e0'],[1,'#5a8858']]);
@@ -4353,18 +4346,17 @@ if (typeof document !== 'undefined') (() => {
       const mg = c.createLinearGradient(0, H * .62, 0, H); mg.addColorStop(0, '#6a9860'); mg.addColorStop(1, '#3a5c38'); c.fillStyle = mg; c.fillRect(0, H * .62, W, H * .38);
       // 針葉樹(山小屋の背後の黒い三角列)
       c.fillStyle = '#2a4a30';
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const tx = W * (.62 + i * .06), ty = H * (.68 + (i % 2) * .02), ts = H * .05; c.beginPath(); c.moveTo(tx, ty - ts); c.lineTo(tx - ts * .4, ty); c.lineTo(tx + ts * .4, ty); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 山小屋(茶の三角屋根+白い身)
       const hx3 = W * .3, hy3 = H * .72, hs3 = H * .09; c.fillStyle = '#e8e0d0'; c.fillRect(hx3 - hs3 * .4, hy3 - hs3 * .35, hs3 * .8, hs3 * .35); c.fillStyle = '#5a4030'; c.beginPath(); c.moveTo(hx3 - hs3 * .5, hy3 - hs3 * .33); c.lineTo(hx3, hy3 - hs3 * .8); c.lineTo(hx3 + hs3 * .5, hy3 - hs3 * .33); c.closePath(); c.closePath(); c.fill();
       // 窓
       c.fillStyle = '#4a3828'; c.fillRect(hx3 - hs3 * .12, hy3 - hs3 * .25, hs3 * .1, hs3 * .12);
       // 草の花(点々)
-      c.fillStyle = '#e8e8d0'; const rngD2 = L.mulberry32(21);
-      for (let i = 0; i < 20; i++) {
+      c.fillStyle = '#e8e8d0'; scat(21, 20, (rngD2, i) => {
         const fx = W * rngD2(), fy = H * (.68 + rngD2() * .28); c.beginPath(); c.ellipse(fx, fy, H * .003, H * .003, 0, 0, 7); c.ellipse(fx, fy, H * .003, H * .003, 0, 0, 7); c.fill();
-      }
+      });
     } else if (pr === 'zhangjiajie') {
       // 張家界: 石英砂岩の柱林+柱頭の松+流れる雲霧
       sky([[0,'#b8d0d8'],[.45,'#8aaba8'],[1,'#3a5848']]);
@@ -4389,9 +4381,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 雲霧(柱の間を流れる白い層、2層)
       c.fillStyle = 'rgba(230,238,240,0.55)';
-      for (let i = 0; i < 2; i++) {
+      times(2, i => {
         const cy = H * (.48 + i * .18); const drift = ((t * .02 + i * .4) % 1.4 - .2) * W; c.beginPath(); c.ellipse(drift, cy, W * .35, H * .05, 0, 0, 7); c.ellipse(drift, cy, W * .35, H * .05, 0, 0, 7); c.fill();
-      }
+      });
       // 谷底の霧
       c.fillStyle = 'rgba(220,230,232,0.5)'; c.beginPath(); c.ellipse(W * .5, H * .95, W * .7, H * .1, 0, 0, 7); c.ellipse(W * .5, H * .95, W * .7, H * .1, 0, 0, 7); c.fill();
     } else if (pr === 'halong') {
@@ -4444,9 +4436,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#c08858'; c.beginPath(); c.moveTo(0, H * .75); c.quadraticCurveTo(W * .3, H * .35, W * .65, H * .3); c.quadraticCurveTo(W * .85, H * .32, W, H * .55); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // 虹の縞(山稜に沿う斜めバンド、赤→金→ターコイズ→栗)
       const bands = ['#b05040', '#d8a050', '#78a088', '#885858', '#c89858'];
-      for (let i = 0; i < bands.length; i++) {
+      times(bands.length, i => {
         c.fillStyle = bands[i]; const off = i * .045; c.beginPath(); c.moveTo(0, H * (.75 - off)); c.quadraticCurveTo(W * .3, H * (.35 - off), W * .65, H * (.3 - off * .5)); c.quadraticCurveTo(W * .85, H * (.32 - off * .4), W, H * (.55 - off)); c.lineTo(W, H * (.55 - off + .04)); c.quadraticCurveTo(W * .85, H * (.32 - off * .4 + .04), W * .65, H * (.3 - off * .5 + .04)); c.quadraticCurveTo(W * .3, H * (.35 - off + .04), 0, H * (.75 - off + .04)); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 山体を再描いて縞を上端だけ残す(下半分は埋め戻す)
       c.fillStyle = '#c08858'; c.beginPath(); c.moveTo(0, H * .62); c.quadraticCurveTo(W * .35, H * .5, W * .7, H * .55); c.lineTo(W, H * .68); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // 谷(右手前の深い渓)
@@ -4477,9 +4469,9 @@ if (typeof document !== 'undefined') (() => {
         const bx = W * cx, by = H * cy, cs = H * .09;
         // 杭(水に立つ柱)
         c.strokeStyle = '#3a2a20'; c.lineWidth = Math.max(1.5, H * .006);
-        for (const dx of [-.3, 0, .3]) {
+        ([-.3, 0, .3]).forEach(dx => {
           c.beginPath(); c.moveTo(bx + cs * dx, by); c.lineTo(bx + cs * dx, by + cs * .2); c.stroke();
-        }
+        });
         // 赤い家身
         c.fillStyle = '#a03828'; c.fillRect(bx - cs * .45, by - cs * .5, cs * .9, cs * .5);
         // 白い窓枠
@@ -4503,9 +4495,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#6a6858'; c.beginPath(); c.moveTo(W * .55, H * .6); c.lineTo(W * .7, H * .28); c.lineTo(W * .88, H * .6); c.closePath(); c.closePath(); c.fill(); c.fillStyle = 'rgba(230,230,225,0.5)'; c.beginPath(); c.ellipse(W * .72, H * .22, W * .06, H * .02, .2, 0, 7); c.ellipse(W * .72, H * .22, W * .06, H * .02, .2, 0, 7); c.fill();
       // 段々の基壇(4段、下に広がる石積み)
       c.fillStyle = '#7a7060';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const ty = H * (.62 + i * .06), tw2 = W * (.5 - i * .08); c.fillRect(W * .5 - tw2 / 2, ty, tw2, H * .05);
-      }
+      });
       // 鐘型仏塔の列(上壇に立つ格子の鐘)
       c.fillStyle = '#8a8070'; const stupas = [.3, .42, .58, .7];
       for (const sx of stupas) {
@@ -4529,17 +4521,17 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#4a6840'; c.fillRect(0, H * .82, W, H * .18);
       // 椰子2本(遺跡の両脇)
       c.strokeStyle = '#3a4a30'; c.lineWidth = Math.max(2, H * .008);
-      for (const px of [.12, .88]) {
+      ([.12, .88]).forEach(px => {
         const bx = W * px; c.beginPath(); c.moveTo(bx, H * .82); c.moveTo(bx, H * .82); c.lineTo(bx + W * .01, H * .68); c.moveTo(bx, H * .82); c.lineTo(bx + W * .01, H * .68); c.stroke(); c.fillStyle = '#3a5c38';
-        for (const a of [-1.9, -1.3, -.8]) {
+        ([-1.9, -1.3, -.8]).forEach(a => {
           c.beginPath(); c.moveTo(bx + W * .01, H * .68);
           c.quadraticCurveTo(bx + W * .01 + Math.cos(a) * W * .05, H * .68 + Math.sin(a) * H * .06,
             bx + W * .01 + Math.cos(a) * W * .09, H * .68 + Math.sin(a) * H * .08 + H * .01);
           c.quadraticCurveTo(bx + W * .01 + Math.cos(a) * W * .05, H * .68 + Math.sin(a) * H * .05,
             bx + W * .01, H * .68);
           c.fill();
-        }
-      }
+        });
+      });
     } else if (pr === 'socotra') {
       // ソコトラ: 竜血樹の傘冠+石灰岩の台地+白い砂浜+ターコイズの海
       sky([[0,'#88c8e0'],[.5,'#b8d8c8'],[1,'#e8dcB0']]);
@@ -4555,9 +4547,9 @@ if (typeof document !== 'undefined') (() => {
         const bx = W * tx, by = H * ty, tsz = H * ts;
         // 幹(下からY字に分かれる)
         c.strokeStyle = '#7a6a55'; c.lineWidth = Math.max(1.5, tsz * .06); c.beginPath(); c.moveTo(bx, by); c.moveTo(bx, by); c.lineTo(bx, by - tsz * .5); c.moveTo(bx, by); c.lineTo(bx, by - tsz * .5); c.stroke();
-        for (const a of [-2.1, -1.6, -1.05]) {
+        ([-2.1, -1.6, -1.05]).forEach(a => {
           c.beginPath(); c.moveTo(bx, by - tsz * .5); c.lineTo(bx + Math.cos(a) * tsz * .3, by - tsz * .5 + Math.sin(a) * tsz * .3); c.stroke();
-        }
+        });
         // 傘冠(平天のドーム)
         c.fillStyle = '#4a7c40'; c.beginPath(); c.ellipse(bx, by - tsz * .75, tsz * .45, tsz * .18, 0, Math.PI, 0); c.quadraticCurveTo(bx, by - tsz * .6, bx - tsz * .45, by - tsz * .75); c.closePath(); c.closePath(); c.fill();
         // 冠の網目(枝の影)
@@ -4588,9 +4580,9 @@ if (typeof document !== 'undefined') (() => {
         const bx = W * sx, by = H * sy, ss = H * .1;
         // 杭(4本の長い足)
         c.strokeStyle = '#4a3828'; c.lineWidth = Math.max(1.5, H * .006);
-        for (const dx of [-.35, -.12, .12, .35]) {
+        ([-.35, -.12, .12, .35]).forEach(dx => {
           c.beginPath(); c.moveTo(bx + ss * dx, by); c.lineTo(bx + ss * dx, by + ss * .5); c.stroke();
-        }
+        });
         // 壁(パーム葺きの家身)
         c.fillStyle = '#8a6a48'; c.fillRect(bx - ss * .4, by - ss * .45, ss * .8, ss * .45);
         // 茅葺き屋根(高い切妻)
@@ -4606,9 +4598,9 @@ if (typeof document !== 'undefined') (() => {
       c.strokeStyle = '#4a3828'; c.lineWidth = Math.max(1, H * .004); c.beginPath(); c.moveTo(bx + H * .01, by - H * .03); c.moveTo(bx + H * .01, by - H * .03); c.lineTo(bx + H * .035, by - H * .09); c.moveTo(bx + H * .01, by - H * .03); c.lineTo(bx + H * .035, by - H * .09); c.stroke();
       // 空の鳥(一行)
       c.strokeStyle = '#4a5860'; c.lineWidth = Math.max(1, H * .004);
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const fx = .6 + i * .06, fy = .18 - i * .01; c.beginPath(); c.moveTo(W * fx - W * .008, H * fy); c.quadraticCurveTo(W * fx, H * fy - H * .01, W * fx + W * .008, H * fy); c.stroke();
-      }
+      });
     } else if (pr === 'drakensberg') {
       // ドラケンスバーグ: アンフィシアターの玄武岩断崖+トゥゲラ滝+緑の山麓+雲
       sky([[0,'#88b8d8'],[.45,'#a8c8d0'],[1,'#5a7858']]);
@@ -4616,9 +4608,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#8a7a68'; c.beginPath(); c.moveTo(W * .1, H * .62); c.lineTo(W * .15, H * .3); c.lineTo(W * .3, H * .22); c.lineTo(W * .5, H * .18); c.lineTo(W * .7, H * .22); c.lineTo(W * .85, H * .3); c.lineTo(W * .9, H * .62); c.closePath(); c.closePath(); c.fill(); // 左上の稜線 // 中央の鞍部
       // 断崖の縦筋(柱状節理)
       c.strokeStyle = '#6a5a48'; c.lineWidth = Math.max(1, H * .004);
-      for (let i = 0; i < 9; i++) {
+      times(9, i => {
         const rx = .18 + i * .08; c.beginPath(); c.moveTo(W * rx, H * .25); c.lineTo(W * (rx + .01), H * .6); c.stroke();
-      }
+      });
       // トゥゲラ滝(中央から流れ落ちる白い筋)
       c.fillStyle = 'rgba(240,245,245,0.8)'; c.beginPath(); c.moveTo(W * .49, H * .2); c.lineTo(W * .505, H * .62); c.lineTo(W * .515, H * .62); c.lineTo(W * .51, H * .2); c.closePath(); c.closePath(); c.fill();
       // 滝壺の飛沫
@@ -4627,9 +4619,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#4a7840'; c.beginPath(); c.moveTo(0, H * .62); c.quadraticCurveTo(W * .5, H * .58, W, H * .64); c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // 草地の陰影(斜めの筋)
       c.strokeStyle = '#3a6030'; c.lineWidth = Math.max(1, H * .005);
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         c.beginPath(); c.moveTo(W * i * .18, H * (.66 + i * .02)); c.lineTo(W * (i * .18 + .12), H * (.64 + i * .02)); c.stroke();
-      }
+      });
       // 頂の雲(断崖の上にかかる帯)
       c.fillStyle = 'rgba(235,240,242,0.7)'; c.beginPath(); c.ellipse(W * .4, H * .16, W * .25, H * .025, 0, 0, 7); c.ellipse(W * .4, H * .16, W * .25, H * .025, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(W * .7, H * .24, W * .18, H * .02, 0, 0, 7); c.ellipse(W * .7, H * .24, W * .18, H * .02, 0, 0, 7); c.fill();
     } else if (pr === 'serengeti') {
@@ -4654,9 +4646,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // ヌーの群れ(遠景の小さなシルエット)
       c.fillStyle = '#3a3028';
-      for (let i = 0; i < 7; i++) {
+      times(7, i => {
         const wx = .35 + i * .07, wy = .63 + .01 * Math.sin(i * 2), ws = H * .012; c.beginPath(); c.ellipse(W * wx, H * wy, ws * 1.6, ws, 0, 0, 7); c.ellipse(W * wx, H * wy, ws * 1.6, ws, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(W * wx + ws * 1.8, H * wy - ws * .8, ws * .5, ws * .5, 0, 0, 7); c.ellipse(W * wx + ws * 1.8, H * wy - ws * .8, ws * .5, ws * .5, 0, 0, 7); c.fill(); // 体 // 頭
-      }
+      });
       // 空の鳥(2羽の影)
       c.strokeStyle = '#4a3828'; c.lineWidth = Math.max(1, H * .004);
       for (const [fx, fy] of [[.4, .25], [.55, .18]]) {
@@ -4675,9 +4667,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#7a6a58'; c.beginPath(); c.moveTo(W * .1, H * .7); c.lineTo(W * .18, H * .35); c.lineTo(W * .24, H * .5); c.lineTo(W * .3, H * .3); c.lineTo(W * .36, H * .52); c.lineTo(W * .44, H * .38); c.lineTo(W * .52, H * .6); c.lineTo(W * .6, H * .7); c.closePath(); c.closePath(); c.fill(); // 高い尖塔
       // 断崖の陰(岩の亀裂筋)
       c.strokeStyle = '#5a4c3c'; c.lineWidth = Math.max(1, H * .004);
-      for (const cx of [.2, .28, .4, .5]) {
+      ([.2, .28, .4, .5]).forEach(cx => {
         c.beginPath(); c.moveTo(W * cx, H * .4); c.lineTo(W * (cx + .02), H * .68); c.stroke();
-      }
+      });
       // 深い谷(断崖の下の暗い窪地)
       c.fillStyle = '#4a5a48'; c.beginPath(); c.moveTo(W * .5, H * .7); c.quadraticCurveTo(W * .75, H * .6, W, H * .75); c.lineTo(W, H); c.lineTo(W, H); c.lineTo(W * .5, H); c.closePath(); c.closePath(); c.fill();
       // 手前の高台草地(断崖の麓)
@@ -4718,9 +4710,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#e8f0f0'; c.beginPath(); c.moveTo(W * .42, H); c.lineTo(W * .42, H * .72); c.quadraticCurveTo(W * .5, H * .66, W * .58, H * .72); c.lineTo(W * .58, H); c.closePath(); c.closePath(); c.fill();
       // 階段の段(路地の白い段差)
       c.strokeStyle = '#b0c8d8'; c.lineWidth = Math.max(1.5, H * .006);
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const sy = H * (.76 + i * .04); c.beginPath(); c.moveTo(W * (.43 + i * .01), sy); c.lineTo(W * (.57 - i * .01), sy); c.stroke();
-      }
+      });
       // 鉢植え(路地の脇の花)
       for (const [px, py, pc] of [[.4, .85, '#c04848'], [.6, .88, '#d8a038'], [.38, .93, '#c04848']]) {
         c.fillStyle = '#8a5a38'; c.fillRect(W * px - W * .012, H * py, W * .024, H * .02); c.fillStyle = pc; dot(px,py - H * .015,W * .012);
@@ -4735,9 +4727,9 @@ if (typeof document !== 'undefined') (() => {
         const bx = W * tx, by = H * ty, bs = W * ts;
         // 高床の柱
         c.fillStyle = '#5a4632';
-        for (const px of [.15, .5, .85]) {
+        ([.15, .5, .85]).forEach(px => {
           c.fillRect(bx + bs * px - bs * .02, by, bs * .04, H * .1);
-        }
+        });
         // 家の本体(横長の壁)
         c.fillStyle = '#7a5a38'; c.fillRect(bx, by - bs * .35, bs, bs * .35);
         // 壁面の彫刻文様(白い横線)
@@ -4747,17 +4739,17 @@ if (typeof document !== 'undefined') (() => {
       }
       // 水田(段々の水面+稲の緑)
       c.fillStyle = '#88b0d0'; c.fillRect(0, H * .78, W, H * .22); c.strokeStyle = '#6a9048'; c.lineWidth = Math.max(1.5, H * .008);
-      for (const ty2 of [.8, .85, .9]) {
+      ([.8, .85, .9]).forEach(ty2 => {
         c.beginPath(); c.moveTo(0, H * ty2); c.quadraticCurveTo(W * .4, H * (ty2 - .02), W, H * ty2); c.stroke();
-      }
+      });
       // 椰子の木1本
       const px2 = W * .88, py2 = H * .78; c.strokeStyle = '#6a5038'; c.lineWidth = Math.max(2, W * .006); c.beginPath(); c.moveTo(px2, py2); c.moveTo(px2, py2); c.lineTo(px2 + W * .01, py2 - H * .15); c.moveTo(px2, py2); c.lineTo(px2 + W * .01, py2 - H * .15); c.stroke(); c.strokeStyle = '#4a7838'; c.lineWidth = Math.max(1.5, W * .004);
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const ang = -2.2 + i * .5; c.beginPath(); c.moveTo(px2 + W * .01, py2 - H * .15);
         c.quadraticCurveTo(px2 + W * .01 + Math.cos(ang) * W * .05, py2 - H * .15 + Math.sin(ang) * H * .03 - H * .02,
           px2 + W * .01 + Math.cos(ang) * W * .08, py2 - H * .15 + Math.sin(ang) * H * .05);
         c.stroke();
-      }
+      });
     } else if (pr === 'chocohills') {
       // チョコレートヒルズ: 円錐状の丘が連なる+椰子+青空
       sky([[0,'#88b8e0'],[.55,'#b0d0e0'],[1,'#8aa868']]);
@@ -4782,12 +4774,12 @@ if (typeof document !== 'undefined') (() => {
       // 椰子の木2本(丘の間)
       for (const [px, py, ps] of [[.24, .78, .14], [.6, .8, .12]]) {
         const tx2 = W * px, ty2 = H * py, ts2 = H * ps; c.strokeStyle = '#7a5a40'; c.lineWidth = Math.max(1.5, ts2 * .06); c.beginPath(); c.moveTo(tx2, ty2); c.moveTo(tx2, ty2); c.lineTo(tx2 + ts2 * .08, ty2 - ts2 * .8); c.moveTo(tx2, ty2); c.lineTo(tx2 + ts2 * .08, ty2 - ts2 * .8); c.stroke(); c.strokeStyle = '#4a7838'; c.lineWidth = Math.max(1, ts2 * .04);
-        for (let i = 0; i < 5; i++) {
+        times(5, i => {
           const ang = -2.4 + i * .55; c.beginPath(); c.moveTo(tx2 + ts2 * .08, ty2 - ts2 * .8);
           c.quadraticCurveTo(tx2 + ts2 * .08 + Math.cos(ang) * ts2 * .45, ty2 - ts2 * .8 + Math.sin(ang) * ts2 * .25,
             tx2 + ts2 * .08 + Math.cos(ang) * ts2 * .7, ty2 - ts2 * .8 + Math.sin(ang) * ts2 * .45);
           c.stroke();
-        }
+        });
       }
     } else if (pr === 'svaneti') {
       // スヴァネティ: 石造りの防衛塔+雪山の連峰+山村
@@ -4820,13 +4812,13 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#d8b890'],[.55,'#c8a878'],[1,'#a08858']]);
       // 粘土の城壁(連なる城塞壁+鋸壁)
       c.fillStyle = '#b89468'; c.fillRect(0, H * .5, W, H * .2); c.fillStyle = '#a88458';
-      for (let i = 0; i < 14; i++) {
+      times(14, i => {
         c.fillRect(W * i / 14 + W * .015, H * .47, W * .04, H * .04);
-      }
+      });
       // 城壁の鼓塔(半円の突出)
-      for (const tx of [.1, .35, .62, .85]) {
+      ([.1, .35, .62, .85]).forEach(tx => {
         c.beginPath(); c.arc(W * tx, H * .5, W * .035, Math.PI, 0); c.fill();
-      }
+      });
       // カルタ・ミナール(太くて短い青の塔)
       const mx = W * .5, mw = W * .07;
       // 台座
@@ -4835,14 +4827,14 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#b89468'; c.fillRect(mx - mw / 2, H * .28, mw, H * .34);
       // タイル帯(ターコイズの横帯)
       c.fillStyle = '#4a98a8';
-      for (const ty of [.32, .42, .52]) {
+      ([.32, .42, .52]).forEach(ty => {
         c.fillRect(mx - mw / 2, H * ty, mw, H * .05);
-      }
+      });
       // 帯の文様(白い縦筋)
       c.strokeStyle = '#e8f0e8'; c.lineWidth = Math.max(1, W * .002);
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const fx = mx - mw / 2 + mw * (i + .5) / 6; c.beginPath(); c.moveTo(fx, H * .32); c.moveTo(fx, H * .32); c.lineTo(fx, H * .57); c.stroke();
-      }
+      });
       // 頂の張り出し(木の梁+小尖塔)
       c.fillStyle = '#6a5848'; c.fillRect(mx - mw * .62, H * .26, mw * 1.24, H * .02); c.fillStyle = '#98806a'; c.fillRect(mx - mw * .55, H * .22, mw * 1.1, H * .04);
       // 入口アーチ(大きなアイワン)
@@ -4860,23 +4852,23 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#3a6898'; c.fillRect(0, H * .68, W, H * .32);
       // 波筋(水面の細い線)
       c.strokeStyle = 'rgba(220,235,240,0.4)'; c.lineWidth = Math.max(1, H * .003);
-      for (const wy of [.72, .78, .85, .92]) {
+      ([.72, .78, .85, .92]).forEach(wy => {
         c.beginPath(); c.moveTo(0, H * wy); c.quadraticCurveTo(W * .4, H * (wy - .01), W, H * wy); c.stroke();
-      }
+      });
       // プレーケストレン(右側の垂直断崖+平らな頂)
       const cx = W * .68; c.fillStyle = '#7a6a58'; c.beginPath(); c.moveTo(cx, H * .3); c.lineTo(cx + W * .32, H * .3); c.lineTo(cx + W * .32, H * .42); c.lineTo(cx + W * .28, H); c.lineTo(cx, H); c.closePath(); c.closePath(); c.fill(); // 頂の左端 // 頂の右端(平ら) // 壁の上端 // 壁の下端(斜めに切れる)
       // 壁面の岩筋(垂直の亀裂)
       c.strokeStyle = '#5a4c3c'; c.lineWidth = Math.max(1.5, H * .006);
-      for (const fx of [.05, .12, .2, .27]) {
+      ([.05, .12, .2, .27]).forEach(fx => {
         c.beginPath(); c.moveTo(cx + W * fx, H * .42); c.lineTo(cx + W * (fx - .01), H); c.stroke();
-      }
+      });
       // 頂上の緑(草地の台座)
       c.fillStyle = '#6a8850'; c.beginPath(); c.moveTo(cx - W * .02, H * .3); c.lineTo(cx + W * .33, H * .3); c.lineTo(cx + W * .33, H * .26); c.lineTo(cx - W * .02, H * .26); c.closePath(); c.closePath(); c.fill();
       // 頂の人影2人(小さな点)
       c.fillStyle = 'rgba(40,40,40,0.8)';
-      for (const px of [.72, .88]) {
+      ([.72, .88]).forEach(px => {
         c.fillRect(W * px, H * .24, W * .006, H * .02);
-      }
+      });
     } else if (pr === 'jeju') {
       // 済州: 漢拏山の火山丘+石垣+菜の花畑+海
       sky([[0,'#90b8e0'],[.5,'#a8ccd0'],[1,'#689858']]);
@@ -4892,16 +4884,16 @@ if (typeof document !== 'undefined') (() => {
       }
       // 石垣(玄武岩の黒い石積み)
       c.fillStyle = '#3a3838';
-      for (const ry of [.68, .72]) {
-        for (let i = 0; i < 12; i++) {
+      ([.68, .72]).forEach(ry => {
+        times(12, i => {
           c.fillRect(W * (i + (ry === .72 ? .5 : 0)) / 12, H * ry, W * .07, H * .035);
-        }
-      }
+        });
+      });
       // 菜の花畑(黄色い点々)
       const tr3 = L.mulberry32(555); c.fillStyle = '#e0c838';
-      for (let i = 0; i < 60; i++) {
+      times(60, i => {
         c.fillRect(tr3() * W, H * (.78 + tr3() * .18), W * .008, W * .008);
-      }
+      });
       // 緑の大地
       c.fillStyle = 'rgba(100,150,80,0.5)'; c.fillRect(0, H * .78, W, H * .22);
     } else if (pr === 'gobi') {
@@ -4911,9 +4903,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#a89858'; c.fillRect(0, H * .55, W, H * .45);
       // 草原の草むら(薄い横筋)
       c.strokeStyle = 'rgba(120,140,70,0.5)'; c.lineWidth = Math.max(1, H * .005);
-      for (const gy of [.6, .66, .72]) {
+      ([.6, .66, .72]).forEach(gy => {
         c.beginPath(); c.moveTo(0, H * gy); c.quadraticCurveTo(W * .5, H * (gy - .02), W, H * gy); c.stroke();
-      }
+      });
       // 白いゲル(丸い幕屋+赤い頂+煙突の煙)
       const gx = W * .3, gy = H * .62, gs = W * .12;
       // 本体(白い円筒+丸屋根)
@@ -4933,9 +4925,9 @@ if (typeof document !== 'undefined') (() => {
         c.strokeStyle = '#8a6a48'; c.lineWidth = Math.max(1.5, bw * .15); c.beginPath(); c.moveTo(bx + bw * .8, H * .68); c.quadraticCurveTo(bx + bw * 1.2, H * .62, bx + bw * 1.15, H * .58); c.stroke();
         // 脚
         c.lineWidth = Math.max(1.5, bw * .1);
-        for (const lx of [-.5, -.2, .3, .6]) {
+        ([-.5, -.2, .3, .6]).forEach(lx => {
           c.beginPath(); c.moveTo(bx + lx * bw, H * .7); c.lineTo(bx + lx * bw, H * .76); c.stroke();
-        }
+        });
       }
       // 白い雲2つ
       c.fillStyle = 'rgba(240,245,250,0.7)'; ell(.2,.2,W * .12,H * .015); ell(.75,.15,W * .15,H * .02);
@@ -4952,9 +4944,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#4878a0'; c.fillRect(0, H * .65, W, H * .35);
       // 川の波(横筋)
       c.strokeStyle = 'rgba(140,190,220,0.5)'; c.lineWidth = Math.max(1, H * .005);
-      for (const wy of [.7, .76, .82, .9]) {
+      ([.7, .76, .82, .9]).forEach(wy => {
         c.beginPath(); c.moveTo(0, H * wy); c.quadraticCurveTo(W * .5, H * (wy - .015), W, H * wy); c.stroke();
-      }
+      });
       // フェルッカ(白い三角帆の帆船)
       const fx = W * .35, fy = H * .62; c.fillStyle = '#e8e0d0'; c.beginPath(); c.moveTo(fx, fy - H * .18); c.moveTo(fx, fy - H * .18); c.lineTo(fx + W * .1, fy); c.moveTo(fx, fy - H * .18); c.lineTo(fx + W * .1, fy); c.lineTo(fx, fy); c.closePath(); c.closePath(); c.fill();
       // 船体
@@ -4963,15 +4955,15 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = 'rgba(230,220,200,0.3)'; c.fillRect(fx, fy + H * .05, W * .1, H * .01);
       // 椰子2本(岸辺)
       c.strokeStyle = '#3a6848'; c.lineWidth = Math.max(2, W * .008);
-      for (const px of [.12, .22]) {
+      ([.12, .22]).forEach(px => {
         const pxx = W * px; c.beginPath(); c.moveTo(pxx, H * .65); c.quadraticCurveTo(pxx + W * .01, H * .55, pxx + W * .02, H * .5); c.stroke();
         // 葉(放射状)
         c.lineWidth = Math.max(1.5, W * .005);
-        for (const a of [-.8, -.4, 0, .4, .8]) {
+        ([-.8, -.4, 0, .4, .8]).forEach(a => {
           c.beginPath(); c.moveTo(pxx + W * .02, H * .5); c.quadraticCurveTo(pxx + W * .02 + W * a * .12, H * .47, pxx + W * .02 + W * a * .16, H * .5); c.stroke();
-        }
+        });
         c.lineWidth = Math.max(2, W * .008);
-      }
+      });
     } else if (pr === 'pamukkale') {
       // パムッカレ: 白い石灰棚+ターコイズの湯池+遠景の山
       sky([[0,'#a8c8e0'],[.5,'#e8e0d8'],[1,'#d0c8b8']]);
@@ -4985,9 +4977,9 @@ if (typeof document !== 'undefined') (() => {
       c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // 棚の縁(影線)
       c.strokeStyle = 'rgba(180,170,150,0.6)'; c.lineWidth = Math.max(1, H * .005);
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const sy = H * (.5 + i * .05); c.beginPath(); c.moveTo(W * i / 8, sy); c.lineTo(W * (i / 8 + .1), sy); c.stroke();
-      }
+      });
       // ターコイズの湯池(棚の上の池)
       for (const [py, px0, px1] of [[.52, .02, .18], [.58, .1, .3], [.65, .18, .38], [.73, .26, .45]]) {
         c.fillStyle = '#58b8c8'; ell((px0 + px1) / 2, py, W * (px1 - px0) / 2, H * .012);
@@ -5001,31 +4993,31 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#80b8e0'],[.55,'#a8ccd8'],[1,'#48884a']]);
       // 密林の樹線(後ろの連なる冠)
       c.fillStyle = '#3a7838';
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const tx = W * i / 9.5; ellP(tx, H * .52, W * .05, H * .04 + (i % 3) * H * .008);
-      }
+      });
       c.fillRect(0, H * .52, W, H * .08);
       // エル・カスティーリョ(9段の階段ピラミッド)
       c.fillStyle = '#b8a078'; const px = W * .5, pw = W * .38;
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const bw = pw * (1 - i * .16), by = H * (.68 - i * .055); c.fillRect(px - bw / 2, by, bw, H * .055);
-      }
+      });
       // 中央の階段(正面の縦帯)
       c.fillStyle = '#988058'; c.fillRect(px - W * .035, H * .42, W * .07, H * .26);
       // 階段の段線(横筋)
       c.strokeStyle = 'rgba(120,100,70,0.6)'; c.lineWidth = Math.max(1, H * .004);
-      for (const sy of [.46, .5, .54, .58, .62, .66]) {
+      ([.46, .5, .54, .58, .62, .66]).forEach(sy => {
         c.beginPath(); c.moveTo(px - W * .035, H * sy); c.lineTo(px + W * .035, H * sy); c.stroke();
-      }
+      });
       // 頂上の神殿(小さな方形+扉)
       c.fillStyle = '#a89068'; c.fillRect(px - W * .06, H * .36, W * .12, H * .06); c.fillStyle = '#584838'; c.fillRect(px - W * .015, H * .38, W * .03, H * .04);
       // 草地(前景)
       c.fillStyle = '#5a9848'; c.fillRect(0, H * .68, W, H * .32);
       // 草むらの陰(横筋)
       c.strokeStyle = 'rgba(70,120,55,0.5)';
-      for (const gy of [.74, .82, .9]) {
+      ([.74, .82, .9]).forEach(gy => {
         c.beginPath(); c.moveTo(0, H * gy); c.quadraticCurveTo(W * .5, H * (gy - .02), W, H * gy); c.stroke();
-      }
+      });
       // 雲2つ
       c.fillStyle = 'rgba(245,250,255,0.7)'; ell(.2,.16,W * .13,H * .018); ell(.8,.22,W * .1,H * .014);
     } else if (pr === 'lencois') {
@@ -5060,15 +5052,15 @@ if (typeof document !== 'undefined') (() => {
       c.strokeStyle = 'rgba(240,250,255,0.8)'; c.lineWidth = Math.max(1.5, H * .008); ellPS(W * .5, H * .68, W * .34, H * .13);
       // 椰子2本(左のモツ)
       c.strokeStyle = '#6a5a40'; c.lineWidth = Math.max(1.5, W * .005);
-      for (const px of [.15, .22]) {
+      ([.15, .22]).forEach(px => {
         const pxx = W * px; c.beginPath(); c.moveTo(pxx, H * .58); c.quadraticCurveTo(pxx + W * .01, H * .5, pxx + W * .015, H * .46); c.stroke();
         // 葉(放射状)
         c.strokeStyle = '#3a7848'; c.lineWidth = Math.max(1.2, W * .004);
-        for (const a of [-.7, -.3, .1, .5]) {
+        ([-.7, -.3, .1, .5]).forEach(a => {
           c.beginPath(); c.moveTo(pxx + W * .015, H * .46); c.quadraticCurveTo(pxx + W * .015 + W * a * .1, H * .44, pxx + W * .015 + W * a * .14, H * .47); c.stroke();
-        }
+        });
         c.strokeStyle = '#6a5a40'; c.lineWidth = Math.max(1.5, W * .005);
-      }
+      });
       // 雲2つ
       c.fillStyle = 'rgba(250,252,255,0.8)'; ell(.2,.15,W * .12,H * .016); ell(.75,.2,W * .14,H * .018);
     } else if (pr === 'potala') {
@@ -5080,29 +5072,29 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#587048'; c.beginPath(); c.moveTo(W * .15, H * .75); c.quadraticCurveTo(W * .5, H * .52, W * .85, H * .75); c.lineTo(W * .85, H); c.lineTo(W * .85, H); c.lineTo(W * .15, H); c.closePath(); c.closePath(); c.fill();
       // 白い宮殿(段々の壁: 4層)
       const px = W * .5, pw = W * .3; c.fillStyle = '#f0ebe0';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const bw = pw * (1 - i * .12), by = H * (.62 - i * .07); c.fillRect(px - bw / 2, by, bw, H * .07);
         // 壁の窓(小さな点列)
         c.fillStyle = 'rgba(80,60,50,0.7)';
-        for (const wx of [-.35, -.18, 0, .18, .35]) {
+        ([-.35, -.18, 0, .18, .35]).forEach(wx => {
           c.fillRect(px + wx * bw / 2 - W * .003, by + H * .025, W * .006, H * .02);
-        }
+        });
         c.fillStyle = '#f0ebe0';
-      }
+      });
       // 赤い中央殿(頂の大きな殿舎)
       c.fillStyle = '#a03828'; c.fillRect(px - pw * .22, H * .35, pw * .44, H * .1);
       // 金の屋根(中央殿の屋根+小さな塔)
       c.fillStyle = '#d8a828'; c.beginPath(); c.moveTo(px - pw * .22, H * .35); c.lineTo(px, H * .28); c.lineTo(px, H * .28); c.lineTo(px + pw * .22, H * .35); c.closePath(); c.closePath(); c.fill();
-      for (const tx of [-.15, 0, .15]) {
+      ([-.15, 0, .15]).forEach(tx => {
         c.fillRect(px + tx * pw, H * .3 - H * .01, W * .008, H * .02);
-      }
+      });
       // 大地(前景の草原)
       c.fillStyle = '#5a8848'; c.fillRect(0, H * .75, W, H * .25);
       // 草むら(横筋)
       c.strokeStyle = 'rgba(70,110,60,0.5)'; c.lineWidth = Math.max(1, H * .005);
-      for (const gy of [.82, .9]) {
+      ([.82, .9]).forEach(gy => {
         c.beginPath(); c.moveTo(0, H * gy); c.quadraticCurveTo(W * .5, H * (gy - .02), W, H * gy); c.stroke();
-      }
+      });
       // 雲2つ
       c.fillStyle = 'rgba(250,252,255,0.8)'; ell(.2,.16,W * .12,H * .016); ell(.8,.22,W * .1,H * .014);
     } else if (pr === 'moher') {
@@ -5112,16 +5104,16 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#3a6a80'; c.fillRect(0, H * .55, W, H * .45);
       // 白い波筋(3列)
       c.strokeStyle = 'rgba(240,248,250,0.6)'; c.lineWidth = Math.max(1, H * .004);
-      for (const wy of [.62, .7, .82]) {
+      ([.62, .7, .82]).forEach(wy => {
         c.beginPath(); c.moveTo(0, H * wy); c.quadraticCurveTo(W * .2, H * (wy - .015), W * .45, H * wy); c.stroke();
-      }
+      });
       // 断崖(右側の積層岩壁)
       const cx = W * .55; c.fillStyle = '#6a5848'; c.beginPath(); c.moveTo(cx, H * .5); c.lineTo(W * .62, H * .48); c.lineTo(W * .62, H * .48); c.lineTo(W, H * .5); c.lineTo(W, H); c.lineTo(W, H); c.lineTo(cx, H); c.closePath(); c.closePath(); c.fill();
       // 積層線(水平の岩層)
       c.strokeStyle = 'rgba(90,75,60,0.8)'; c.lineWidth = Math.max(1, H * .003);
-      for (const ly of [.55, .62, .7, .78, .86, .93]) {
+      ([.55, .62, .7, .78, .86, .93]).forEach(ly => {
         c.beginPath(); c.moveTo(cx + W * .02, H * ly); c.lineTo(W, H * (ly - .01)); c.stroke();
-      }
+      });
       // 崖の縁(左端のジグザグ)
       c.strokeStyle = '#4a3c30'; c.lineWidth = Math.max(1, H * .006); c.beginPath(); c.moveTo(cx, H * .5); c.lineTo(cx + W * .015, H * .58); c.lineTo(cx + W * .015, H * .58); c.lineTo(cx - W * .005, H * .66); c.lineTo(cx + W * .012, H * .74); c.lineTo(cx + W * .012, H * .74); c.lineTo(cx - W * .008, H * .82); c.lineTo(cx + W * .008, H * .9); c.lineTo(cx + W * .008, H * .9); c.lineTo(cx, H); c.stroke();
       // 緑の崖頂(上の芝生)
@@ -5154,9 +5146,9 @@ if (typeof document !== 'undefined') (() => {
         c.fillStyle = '#7a5a40'; c.beginPath(); c.moveTo(W * bx - tw / 2, H); c.lineTo(W * bx - tw * .32, H * by - th * .4); c.lineTo(W * bx + tw * .32, H * by - th * .4); c.lineTo(W * bx + tw / 2, H); c.closePath(); c.closePath(); c.fill();
         // 枝(上の短い広がり)
         c.strokeStyle = '#7a5a40'; c.lineWidth = Math.max(2, tw * .08);
-        for (const a of [-.7, -.35, 0, .35, .7]) {
+        ([-.7, -.35, 0, .35, .7]).forEach(a => {
           c.beginPath(); c.moveTo(W * bx, H * (by - th * .4)); c.lineTo(W * bx + Math.sin(a) * tw * .8, H * (by - th * .4) - Math.cos(a) * th * .35); c.stroke();
-        }
+        });
         // 小さな冠(枝先の葉)
         c.fillStyle = '#5a7848'; ell(bx, (by - th * .4) - th * .3, tw * .85, th * .18);
       }
@@ -5183,20 +5175,20 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#58c8d8'; c.fillRect(0, H * .57, W, H * .2);
       // 礁湖の波筋
       c.strokeStyle = 'rgba(240,250,250,0.5)'; c.lineWidth = Math.max(1, H * .003);
-      for (const wy of [.62, .68, .74]) {
+      ([.62, .68, .74]).forEach(wy => {
         c.beginPath(); c.moveTo(0, H * wy); c.quadraticCurveTo(W * .5, H * (wy - .01), W, H * wy); c.stroke();
-      }
+      });
       // 白砂の前浜(下の帯)
       c.fillStyle = '#f0e8d0'; c.fillRect(0, H * .78, W, H * .22);
       // 砂の陰(波打ち線)
       c.strokeStyle = 'rgba(200,180,140,0.6)'; c.lineWidth = Math.max(1, H * .004); c.beginPath(); c.moveTo(0, H * .82); c.quadraticCurveTo(W * .5, H * .8, W, H * .83); c.stroke();
       // 椰子2本(右の浜)
-      for (const px of [.78, .9]) {
+      ([.78, .9]).forEach(px => {
         c.strokeStyle = '#6a4a30'; c.lineWidth = Math.max(1, W * .006); c.beginPath(); c.moveTo(W * px, H); c.quadraticCurveTo(W * (px + .02), H * .88, W * (px + .01), H * .8); c.stroke(); c.strokeStyle = '#3a7848'; c.lineWidth = Math.max(1, W * .007); const tipX = W * (px + .01), tipY = H * .8;
-        for (const a of [-.8, -.4, 0, .4, .8]) {
+        ([-.8, -.4, 0, .4, .8]).forEach(a => {
           c.beginPath(); c.moveTo(tipX, tipY); c.lineTo(tipX + Math.sin(a) * W * .035, tipY - Math.cos(a) * W * .02); c.stroke();
-        }
-      }
+        });
+      });
       // 雲2つ
       c.fillStyle = 'rgba(250,252,255,0.8)'; ell(.25,.15,W * .12,H * .016); ell(.7,.1,W * .09,H * .013);
     } else if (pr === 'bure') {
@@ -5221,18 +5213,18 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#8a6a40'; c.beginPath(); c.moveTo(bx - bs * .5, by - bs * .32); c.lineTo(bx, by - bs * .75); c.lineTo(bx + bs * .5, by - bs * .32); c.closePath(); c.closePath(); c.fill();
       // 屋根の藁線(垂れ筋)
       c.strokeStyle = 'rgba(60,45,25,0.5)'; c.lineWidth = Math.max(1, W * .0015);
-      for (const rx of [-.35, -.2, 0, .2, .35]) {
+      ([-.35, -.2, 0, .2, .35]).forEach(rx => {
         c.beginPath(); c.moveTo(bx + rx * bs, by - bs * .38); c.lineTo(bx + rx * bs * .7, by - bs * .65); c.stroke();
-      }
+      });
       // ドア(暗い開口)
       c.fillStyle = '#3a2c1c'; c.fillRect(bx - bs * .08, by - bs * .25, bs * .16, bs * .25);
       // 椰子2本(右の浜)
-      for (const px of [.72, .88]) {
+      ([.72, .88]).forEach(px => {
         c.strokeStyle = '#6a4a30'; c.lineWidth = Math.max(1, W * .006); c.beginPath(); c.moveTo(W * px, H * .95); c.quadraticCurveTo(W * (px + .015), H * .85, W * px, H * .78); c.stroke(); c.strokeStyle = '#3a7848'; c.lineWidth = Math.max(1, W * .007);
-        for (const a of [-.8, -.4, 0, .4, .8]) {
+        ([-.8, -.4, 0, .4, .8]).forEach(a => {
           c.beginPath(); c.moveTo(W * px, H * .78); c.lineTo(W * px + Math.sin(a) * W * .035, H * .78 - Math.cos(a) * W * .022); c.stroke();
-        }
-      }
+        });
+      });
       // 雲2つ
       c.fillStyle = 'rgba(250,252,255,0.8)'; ell(.2,.15,W * .12,H * .016); ell(.75,.2,W * .1,H * .014);
     } else if (pr === 'kokoda') {
@@ -5256,9 +5248,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 露光の粒(霧の中の光)
       const rng7 = L.mulberry32(777); c.fillStyle = 'rgba(255,250,230,0.5)';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const lx = rng7() * W, ly = H * (.35 + rng7() * .3); dotP(lx, ly, W * .004);
-      }
+      });
     } else if (pr === 'haamonga') {
       // ハアモンガ: 巨石の三石門+草原+海の遠景
       sky([[0,'#80b8d8'],[.5,'#a0c8d8'],[1,'#5a8858']]);
@@ -5268,9 +5260,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#6a9848'; c.fillRect(0, H * .56, W, H * .44);
       // 草の揺れ筋(2筋)
       c.strokeStyle = 'rgba(80,120,60,0.5)'; c.lineWidth = Math.max(1, H * .005);
-      for (const gy of [.68, .82]) {
+      ([.68, .82]).forEach(gy => {
         c.beginPath(); c.moveTo(0, H * gy); c.quadraticCurveTo(W * .5, H * (gy - .015), W, H * gy); c.stroke();
-      }
+      });
       // 三石門(中央の巨石トンガ門)
       const gx = W * .5, gw = W * .18, gh = H * .3;
       // 左柱
@@ -5285,12 +5277,12 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath(); c.moveTo(gx + cx2 * gw, H * (.78 + cy2 * gh / gh * .2)); c.lineTo(gx + cx2 * gw + W * .01, H * (.78 + cy2 * gh / gh * .25)); c.stroke();
       }
       // 椰子2本(門の両脇)
-      for (const px of [.15, .85]) {
+      ([.15, .85]).forEach(px => {
         c.strokeStyle = '#6a4a30'; c.lineWidth = Math.max(1, W * .005); c.beginPath(); c.moveTo(W * px, H * .8); c.quadraticCurveTo(W * (px + .015), H * .7, W * px, H * .62); c.stroke(); c.strokeStyle = '#3a7848'; c.lineWidth = Math.max(1, W * .006);
-        for (const a of [-.8, -.4, 0, .4, .8]) {
+        ([-.8, -.4, 0, .4, .8]).forEach(a => {
           c.beginPath(); c.moveTo(W * px, H * .62); c.lineTo(W * px + Math.sin(a) * W * .03, H * .62 - Math.cos(a) * W * .018); c.stroke();
-        }
-      }
+        });
+      });
       // 雲2つ
       c.fillStyle = 'rgba(250,252,255,0.75)'; ell(.2,.14,W * .12,H * .016); ell(.7,.1,W * .1,H * .014);
     } else if (pr === 'yasur') {
@@ -5321,20 +5313,20 @@ if (typeof document !== 'undefined') (() => {
       }
       // 灰の粒(舞う火山灰)
       const rng8 = L.mulberry32(888); c.fillStyle = 'rgba(180,160,150,0.4)';
-      for (let i = 0; i < 12; i++) {
+      times(12, i => {
         const ax = rng8() * W, ay = H * (.3 + rng8() * .5); dotP(ax, ay, W * .003);
-      }
+      });
     } else if (pr === 'douro') {
       // ドウロ: 渓谷の段々畑+蛇行する川+山裾の村+船
       sky([[0,'#88b8d8'],[.45,'#a8c8d8'],[1,'#4a7a58']]);
       // 遠山(2層の稜線)
       c.fillStyle = '#6a8a70'; c.beginPath(); c.moveTo(0, H * .42); c.lineTo(W * .3, H * .3); c.lineTo(W * .3, H * .3); c.lineTo(W * .6, H * .4); c.lineTo(W * .3, H * .3); c.lineTo(W * .6, H * .4); c.lineTo(W, H * .32); c.lineTo(W, H * .6); c.lineTo(W, H * .6); c.lineTo(0, H * .6); c.closePath(); c.closePath(); c.fill();
       // 段々畑(重なる横帯のテラス)
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const ty = .45 + i * .05; c.fillStyle = i % 2 ? '#5a8a58' : '#6a9a60'; c.beginPath(); c.moveTo(0, H * ty); c.quadraticCurveTo(W * .3, H * (ty - .02), W * .55, H * ty); c.quadraticCurveTo(W * .8, H * (ty + .02), W, H * ty); c.lineTo(W, H * (ty + .05)); c.quadraticCurveTo(W * .8, H * (ty + .07), W * .55, H * (ty + .05)); c.quadraticCurveTo(W * .3, H * (ty + .03), 0, H * (ty + .05)); c.closePath(); c.closePath(); c.fill();
         // テラスの縁線(石垣の暗い筋)
         c.strokeStyle = 'rgba(60,80,50,0.5)'; c.lineWidth = Math.max(1, H * .004); c.beginPath(); c.moveTo(0, H * ty); c.quadraticCurveTo(W * .3, H * (ty - .02), W * .55, H * ty); c.quadraticCurveTo(W * .8, H * (ty + .02), W, H * ty); c.stroke();
-      }
+      });
       // 蛇行する川(中央の青い帯)
       c.fillStyle = '#4a88a8'; c.beginPath(); c.moveTo(W * .3, H * .75); c.quadraticCurveTo(W * .5, H * .7, W * .65, H * .78); c.quadraticCurveTo(W * .8, H * .85, W * .75, H); c.lineTo(W * .55, H); c.quadraticCurveTo(W * .6, H * .88, W * .45, H * .82); c.quadraticCurveTo(W * .3, H * .76, W * .1, H * .78); c.lineTo(0, H * .82); c.lineTo(0, H * .82); c.lineTo(0, H * .78); c.closePath(); c.closePath(); c.fill();
       // 川の光(白い反射筋)
@@ -5359,9 +5351,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#c08848'; c.fillRect(0, H * .72, W * .4, H * .08); c.fillStyle = '#a06838'; c.fillRect(0, H * .76, W * .4, H * .04);
       // 木々(畑の間の緑の丸)
       c.fillStyle = '#4a7048';
-      for (const tx of [.08, .2, .32]) {
+      ([.08, .2, .32]).forEach(tx => {
         dot(tx,.7,W * .015);
-      }
+      });
       // ホルヴィラップ修道院(左の小さな教会)
       const mx = W * .18; c.fillStyle = '#6a5a50'; c.beginPath(); c.moveTo(mx - W * .05, H * .78); c.lineTo(mx - W * .05, H * .7); c.lineTo(mx, H * .66); c.lineTo(mx + W * .05, H * .7); c.lineTo(mx + W * .05, H * .78); c.closePath(); c.closePath(); c.fill();
       // 尖塔(釣鐘のような上の構造)
@@ -5370,9 +5362,9 @@ if (typeof document !== 'undefined') (() => {
       c.strokeStyle = '#d0c0a0'; c.lineWidth = Math.max(1, W * .002); c.beginPath(); c.moveTo(mx, H * .58); c.moveTo(mx, H * .58); c.lineTo(mx, H * .56); c.moveTo(mx - W * .004, H * .575); c.moveTo(mx - W * .004, H * .575); c.lineTo(mx + W * .004, H * .575); c.stroke();
       // 鳥2羽(遠くの飛翔)
       c.strokeStyle = '#4a4a55'; c.lineWidth = Math.max(1, W * .002);
-      for (const bx of [.35, .45]) {
+      ([.35, .45]).forEach(bx => {
         c.beginPath(); c.arc(W * bx, H * .18 + bx * H * .05, W * .008, 3.6, 5.8); c.stroke();
-      }
+      });
     } else if (pr === 'khinalug') {
       // ヒナルグ: 山頂の石造り村+連なる階段状の家+遠い連峰
       sky([[0,'#7a88a8'],[.5,'#a8b0c0'],[1,'#5a6a58']]);
@@ -5412,9 +5404,9 @@ if (typeof document !== 'undefined') (() => {
       const hx2 = W * .5; c.fillStyle = '#b08858'; c.beginPath(); c.moveTo(hx2 - W * .2, H * .72); c.lineTo(hx2 - W * .18, H * .38); c.lineTo(hx2 - W * .08, H * .3); c.lineTo(hx2 + W * .12, H * .34); c.lineTo(hx2 + W * .2, H * .45); c.lineTo(hx2 + W * .2, H * .72); c.closePath(); c.closePath(); c.fill();
       // 岩の水平層理(3本の筋)
       c.strokeStyle = 'rgba(140,100,60,0.6)'; c.lineWidth = Math.max(1, H * .004);
-      for (const ly of [.45, .55, .65]) {
+      ([.45, .55, .65]).forEach(ly => {
         c.beginPath(); c.moveTo(hx2 - W * .19, H * ly); c.lineTo(hx2 + W * .19, H * (ly + .01)); c.stroke();
-      }
+      });
       // 墓のファサード(岩に刻まれた神殿の正面)
       const fx = hx2, fw = W * .14, fy = H * .7, fh = H * .22;
       // 階段状の玄関帯(上部の2段の縁)
@@ -5425,16 +5417,16 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#6a5030'; c.fillRect(fx - fw * .2, fy - fh * .5, fw * .4, fh * .5);
       // 柱4本(ファサードの柱列)
       c.fillStyle = '#8a6840';
-      for (const px2 of [-.3, -.1, .1, .3]) {
+      ([-.3, -.1, .1, .3]).forEach(px2 => {
         c.fillRect(fx + px2 * fw, fy - fh * .52, fw * .06, fh * .52);
-      }
+      });
       // 三角の破風(上の三角縁)
       c.fillStyle = '#8a6840'; c.beginPath(); c.moveTo(fx - fw * .3, fy - fh); c.lineTo(fx, fy - fh - H * .03); c.lineTo(fx + fw * .3, fy - fh); c.closePath(); c.closePath(); c.fill();
       // ラクダ2頭(遠くのシルエット)
       c.fillStyle = '#6a5030';
-      for (const cx3 of [.12, .2]) {
+      ([.12, .2]).forEach(cx3 => {
         c.beginPath(); c.ellipse(W * cx3, H * .78, W * .015, H * .012, 0, 0, 7); c.ellipse(W * cx3, H * .78, W * .015, H * .012, 0, 0, 7); c.fill(); c.strokeStyle = '#6a5030'; c.lineWidth = Math.max(1, W * .003); c.beginPath(); c.moveTo(W * cx3 + W * .012, H * .77); c.lineTo(W * cx3 + W * .018, H * .74); c.stroke();
-      }
+      });
       // 陽の光(斜めの筋)
       c.strokeStyle = 'rgba(255,220,160,0.25)'; c.lineWidth = W * .02; c.beginPath(); c.moveTo(W * .1, 0); c.lineTo(W * .5, H); c.stroke();
     } else if (pr === 'sidi') {
@@ -5444,9 +5436,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#2868a0'; c.fillRect(0, H * .72, W, H * .28);
       // 海の白波(2本の筋)
       c.strokeStyle = 'rgba(220,240,255,0.5)'; c.lineWidth = Math.max(1, H * .003);
-      for (const wy of [.78, .86]) {
+      ([.78, .86]).forEach(wy => {
         c.beginPath(); c.moveTo(0, H * wy); c.quadraticCurveTo(W * .5, H * (wy - .01), W, H * wy); c.stroke();
-      }
+      });
       // 丘(白い村の土台)
       c.fillStyle = '#e8e0d0'; c.beginPath(); c.moveTo(0, H * .72); c.quadraticCurveTo(W * .4, H * .5, W * .75, H * .55); c.quadraticCurveTo(W * .9, H * .58, W, H * .65); c.lineTo(W, H * .72); c.closePath(); c.closePath(); c.fill();
       // 白い家の連なり(丘の上の箱)
@@ -5463,9 +5455,9 @@ if (typeof document !== 'undefined') (() => {
       // 花の点(ブーゲンビリアの赤い点)
       c.fillStyle = '#d84858';
       for (const [fx3, fy3] of [[.15, .68], [.4, .64], [.65, .7]]) {
-        for (let i = 0; i < 5; i++) {
+        times(5, i => {
           dot((fx3 + i * .02), (fy3 + (i % 2) * .015), W * .004);
-        }
+        });
       }
       // 雲2つ
       c.fillStyle = 'rgba(250,252,255,0.7)'; ell(.2,.1,W * .14,H * .018); ell(.75,.08,W * .12,H * .015);
@@ -5476,29 +5468,29 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#b08858'; c.fillRect(0, H * .68, W, H * .32);
       // 礫の点(小さな石の粒)
       const rng9 = L.mulberry32(999); c.fillStyle = 'rgba(80,60,40,0.4)';
-      for (let i = 0; i < 40; i++) {
+      times(40, i => {
         const gx2 = rng9() * W, gy2 = H * (.7 + rng9() * .25); dotP(gx2, gy2, W * (.002 + rng9() * .003));
-      }
+      });
       // 巨大なドーム(中央の花崗岩の山)
       const bx4 = W * .5; c.fillStyle = '#987858'; c.beginPath(); c.moveTo(bx4 - W * .35, H * .68); c.quadraticCurveTo(bx4 - W * .3, H * .35, bx4, H * .3); c.quadraticCurveTo(bx4 + W * .3, H * .35, bx4 + W * .35, H * .68); c.closePath(); c.closePath(); c.fill();
       // 岩の層理(ドームの水平筋)
       c.strokeStyle = 'rgba(120,90,60,0.5)'; c.lineWidth = Math.max(1, H * .004);
-      for (const ly of [.4, .5, .6]) {
+      ([.4, .5, .6]).forEach(ly => {
         c.beginPath(); c.moveTo(bx4 - W * .32, H * ly); c.quadraticCurveTo(bx4, H * (ly - .03), bx4 + W * .32, H * ly); c.stroke();
-      }
+      });
       // 頂の岩肌の陰(斜めの筋)
       c.strokeStyle = 'rgba(140,110,80,0.4)';
-      for (const sx3 of [-.12, .08]) {
+      ([-.12, .08]).forEach(sx3 => {
         c.beginPath(); c.moveTo(bx4 + sx3 * W, H * .32); c.quadraticCurveTo(bx4 + sx3 * W * 1.2, H * .5, bx4 + sx3 * W * 1.05, H * .66); c.stroke();
-      }
+      });
       // 矢筒の木3本(フォーク形の枯れ木)
       c.strokeStyle = '#4a3828'; c.lineWidth = Math.max(1, W * .004);
       for (const [qx, qs] of [[.15, 1], [.3, .8], [.82, .9]]) {
         const qy = H * .8, qh = H * .12 * qs; c.beginPath(); c.moveTo(W * qx, qy); c.lineTo(W * qx, qy - qh * .6); c.stroke();
         // 枝(上の分岐)
-        for (const ba of [-.5, -.2, .2, .5]) {
+        ([-.5, -.2, .2, .5]).forEach(ba => {
           c.beginPath(); c.moveTo(W * qx, qy - qh * .6); c.lineTo(W * qx + Math.sin(ba) * W * .02, qy - qh); c.stroke();
-        }
+        });
         // 葉の先の丸(小さな円)
         c.fillStyle = '#3a5a38'; c.beginPath(); c.arc(W * qx, qy - qh, W * .006, 0, 7); c.arc(W * qx, qy - qh, W * .006, 0, 7); c.fill();
       }
@@ -5518,9 +5510,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#5a8898'; c.fillRect(0, H * .7, W, H * .3);
       // 川の波(3本の筋)
       c.strokeStyle = 'rgba(220,240,240,0.4)'; c.lineWidth = Math.max(1, H * .003);
-      for (const wy of [.75, .82, .9]) {
+      ([.75, .82, .9]).forEach(wy => {
         c.beginPath(); c.moveTo(0, H * wy); c.quadraticCurveTo(W * .5, H * (wy - .012), W, H * wy); c.stroke();
-      }
+      });
       // 岸辺の緑帯(川との境)
       c.fillStyle = '#4a7848'; c.fillRect(0, H * .68, W, H * .04);
       // 寺院(重層の反り屋根)
@@ -5540,15 +5532,15 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#d8a838'; c.fillRect(tx - W * .01, H * .58, W * .02, H * .1);
       // 椰子の木2本(岸辺)
       c.strokeStyle = '#6a5030'; c.lineWidth = Math.max(1, W * .005);
-      for (const px of [.62, .85]) {
+      ([.62, .85]).forEach(px => {
         c.beginPath(); c.moveTo(W * px, H * .68); c.quadraticCurveTo(W * px + W * .01, H * .55, W * px + W * .015, H * .5); c.stroke();
         // 椰子の葉(放射の葉脈)
         c.strokeStyle = '#4a8838';
-        for (const pa of [-.9, -.5, 0, .5, .9]) {
+        ([-.9, -.5, 0, .5, .9]).forEach(pa => {
           c.beginPath(); c.moveTo(W * px + W * .015, H * .5); c.quadraticCurveTo(W * px + W * .015 + Math.sin(pa) * W * .05, H * (.5 - Math.cos(pa) * .06), W * px + W * .015 + Math.sin(pa) * W * .07, H * (.52 - Math.cos(pa) * .04)); c.stroke();
-        }
+        });
         c.strokeStyle = '#6a5030';
-      }
+      });
       // 川の小舟(1隻)
       c.fillStyle = '#5a4030'; c.beginPath(); c.moveTo(W * .6, H * .82); c.quadraticCurveTo(W * .65, H * .86, W * .7, H * .82); c.lineTo(W * .68, H * .83); c.lineTo(W * .62, H * .83); c.closePath(); c.closePath(); c.fill();
       // 雲2つ
@@ -5568,21 +5560,21 @@ if (typeof document !== 'undefined') (() => {
       }
       // 頂の古城(ブラン城の塔群)
       c.fillStyle = '#d8d0c0'; c.fillRect(W * .62, H * .3, W * .1, H * .12); c.fillStyle = '#a84838';
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const tx2 = W * (.63 + i * .04); c.beginPath(); c.moveTo(tx2 - W * .012, H * .3); c.lineTo(tx2, H * .25); c.lineTo(tx2 + W * .012, H * .3); c.closePath(); c.closePath(); c.fill(); c.fillStyle = '#d8d0c0'; c.fillRect(tx2 - W * .008, H * .3, W * .016, H * .04); c.fillStyle = '#a84838';
-      }
+      });
       // 霧の帯(谷の霧)
       c.fillStyle = 'rgba(220,230,235,0.35)';
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         c.beginPath();
         c.ellipse(W * (.2 + i * .3) + Math.sin(t * .3 + i) * W * .03,
           H * (.55 + i * .08), W * .2, H * .03, 0, 0, 7);
         c.fill();
-      }
+      });
       // 前面の針葉樹(左と右に高大木)
-      for (const tx2 of [.08, .9]) {
+      ([.08, .9]).forEach(tx2 => {
         c.fillStyle = '#1a3a2a'; c.beginPath(); c.moveTo(W * tx2, H * .35); c.lineTo(W * (tx2 - .05), H * .7); c.lineTo(W * (tx2 + .05), H * .7); c.closePath(); c.closePath(); c.fill(); c.beginPath(); c.moveTo(W * tx2, H * .45); c.lineTo(W * (tx2 - .04), H * .75); c.lineTo(W * (tx2 + .04), H * .75); c.closePath(); c.closePath(); c.fill(); c.fillStyle = '#3a2a1a'; c.fillRect(W * (tx2 - .008), H * .75, W * .016, H * .05);
-      }
+      });
       // 森の地面
       c.fillStyle = '#2a4a38'; c.fillRect(0, H * .78, W, H * .22);
       // 熊の影(小さな)
@@ -5604,16 +5596,16 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#8a6848'; dotP(wx + W * .09, wy - H * .1, H * .015); c.lineWidth = 1.5; c.beginPath(); c.moveTo(wx - W * .12, wy + H * .01); c.lineTo(wx - W * .12, wy + H * .07); c.stroke(); c.fillStyle = '#5a4838'; c.fillRect(wx - W * .135, wy + H * .07, W * .03, H * .04);
       // 羊の群れ(点々)
       c.fillStyle = '#e8e0c8'; const rng = L.mulberry32(1337);
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const sx = rng() * W, sy = H * (.58 + rng() * .12); ellP(sx, sy, W * .015, H * .012);
-      }
+      });
       // 遠くの馬(小さな影)
-      c.fillStyle = '#584838'; const hx2 = W * .3 + Math.sin(t * .5) * W * .01; c.beginPath(); c.beginPath(); c.ellipse(hx2, H * .6, W * .03, H * .015, 0, 0, 7); ellP(hx2, H * .6, W * .03, H * .015); c.beginPath(); c.beginPath(); c.ellipse(hx2 + W * .03, H * .585, W * .012, H * .01, -.4, 0, 7); ellP(hx2 + W * .03, H * .585, W * .012, H * .01, -.4);
+      c.fillStyle = '#584838'; const hx2 = W * .3 + S(.5) * W * .01; c.beginPath(); c.beginPath(); c.ellipse(hx2, H * .6, W * .03, H * .015, 0, 0, 7); ellP(hx2, H * .6, W * .03, H * .015); c.beginPath(); c.beginPath(); c.ellipse(hx2 + W * .03, H * .585, W * .012, H * .01, -.4, 0, 7); ellP(hx2 + W * .03, H * .585, W * .012, H * .01, -.4);
       // 草の穂(風に揺れる)
       c.strokeStyle = '#989058'; c.lineWidth = 1.2;
-      for (let i = 0; i < 15; i++) {
+      times(15, i => {
         const gx = rng() * W, gy = H * (.8 + rng() * .18); const sw = Math.sin(t * 1.5 + i) * W * .008; c.beginPath(); c.moveTo(gx, gy); c.moveTo(gx, gy); c.quadraticCurveTo(gx + sw, gy - H * .04, gx + sw * 1.5, gy - H * .07); c.stroke();
-      }
+      });
     } else if (pr === 'tatras') {
       // タトラ山脈: 鋸歯の岩峰+青い氷河湖+山小屋+高山の花
       sky([[0,'#b0d0e8'],[.5,'#d8e8f0'],[1,'#7a9878']]);
@@ -5622,32 +5614,31 @@ if (typeof document !== 'undefined') (() => {
       c.lineTo(0, H * .62); c.closePath(); c.closePath(); c.fill();
       // 岩の筋(明暗)
       c.strokeStyle = 'rgba(90,105,125,0.6)'; c.lineWidth = 2;
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         c.beginPath(); c.moveTo(W * (.12 + i * .15), H * .32); c.lineTo(W * (.1 + i * .15), H * .55); c.stroke();
-      }
+      });
       // 雪の残り(峰の谷筋)
       c.fillStyle = '#f0f4f8';
-      for (const px of [.24, .44, .66]) {
+      ([.24, .44, .66]).forEach(px => {
         c.beginPath(); c.moveTo(W * (px - .02), H * .3); c.moveTo(W * (px - .02), H * .3); c.lineTo(W * px, H * .22); c.lineTo(W * (px + .02), H * .3); c.lineTo(W * (px + .02), H * .3); c.lineTo(W * px, H * .35); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 青い氷河湖(目のような湖)
       c.fillStyle = '#58a8c8'; ell(.5, .68, W * .22, H * .05); c.fillStyle = 'rgba(240,250,255,0.5)'; ellP(W * .45, H * .67, W * .08, H * .015, -.2);
       // 湖畔の山小屋(木造+石の煙突)
       c.fillStyle = '#8a6848'; c.fillRect(W * .72, H * .66, W * .1, H * .07); c.fillStyle = '#5a4030'; c.beginPath(); c.moveTo(W * .71, H * .66); c.moveTo(W * .71, H * .66); c.lineTo(W * .77, H * .61); c.moveTo(W * .71, H * .66); c.lineTo(W * .77, H * .61); c.lineTo(W * .83, H * .66); c.closePath(); c.closePath(); c.fill(); c.fillStyle = '#6a5a50'; c.fillRect(W * .79, H * .62, W * .012, H * .04);
       // 煙
-      c.fillStyle = 'rgba(230,230,230,0.5)'; ell(.795 + Math.sin(t * 2) * W * .01, .59, W * .012, H * .015);
+      c.fillStyle = 'rgba(230,230,230,0.5)'; ell(.795 + S(2) * W * .01, .59, W * .012, H * .015);
       // 前面の高山草地+エーデルワイス風の小花
-      c.fillStyle = '#6a9858'; c.fillRect(0, H * .73, W, H * .27); const rng = L.mulberry32(934);
-      for (let i = 0; i < 12; i++) {
+      c.fillStyle = '#6a9858'; c.fillRect(0, H * .73, W, H * .27); scat(934, 12, (rng, i) => {
         const fx = rng() * W, fy = H * (.78 + rng() * .18); c.fillStyle = '#f0f0d8';
-        for (let p2 = 0; p2 < 5; p2++) {
+        times(5, p2 => {
           const pa = p2 * Math.PI * 2 / 5; c.beginPath();
           c.ellipse(fx + Math.cos(pa) * H * .008, fy + Math.sin(pa) * H * .008,
             H * .006, H * .003, pa, 0, 7);
           c.fill();
-        }
+        });
         c.fillStyle = '#e8c848'; dotP(fx, fy, H * .003);
-      }
+      });
     } else if (pr === 'caucasus') {
       // コーカサス: 巨大な雪山脈+山腹の修道院+旋回する鷲
       sky([[0,'#c8d8f0'],[.5,'#e8ecf4'],[1,'#8a9a80']]);
@@ -5672,37 +5663,36 @@ if (typeof document !== 'undefined') (() => {
       // 遠くの小さな玉葱堂(金色の頭)
       c.fillStyle = '#6888a8'; c.fillRect(W * .7, H * .35, W * .08, H * .25); c.fillStyle = '#e8b838'; ell(.74,.33,W * .035,H * .045); ell(.68,.4,W * .02,H * .028); ell(.8,.4,W * .02,H * .028);
       // 白樺の列(幹+黒い横筋+揺れる葉)
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const bx = W * (.08 + i * .22); c.fillStyle = '#e8e8e0'; c.fillRect(bx - W * .008, H * .15, W * .016, H * .5); c.strokeStyle = '#383830'; c.lineWidth = 1.2;
-        for (let k = 0; k < 5; k++) {
+        times(5, k => {
           c.beginPath(); c.moveTo(bx - W * .008, H * (.2 + k * .08)); c.lineTo(bx + W * .006, H * (.2 + k * .08)); c.stroke();
-        }
+        });
         c.fillStyle = 'rgba(140,170,90,0.7)'; ellP(bx + Math.sin(t * 1.5 + i) * W * .005, H * .16, W * .05, H * .06);
-      }
+      });
       // イズバ(丸太小屋): 丸太の筋+切妻屋根+窓+煙突の煙
       const ix = W * .28, iy = H * .55; c.fillStyle = '#8a6848'; c.fillRect(ix, iy, W * .22, H * .2);
       // 丸太の横筋
       c.strokeStyle = '#6a4c34'; c.lineWidth = 2;
-      for (let k = 0; k < 6; k++) {
+      times(6, k => {
         c.beginPath(); c.moveTo(ix, iy + H * .033 * (k + 1)); c.lineTo(ix + W * .22, iy + H * .033 * (k + 1)); c.stroke();
-      }
+      });
       // 切妻屋根(苔むし感)
       c.fillStyle = '#5a4030'; c.beginPath(); c.moveTo(ix - W * .02, iy); c.lineTo(ix + W * .11, iy - H * .1); c.lineTo(ix + W * .24, iy); c.closePath(); c.closePath(); c.fill();
       // 窓(細工枠)
       c.fillStyle = '#f0e8c8'; c.fillRect(ix + W * .07, iy + H * .06, W * .08, H * .08); c.strokeStyle = '#d8b888'; c.lineWidth = 2; c.strokeRect(ix + W * .07, iy + H * .06, W * .08, H * .08); c.beginPath(); c.moveTo(ix + W * .11, iy + H * .06); c.moveTo(ix + W * .11, iy + H * .06); c.lineTo(ix + W * .11, iy + H * .14); c.moveTo(ix + W * .07, iy + H * .1); c.moveTo(ix + W * .07, iy + H * .1); c.lineTo(ix + W * .15, iy + H * .1); c.stroke();
       // 煙突+ゆれる煙
       c.fillStyle = '#4a3830'; c.fillRect(ix + W * .17, iy - H * .08, W * .02, H * .08); c.fillStyle = 'rgba(230,230,230,0.5)';
-      for (let k = 0; k < 3; k++) {
+      times(3, k => {
         c.beginPath();
         c.ellipse(ix + W * .18 + Math.sin(t * 2 + k) * W * .015,
           iy - H * (.1 + k * .05), W * (.018 + k * .008), H * (.02 + k * .01), 0, 0, 7);
         c.fill();
-      }
+      });
       // 地面の草と小花
-      c.fillStyle = '#6a9858'; c.fillRect(0, H * .72, W, H * .28); const rng = L.mulberry32(832);
-      for (let i = 0; i < 10; i++) {
+      c.fillStyle = '#6a9858'; c.fillRect(0, H * .72, W, H * .28); scat(832, 10, (rng, i) => {
         c.fillStyle = ['#d84838', '#e8c838', '#f0f0e8'][i % 3]; dotP(rng() * W, H * (.78 + rng() * .18), H * .008);
-      }
+      });
     } else if (pr === 'haveli') {
       // ハヴェリ(ジャイサルメール): 砂岩の彫刻邸宅+ジャローカ窓+中庭+洗濯物
       sky([[0,'#f0d0a8'],[.5,'#d0a068'],[1,'#705038']]);
@@ -5710,46 +5700,45 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#c89858'; c.fillRect(W * .15, H * .25, W * .7, H * .5);
       // 彫刻の帯(連続アーチ)
       c.fillStyle = '#a87840';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         c.beginPath(); c.arc(W * (.19 + i * .09), H * .3, W * .03, Math.PI, 0); c.fill();
-      }
+      });
       c.fillRect(W * .15, H * .3, W * .7, H * .015);
       // ジャローカ窓(3つの張り出し窓)
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const jx = W * (.28 + i * .22), jy = H * .48; c.fillStyle = '#b88848'; c.fillRect(jx - W * .05, jy - H * .12, W * .1, H * .12);
         // 格子
         c.strokeStyle = '#785030'; c.lineWidth = 1.5;
-        for (let g = 0; g < 4; g++) {
+        times(4, g => {
           c.beginPath(); c.moveTo(jx - W * .04 + g * W * .025, jy - H * .1); c.lineTo(jx - W * .04 + g * W * .025, jy - H * .02); c.stroke();
-        }
+        });
         c.beginPath(); c.moveTo(jx - W * .05, jy - H * .07); c.moveTo(jx - W * .05, jy - H * .07); c.lineTo(jx + W * .05, jy - H * .07); c.moveTo(jx - W * .05, jy - H * .04); c.moveTo(jx - W * .05, jy - H * .04); c.lineTo(jx + W * .05, jy - H * .04); c.stroke();
         // 窓の庇(カッジャ)
         c.fillStyle = '#986838'; c.beginPath(); c.moveTo(jx - W * .06, jy - H * .12); c.lineTo(jx, jy - H * .16); c.lineTo(jx + W * .06, jy - H * .12); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 下の入口と中庭
       c.fillStyle = '#483020'; c.beginPath(); c.moveTo(W * .44, H * .75); c.lineTo(W * .44, H * .6); c.quadraticCurveTo(W * .5, H * .55, W * .56, H * .6); c.lineTo(W * .56, H * .75); c.closePath(); c.closePath(); c.fill();
       // 中庭の地面+水盤
       c.fillStyle = '#8a6840'; c.fillRect(0, H * .75, W, H * .25); c.fillStyle = '#4a6a70'; ell(.5,.85,W * .1,H * .03);
       // 洗濯物(両脇の紐)
       c.strokeStyle = 'rgba(80,60,40,0.6)'; c.lineWidth = 1; c.beginPath(); c.moveTo(W * .05, H * .4); c.moveTo(W * .05, H * .4); c.quadraticCurveTo(W * .12, H * .43, W * .15, H * .38); c.moveTo(W * .85, H * .38); c.moveTo(W * .85, H * .38); c.quadraticCurveTo(W * .9, H * .42, W * .95, H * .39); c.stroke(); const clothCols = ['#d04838', '#e8c838', '#3868a8', '#48a868'];
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         c.fillStyle = clothCols[i]; c.fillRect(W * (.06 + i * .024), H * .395 + Math.sin(t + i) * H * .003, W * .02, H * .045);
-      }
+      });
       // 飛ぶ鳥
       c.strokeStyle = 'rgba(70,50,35,0.7)'; c.lineWidth = 1.3;
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const bx = W * (.3 + i * .25 + Math.sin(t * .4 + i) * .02); const by = H * (.12 + (i % 2) * .06); c.beginPath(); c.moveTo(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
-      }
+      });
     } else if (pr === 'rann') {
       // ラン塩原(カッチ): 月に輝く白い塩の大地+亀裂+遠くの丘+流れ星
       sky([[0,'#182038'],[.5,'#3a4560'],[1,'#8890a8']]);
       // 大きな月
       c.fillStyle = '#e8e8f0'; dot(.7,.22,H * .09); c.fillStyle = '#c8ccd8'; dot(.67,.2,H * .02); dot(.73,.25,H * .015);
       // 星
-      c.fillStyle = '#e8e8f0'; const rng = L.mulberry32(731);
-      for (let i = 0; i < 30; i++) {
+      c.fillStyle = '#e8e8f0'; scat(731, 30, (rng, i) => {
         c.globalAlpha = .4 + .6 * rng(); c.fillRect(rng() * W, rng() * H * .4, 1.5, 1.5);
-      }
+      });
       c.globalAlpha = 1;
       // 遠くの小さな丘
       c.fillStyle = '#2a3048'; c.beginPath(); c.moveTo(0, H * .48); c.quadraticCurveTo(W * .15, H * .42, W * .3, H * .48); c.quadraticCurveTo(W * .5, H * .44, W * .65, H * .48); c.lineTo(W, H * .48); c.lineTo(W, H * .48); c.lineTo(W, H * .6); c.lineTo(W, H * .48); c.lineTo(W, H * .6); c.lineTo(0, H * .6); c.closePath(); c.closePath(); c.fill();
@@ -5759,21 +5748,20 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = 'rgba(240,240,250,0.35)'; c.beginPath(); c.moveTo(W * .62, H); c.lineTo(W * .67, H * .5); c.lineTo(W * .73, H * .5); c.lineTo(W * .78, H); c.closePath(); c.closePath(); c.fill();
       // 塩の亀裂模様(不規則な網目)
       c.strokeStyle = 'rgba(90,100,130,0.5)'; c.lineWidth = 1;
-      for (let i = 0; i < 12; i++) {
+      times(12, i => {
         const sx = rng() * W, sy = H * (.55 + rng() * .4); c.beginPath(); c.moveTo(sx, sy);
-        for (let j2 = 0; j2 < 3; j2++) {
+        times(3, j2 => {
           c.lineTo(sx + (rng() - .3) * W * .06, sy + rng() * H * .05);
-        }
+        });
         c.stroke();
-      }
+      });
       // 流れ星
       const mx = (t * .3 % 2) * W; c.strokeStyle = 'rgba(240,240,250,0.8)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(mx, H * .15); c.lineTo(mx - W * .06, H * .19); c.stroke();
     } else if (pr === 'ghats') {
       // 西ガーツ山脈: 霧の立つ緑の重畳+白い滝筋+森林の海
       sky([[0,'#c8d8c0'],[.5,'#789868'],[1,'#2a4535']]);
       // 重なる尾根(遠→近、色濃く)
-      const ridgeCols = ['#9ab890', '#7aa070', '#5a8050', '#3a6040']; const rng = L.mulberry32(611);
-      for (let r = 0; r < 4; r++) {
+      const ridgeCols = ['#9ab890', '#7aa070', '#5a8050', '#3a6040']; scat(611, 4, (rng, r) => {
         c.fillStyle = ridgeCols[r]; c.beginPath(); c.moveTo(0, H * (.38 + r * .14));
         for (let i = 0; i <= 8; i++) {
           c.lineTo(W * i / 8, H * (.38 + r * .14) - H * (.05 + rng() * .1) * (r + 1) * .3);
@@ -5781,13 +5769,13 @@ if (typeof document !== 'undefined') (() => {
         c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
         // 尾根の霧帯
         c.fillStyle = 'rgba(220,230,215,0.3)'; ell((.3 + r * .15) + Math.sin(t * .2 + r) * W * .03, (.4 + r * .14), W * .3, H * .03);
-      }
+      });
       // 滝筋(複数)
-      for (const wx of [.3, .55, .8]) {
+      ([.3, .55, .8]).forEach(wx => {
         const wy = H * .45; c.strokeStyle = 'rgba(230,240,235,0.7)'; c.lineWidth = 3; c.beginPath(); c.moveTo(W * wx, wy); c.quadraticCurveTo(W * wx - W * .01, wy + H * .15, W * wx + W * .005, wy + H * .3); c.stroke();
         // 落ち口の飛沫
         c.fillStyle = 'rgba(235,245,240,0.5)'; ellP(W * wx + W * .005, wy + H * .32, W * .02, H * .012);
-      }
+      });
       // 前景の密林の影
       c.fillStyle = '#1e3528'; c.beginPath(); c.moveTo(0, H * .82);
       for (let i = 0; i <= 10; i++) {
@@ -5796,19 +5784,18 @@ if (typeof document !== 'undefined') (() => {
       c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // 飛ぶ鳥
       c.strokeStyle = 'rgba(40,50,45,0.7)'; c.lineWidth = 1.3;
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const bx = W * (.2 + i * .18 + Math.sin(t * .35 + i) * .02); const by = H * (.15 + (i % 2) * .07); c.beginPath(); c.moveTo(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
-      }
+      });
     } else if (pr === 'kaziranga') {
       // カジランガ: アッサムの湿地保護区 — イッサイ+一角サイ+沼地+飛ぶガン
       sky([[0,'#d8d0a8'],[.5,'#a0a868'],[1,'#3a5040']]);
       // 朝日(霞む)
       c.fillStyle = '#e8d8a8'; dot(.75,.22,H * .06);
       // 高い象草(イッサイ)の原っぱ
-      const rng = L.mulberry32(507);
-      for (let i = 0; i < 26; i++) {
+      scat(507, 26, (rng, i) => {
         const gx = rng() * W; const gh = H * (.12 + rng() * .18); const lean = (rng() - .5) * W * .02; c.strokeStyle = i % 3 ? '#5a7038' : '#6a8040'; c.lineWidth = 2; c.beginPath(); c.moveTo(gx, H * .72); c.quadraticCurveTo(gx + lean, H * .72 - gh * .6, gx + lean * 2, H * .72 - gh); c.stroke();
-      }
+      });
       // 一角サイ(灰色の巨体+単角)
       const rx = W * .35, ry = H * .66; c.fillStyle = '#6a6a60'; ellP(rx, ry, W * .09, H * .055);
       // 頭+角
@@ -5817,22 +5804,21 @@ if (typeof document !== 'undefined') (() => {
       c.fillRect(rx - W * .08, ry - H * .045, W * .012, H * .015); c.fillRect(rx - W * .06, ry + H * .03, W * .015, H * .035); c.fillRect(rx + W * .05, ry + H * .03, W * .015, H * .035);
       // 沼地(水溜まりの輪)
       c.fillStyle = '#3a5850';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const wx = W * (.15 + rng() * .7); const wy = H * (.78 + rng() * .15); ellP(wx, wy, W * (.04 + rng() * .05), H * .015);
-      }
+      });
       // 前景の草むら
       c.fillStyle = '#2a4030'; c.fillRect(0, H * .85, W, H * .15);
       // 飛ぶガン(編隊)
       c.strokeStyle = 'rgba(50,55,45,0.8)'; c.lineWidth = 1.4;
-      for (let i = 0; i < 5; i++) {
-        const bx = W * (.55 + i * .07 + Math.sin(t * .3) * .02); const by = H * (.28 + Math.abs(i - 2) * .04); c.beginPath(); c.moveTo(bx - 6, by); c.moveTo(bx - 6, by); c.quadraticCurveTo(bx, by - 5, bx + 6, by); c.stroke();
-      }
+      times(5, i => {
+        const bx = W * (.55 + i * .07 + S(.3) * .02); const by = H * (.28 + Math.abs(i - 2) * .04); c.beginPath(); c.moveTo(bx - 6, by); c.moveTo(bx - 6, by); c.quadraticCurveTo(bx, by - 5, bx + 6, by); c.stroke();
+      });
     } else if (pr === 'kerala') {
       // ケーララのバックウォーター: 椰子並木の水路+ハウスボート+蓮+白鷺
       sky([[0,'#e0d8b0'],[.45,'#a8b878'],[1,'#305848']]);
       // 奥の椰子並木(左右)
-      const rng = L.mulberry32(441);
-      for (let i = 0; i < 7; i++) {
+      scat(441, 7, (rng, i) => {
         for (const s of [-1, 1]) {
           const px = W * .5 + s * W * (.12 + i * .06); const py = H * .6 - i * H * .015; const ps = 1 - i * .09; c.strokeStyle = '#4a3a28'; c.lineWidth = 3 * ps; c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + s * W * .015, py - H * .1 * ps, px + s * W * .025, py - H * .16 * ps); c.stroke();
           // 葉
@@ -5841,25 +5827,25 @@ if (typeof document !== 'undefined') (() => {
             c.beginPath(); c.moveTo(px + s * W * .025, py - H * .16 * ps); c.quadraticCurveTo(px + s * W * (.025 + f * .02 * ps), py - H * (.16 + .04 * ps), px + s * W * (.025 + f * .04 * ps), py - H * (.12 * ps)); c.stroke();
           }
         }
-      }
+      });
       // 水路
       c.fillStyle = '#3a5850'; c.beginPath(); c.moveTo(W * .3, H); c.lineTo(W * .44, H * .6); c.lineTo(W * .56, H * .6); c.lineTo(W * .7, H); c.closePath(); c.closePath(); c.fill();
       // 水光
       c.fillStyle = 'rgba(224,216,176,0.25)'; ell(.5, .85, W * .12, H * .05);
       // ハウスボート
-      const bx = W * .5 + Math.sin(t * .4) * W * .015; const by = H * .78; c.fillStyle = '#5a4028'; c.beginPath(); c.moveTo(bx - W * .09, by); c.quadraticCurveTo(bx, by + H * .05, bx + W * .09, by); c.closePath(); c.closePath(); c.fill();
+      const bx = W * .5 + S(.4) * W * .015; const by = H * .78; c.fillStyle = '#5a4028'; c.beginPath(); c.moveTo(bx - W * .09, by); c.quadraticCurveTo(bx, by + H * .05, bx + W * .09, by); c.closePath(); c.closePath(); c.fill();
       // 竹の屋根(アーチ)
       c.fillStyle = '#8a6840'; c.beginPath(); c.moveTo(bx - W * .07, by); c.quadraticCurveTo(bx, by - H * .1, bx + W * .07, by); c.lineTo(bx + W * .05, by); c.quadraticCurveTo(bx, by - H * .07, bx - W * .05, by); c.closePath(); c.closePath(); c.fill();
       // 蓮の葉と花
       c.fillStyle = '#3a6848';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const lx = W * (.18 + rng() * .6); const ly = H * (.72 + rng() * .2); ellP(lx, ly, W * .02, H * .008);
         if (i % 2 === 0) {
           c.fillStyle = '#e8a0b0'; dotP(lx, ly - H * .015, 3); c.fillStyle = '#3a6848';
         }
-      }
+      });
       // 白鷺
-      c.strokeStyle = '#e8e8e0'; c.lineWidth = 1.5; const ex = W * .72, ey = H * .55 + Math.sin(t * .6) * H * .01; c.beginPath(); c.moveTo(ex - 7, ey); c.moveTo(ex - 7, ey); c.quadraticCurveTo(ex, ey - 5, ex + 7, ey); c.stroke();
+      c.strokeStyle = '#e8e8e0'; c.lineWidth = 1.5; const ex = W * .72, ey = H * .55 + S(.6) * H * .01; c.beginPath(); c.moveTo(ex - 7, ey); c.moveTo(ex - 7, ey); c.quadraticCurveTo(ex, ey - 5, ex + 7, ey); c.stroke();
     } else if (pr === 'gopuram') {
       // ゴープラム(南インド寺院): 層塔の門+聖なる水溜まり+灯籠+椰子
       sky([[0,'#f0c8b8'],[.5,'#d89878'],[1,'#605050']]);
@@ -5867,14 +5853,14 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#f8d8b0'; dot(.8,.22,H * .055);
       // 層塔(上に窄む6段)
       const gx = W * .5; const tcols = ['#b06040', '#a85840', '#985038', '#884834', '#784030', '#683828'];
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const w = W * (.34 - i * .04); const y2 = H * .72 - i * H * .09; c.fillStyle = tcols[i]; c.fillRect(gx - w / 2, y2 - H * .09, w, H * .09);
         // 各層の彫刻(小さな突起の列)
         c.fillStyle = '#684030';
-        for (let j2 = 0; j2 < 7 - i; j2++) {
+        times(7 - i, j2 => {
           const dx = gx - w / 2 + w * (j2 + .5) / (7 - i); c.fillRect(dx - W * .006, y2 - H * .075, W * .012, H * .04);
-        }
-      }
+        });
+      });
       // 頂の桶屋根
       c.fillStyle = '#d0a048'; c.beginPath(); c.ellipse(gx, H * .18, W * .07, H * .045, 0, Math.PI, 0); c.fill(); c.fillRect(gx - W * .07, H * .18, W * .14, H * .02);
       // 門の入口アーチ
@@ -5890,9 +5876,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 灯籠の点々
       c.fillStyle = '#f0c040';
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         dot((.15 + i * .18), .75 + Math.sin(t * 2 + i) * H * .003, 2);
-      }
+      });
     } else if (pr === 'thar') {
       // タール砂漠(ラジャスタン): 金色の砂丘+キャラバン+遠くの城塞+照る太陽
       sky([[0,'#f0d0a0'],[.55,'#e0a860'],[1,'#c08840']]);
@@ -5900,21 +5886,21 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#f8e0b0'; dot(.75,.2,H * .07);
       // 遠くの城塞(丘の上の砦)
       c.fillStyle = '#a06840'; c.fillRect(W * .08, H * .38, W * .14, H * .1);
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         c.fillRect(W * (.09 + i * .045), H * .34, W * .02, H * .05); // 塔
-      }
+      });
       c.fillStyle = '#885830'; c.beginPath(); c.moveTo(W * .05, H * .48); c.lineTo(W * .25, H * .48); c.lineTo(W * .28, H * .55); c.lineTo(W * .02, H * .55); c.closePath(); c.fill();
       // 砂丘の稜線
       c.fillStyle = '#d09858'; c.beginPath(); c.moveTo(0, H * .6); c.quadraticCurveTo(W * .3, H * .52, W * .6, H * .6); c.quadraticCurveTo(W * .8, H * .66, W, H * .58); c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill(); c.fillStyle = '#c88848'; c.beginPath(); c.moveTo(0, H * .75); c.quadraticCurveTo(W * .5, H * .65, W, H * .78); c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // 風紋
       c.strokeStyle = 'rgba(180,130,70,0.5)'; c.lineWidth = 1;
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         c.beginPath(); c.moveTo(W * (i * .2), H * (.82 + (i % 2) * .06)); c.quadraticCurveTo(W * (i * .2 + .1), H * (.8 + (i % 2) * .06), W * (i * .2 + .2), H * (.83 + (i % 2) * .06)); c.stroke();
-      }
+      });
       // キャラバン(連なるラクダ)
       c.fillStyle = '#5a3a20';
-      for (let i = 0; i < 3; i++) {
-        const cx = W * (.35 + i * .09 + Math.sin(t * .4) * .005); const cy = H * .63 - i * H * .008;
+      times(3, i => {
+        const cx = W * (.35 + i * .09 + S(.4) * .005); const cy = H * .63 - i * H * .008;
         // 胴とこぶ
         ellP(cx, cy, W * .022, H * .018); c.beginPath(); c.beginPath(); c.arc(cx, cy - H * .02, H * .012, 0, 7); dotP(cx, cy - H * .02, H * .012);
         // 首と頭
@@ -5923,62 +5909,60 @@ if (typeof document !== 'undefined') (() => {
         c.fillRect(cx - W * .015, cy + H * .01, 2, H * .025); c.fillRect(cx + W * .01, cy + H * .01, 2, H * .025);
         // 乗り手
         dotP(cx - W * .005, cy - H * .028, H * .008);
-      }
+      });
     } else if (pr === 'himalaya') {
       // ヒマラヤ: 連なる大雪山峰+山腹の僧院+翻る祈祷旗
       sky([[0,'#c8d8f0'],[.5,'#8098b8'],[1,'#40505e']]);
       // 高峰の列(雪を頂く鋭い山)
-      const rng = L.mulberry32(331);
-      for (let i = 0; i < 5; i++) {
+      scat(331, 5, (rng, i) => {
         const px = W * (i * .22 + .05); const ph = H * (.35 + rng() * .3); const pw = W * (.2 + rng() * .1); c.fillStyle = i % 2 ? '#5a6a78' : '#4a5a68'; c.beginPath(); c.moveTo(px - pw / 2, H * .75); c.lineTo(px, H * .75 - ph); c.lineTo(px + pw / 2, H * .75); c.closePath(); c.closePath(); c.fill();
         // 頂の雪
         c.fillStyle = '#e8f0f8'; c.beginPath(); c.moveTo(px - pw * .12, H * .75 - ph * .78); c.lineTo(px, H * .75 - ph); c.lineTo(px + pw * .12, H * .75 - ph * .78); c.lineTo(px + pw * .06, H * .75 - ph * .72); c.lineTo(px - pw * .04, H * .75 - ph * .74); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 山腹の僧院(白い建物+金の屋根)
       const mx = W * .62, my = H * .68; c.fillStyle = '#e0dcd0'; c.fillRect(mx - W * .05, my - H * .05, W * .1, H * .05); c.fillStyle = '#c89030'; c.beginPath(); c.moveTo(mx - W * .06, my - H * .05); c.lineTo(mx, my - H * .09); c.lineTo(mx + W * .06, my - H * .05); c.closePath(); c.closePath(); c.fill();
       // 前景の斜面
       c.fillStyle = '#384850'; c.beginPath(); c.moveTo(0, H * .78); c.quadraticCurveTo(W * .4, H * .7, W, H * .8); c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // 祈祷旗の列(紐に連なる色旗)
       const flagCols = ['#2858b0', '#e8e8e8', '#c03030', '#287030', '#e8c020'];
-      for (let s = 0; s < 2; s++) {
+      times(2, s => {
         const y0 = H * (.58 + s * .08); c.strokeStyle = 'rgba(60,60,60,0.5)'; c.lineWidth = 1; c.beginPath(); c.moveTo(W * .05, y0 - H * .04); c.quadraticCurveTo(W * .3, y0 + H * .02, W * (.5 + s * .1), y0); c.stroke();
-        for (let i = 0; i < 6; i++) {
+        times(6, i => {
           const fp = i / 6; const fx = W * (.05 + fp * (.45 + s * .1)); const fy = (1 - fp) * (1 - fp) * (y0 - H * .04) + 2 * (1 - fp) * fp * (y0 + H * .02) + fp * fp * y0; c.fillStyle = flagCols[(i + s) % 5]; c.fillRect(fx, fy, W * .018, H * .022);
-        }
-      }
+        });
+      });
       // 飛ぶ大鷲
-      c.strokeStyle = 'rgba(40,45,55,0.8)'; c.lineWidth = 1.6; const ex = W * .3 + Math.sin(t * .3) * W * .04, ey = H * .3 + Math.cos(t * .4) * H * .02; c.beginPath(); c.moveTo(ex - 9, ey); c.moveTo(ex - 9, ey); c.quadraticCurveTo(ex, ey - 6, ex + 9, ey); c.stroke();
+      c.strokeStyle = 'rgba(40,45,55,0.8)'; c.lineWidth = 1.6; const ex = W * .3 + S(.3) * W * .04, ey = H * .3 + C(.4) * H * .02; c.beginPath(); c.moveTo(ex - 9, ey); c.moveTo(ex - 9, ey); c.quadraticCurveTo(ex, ey - 6, ex + 9, ey); c.stroke();
     } else if (pr === 'ghat') {
       // ガート(ヴァラナシ): 川へ下る石段+寺院群+浮かぶ小舟+朝靄
       sky([[0,'#f0c8a0'],[.5,'#d89878'],[1,'#48606a']]);
       // 朝日と光筋
       c.fillStyle = '#f8d8a0'; dot(.2,.22,H * .06);
       // 寺院群(上部: ドームと尖塔の連なり)
-      const rng = L.mulberry32(209);
-      for (let i = 0; i < 8; i++) {
+      scat(209, 8, (rng, i) => {
         const tx = W * .05 + i * W * .13; const th = H * (.08 + rng() * .14); const tw = W * (.05 + rng() * .03); c.fillStyle = i % 2 ? '#a05840' : '#b06850'; c.fillRect(tx, H * .45 - th, tw, th);
         if (i % 3 === 0) { // シカラ尖塔
           c.fillStyle = '#8a4830'; c.beginPath(); c.moveTo(tx - tw * .1, H * .45 - th); c.lineTo(tx + tw * .5, H * .45 - th - H * .06); c.lineTo(tx + tw * 1.1, H * .45 - th); c.closePath(); c.closePath(); c.fill();
         } else if (i % 3 === 1) { // ドーム
           c.beginPath(); c.arc(tx + tw * .5, H * .45 - th, tw * .5, Math.PI, 0); c.fill();
         }
-      }
+      });
       // 石段(ガート: 幅の広がる階段)
-      for (let s = 0; s < 6; s++) {
+      times(6, s => {
         c.fillStyle = s % 2 ? '#c09070' : '#b08060'; const w = W * (.75 + s * .04); c.fillRect(W * .5 - w / 2, H * (.45 + s * .055), w, H * .055);
-      }
+      });
       // 川面
       c.fillStyle = '#3a5560'; c.fillRect(0, H * .8, W, H * .2);
       // 光の反射
       c.fillStyle = 'rgba(248,200,140,0.35)'; c.fillRect(W * .05, H * .8, W * .3, H * .2);
       // 小舟
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const bx = W * (.2 + i * .3) + Math.sin(t * .5 + i * 2) * W * .01; const by = H * (.85 + (i % 2) * .07); c.fillStyle = '#4a3028'; c.beginPath(); c.moveTo(bx - W * .05, by); c.quadraticCurveTo(bx, by + H * .035, bx + W * .05, by); c.closePath(); c.closePath(); c.fill();
         // 漕ぎ手の影
         dotP(bx, by - H * .02, H * .015);
-      }
+      });
       // 朝靄の帯
-      c.fillStyle = 'rgba(240,210,180,0.28)'; ell(.5 + Math.sin(t * .2) * W * .04, .47, W * .5, H * .06);
+      c.fillStyle = 'rgba(240,210,180,0.28)'; ell(.5 + S(.2) * W * .04, .47, W * .5, H * .06);
     } else if (pr === 'taj') {
       // タージマハル: 白亜の霊廟 — 玉ねぎドーム+ミナレット4本+映る水鏡
       sky([[0,'#f0e0d0'],[.45,'#d8b0a0'],[1,'#305060']]);
@@ -5991,25 +5975,25 @@ if (typeof document !== 'undefined') (() => {
       // 尖塔
       c.fillRect(bx - 2, by - H * .38, 4, H * .06);
       // 脇の小ドーム
-      for (const s of [-1, 1]) {
+      ([-1, 1]).forEach(s => {
         c.beginPath(); c.arc(bx + s * W * .09, by - H * .17, W * .028, Math.PI, 0); c.fill(); c.fillRect(bx + s * W * .09 - 1, by - H * .22, 2, H * .05);
-      }
+      });
       // 中央アーチ入口
       c.fillStyle = '#3a3038'; c.beginPath(); c.moveTo(bx - W * .035, by); c.lineTo(bx - W * .035, by - H * .1); c.quadraticCurveTo(bx, by - H * .15, bx + W * .035, by - H * .1); c.lineTo(bx + W * .035, by); c.closePath(); c.closePath(); c.fill();
       // ミナレット4本
       c.fillStyle = '#e0dcd2';
-      for (const s of [-1.6, -1.25, 1.25, 1.6]) {
+      ([-1.6, -1.25, 1.25, 1.6]).forEach(s => {
         const mx = bx + s * W * .12; c.fillRect(mx - W * .008, by - H * .26, W * .016, H * .26); c.beginPath(); c.arc(mx, by - H * .27, W * .012, Math.PI, 0); c.fill();
-      }
+      });
       // 水面の映り込み
       c.fillStyle = 'rgba(240,236,228,0.4)'; c.beginPath(); c.moveTo(bx - W * .1, H); c.lineTo(bx - W * .05, by + H * .05); c.lineTo(bx + W * .05, by + H * .05); c.lineTo(bx + W * .1, H); c.closePath(); c.closePath(); c.fill();
       // 両脇の木々
       c.fillStyle = '#3a5040';
-      for (let i = 0; i < 4; i++) {
-        for (const s of [-1, 1]) {
+      times(4, i => {
+        ([-1, 1]).forEach(s => {
           const tx = bx + s * W * (.2 + i * .08); c.fillRect(tx - 2, by + H * .02 - H * .06, 4, H * .06); dotP(tx, by + H * .02 - H * .07, W * .02);
-        }
-      }
+        });
+      });
     } else if (pr === 'stupa') {
       // 仏塔(ボロブドゥール): 段々の基壇+鐘形の仏塔+朝霧+ジャングル
       sky([[0,'#e8c890'],[.5,'#c8a878'],[1,'#4a5a48']]);
@@ -6024,24 +6008,23 @@ if (typeof document !== 'undefined') (() => {
       // 段々の基壇(3段)
       c.fillStyle = '#8a7058'; c.fillRect(W * .1, H * .62, W * .8, H * .38); c.fillStyle = '#7a6048'; c.fillRect(W * .15, H * .54, W * .7, H * .08); c.fillStyle = '#6a5040'; c.fillRect(W * .2, H * .48, W * .6, H * .06);
       // 鐘形の仏塔の列(透かし格子)
-      const rng = L.mulberry32(187);
-      for (let row = 0; row < 2; row++) {
+      scat(187, 2, (rng, row) => {
         const n = 6 - row * 2;
-        for (let i = 0; i < n; i++) {
+        times(n, i => {
           const sx = W * (.24 + i * .1 + row * .05); const sy = H * (.5 - row * .07); const sr = W * .028; c.fillStyle = '#5a4438'; c.beginPath(); c.moveTo(sx - sr, sy); c.quadraticCurveTo(sx - sr, sy - sr * 1.4, sx, sy - sr * 1.5); c.quadraticCurveTo(sx + sr, sy - sr * 1.4, sx + sr, sy); c.closePath(); c.closePath(); c.fill();
           // 尖塔
           c.fillRect(sx - 1.5, sy - sr * 1.8, 3, sr * .4);
-        }
-      }
+        });
+      });
       // 中央の大仏塔
       c.fillStyle = '#4a382e'; c.beginPath(); c.moveTo(W * .44, H * .5); c.quadraticCurveTo(W * .44, H * .32, W * .5, H * .3); c.quadraticCurveTo(W * .56, H * .32, W * .56, H * .5); c.closePath(); c.closePath(); c.fill(); c.fillRect(W * .492, H * .22, W * .016, H * .1);
       // 朝霧の帯
-      c.fillStyle = 'rgba(240,230,210,0.3)'; ell(.5 + Math.sin(t * .25) * W * .05, .52, W * .45, H * .05);
+      c.fillStyle = 'rgba(240,230,210,0.3)'; ell(.5 + S(.25) * W * .05, .52, W * .45, H * .05);
       // 飛ぶ鳥
       c.strokeStyle = 'rgba(60,50,40,0.7)'; c.lineWidth = 1.3;
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const bx = W * (.15 + i * .2 + Math.sin(t * .4 + i) * .03); const by = H * (.15 + (i % 2) * .08); c.beginPath(); c.moveTo(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
-      }
+      });
     } else if (pr === 'dojo') {
       // 道場: 板張りの床+障子の窓+掛け軸+木刀
       sky([[0,'#8a7458'],[.55,'#b8956a'],[1,'#7a5f42']]);
@@ -6049,12 +6032,12 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#9a7a54'; c.fillRect(0, H * .55, W, H * .45);
       // 床の板目(遠近感)
       c.strokeStyle = 'rgba(90,65,40,0.5)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const fx = W * i / 9; c.beginPath(); c.moveTo(W * .5 + (fx - W * .5) * .4, H * .55); c.lineTo(fx, H); c.stroke();
-      }
-      for (let i = 0; i < 4; i++) {
+      });
+      times(4, i => {
         const fy = H * (.6 + i * .1); c.beginPath(); c.moveTo(0, fy); c.moveTo(0, fy); c.lineTo(W, fy); c.stroke();
-      }
+      });
       // 障子窓(両側に光)
       for (let s = 0; s < 2; s++) {
         const wx = s === 0 ? W * .05 : W * .78; c.fillStyle = '#f0e8d0'; c.fillRect(wx, H * .12, W * .17, H * .38); c.strokeStyle = '#6a5238'; c.lineWidth = 2; c.strokeRect(wx, H * .12, W * .17, H * .38);
@@ -6080,26 +6063,25 @@ if (typeof document !== 'undefined') (() => {
       // 夕日
       c.fillStyle = '#f0d090'; dot(.25,.35,H * .06);
       // 遠くの岩柱(薄い)
-      c.fillStyle = 'rgba(110,80,80,0.5)'; const rng = L.mulberry32(257);
-      for (let i = 0; i < 4; i++) {
+      c.fillStyle = 'rgba(110,80,80,0.5)'; scat(257, 4, (rng, i) => {
         const px = W * (.08 + i * .24); const ph = H * (.3 + rng() * .2); c.beginPath(); c.moveTo(px, H); c.lineTo(px + W * .015, H - ph); c.lineTo(px + W * .05, H - ph - H * .02); c.lineTo(px + W * .065, H); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 手前の大岩柱
       c.fillStyle = '#6a5048'; c.beginPath(); c.moveTo(W * .55, H); c.lineTo(W * .58, H * .42); c.quadraticCurveTo(W * .62, H * .36, W * .68, H * .38); c.lineTo(W * .74, H * .42); c.lineTo(W * .77, H); c.closePath(); c.closePath(); c.fill();
       // 岩の縞
       c.strokeStyle = 'rgba(60,45,42,0.5)'; c.lineWidth = 2;
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const sy = H * (.5 + i * .12); c.beginPath(); c.moveTo(W * (.57 + i * .005), sy); c.quadraticCurveTo(W * .66, sy + H * .015, W * .76, sy); c.stroke();
-      }
+      });
       // 頂の僧院(赤い屋根)
       c.fillStyle = '#e8dcc8'; c.fillRect(W * .62, H * .34, W * .09, H * .06); c.fillStyle = '#a04030'; c.beginPath(); c.moveTo(W * .6, H * .345); c.lineTo(W * .665, H * .31); c.lineTo(W * .73, H * .345); c.closePath(); c.closePath(); c.fill(); c.fillStyle = '#3a4a55';
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         c.fillRect(W * .63 + i * W * .026, H * .355, W * .012, H * .025);
-      }
+      });
       // 小さな岩柱+僧院(左)
       c.fillStyle = '#5a463e'; c.beginPath(); c.moveTo(W * .15, H); c.lineTo(W * .17, H * .6); c.lineTo(W * .21, H * .58); c.lineTo(W * .23, H); c.closePath(); c.closePath(); c.fill(); c.fillStyle = '#e8dcc8'; c.fillRect(W * .175, H * .555, W * .035, H * .03); c.fillStyle = '#a04030'; c.beginPath(); c.moveTo(W * .172, H * .558); c.moveTo(W * .172, H * .558); c.lineTo(W * .192, H * .54); c.moveTo(W * .172, H * .558); c.lineTo(W * .192, H * .54); c.lineTo(W * .212, H * .558); c.closePath(); c.closePath(); c.fill();
       // 鳶(8の字に回る)
-      c.strokeStyle = 'rgba(50,40,35,0.8)'; c.lineWidth = 1.5; const bx = W * (.4 + .15 * Math.sin(t * .5)); const by = H * (.25 + .08 * Math.sin(t)); c.beginPath(); c.moveTo(bx - 8, by); c.quadraticCurveTo(bx - 3, by - 5 - 2 * Math.sin(t * 6), bx, by); c.quadraticCurveTo(bx + 3, by - 5 - 2 * Math.sin(t * 6), bx + 8, by); c.stroke();
+      c.strokeStyle = 'rgba(50,40,35,0.8)'; c.lineWidth = 1.5; const bx = W * (.4 + .15 * S(.5)); const by = H * (.25 + .08 * Math.sin(t)); c.beginPath(); c.moveTo(bx - 8, by); c.quadraticCurveTo(bx - 3, by - 5 - 2 * S(6), bx, by); c.quadraticCurveTo(bx + 3, by - 5 - 2 * S(6), bx + 8, by); c.stroke();
     } else if (pr === 'rapids') {
       // 急流: 白く弾ける水+転がる岩+両岸の断崖
       sky([[0,'#7a9a90'],[.45,'#4a6a60'],[1,'#2a4a5a']]);
@@ -6111,23 +6093,23 @@ if (typeof document !== 'undefined') (() => {
       const wat = c.createLinearGradient(0, H * .4, 0, H); wat.addColorStop(0, '#3a7a80'); wat.addColorStop(1, '#1a4a58'); c.fillStyle = wat; c.beginPath(); c.moveTo(W * .28, H * .55); c.moveTo(W * .28, H * .55); c.lineTo(W * .18, H); c.lineTo(W * .84, H); c.lineTo(W * .84, H); c.lineTo(W * .74, H * .55); c.closePath(); c.closePath(); c.fill();
       // 転がる岩+白い水しぶき
       const rng = L.mulberry32(941);
-      for (let i = 0; i < 7; i++) {
+      times(7, i => {
         const rx = W * (.28 + rng() * .45); const ry = H * (.58 + rng() * .35); const rr = W * (.02 + rng() * .03);
         // 岩
         c.fillStyle = '#5a5a55'; ellP(rx, ry, rr, rr * .7);
         // 水しぶき(ゆらぐ)
         c.strokeStyle = 'rgba(230,245,250,0.75)'; c.lineWidth = 1.5; const fl = Math.sin(t * 5 + i * 2); c.beginPath(); c.moveTo(rx - rr * 1.4, ry); c.quadraticCurveTo(rx - rr * .5, ry - rr * (0.8 + fl * .3), rx, ry - rr * .2); c.moveTo(rx + rr * .3, ry - rr * .15); c.quadraticCurveTo(rx + rr, ry - rr * (0.6 - fl * .3), rx + rr * 1.5, ry + 2); c.stroke();
-      }
+      });
       // 流れの筋(速い)
       c.strokeStyle = 'rgba(200,235,240,0.5)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const sy = H * (.58 + i * .05); const off = (t * .3 + i * .13) % 1; c.beginPath(); c.moveTo(W * (.22 + off * .1), sy); c.lineTo(W * (.5 + off * .1), sy + H * .04); c.stroke();
-      }
+      });
       // 飛沫の点
       c.fillStyle = 'rgba(240,250,255,0.6)';
-      for (let i = 0; i < 15; i++) {
+      times(15, i => {
         const px = W * (.3 + rng() * .4); const py = H * (.6 + rng() * .3); const tw = .5 + .5 * Math.sin(t * 4 + i); dotP(px, py, 1.5 * tw);
-      }
+      });
     } else if (pr === 'iceberg') {
       // 氷山: 輝く巨大な氷山+冷たい海+流氷+アザラシ
       sky([[0,'#4a6a8a'],[.5,'#7a9ab5'],[1,'#3a5a75']]);
@@ -6142,12 +6124,11 @@ if (typeof document !== 'undefined') (() => {
       // 氷山の映り込み
       c.fillStyle = 'rgba(190,220,235,0.25)'; c.beginPath(); c.moveTo(W * .35, H * .58); c.lineTo(W * .5, H * .72); c.lineTo(W * .68, H * .58); c.closePath(); c.closePath(); c.fill();
       // 流氷の欠片
-      c.fillStyle = 'rgba(220,235,245,0.8)'; const rng = L.mulberry32(761);
-      for (let i = 0; i < 10; i++) {
+      c.fillStyle = 'rgba(220,235,245,0.8)'; scat(761, 10, (rng, i) => {
         const fx = rng() * W; const fy = H * (.62 + rng() * .32); const fw = W * (.02 + rng() * .05); const dy = Math.sin(t * .8 + i) * 2; c.beginPath(); c.moveTo(fx, fy + dy); c.lineTo(fx + fw * .4, fy - H * .012 + dy); c.lineTo(fx + fw, fy + dy); c.lineTo(fx + fw * .8, fy + H * .008 + dy); c.lineTo(fx + fw * .15, fy + H * .01 + dy); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // アザラシ(丸い頭だけ出す)
-      const sx = W * (.15 + .1 * Math.sin(t * .2)); const sy = H * (.78 + .01 * Math.sin(t * 1.5)); c.fillStyle = '#4a5a64'; ellP(sx, sy, W * .018, H * .018); c.fillStyle = '#222'; c.beginPath(); c.arc(sx - W * .005, sy - 2, 1.5, 0, 7); c.arc(sx + W * .005, sy - 2, 1.5, 0, 7); c.fill();
+      const sx = W * (.15 + .1 * S(.2)); const sy = H * (.78 + .01 * S(1.5)); c.fillStyle = '#4a5a64'; ellP(sx, sy, W * .018, H * .018); c.fillStyle = '#222'; c.beginPath(); c.arc(sx - W * .005, sy - 2, 1.5, 0, 7); c.arc(sx + W * .005, sy - 2, 1.5, 0, 7); c.fill();
       // 波の筋
       c.strokeStyle = 'rgba(160,200,220,0.3)'; c.lineWidth = 1.2;
       for (let i = 0; i < 6; i++) {
@@ -6162,80 +6143,79 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#8aa098'],[.5,'#5a7a68'],[1,'#2a4438']]);
       // 奥の樹(霧で薄い)
       c.fillStyle = 'rgba(60,90,75,0.5)';
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const tx = W * (.1 + i * .2); c.fillRect(tx, H * .15, W * .015, H * .7); ellP(tx + W * .008, H * .15, W * .06, H * .1);
-      }
+      });
       // 流れる霧の帯(2層)
-      for (let i = 0; i < 2; i++) {
+      times(2, i => {
         const my = H * (.3 + i * .25); const mx = Math.sin(t * .3 + i * 2) * W * .08;
         c.fillStyle = `rgba(200,220,210,${.25 - i * .08})`;
         ellP(W * .5 + mx, my, W * .55, H * .07);
-      }
+      });
       // 手前の巨木
       c.fillStyle = '#1e3228'; c.fillRect(W * .08, 0, W * .05, H); c.fillRect(W * .85, 0, W * .06, H);
       // 枝
       c.beginPath(); c.moveTo(W * .13, H * .2); c.moveTo(W * .13, H * .2); c.lineTo(W * .35, H * .12); c.lineTo(W * .35, H * .16); c.lineTo(W * .35, H * .16); c.lineTo(W * .13, H * .27); c.closePath(); c.closePath(); c.fill(); c.beginPath(); c.moveTo(W * .85, H * .28); c.moveTo(W * .85, H * .28); c.lineTo(W * .65, H * .2); c.lineTo(W * .65, H * .24); c.lineTo(W * .65, H * .24); c.lineTo(W * .85, H * .35); c.closePath(); c.closePath(); c.fill();
       // 垂れ下がる苔(ゆれる)
       c.strokeStyle = 'rgba(120,160,110,0.8)'; c.lineWidth = 2; const rng = L.mulberry32(433);
-      for (let i = 0; i < 14; i++) {
+      times(14, i => {
         const bx = W * (.14 + rng() * .2); const by = H * (.13 + rng() * .08); const bl = H * (.06 + rng() * .12); const sw = Math.sin(t + i) * 3; c.beginPath(); c.moveTo(bx, by); c.quadraticCurveTo(bx + sw, by + bl * .6, bx + sw * .6, by + bl); c.stroke();
-      }
-      for (let i = 0; i < 10; i++) {
+      });
+      times(10, i => {
         const bx = W * (.66 + rng() * .18); const by = H * (.21 + rng() * .08); const bl = H * (.05 + rng() * .1); const sw = Math.sin(t * 1.2 + i) * 3; c.beginPath(); c.moveTo(bx, by); c.quadraticCurveTo(bx + sw, by + bl * .6, bx + sw * .6, by + bl); c.stroke();
-      }
+      });
       // 下草
       c.fillStyle = '#24392e'; c.fillRect(0, H * .82, W, H * .18); c.strokeStyle = '#3a5a48'; c.lineWidth = 2;
-      for (let i = 0; i < 20; i++) {
+      times(20, i => {
         const gx = rng() * W; c.beginPath(); c.moveTo(gx, H); c.quadraticCurveTo(gx + 4, H * .9, gx + Math.sin(t + i) * 5, H * .84); c.stroke();
-      }
+      });
       // 鳥(ケツァール風: 緑の影)
-      c.fillStyle = 'rgba(60,140,100,0.85)'; const bx2 = W * (.3 + .2 * Math.sin(t * .4)); const by2 = H * (.45 + .06 * Math.sin(t * 1.3)); const flap = Math.sin(t * 8); c.beginPath(); c.beginPath(); c.ellipse(bx2, by2, 8, 5, 0, 0, 7); ellP(bx2, by2, 8, 5); c.beginPath(); c.moveTo(bx2 - 4, by2); c.quadraticCurveTo(bx2 - 14, by2 - 8 * flap, bx2 - 18, by2 - 2); c.stroke();
+      c.fillStyle = 'rgba(60,140,100,0.85)'; const bx2 = W * (.3 + .2 * S(.4)); const by2 = H * (.45 + .06 * S(1.3)); const flap = S(8); c.beginPath(); c.beginPath(); c.ellipse(bx2, by2, 8, 5, 0, 0, 7); ellP(bx2, by2, 8, 5); c.beginPath(); c.moveTo(bx2 - 4, by2); c.quadraticCurveTo(bx2 - 14, by2 - 8 * flap, bx2 - 18, by2 - 2); c.stroke();
     } else if (pr === 'grotto') {
       // 青の洞窟: 輝く青い水+鍾乳石+水面の反射+入口の光
       sky([[0,'#0a1520'],[.55,'#10283a'],[1,'#0a3a50']]);
       // 入口の白光(奥)
       const glow = c.createRadialGradient(W * .5, H * .38, 0, W * .5, H * .38, W * .25); glow.addColorStop(0, 'rgba(180,220,255,0.7)'); glow.addColorStop(1, 'rgba(180,220,255,0)'); c.fillStyle = glow; c.fillRect(0, 0, W, H * .7);
       // 鍾乳石
-      c.fillStyle = '#1a2a35'; const rng = L.mulberry32(887);
-      for (let i = 0; i < 12; i++) {
+      c.fillStyle = '#1a2a35'; scat(887, 12, (rng, i) => {
         const sx = rng() * W; const sh = H * (.08 + rng() * .22); const sw = W * (.01 + rng() * .03); c.beginPath(); c.moveTo(sx - sw, 0); c.lineTo(sx, sh); c.lineTo(sx + sw, 0); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 側壁の岩
       c.fillStyle = '#16242e'; c.beginPath(); c.moveTo(0, 0); c.moveTo(0, 0); c.lineTo(W * .12, 0); c.quadraticCurveTo(W * .16, H * .4, W * .1, H * .6); c.lineTo(0, H * .75); c.lineTo(0, H * .75); c.closePath(); c.lineTo(0, H * .75); c.closePath(); c.fill(); c.beginPath(); c.moveTo(W, 0); c.moveTo(W, 0); c.lineTo(W * .88, 0); c.quadraticCurveTo(W * .84, H * .4, W * .9, H * .6); c.lineTo(W, H * .75); c.lineTo(W, H * .75); c.closePath(); c.lineTo(W, H * .75); c.closePath(); c.fill();
       // 輝く青い水面
       const water = c.createLinearGradient(0, H * .62, 0, H); water.addColorStop(0, '#1a6a8a'); water.addColorStop(1, '#0a4a6a'); c.fillStyle = water; c.fillRect(0, H * .62, W, H * .38);
       // 水面の光の反射(ゆらぐ)
       c.fillStyle = 'rgba(150,220,255,0.3)';
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const rx = W * (.3 + i * .045); const ry = H * (.64 + i * .03); const rw = W * (.02 + .012 * Math.sin(t * 1.5 + i)); c.fillRect(rx - rw / 2, ry, rw, 2);
-      }
+      });
       // 光の筋(入口から水へ)
       c.fillStyle = 'rgba(170,210,255,0.1)'; c.beginPath(); c.moveTo(W * .44, H * .35); c.moveTo(W * .44, H * .35); c.lineTo(W * .36, H); c.lineTo(W * .52, H); c.lineTo(W * .52, H); c.lineTo(W * .52, H * .35); c.closePath(); c.closePath(); c.fill();
       // 水滴のきらめき
       c.fillStyle = 'rgba(200,240,255,0.7)';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const sx = rng() * W; const sy = H * (.3 + rng() * .3); const tw = .5 + .5 * Math.sin(t * 3 + i * 2); dotP(sx, sy, 1.5 * tw);
-      }
+      });
     } else if (pr === 'canal') {
       // 運河の街: 両岸の彩色建物+アーチ橋+水面に揺れるゴンドラ
       sky([[0,'#a0c0d8'],[.6,'#c8b8a0'],[1,'#6a8090']]);
       // 両岸の建物(左)
       const rng = L.mulberry32(613); const hues = ['#c07050', '#d0a060', '#a08060', '#b06050', '#c09070'];
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const bx = W * i * .13; const bh = H * (.2 + rng() * .15); c.fillStyle = hues[i % hues.length]; c.fillRect(bx, H * .45 - bh, W * .12, bh);
         // 窓
         c.fillStyle = '#4a5a6a';
-        for (let w = 0; w < 3; w++) {
+        times(3, w => {
           c.fillRect(bx + W * .02 + w * W * .035, H * .45 - bh * .7, W * .018, bh * .25);
-        }
-      }
+        });
+      });
       // 右側
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const bx = W * (.6 + i * .11); const bh = H * (.18 + rng() * .16); c.fillStyle = hues[(i + 2) % hues.length]; c.fillRect(bx, H * .45 - bh, W * .1, bh); c.fillStyle = '#4a5a6a';
-        for (let w = 0; w < 2; w++) {
+        times(2, w => {
           c.fillRect(bx + W * .015 + w * W * .04, H * .45 - bh * .65, W * .02, bh * .3);
-        }
-      }
+        });
+      });
       // 遠くのアーチ橋
       c.fillStyle = '#8a7058'; c.beginPath(); c.moveTo(W * .32, H * .52); c.quadraticCurveTo(W * .5, H * .38, W * .68, H * .52); c.lineTo(W * .68, H * .56); c.lineTo(W * .68, H * .56); c.lineTo(W * .32, H * .56); c.closePath(); c.closePath(); c.fill();
       // 運河の水面
@@ -6263,28 +6243,27 @@ if (typeof document !== 'undefined') (() => {
       // 遠くの地平の丘
       c.fillStyle = '#a8b87a'; c.beginPath(); c.moveTo(0, H * .58); c.quadraticCurveTo(W * .3, H * .52, W * .65, H * .56); c.quadraticCurveTo(W * .85, H * .6, W, H * .55); c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // パンパスグラスの穂(白銀の揺れる房)
-      const rng = L.mulberry32(509);
-      for (let i = 0; i < 40; i++) {
+      scat(509, 40, (rng, i) => {
         const px = rng() * W; const py = H * (.6 + rng() * .38); const ph = H * (.08 + rng() * .1); const sw = Math.sin(t * 1.2 + px * .05) * ph * .12;
         // 茎
         c.strokeStyle = 'rgba(120,130,80,0.7)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + sw * .5, py - ph * .6, px + sw, py - ph); c.stroke();
         // 銀色の穂
         c.fillStyle = 'rgba(225,222,205,0.85)'; ellP(px + sw, py - ph, 2.5, ph * .28, sw * .02);
-      }
+      });
       // ガウチョの影(小さな騎馬のシルエット)
-      const gx = W * (.1 + .05 * Math.sin(t * .1)); c.fillStyle = 'rgba(40,35,30,0.8)'; c.fillRect(gx, H * .55, W * .025, H * .015); c.fillRect(gx + W * .003, H * .535, W * .008, H * .018); // 馬の体 // 人
+      const gx = W * (.1 + .05 * S(.1)); c.fillStyle = 'rgba(40,35,30,0.8)'; c.fillRect(gx, H * .55, W * .025, H * .015); c.fillRect(gx + W * .003, H * .535, W * .008, H * .018); // 馬の体 // 人
       // 鳥の群れ
       c.strokeStyle = 'rgba(60,60,60,0.7)'; c.lineWidth = 1.3;
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const bx = W * (.15 + i * .13 + Math.sin(t * .3 + i) * .02); const by = H * (.12 + (i % 3) * .05); c.beginPath(); c.moveTo(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
-      }
+      });
     } else if (pr === 'tea') {
       // 茶畑: 等高線に沿って曲がる茶の列+霧の山+摘み手の笠
       sky([[0,'#a8c8d8'],[.45,'#c8d8b8'],[1,'#5a8a50']]);
       // 霧の立つ山
       c.fillStyle = '#8a9a90'; c.beginPath(); c.moveTo(0, H * .45); c.quadraticCurveTo(W * .3, H * .28, W * .6, H * .4); c.quadraticCurveTo(W * .8, H * .48, W, H * .42); c.lineTo(W, H * .55); c.lineTo(W, H * .55); c.lineTo(0, H * .55); c.closePath(); c.closePath(); c.fill();
       // 山の霧
-      c.fillStyle = 'rgba(230,235,230,0.35)'; ell(.5 + Math.sin(t * .2) * W * .03, .42, W * .35, H * .04);
+      c.fillStyle = 'rgba(230,235,230,0.35)'; ell(.5 + S(.2) * W * .03, .42, W * .35, H * .04);
       // 等高線に沿う茶の列(うねる暗緑の帯)
       for (let i = 0; i < 6; i++) {
         const ry = H * (.56 + i * .07); const amp = .015 + i * .008; // 下ほど波が大きい
@@ -6297,47 +6276,46 @@ if (typeof document !== 'undefined') (() => {
       }
       // 列間の畦道
       c.strokeStyle = 'rgba(160,150,110,0.5)'; c.lineWidth = 2;
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const px = W * (.15 + i * .22); c.beginPath(); c.moveTo(px, H * .55); c.lineTo(px + W * .05, H); c.stroke();
-      }
+      });
       // 摘み手の菅笠(点々)
-      const rng = L.mulberry32(359);
-      for (let i = 0; i < 4; i++) {
+      scat(359, 4, (rng, i) => {
         const px = W * (.2 + rng() * .6); const py = H * (.68 + rng() * .2); c.fillStyle = '#c8b060'; c.beginPath(); c.moveTo(px - W * .012, py); c.moveTo(px - W * .012, py); c.lineTo(px, py - H * .018); c.moveTo(px - W * .012, py); c.lineTo(px, py - H * .018); c.lineTo(px + W * .012, py); c.closePath(); c.closePath(); c.fill();
-      }
+      });
     } else if (pr === 'glade') {
       // 林間の広場: 周囲を囲む高木+木漏れ日の光柱+花の咲く草地+舞う蝶
       sky([[0,'#4a7a5a'],[.5,'#6a9a68'],[1,'#4a7a48']]); const rng = L.mulberry32(347);
       // 周囲の高木(左右に縁取る)
-      for (const side of [0, 1]) {
-        for (let i = 0; i < 4; i++) {
+      ([0, 1]).forEach(side => {
+        times(4, i => {
           const tx = W * (side ? .72 + i * .08 : .02 + i * .08); const th = H * (.5 + rng() * .15); c.fillStyle = '#4a3a28'; c.fillRect(tx, H * .55 - th * .3, W * .012, th * .3 + H * .1); c.fillStyle = '#3a6a40'; ellP(tx + W * .006, H * .55 - th * .35, W * .07, H * .14);
-        }
-      }
+        });
+      });
       // 中央の草地
       c.fillStyle = '#5a8a48'; c.fillRect(0, H * .55, W, H * .45);
       // 木漏れ日の光柱
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const gx = W * (.35 + i * .12) + Math.sin(t * .3 + i) * W * .01; c.fillStyle = 'rgba(255,240,180,0.12)'; c.beginPath(); c.moveTo(gx, H * .1); c.moveTo(gx, H * .1); c.lineTo(gx + W * .05, H * .1); c.lineTo(gx + W * .09, H * .7); c.lineTo(gx + W * .09, H * .7); c.lineTo(gx + W * .04, H * .7); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 草の筋
       c.strokeStyle = 'rgba(40,80,35,0.5)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const px = W * (.28 + rng() * .44); const py = H * (.62 + rng() * .3); c.beginPath(); c.moveTo(px, py); c.moveTo(px, py); c.lineTo(px + W * .004, py - H * .025); c.stroke();
-      }
+      });
       // 咲く花
-      for (let i = 0; i < 12; i++) {
+      times(12, i => {
         const px = W * (.26 + rng() * .48); const py = H * (.6 + rng() * .32); c.fillStyle = ['#e8e0f0', '#f0d8e8', '#f8e8a8', '#e8f0d8'][Math.floor(rng() * 4)]; dotP(px, py, W * .005);
-      }
+      });
       // 舞う蝶
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const bx = W * .5 + Math.sin(t * .5 + i * 2.2) * W * (.1 + i * .06); const by = H * .55 + Math.sin(t * .9 + i * 1.3) * H * .08; const flap = Math.sin(t * 12 + i) * .6; c.fillStyle = ['#f0c8e0', '#f0e0b0', '#c8e0f0'][i]; c.beginPath(); c.ellipse(bx - W * .006, by, W * .007, H * .004 * Math.abs(flap) + H * .002, -.3, 0, 7); c.ellipse(bx + W * .006, by, W * .007, H * .004 * Math.abs(flap) + H * .002, .3, 0, 7); c.fill();
-      }
+      });
       // 浮かぶ花粉
       c.fillStyle = 'rgba(255,250,210,0.5)';
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const px = W * (.3 + rng() * .4) + Math.sin(t * .6 + i) * W * .015; const py = H * (.3 + rng() * .3) + Math.cos(t * .5 + i) * H * .015; dotP(px, py, 1.5);
-      }
+      });
     } else if (pr === 'billabong') {
       // ビラボン: 乾いた大地の静かな水溜り+ガムの木+映り込み+水鳥
       sky([[0,'#e8c88a'],[.5,'#d8a860'],[1,'#a87848']]);
@@ -6348,40 +6326,39 @@ if (typeof document !== 'undefined') (() => {
       // 地平の低い丘
       c.fillStyle = '#9a7850'; c.beginPath(); c.moveTo(0, H * .5); c.quadraticCurveTo(W * .3, H * .44, W * .6, H * .5); c.quadraticCurveTo(W * .8, H * .54, W, H * .5); c.lineTo(W, H * .55); c.lineTo(W, H * .55); c.lineTo(0, H * .55); c.closePath(); c.closePath(); c.fill();
       // ガムの木(白っぽい幹+頭の雲状の葉)
-      const rng = L.mulberry32(337);
-      for (let i = 0; i < 3; i++) {
+      scat(337, 3, (rng, i) => {
         const tx = W * (.12 + i * .15 + rng() * .04); const th = H * (.22 + rng() * .08); c.fillStyle = '#c8b8a0'; c.fillRect(tx, H * .55 - th, W * .008, th); c.fillStyle = '#6a8a58'; // 白い幹
-        for (let j = 0; j < 4; j++) {
+        times(4, j => {
           ellP(tx + W * (rng() - .4) * .05, H * .55 - th - H * (rng() * .06), W * .035, H * .022);
-        }
-      }
+        });
+      });
       // 水溜り(三日月状の水域)
       const wg = c.createLinearGradient(0, H * .62, 0, H * .85); wg.addColorStop(0, '#5a8a9a'); wg.addColorStop(1, '#3a6a7a'); c.fillStyle = wg; ell(.55, .72, W * .32, H * .11);
       // 木の映り込み
       c.fillStyle = 'rgba(90,120,90,0.3)';
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const tx = W * (.12 + i * .15); ellP(tx, H * .68, W * .03, H * .02);
-      }
+      });
       // 水面の輝き+さざ波
       c.strokeStyle = 'rgba(200,235,245,0.4)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const py = H * (.66 + i * .03); c.beginPath(); c.moveTo(W * .35 + Math.sin(t * .7 + i) * W * .02, py); c.lineTo(W * .7 + Math.sin(t * .7 + i) * W * .02, py); c.stroke();
-      }
+      });
       // 水鳥(佇むシギ)
       c.strokeStyle = '#3a3028'; c.lineWidth = 1.5; const bx = W * .32, by = H * .66; c.beginPath(); c.moveTo(bx, by); c.lineTo(bx, by + H * .025); c.stroke(); c.fillStyle = '#3a3028'; c.beginPath(); c.beginPath(); c.ellipse(bx + W * .004, by - H * .004, W * .008, H * .006, 0, 0, 7); ellP(bx + W * .004, by - H * .004, W * .008, H * .006); c.beginPath(); c.beginPath(); c.arc(bx + W * .012, by - H * .012, W * .004, 0, 7); dotP(bx + W * .012, by - H * .012, W * .004); // 脚 // 頭
       // 岸の草叢
       c.strokeStyle = '#7a8a50'; c.lineWidth = 1.5;
-      for (let i = 0; i < 7; i++) {
+      times(7, i => {
         const px = W * (.25 + rng() * .5); const py = H * (.8 + rng() * .1); c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + W * .006, py - H * .03, px + W * .002, py - H * .045); c.stroke();
-      }
+      });
     } else if (pr === 'seastack') {
       // 海食柱: 切り立つ岩柱+砕ける波+飛ぶ海鳥+曇り空
       sky([[0,'#8a9aa8'],[.5,'#4a6a80'],[1,'#2a4a60']]);
       // 曇り空の雲
       c.fillStyle = 'rgba(220,225,230,0.3)';
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const px = ((W * (.1 + i * .4) + t * W * .01) % (W * 1.2)) - W * .1; ellP(px, H * (.1 + i * .06), W * .12, H * .025);
-      }
+      });
       // 海食柱(海面から立つ岩塔)
       const rng = L.mulberry32(313); const stacks = [[.2, .35, .05], [.38, .28, .04], [.68, .4, .06], [.88, .3, .035]];
       for (const [sx, sh, sw] of stacks) {
@@ -6398,93 +6375,92 @@ if (typeof document !== 'undefined') (() => {
       }
       // 波の輝き
       c.fillStyle = 'rgba(200,230,245,0.35)';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const px = W * rng(), py = H * (.73 + rng() * .22); ellP(px + Math.sin(t + i) * W * .006, py, W * .012, H * .002);
-      }
+      });
       // 海鳥
       c.strokeStyle = '#202830'; c.lineWidth = 1.5;
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const bx = W * (.15 + i * .3) + Math.sin(t * .5 + i) * W * .03; const by = H * (.25 + i * .08) + Math.sin(t * .9 + i * 2) * H * .02; c.beginPath(); c.arc(bx - W * .005, by, W * .005, Math.PI * 1.1, Math.PI * 1.9); c.arc(bx + W * .005, by, W * .005, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
-      }
+      });
     } else if (pr === 'bazaar') {
       // バザール: 市場の屋台+色とりどりの天幕+吊るす提灯+石畳
       sky([[0,'#e8a860'],[.55,'#c88858'],[1,'#8a5a40']]);
       // 遠景の建物シルエット(ドーム+ミナレット)
       c.fillStyle = '#a06a48'; c.fillRect(0, H * .35, W, H * .18); c.beginPath(); c.arc(W * .2, H * .35, W * .05, Math.PI, Math.PI * 2); c.arc(W * .2, H * .35, W * .05, Math.PI, Math.PI * 2); c.fill(); c.beginPath(); c.arc(W * .62, H * .35, W * .07, Math.PI, Math.PI * 2); c.arc(W * .62, H * .35, W * .07, Math.PI, Math.PI * 2); c.fill(); c.fillRect(W * .85, H * .22, W * .015, H * .3); c.beginPath(); c.arc(W * .857, H * .22, W * .012, Math.PI, Math.PI * 2); c.arc(W * .857, H * .22, W * .012, Math.PI, Math.PI * 2); c.fill(); // ミナレット
       // 市場の天幕(縞のタープ)
-      const rng = L.mulberry32(293);
-      for (let i = 0; i < 3; i++) {
+      scat(293, 3, (rng, i) => {
         const ax = W * (.08 + i * .32); const aw = W * .26;
-        for (let s = 0; s < 6; s++) {
+        times(6, s => {
           c.fillStyle = s % 2 ? '#c84838' : '#e8d8b8'; c.beginPath(); c.moveTo(ax + aw * s / 6, H * .5); c.lineTo(ax + aw * (s + 1) / 6, H * .5); c.lineTo(ax + aw * (s + .5) / 6, H * .56); c.closePath(); c.closePath(); c.fill();
-        }
-      }
+        });
+      });
       // 屋台(箱+商品の塊)
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const sx = W * (.1 + i * .32); c.fillStyle = '#7a5a3a'; c.fillRect(sx, H * .62, W * .2, H * .12); c.fillStyle = ['#c84a3a', '#3a7a5a', '#c8a83a'][i];
-        for (let j = 0; j < 5; j++) {
+        times(5, j => {
           dotP(sx + W * .02 + j * W * .035, H * .6, W * .012);
-        }
-      }
+        });
+      });
       // 吊るす提灯
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const lx = W * (.12 + i * .19); const ly = H * .18 + Math.sin(t * .8 + i) * H * .008; c.strokeStyle = 'rgba(60,40,30,0.6)'; c.lineWidth = 1; c.beginPath(); c.moveTo(lx, H * .08); c.lineTo(lx, ly); c.stroke(); c.fillStyle = 'rgba(255,190,90,0.9)'; ellP(lx, ly + H * .015, W * .011, H * .018);
-      }
+      });
       // 石畳
       c.fillStyle = '#6a5040'; c.fillRect(0, H * .86, W, H * .14); c.strokeStyle = 'rgba(40,30,22,0.4)'; c.lineWidth = 1;
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const px = W * rng(); c.beginPath(); c.moveTo(px, H * .88); c.lineTo(px + W * .03, H * .98); c.stroke();
-      }
+      });
     } else if (pr === 'polder') {
       // ポルダー: 干拓地の水平線+運河+風車+低い雲+放牧地
       sky([[0,'#a8c8e0'],[.5,'#c8d8c0'],[1,'#7aa868']]);
       // 低い流れ雲
       c.fillStyle = 'rgba(255,255,255,0.5)';
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const px = ((W * (.15 + i * .35) + t * W * .015) % (W * 1.2)) - W * .1; ellP(px, H * (.12 + i * .07), W * .09, H * .02);
-      }
+      });
       // 地平の風車
       const wx = W * .75, wy = H * .42; c.fillStyle = '#6a5a4a'; c.beginPath(); c.moveTo(wx - W * .012, wy + H * .12); c.moveTo(wx - W * .012, wy + H * .12); c.lineTo(wx + W * .012, wy + H * .12); c.lineTo(wx + W * .008, wy); c.lineTo(wx + W * .008, wy); c.lineTo(wx - W * .008, wy); c.closePath(); c.closePath(); c.fill();
       // 回る翼
       c.strokeStyle = '#5a4a3a'; c.lineWidth = 2;
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const a = t * .8 + i * Math.PI / 2; c.beginPath(); c.moveTo(wx, wy + H * .01); c.lineTo(wx + Math.cos(a) * W * .045, wy + H * .01 + Math.sin(a) * W * .045); c.stroke();
-      }
+      });
       // 運河(地平に向かって収束)
       c.fillStyle = '#4a7a95'; c.beginPath(); c.moveTo(W * .42, H); c.moveTo(W * .42, H); c.lineTo(W * .47, H * .5); c.lineTo(W * .53, H * .5); c.lineTo(W * .53, H * .5); c.lineTo(W * .62, H); c.closePath(); c.closePath(); c.fill();
       // 運河の輝き
       c.fillStyle = 'rgba(180,220,235,0.3)'; c.beginPath(); c.moveTo(W * .48, H); c.moveTo(W * .48, H); c.lineTo(W * .5, H * .55); c.moveTo(W * .48, H); c.lineTo(W * .5, H * .55); c.lineTo(W * .51, H * .55); c.moveTo(W * .48, H); c.lineTo(W * .5, H * .55); c.lineTo(W * .51, H * .55); c.lineTo(W * .5, H); c.closePath(); c.closePath(); c.fill();
       // 牧草地の区割り線(畝/畦)
       c.strokeStyle = 'rgba(60,90,50,0.35)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         c.beginPath(); c.moveTo(W * (i * .08), H * .58); c.lineTo(W * (i * .16 - .02), H); c.stroke();
-      }
+      });
       // 牛の点
       const rng = L.mulberry32(277); c.fillStyle = '#3a3a32';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const px = W * (.08 + rng() * .3); const py = H * (.7 + rng() * .2); ellP(px, py, W * .009, H * .008); dotP(px + W * .01, py - H * .004, W * .004);
-      }
+      });
     } else if (pr === 'karst') {
       // カルスト: 石灰岩の割れ目大地+鍾乳石の森+青い空+低い丘
       sky([[0,'#a8c8e8'],[.55,'#c8bfa0'],[1,'#9a8a6a']]);
       // 遠景の低い丘
       c.fillStyle = '#8a9a80'; c.beginPath(); c.moveTo(0, H * .45); c.quadraticCurveTo(W * .25, H * .34, W * .5, H * .42); c.quadraticCurveTo(W * .75, H * .5, W, H * .44); c.lineTo(W, H * .55); c.lineTo(W, H * .55); c.lineTo(0, H * .55); c.closePath(); c.closePath(); c.fill(); const rng = L.mulberry32(263);
       // 石灰岩の柱林(鍾乳石の塔)
-      for (let i = 0; i < 9; i++) {
+      times(9, i => {
         const px = W * (.05 + i * .11) + rng() * W * .03; const ph = H * (.18 + rng() * .25); const pw = W * (.02 + rng() * .018); c.fillStyle = ['#b8ac8e', '#a89a7c', '#c4b89e'][Math.floor(rng() * 3)]; c.beginPath(); c.moveTo(px - pw, H * .85); c.lineTo(px - pw * .7, H * .85 - ph); c.quadraticCurveTo(px, H * .85 - ph - H * .02, px + pw * .7, H * .85 - ph); c.lineTo(px + pw, H * .85); c.closePath(); c.closePath(); c.fill();
         // 縦筋
         c.strokeStyle = 'rgba(90,80,60,0.4)'; c.lineWidth = 1; c.beginPath(); c.moveTo(px - pw * .3, H * .82); c.lineTo(px - pw * .3, H * .85 - ph * .8); c.stroke();
-      }
+      });
       // 前景: ひび割れた石灰岩の地表
       c.fillStyle = '#8a7a5c'; c.fillRect(0, H * .82, W, H * .18); c.strokeStyle = 'rgba(60,50,35,0.5)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 7; i++) {
+      times(7, i => {
         const px = W * rng(), py = H * (.84 + rng() * .13); c.beginPath(); c.moveTo(px, py); c.lineTo(px + W * (rng() - .5) * .06, py + H * .04); c.lineTo(px + W * (rng() - .5) * .08, py + H * .08); c.stroke();
-      }
+      });
       // 隙間の草
       c.strokeStyle = '#6a8a50'; c.lineWidth = 1.5;
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const px = W * rng(); c.beginPath(); c.moveTo(px, H * .85); c.quadraticCurveTo(px + W * .008, H * .82, px + W * .004, H * .8); c.stroke();
-      }
+      });
     } else if (pr === 'loch') {
       // ロッホ: 霧の立つ深い湖+両岸の丘+陰が差す水面+遠くの城跡
       sky([[0,'#7a8a95'],[.5,'#4a5a68'],[1,'#2a3a48']]);
@@ -6497,21 +6473,20 @@ if (typeof document !== 'undefined') (() => {
       // 反射の丘影
       c.fillStyle = 'rgba(50,70,80,0.35)'; c.beginPath(); c.moveTo(W * .3, H * .58); c.quadraticCurveTo(W * .45, H * .7, W * .55, H * .58); c.closePath(); c.closePath(); c.fill();
       // 漂う霧の帯
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const my = H * (.5 + i * .07) + Math.sin(t * .3 + i) * H * .01;
         c.fillStyle = `rgba(200,215,220,${.1 + i * .05})`;
         ellP(W * .5 + Math.sin(t * .15 + i) * W * .05, my, W * (.3 + i * .1), H * .02);
-      }
+      });
       // 水面の輝き
-      c.fillStyle = 'rgba(160,200,220,0.3)'; const rng = L.mulberry32(251);
-      for (let i = 0; i < 10; i++) {
+      c.fillStyle = 'rgba(160,200,220,0.3)'; scat(251, 10, (rng, i) => {
         const px = W * rng(), py = H * (.62 + rng() * .32); ellP(px + Math.sin(t + i) * W * .008, py, W * .015, H * .002);
-      }
+      });
       // 飛び交う水鳥
       c.strokeStyle = '#202830'; c.lineWidth = 1.5;
-      for (let i = 0; i < 2; i++) {
+      times(2, i => {
         const bx = W * (.3 + i * .35) + Math.sin(t * .4 + i) * W * .04; const by = H * .3 + Math.sin(t * .8 + i * 2) * H * .02; c.beginPath(); c.arc(bx - W * .006, by, W * .006, Math.PI * 1.1, Math.PI * 1.9); c.arc(bx + W * .006, by, W * .006, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
-      }
+      });
     } else if (pr === 'cenote') {
       // セノーテ: 石灰岩の窪み+差し込む光柱+青い湧水+垂れ下がる根
       sky([[0,'#2a3a30'],[.45,'#1a4a55'],[1,'#0d3540']]);
@@ -6523,43 +6498,43 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#3d4a3a'; c.beginPath(); c.moveTo(0, 0); c.moveTo(0, 0); c.lineTo(W * .22, 0); c.quadraticCurveTo(W * .18, H * .3, W * .2, H * .55); c.lineTo(W * .18, H); c.lineTo(W * .18, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill(); c.beginPath(); c.moveTo(W, 0); c.moveTo(W, 0); c.lineTo(W * .78, 0); c.quadraticCurveTo(W * .82, H * .3, W * .8, H * .55); c.lineTo(W * .82, H); c.lineTo(W * .82, H); c.lineTo(W, H); c.closePath(); c.closePath(); c.fill();
       // 垂れる根
       const rng = L.mulberry32(237); c.strokeStyle = '#4a5a40'; c.lineWidth = 1.5;
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const px = W * (.3 + rng() * .4); const len = H * (.08 + rng() * .15); c.beginPath(); c.moveTo(px, H * .04); c.quadraticCurveTo(px + Math.sin(i) * W * .01, H * .04 + len * .5, px + Math.sin(i * 1.7) * W * .015, H * .04 + len); c.stroke();
-      }
+      });
       // 湧水面
       c.fillStyle = '#2a8a9a'; c.fillRect(0, H * .72, W, H * .28); c.fillStyle = 'rgba(180,240,250,0.25)';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const wx = (W * (.1 + i * .25) + Math.sin(t * .6 + i) * W * .04); ellP(wx, H * .74, W * .05, H * .006);
-      }
+      });
       // 揺れる小魚
       c.fillStyle = 'rgba(200,230,220,0.6)';
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const fx = W * .5 + Math.sin(t * .5 + i * 2.1) * W * (.08 + i * .04); const fy = H * (.8 + i * .05) + Math.cos(t * .8 + i) * H * .015; ellP(fx, fy, W * .011, H * .0045);
-      }
+      });
     } else if (pr === 'kelp') {
       // 昆布の森: 水中の光筋+ゆらめく昆布の列+魚群+岩礁の底
       sky([[0,'#2a5a70'],[.5,'#1a4a58'],[1,'#0e3540']]);
       // 差し込む光筋
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const gx = W * (.15 + i * .22) + Math.sin(t * .2 + i) * W * .02; c.fillStyle = 'rgba(150,220,230,0.07)'; c.beginPath(); c.moveTo(gx, 0); c.moveTo(gx, 0); c.lineTo(gx + W * .1, 0); c.lineTo(gx + W * .16, H); c.lineTo(gx + W * .16, H); c.lineTo(gx + W * .06, H); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       const rng = L.mulberry32(223);
       // 揺れる昆布(根元から伸びる縦の葉体)
-      for (let i = 0; i < 14; i++) {
+      times(14, i => {
         const px = W * (.04 + rng() * .92); const kh = H * (.3 + rng() * .45); const sway = Math.sin(t * .8 + i) * W * .012; c.strokeStyle = ['#2a6a3a', '#3a7a45', '#1f5a35'][Math.floor(rng() * 3)]; c.lineWidth = 2 + rng() * 3; c.beginPath(); c.moveTo(px, H); c.quadraticCurveTo(px + sway * .4, H - kh * .6, px + sway, H - kh); c.stroke(); // 高さ
         // 先端の葉
         c.fillStyle = '#3a8a50'; ellP(px + sway, H - kh, W * .008, H * .02, sway * 2);
-      }
+      });
       // 魚群
       c.fillStyle = 'rgba(180,220,230,0.7)';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const fx = (W * (.1 + i * .11) + t * W * .03) % (W * 1.1); const fy = H * (.2 + (i % 3) * .12) + Math.sin(t * 1.5 + i) * H * .02; ellP(fx, fy, W * .012, H * .005); c.beginPath(); c.moveTo(fx - W * .012, fy); c.moveTo(fx - W * .012, fy); c.lineTo(fx - W * .018, fy - H * .006); c.moveTo(fx - W * .012, fy); c.lineTo(fx - W * .018, fy - H * .006); c.lineTo(fx - W * .018, fy + H * .006); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 底の岩礁
       c.fillStyle = '#153038';
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const px = W * (i / 6) + rng() * W * .08; ellP(px, H * .98, W * (.04 + rng() * .04), H * (.02 + rng() * .015));
-      }
+      });
     } else if (pr === 'hamada') {
       // ハマダ: 岩盤むき出しの平坦な砂漠+疎らな礫+砂塵+遠い低山
       sky([[0,'#d8a878'],[.4,'#c08858'],[1,'#98704a']]);
@@ -6573,23 +6548,23 @@ if (typeof document !== 'undefined') (() => {
       c.lineTo(W, H * .42); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
       // 岩盤の平坦な地表+ひび筋
       c.fillStyle = '#a88058'; c.fillRect(0, H * .42, W, H * .58); c.strokeStyle = 'rgba(90,60,40,0.35)'; c.lineWidth = 1;
-      for (let i = 0; i < 18; i++) {
+      times(18, i => {
         const px = W * rng(), py = H * (.5 + rng() * .48); c.beginPath(); c.moveTo(px, py); c.lineTo(px + (rng() - .5) * W * .08, py + rng() * H * .03); c.stroke();
-      }
+      });
       // 疎らな礫
-      for (let i = 0; i < 30; i++) {
+      times(30, i => {
         const px = W * rng(), py = H * (.45 + rng() * .52); const s = rng(); c.fillStyle = ['#7a5a3a', '#8a6a48', '#6a4a30'][Math.floor(rng() * 3)]; ellP(px, py, W * (.004 + s * .01), H * (.002 + s * .005), rng() * .5);
-      }
+      });
       // 漂う砂塵
       c.fillStyle = 'rgba(230,200,160,0.2)';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const y = H * (.55 + i * .12) + Math.sin(t * .5 + i * 2) * H * .01; ellP(W * .5, y, W * .45, H * .025);
-      }
+      });
       // 蜃気楼の揺らぎ筋
       c.strokeStyle = 'rgba(255,240,210,0.3)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const y = H * (.44 + i * .015); c.beginPath(); c.moveTo(W * .2, y); c.quadraticCurveTo(W * .5, y + Math.sin(t * .8 + i) * H * .006, W * .8, y); c.stroke();
-      }
+      });
     } else if (pr === 'meseta') {
       // メセタ高原: 乾いた黄土の高原+孤立した樫の木+回る猛禽+遠い丘陵
       sky([[0,'#d8c090'],[.45,'#c8a870'],[1,'#a88558']]);
@@ -6602,21 +6577,21 @@ if (typeof document !== 'undefined') (() => {
       }
       c.lineTo(W, H * .42); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
       // 乾いた草の点描
-      for (let i = 0; i < 80; i++) {
+      times(80, i => {
         const px = W * rng(), py = H * (.45 + rng() * .52); c.fillStyle = ['#8a7040', '#9a8050', '#7a6038'][Math.floor(rng() * 3)]; c.globalAlpha = .4 + rng() * .4; ellP(px, py, W * .006, H * .003, rng() * .6);
-      }
+      });
       c.globalAlpha = 1;
       // 孤立した樫の木(丸い樹冠)
       c.fillStyle = '#4a3a28'; c.fillRect(W * .24, H * .5, W * .008, H * .09); c.fillStyle = '#4a5a2e'; ell(.244,.48,W * .035,H * .028); ell(.228,.5,W * .02,H * .02); // 幹
       // 空を回る猛禽
       c.strokeStyle = '#4a4038'; c.lineWidth = 1.5;
-      for (let i = 0; i < 2; i++) {
+      times(2, i => {
         const ang = t * .4 + i * Math.PI; const bx = W * (.55 + Math.cos(ang) * .12); const by = H * (.2 + Math.sin(ang) * .04); c.beginPath(); c.moveTo(bx - W * .015, by); c.quadraticCurveTo(bx, by - H * .012, bx + W * .015, by); c.stroke();
-      }
+      });
       // 石の散在
-      for (let i = 0; i < 12; i++) {
+      times(12, i => {
         const px = W * rng(), py = H * (.85 + rng() * .13); c.fillStyle = '#8a7a60'; ellP(px, py, W * (.008 + rng() * .01), H * (.004 + rng() * .005), rng() * .4);
-      }
+      });
     } else if (pr === 'steppe') {
       // ステップ草原: 果てしない平坦な地平+羽毛草の波+巨大な積雲
       sky([[0,'#90b0d0'],[.4,'#c8c8a0'],[1,'#a0986a']]); const rng = L.mulberry32(191);
@@ -6628,14 +6603,14 @@ if (typeof document !== 'undefined') (() => {
       // 平坦な地平線
       c.fillStyle = '#98905f'; c.fillRect(0, H * .42, W, H * .58);
       // 羽毛草(スティパ)の穂の波 — 風で揺れる
-      for (let i = 0; i < 70; i++) {
+      times(70, i => {
         const px = W * rng(), py = H * (.45 + rng() * .52); const dep = (py / H - .45) / .55; const sway = Math.sin(t * 1.2 + px * .01) * W * .004 * (0.5 + dep); c.strokeStyle = ['#b8a870', '#c8b880', '#a89860'][Math.floor(rng() * 3)]; c.lineWidth = 1; c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + sway * .5, py - H * .03, px + sway, py - H * (.035 + dep * .02)); c.stroke(); // 遠近: 小さいほど遠く
-      }
+      });
       // 遠くの騎馬シルエット
       c.fillStyle = '#5a5040';
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const hx2 = W * (.3 + i * .18 + rng() * .06); const hy2 = H * .43; ellP(hx2, hy2, W * .012, H * .005); c.fillRect(hx2 - W * .002, hy2 - H * .018, W * .004, H * .014); // 馬体 // 騎手
-      }
+      });
       // 孤立した一樹
       c.fillStyle = '#4a5a38'; c.fillRect(W * .82, H * .38, W * .005, H * .045); ell(.822,.37,W * .02,H * .02);
     } else if (pr === 'glen') {
@@ -6645,20 +6620,20 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#4a6038'; c.beginPath(); c.moveTo(0, 0); c.moveTo(0, 0); c.lineTo(W * .3, 0); c.quadraticCurveTo(W * .38, H * .35, W * .28, H); c.lineTo(0, H); c.lineTo(0, H); c.closePath(); c.lineTo(0, H); c.closePath(); c.fill(); c.fillStyle = '#42562e'; c.beginPath(); c.moveTo(W, 0); c.moveTo(W, 0); c.lineTo(W * .7, 0); c.quadraticCurveTo(W * .62, H * .35, W * .72, H); c.lineTo(W, H); c.lineTo(W, H); c.closePath(); c.lineTo(W, H); c.closePath(); c.fill();
       // 斜面の木々(小さな点々)
       c.fillStyle = '#3a5028';
-      for (let i = 0; i < 26; i++) {
+      times(26, i => {
         const side = rng() < .5 ? 0 : 1; const px = side ? W * (.72 + rng() * .26) : W * (rng() * .28); const py = H * (.15 + rng() * .7); ellP(px, py, W * .008, H * .01);
-      }
+      });
       // 霧の帯
       c.fillStyle = 'rgba(220,228,235,0.25)';
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const y = H * (.3 + i * .18) + Math.sin(t * .3 + i) * H * .01; ellP(W * .5, y, W * .35, H * .04);
-      }
+      });
       // 谷底の渓流
-      c.strokeStyle = '#a8c8d8'; c.lineWidth = 5; c.beginPath(); c.moveTo(W * .48, H); c.quadraticCurveTo(W * (.52 + Math.sin(t * .4) * .01), H * .75, W * .5, H * .55); c.quadraticCurveTo(W * .48, H * .4, W * .5, H * .3); c.stroke(); c.strokeStyle = 'rgba(230,245,255,0.6)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(W * .48, H); c.quadraticCurveTo(W * (.52 + Math.sin(t * .4) * .01), H * .75, W * .5, H * .55); c.stroke();
+      c.strokeStyle = '#a8c8d8'; c.lineWidth = 5; c.beginPath(); c.moveTo(W * .48, H); c.quadraticCurveTo(W * (.52 + S(.4) * .01), H * .75, W * .5, H * .55); c.quadraticCurveTo(W * .48, H * .4, W * .5, H * .3); c.stroke(); c.strokeStyle = 'rgba(230,245,255,0.6)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(W * .48, H); c.quadraticCurveTo(W * (.52 + S(.4) * .01), H * .75, W * .5, H * .55); c.stroke();
       // 渓流の岩
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const px = W * (.42 + rng() * .16), py = H * (.6 + rng() * .38); c.fillStyle = '#6a6a60'; ellP(px, py, W * .012, H * .006, rng() * .5);
-      }
+      });
     } else if (pr === 'cove') {
       // 入り江: 両側の断崖+穏やかな湾内の水+小さなボート+砂浜
       sky([[0,'#a8c8e0'],[.4,'#b8d0e0'],[1,'#d8c8a0']]); const rng = L.mulberry32(173);
@@ -6671,17 +6646,17 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#5a8aa8'; c.beginPath(); c.moveTo(0, H * .7); c.quadraticCurveTo(W * .5, H * .5, W, H * .75); c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
       // 波の光
       c.strokeStyle = 'rgba(230,245,255,0.5)'; c.lineWidth = 1;
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const y = H * (.62 + i * .035); c.beginPath(); c.moveTo(W * (.25 + rng() * .2), y); c.lineTo(W * (.45 + rng() * .25), y); c.stroke();
-      }
+      });
       // 小さなボート
-      const bx = W * (.45 + Math.sin(t * .2) * .03), by = H * .62; c.fillStyle = '#8a5a38'; c.beginPath(); c.moveTo(bx - W * .03, by); c.quadraticCurveTo(bx, by + H * .02, bx + W * .03, by); c.lineTo(bx + W * .025, by - H * .008); c.lineTo(bx - W * .025, by - H * .008); c.closePath(); c.closePath(); c.fill(); c.strokeStyle = '#6a4a30'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(bx, by - H * .008); c.lineTo(bx, by - H * .055); c.stroke(); // マスト
+      const bx = W * (.45 + S(.2) * .03), by = H * .62; c.fillStyle = '#8a5a38'; c.beginPath(); c.moveTo(bx - W * .03, by); c.quadraticCurveTo(bx, by + H * .02, bx + W * .03, by); c.lineTo(bx + W * .025, by - H * .008); c.lineTo(bx - W * .025, by - H * .008); c.closePath(); c.closePath(); c.fill(); c.strokeStyle = '#6a4a30'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(bx, by - H * .008); c.lineTo(bx, by - H * .055); c.stroke(); // マスト
       // 砂浜
       c.fillStyle = '#d8c098'; c.beginPath(); c.moveTo(0, H); c.moveTo(0, H); c.lineTo(0, H * .92); c.quadraticCurveTo(W * .3, H * .85, W * .6, H * .95); c.lineTo(W, H * .98); c.lineTo(W, H * .98); c.lineTo(W, H); c.lineTo(W, H * .98); c.lineTo(W, H); c.closePath(); c.lineTo(W, H * .98); c.lineTo(W, H); c.closePath(); c.fill();
       // 砂の貝殻点
-      for (let i = 0; i < 14; i++) {
+      times(14, i => {
         c.fillStyle = ['#b09070', '#c8a880', '#a88868'][Math.floor(rng() * 3)]; dot(rng(), (.9 + rng() * .09), W * .003);
-      }
+      });
     } else if (pr === 'fen') {
       // フェン: 平坦な水湿地+葦の茂み+開いた水路+低い空
       sky([[0,'#b8c8d8'],[.45,'#a8b898'],[1,'#788868']]); const rng = L.mulberry32(163);
@@ -6689,9 +6664,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#8aa0b0'; c.beginPath(); c.moveTo(W * .35, H); c.quadraticCurveTo(W * .3, H * .8, W * .42, H * .62); c.quadraticCurveTo(W * .55, H * .45, W * .48, H * .3); c.lineTo(W * .56, H * .3); c.quadraticCurveTo(W * .62, H * .5, W * .5, H * .65); c.quadraticCurveTo(W * .38, H * .82, W * .45, H); c.closePath(); c.closePath(); c.fill();
       // 水面の光の筋
       c.strokeStyle = 'rgba(220,235,245,0.4)'; c.lineWidth = 1;
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const y = H * (.55 + i * .05); c.beginPath(); c.moveTo(W * (.3 + rng() * .15), y); c.lineTo(W * (.42 + rng() * .12), y); c.stroke();
-      }
+      });
       // 葦の茂み(縦の細い穂)
       for (let i = 0; i < 40; i++) {
         const px = W * rng();
@@ -6702,14 +6677,14 @@ if (typeof document !== 'undefined') (() => {
       }
       // 遠くの地平の樹列
       c.fillStyle = '#5a6a58';
-      for (let i = 0; i < 9; i++) {
+      times(9, i => {
         const px = W * (i / 9) + rng() * W * .03; c.fillRect(px, H * .36 - H * (.01 + rng() * .015), W * .008, H * .04);
-      }
+      });
       // 飛ぶ鳥
       c.strokeStyle = '#4a5560'; c.lineWidth = 1.2;
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const bx = W * (.15 + i * .2 + rng() * .1), by = H * (.12 + rng() * .1); c.beginPath(); c.moveTo(bx - W * .012, by); c.quadraticCurveTo(bx, by - H * .01, bx + W * .012, by); c.stroke();
-      }
+      });
     } else if (pr === 'cirque') {
       // 圏谷: すり鉢状の岩壁+吊るされた滝+小さな湖(氷河湖)
       sky([[0,'#a8b8d0'],[.4,'#9098a8'],[1,'#687078']]); const rng = L.mulberry32(151);
@@ -6717,19 +6692,19 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#7a7f88'; c.beginPath(); c.moveTo(0, 0); c.moveTo(0, 0); c.lineTo(W * .22, 0); c.quadraticCurveTo(W * .32, H * .4, W * .2, H); c.lineTo(0, H); c.lineTo(0, H); c.closePath(); c.lineTo(0, H); c.closePath(); c.fill(); c.beginPath(); c.moveTo(W, 0); c.moveTo(W, 0); c.lineTo(W * .78, 0); c.quadraticCurveTo(W * .68, H * .4, W * .8, H); c.lineTo(W, H); c.lineTo(W, H); c.closePath(); c.lineTo(W, H); c.closePath(); c.fill();
       // 岩壁の筋
       c.strokeStyle = 'rgba(50,55,65,0.4)'; c.lineWidth = 1.2;
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const y = H * (.1 + i * .09); c.beginPath(); c.moveTo(W * (.1 + rng() * .12), y); c.quadraticCurveTo(W * .25, y + H * .02, W * (.18 + rng() * .1), y + H * .06); c.stroke(); c.beginPath(); c.moveTo(W * (.78 + rng() * .1), y); c.quadraticCurveTo(W * .75, y + H * .02, W * (.72 + rng() * .1), y + H * .06); c.stroke();
-      }
+      });
       // 中央奥の氷河雪渓
       c.fillStyle = '#e0e8f0'; c.beginPath(); c.moveTo(W * .38, H * .1); c.quadraticCurveTo(W * .5, H * .05, W * .62, H * .1); c.quadraticCurveTo(W * .58, H * .22, W * .5, H * .26); c.quadraticCurveTo(W * .42, H * .22, W * .38, H * .1); c.closePath(); c.closePath(); c.fill();
       // 吊るされた滝
-      c.strokeStyle = 'rgba(230,240,255,0.85)'; c.lineWidth = 3; c.beginPath(); c.moveTo(W * .5, H * .26); c.quadraticCurveTo(W * (.5 + Math.sin(t * .6) * .008), H * .5, W * .5, H * .74); c.stroke();
+      c.strokeStyle = 'rgba(230,240,255,0.85)'; c.lineWidth = 3; c.beginPath(); c.moveTo(W * .5, H * .26); c.quadraticCurveTo(W * (.5 + S(.6) * .008), H * .5, W * .5, H * .74); c.stroke();
       // 小さな湖(ターン)
       c.fillStyle = '#5a7a9a'; c.beginPath(); c.ellipse(W * .5, H * .78, W * .18, H * .05, 0, 0, 7); c.ellipse(W * .5, H * .78, W * .18, H * .05, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(220,235,255,0.5)'; c.beginPath(); c.ellipse(W * .5, H * .76, W * .1, H * .015, 0, 0, 7); c.ellipse(W * .5, H * .76, W * .1, H * .015, 0, 0, 7); c.fill(); // 滝の映り込み
       // 下部の氷堆石
-      for (let i = 0; i < 12; i++) {
+      times(12, i => {
         const px = W * (.2 + rng() * .6), py = H * (.82 + rng() * .16); c.fillStyle = '#6a7078'; ellP(px, py, W * (.008 + rng() * .012), H * (.004 + rng() * .006), rng() * .5);
-      }
+      });
     } else if (pr === 'dune') {
       // 砂丘: 風紋の砂の曲線+丘稜+遠くの海+マレーグラス
       sky([[0,'#c8d8e8'],[.35,'#e8d8b0'],[1,'#c8a878']]);
@@ -6739,39 +6714,38 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#d8b888'; c.beginPath(); c.moveTo(0, H); c.moveTo(0, H); c.lineTo(0, H * .55); c.quadraticCurveTo(W * .25, H * .42, W * .5, H * .58); c.quadraticCurveTo(W * .75, H * .7, W, H * .55); c.lineTo(W, H); c.lineTo(W, H); c.closePath(); c.lineTo(W, H); c.closePath(); c.fill(); c.fillStyle = '#c8a070'; c.beginPath(); c.moveTo(0, H); c.moveTo(0, H); c.lineTo(0, H * .72); c.quadraticCurveTo(W * .3, H * .6, W * .65, H * .78); c.quadraticCurveTo(W * .85, H * .9, W, H * .82); c.lineTo(W, H); c.lineTo(W, H); c.closePath(); c.lineTo(W, H); c.closePath(); c.fill();
       // 風紋の筋
       c.strokeStyle = 'rgba(160,120,70,0.4)'; c.lineWidth = 1.2;
-      for (let i = 0; i < 22; i++) {
+      times(22, i => {
         const y = H * (.55 + i * .02); c.beginPath(); c.moveTo(W * .05, y); c.quadraticCurveTo(W * (.3 + Math.sin(i * .8) * .1), y - H * .01, W * .7, y); c.stroke();
-      }
+      });
       // 丘稜のハイライト
       c.strokeStyle = 'rgba(255,230,180,0.6)'; c.lineWidth = 2; c.beginPath(); c.moveTo(0, H * .55); c.quadraticCurveTo(W * .25, H * .42, W * .5, H * .58); c.stroke();
       // マレーグラスの穂
-      const rng = L.mulberry32(139);
-      for (let i = 0; i < 18; i++) {
+      scat(139, 18, (rng, i) => {
         const px = W * (.05 + rng() * .9), py = H * (.6 + rng() * .38); c.strokeStyle = '#8a7a50'; c.lineWidth = 1;
-        for (let j = 0; j < 4; j++) {
+        times(4, j => {
           c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + (j - 1.5) * W * .004, py - H * .025, px + (j - 1.5) * W * .006, py - H * .04); c.stroke();
-        }
-      }
+        });
+      });
     } else if (pr === 'quarry') {
       // 採石場: 切り出した岩壁+階段状の段+岩石クレーン
       sky([[0,'#b8a890'],[.4,'#a09070'],[1,'#806f55']]); const rng = L.mulberry32(131);
       // 岩壁の段（上から下へ3段）
       const bench = [0.52, 0.68, 0.84];
-      for (let s = 0; s < bench.length; s++) {
+      times(bench.length, s => {
         const y = H * bench[s]; c.fillStyle = ['#8a7a60', '#7a6a50', '#6a5a44'][s]; c.fillRect(0, y, W, H * .16);
         // 段の垂直面の陰影筋
         c.strokeStyle = 'rgba(60,50,35,0.35)'; c.lineWidth = 1;
-        for (let x = 0; x < 20; x++) {
+        times(20, x => {
           const sx = W * (x / 20) + rng() * W * .03; c.beginPath(); c.moveTo(sx, y); c.lineTo(sx - rng() * W * .01, y + H * .14); c.stroke();
-        }
-      }
+        });
+      });
       // 石のクレーン(鉄柱+アーム)
       c.strokeStyle = '#4a4038'; c.lineWidth = 3; c.beginPath(); c.beginPath(); c.moveTo(W * .15, H * .52); c.beginPath(); c.moveTo(W * .15, H * .52); c.lineTo(W * .15, H * .15); c.beginPath(); c.moveTo(W * .15, H * .52); c.lineTo(W * .15, H * .15); c.stroke(); c.beginPath(); c.beginPath(); c.moveTo(W * .15, H * .15); c.beginPath(); c.moveTo(W * .15, H * .15); c.lineTo(W * .45, H * .12); c.beginPath(); c.moveTo(W * .15, H * .15); c.lineTo(W * .45, H * .12); c.stroke(); c.lineWidth = 1.5; c.beginPath(); c.moveTo(W * .45, H * .12); c.lineTo(W * .45, H * .28); c.stroke(); c.fillStyle = '#5a5048';
       c.fillRect(W * .43, H * .28, W * .04, H * .05); // 吊り下げケーブル // 吊り岩
       // 散在する岩石
-      for (let i = 0; i < 14; i++) {
+      times(14, i => {
         const px = W * rng(), py = H * (.86 + rng() * .12); c.fillStyle = '#6a5a48'; ellP(px, py, W * (.01 + rng() * .015), H * (.005 + rng() * .008), rng() * .4);
-      }
+      });
     } else if (pr === 'tundra') {
       // ツンドラ: 平坦な地衣の大地+低い太陽+遠くのカリブー+疎らな岩
       sky([[0,'#c8b8a0'],[.45,'#a89878'],[1,'#8a8068']]);
@@ -6784,20 +6758,20 @@ if (typeof document !== 'undefined') (() => {
       }
       c.lineTo(W, H); c.closePath(); c.fill();
       // 地衣・苔の斑点
-      for (let i = 0; i < 60; i++) {
+      times(60, i => {
         const px = W * rng(), py = H * (.5 + rng() * .47); const cols = ['#7a8a58', '#8a7a50', '#a08858', '#6a7a50']; c.fillStyle = cols[Math.floor(rng() * 4)]; c.globalAlpha = .3 + rng() * .4; ellP(px, py, W * .015 * (1 + rng()), H * .006 * (1 + rng()));
-      }
+      });
       c.globalAlpha = 1;
       // 疎らな岩
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const px = W * (.1 + rng() * .8), py = H * (.55 + rng() * .35); c.fillStyle = '#7a7468'; ellP(px, py, W * (.015 + rng() * .02), H * (.008 + rng() * .006), rng() * .5);
-      }
+      });
       // 遠くのカリブーの群れ(シルエット)
       c.fillStyle = '#4a4038'; c.strokeStyle = '#4a4038'; c.lineWidth = 1.2;
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const cx = W * (.12 + i * .14 + rng() * .05); const cy = H * (.5 + rng() * .04); c.beginPath(); c.beginPath(); c.ellipse(cx, cy, W * .008, H * .004, 0, 0, 7); ellP(cx, cy, W * .008, H * .004); c.beginPath(); c.beginPath(); c.moveTo(cx + W * .006, cy - H * .003); c.beginPath(); c.moveTo(cx + W * .006, cy - H * .003); c.lineTo(cx + W * .01, cy - H * .01); c.beginPath(); c.moveTo(cx + W * .006, cy - H * .003); c.lineTo(cx + W * .01, cy - H * .01); c.lineTo(cx + W * .013, cy - H * .006); c.beginPath(); c.moveTo(cx + W * .006, cy - H * .003); c.lineTo(cx + W * .01, cy - H * .01);
         c.lineTo(cx + W * .013, cy - H * .006); c.stroke(); // 体 // 角/首
-      }
+      });
     } else if (pr === 'wadi') {
       // 涸れ川: 丸石の河床+両岸の崖+遠い砂漠+流木
       sky([[0,'#e0b880'],[.5,'#c89868'],[1,'#a88058']]); const rng = L.mulberry32(111);
@@ -6820,11 +6794,11 @@ if (typeof document !== 'undefined') (() => {
       // 河床(中央の窪み)
       c.fillStyle = '#c0a070'; c.beginPath(); c.moveTo(0, H); c.lineTo(W * .1, H * .55); c.quadraticCurveTo(W * .5, H * .5, W * .9, H * .58); c.lineTo(W, H); c.closePath(); c.closePath(); c.fill();
       // 丸石(大小の楕円)
-      for (let i = 0; i < 26; i++) {
+      times(26, i => {
         const px = W * (.1 + rng() * .8); const py = H * (.58 + rng() * .38); const s = (.5 + rng()) * (py - H * .5) / (H * .5) + .3;
         c.fillStyle = `rgba(${140 + Math.floor(rng() * 60)},${110 + Math.floor(rng() * 40)},${80 + Math.floor(rng() * 30)},0.85)`;
         ellP(px, py, W * .02 * s, H * .01 * s, rng());
-      }
+      });
       // 流木
       c.strokeStyle = '#6a4a30'; c.lineWidth = 4; c.beginPath(); c.moveTo(W * .55, H * .82); c.quadraticCurveTo(W * .65, H * .78, W * .78, H * .84); c.stroke(); c.beginPath(); c.moveTo(W * .66, H * .8); c.lineTo(W * .7, H * .75); c.stroke(); // 枝
     } else if (pr === 'saltflat') {
@@ -6840,23 +6814,23 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#f4f2ea'; c.fillRect(0, H * .45, W, H * .55);
       // 六角の亀裂パターン
       c.strokeStyle = 'rgba(160,155,140,0.5)'; c.lineWidth = 1;
-      for (let row = 0; row < 5; row++) {
-        for (let col = 0; col < 6; col++) {
+      times(5, row => {
+        times(6, col => {
           const cx = W * (col / 6 + (row % 2 ? .08 : 0)) + W * .02; const cy = H * (.5 + row * .1); const s = W * .045 * (1 - row * .08); c.beginPath();
-          for (let v = 0; v < 6; v++) {
+          times(6, v => {
             const va = v * Math.PI / 3 + .5; const px = cx + Math.cos(va) * s, py = cy + Math.sin(va) * s * .4; v ? c.lineTo(px, py) : c.moveTo(px, py);
-          }
+          });
           c.closePath(); c.stroke();
-        }
-      }
+        });
+      });
       // 浅い水鏡(空を映す帯)
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const py = H * (.5 + i * .12); c.fillStyle = 'rgba(180,205,220,0.5)'; ellP(W * (.25 + i * .3), py, W * .12, H * .015);
         // 山の映り込み
         c.fillStyle = 'rgba(160,170,180,0.35)'; ellP(W * (.25 + i * .3), py + H * .005, W * .06, H * .005);
-      }
+      });
       // 眩しさの光斑
-      c.fillStyle = `rgba(255,255,255,${.3 + Math.sin(t * 1.5) * .15})`;
+      c.fillStyle = `rgba(255,255,255,${.3 + S(1.5) * .15})`;
       ell(.6, .52, W * .15, H * .03);
     } else if (pr === 'highland') {
       // 高地牧場: うねる緑の丘+石積みの垣根+点々の羊+大きな空
@@ -6882,13 +6856,13 @@ if (typeof document !== 'undefined') (() => {
         const sx = W * x / 14; const sy = H * (.6 + x * .012) + Math.sin(x * .7) * H * .02; c.beginPath(); c.moveTo(sx, sy - 4); c.lineTo(sx, sy + 4); c.stroke();
       }
       // 羊(白い点と頭)
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const sx = W * (.08 + rng() * .85); const sy = H * (.55 + rng() * .35); c.fillStyle = '#f0f0e8'; ellP(sx, sy, W * .008, H * .005); c.fillStyle = '#3a3a34'; ellP(sx + W * .008, sy - H * .002, W * .0025, H * .002);
-      }
+      });
       // 流れる雲
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const cx2 = ((t * .02 + i * .35) % 1.3 - .15) * W; c.fillStyle = 'rgba(255,255,255,0.5)'; ellP(cx2, H * (.1 + i * .08), W * .07, H * .018);
-      }
+      });
     } else if (pr === 'delta') {
       // 三角州: 三つ編み状の水路+緑の砂州+飛ぶ鳥+遠い海
       sky([[0,'#a8d0e0'],[.5,'#88b8b0'],[1,'#c8d0a8']]); const rng = L.mulberry32(91);
@@ -6898,39 +6872,39 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#6a9ab0'; c.fillRect(0, H * .36, W, H * .05);
       // 三つ編み状の水路(複数の蛇行する流れ)
       c.strokeStyle = '#5a8a98';
-      for (let ch = 0; ch < 4; ch++) {
+      times(4, ch => {
         const lw = 6 + ch * 4; c.lineWidth = lw; c.beginPath(); let cx = W * (.15 + ch * .22); c.moveTo(cx, H * .4);
-        for (let seg = 0; seg < 6; seg++) {
+        times(6, seg => {
           const ny = H * (.4 + (seg + 1) * .1); cx += (rng() - .5) * W * .06 + (seg > 2 ? (ch - 1.5) * W * .02 : 0); c.lineTo(cx, Math.min(ny, H * .98));
-        }
+        });
         c.stroke();
-      }
+      });
       // 砂州のハイライト
       c.strokeStyle = 'rgba(220,220,180,0.4)'; c.lineWidth = 2;
-      for (let ch = 0; ch < 3; ch++) {
+      times(3, ch => {
         c.beginPath(); let cx = W * (.2 + ch * .25); c.moveTo(cx, H * .5);
-        for (let seg = 0; seg < 5; seg++) {
+        times(5, seg => {
           cx += (rng() - .5) * W * .05; c.lineTo(cx, H * (.5 + (seg + 1) * .1));
-        }
+        });
         c.stroke();
-      }
+      });
       // 葦の集まり
-      for (let i = 0; i < 20; i++) {
+      times(20, i => {
         const rx = W * rng(), ry = H * (.55 + rng() * .4); c.strokeStyle = '#4a6a3a'; c.lineWidth = 1; c.beginPath(); c.moveTo(rx, ry); c.lineTo(rx + 1, ry - H * (.02 + rng() * .015)); c.stroke();
-      }
+      });
       // 飛ぶ鳥
       c.strokeStyle = '#3a4a44'; c.lineWidth = 1.5;
-      for (let b = 0; b < 3; b++) {
+      times(3, b => {
         const bx = W * (.15 + b * .3 + Math.sin(t * .3 + b) * .05); const by = H * (.15 + b * .07); c.beginPath(); c.moveTo(bx - W * .012, by); c.quadraticCurveTo(bx, by - H * .008 - Math.sin(t * 6 + b) * 3, bx + W * .012, by); c.stroke();
-      }
+      });
     } else if (pr === 'mangrove') {
       // マングローブ: 高根(支柱根)+濁った水+葉の天蓋+水鳥
       sky([[0,'#b8d0a8'],[.45,'#7a9a78'],[1,'#4a6a58']]); const rng = L.mulberry32(84);
       // 天蓋(上部の葉影)
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         c.fillStyle = `rgba(50,90,60,${.5 + rng() * .3})`;
         ell(rng(), rng() * .18, W * (.08 + rng() * .06), H * (.05 + rng() * .03));
-      }
+      });
       // 濁った水面
       c.fillStyle = '#5a7a68'; c.beginPath(); c.moveTo(0, H); c.moveTo(0, H); c.lineTo(0, H * .62);
       for (let x = 0; x <= 12; x++) {
@@ -6939,9 +6913,9 @@ if (typeof document !== 'undefined') (() => {
       c.lineTo(W, H); c.closePath(); c.fill();
       // 水面の反射筋
       c.strokeStyle = 'rgba(200,230,200,0.25)'; c.lineWidth = 1;
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const wy = H * (.65 + i * .04); c.beginPath(); c.moveTo(W * rng() * .3, wy); c.lineTo(W * (.5 + rng() * .5), wy); c.stroke();
-      }
+      });
       // 支柱根(放射状に水に降りる根)
       c.strokeStyle = '#4a3a2a'; c.lineWidth = 3;
       for (let tr = 0; tr < 4; tr++) {
@@ -6953,9 +6927,9 @@ if (typeof document !== 'undefined') (() => {
         }
         // 根元の葉
         c.fillStyle = '#3a6a44';
-        for (let lf = 0; lf < 4; lf++) {
+        times(4, lf => {
           ellP(tx + rng() * W * .04 - W * .02, ty - H * (.14 + rng() * .1), W * .02, H * .012, rng() * 3);
-        }
+        });
       }
       // 水鳥(立っている)
       c.fillStyle = '#e8e8e0'; const bx = W * .75, by = H * .68; ellP(bx, by, W * .012, H * .008); c.strokeStyle = '#e8e8e0'; c.lineWidth = 2; c.beginPath(); c.moveTo(bx, by); c.lineTo(bx, by + H * .02); c.stroke(); c.strokeStyle = '#e8e8e0'; c.beginPath(); c.moveTo(bx + W * .008, by - H * .006); c.lineTo(bx + W * .015, by - H * .014); c.stroke(); // 首
@@ -6966,13 +6940,13 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = 'rgba(255,235,190,0.9)'; dot(.2,.3,H * .055); const rng = L.mulberry32(77);
       // 遠くの雪峰
       c.fillStyle = '#e8ecf0';
-      for (let m = 0; m < 3; m++) {
+      times(3, m => {
         const mx = W * (m * .35 + .05); c.beginPath(); c.moveTo(mx, H * .45); c.lineTo(mx + W * .12, H * (.22 + rng() * .06)); c.lineTo(mx + W * .24, H * .45); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 針葉樹の林(遠景=小さく薄く)
-      for (let i = 0; i < 22; i++) {
+      times(22, i => {
         const tx = W * rng(); const ty = H * (.45 + rng() * .04); c.fillStyle = 'rgba(70,100,90,0.55)'; c.beginPath(); c.moveTo(tx, ty); c.moveTo(tx, ty); c.lineTo(tx + W * .012, ty - H * .05); c.moveTo(tx, ty); c.lineTo(tx + W * .012, ty - H * .05); c.lineTo(tx + W * .024, ty); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 残雪の地面
       c.fillStyle = '#e4ecea'; c.beginPath(); c.moveTo(0, H); c.moveTo(0, H); c.lineTo(0, H * .55);
       for (let x = 0; x <= 12; x++) {
@@ -6980,19 +6954,19 @@ if (typeof document !== 'undefined') (() => {
       }
       c.lineTo(W, H); c.closePath(); c.fill();
       // 雪の斑点
-      for (let i = 0; i < 30; i++) {
+      times(30, i => {
         c.fillStyle = `rgba(255,255,255,${.3 + rng() * .4})`;
         c.fillRect(W * rng(), H * (.55 + rng() * .42), W * .008, H * .004);
-      }
+      });
       // 手前の針葉樹(大きく濃く)
-      for (let i = 0; i < 7; i++) {
+      times(7, i => {
         const tx = W * (.06 + i * .14 + rng() * .05); const ty = H * (.62 + rng() * .25); const th = H * (.14 + rng() * .07); c.fillStyle = '#33524a'; c.fillRect(tx + W * .006, ty - th * .3, W * .008, th * .3); // 幹
-        for (let l = 0; l < 3; l++) {
+        times(3, l => {
           const lw = W * (.045 - l * .012); const ly = ty - th * (.3 + l * .28); c.beginPath(); c.moveTo(tx - lw / 2 + W * .01, ly); c.lineTo(tx + W * .01, ly - th * .32); c.lineTo(tx + lw / 2 + W * .01, ly); c.closePath(); c.closePath(); c.fill();
-        }
+        });
         // 枝の積雪
         c.fillStyle = 'rgba(255,255,255,0.55)'; ellP(tx + W * .01, ty - th * .75, W * .016, H * .005);
-      }
+      });
     } else if (pr === 'badlands') {
       // バッドランズ: 縞模様の浸食台地+照りつける太陽+疎らな灌木
       sky([[0,'#e8b070'],[.5,'#c88858'],[1,'#a06848']]);
@@ -7000,12 +6974,12 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#fff0d0'; dot(.78,.16,H * .07); const rng = L.mulberry32(71);
       // 層状の台地(色帯の積層)
       const bands = ['#c07850', '#b06040', '#d08858', '#a85838', '#c88050'];
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const ty = H * (.3 + i * .13);
-        for (let m = 0; m < 3; m++) {
+        times(3, m => {
           const mx = W * (m * .35 + rng() * .1); const mw = W * (.18 + rng() * .1); c.fillStyle = bands[(i + m) % 5]; c.fillRect(mx, ty, mw, H * .07);
-        }
-      }
+        });
+      });
       // 手前の大きな台地
       c.fillStyle = '#b06844'; c.beginPath(); c.moveTo(0, H); c.moveTo(0, H); c.lineTo(0, H * .62);
       for (let x = 0; x <= 12; x++) {
@@ -7022,14 +6996,14 @@ if (typeof document !== 'undefined') (() => {
         c.stroke();
       }
       // 灌木
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const bx = W * (.08 + i * .2 + rng() * .08); const by = H * (.72 + rng() * .2); c.fillStyle = '#6a7a50';
-        for (let b = 0; b < 4; b++) {
+        times(4, b => {
           ellP(bx + rng() * W * .012 - W * .006, by - rng() * H * .012, W * .008, H * .005);
-        }
-      }
+        });
+      });
       // 蜃気楼の揺らぎ筋
-      c.strokeStyle = `rgba(255,240,210,${.15 + Math.sin(t * 2) * .08})`;
+      c.strokeStyle = `rgba(255,240,210,${.15 + S(2) * .08})`;
       c.lineWidth = 1;
       for (let i = 0; i < 3; i++) {
         const hy = H * (.35 + i * .08); c.beginPath();
@@ -7048,25 +7022,25 @@ if (typeof document !== 'undefined') (() => {
       }
       c.closePath(); c.fill();
       // 広がる波紋
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const ph = (t * .4 + i * .25) % 1; const rx = W * (.15 + i * .23), ry = H * (.55 + (i % 2) * .15);
         c.strokeStyle = `rgba(255,255,255,${(1 - ph) * .35})`;
         c.lineWidth = 1.5; ellPS(rx, ry, W * (.02 + ph * .12), H * (.008 + ph * .03));
-      }
+      });
       // 泳ぐ鯉の影(深い色の魚影)
-      const kx = W * ((t * .06) % 1.4 - .2); const ky = H * (.72 + Math.sin(t * .9) * .03); c.fillStyle = 'rgba(20,40,38,0.5)'; ellP(kx, ky, W * .05, H * .014, Math.sin(t * 1.5) * .08);
+      const kx = W * ((t * .06) % 1.4 - .2); const ky = H * (.72 + S(.9) * .03); c.fillStyle = 'rgba(20,40,38,0.5)'; ellP(kx, ky, W * .05, H * .014, S(1.5) * .08);
       // 睡蓮の葉と花
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const lx = W * (.08 + i * .2 + rng() * .06); const ly = H * (.5 + rng() * .4); c.fillStyle = '#3f7a55'; c.beginPath(); c.ellipse(lx, ly, W * .035, H * .012, rng() * .4, .3, Math.PI * 2 - .3); c.fill();
         if (i % 2 === 0) {
           c.fillStyle = '#f0b8c8';
-          for (let p = 0; p < 5; p++) {
+          times(5, p => {
             const pa = p * 1.257; ellP(lx + Math.cos(pa) * W * .008, ly - H * .012 + Math.sin(pa) * H * .004, W * .006, H * .004, pa);
-          }
+          });
         }
-      }
+      });
       // 蜻蛉
-      const dx = W * (.2 + .6 * Math.abs(Math.sin(t * .5))); const dy = H * (.35 + Math.sin(t * 3) * .04); c.strokeStyle = 'rgba(60,80,90,0.8)'; c.lineWidth = 1; c.beginPath(); c.moveTo(dx - W * .015, dy); c.lineTo(dx + W * .015, dy); c.stroke(); c.fillStyle = 'rgba(120,180,200,0.6)'; ellP(dx, dy - H * .008, W * .02, H * .005);
+      const dx = W * (.2 + .6 * A(.5)); const dy = H * (.35 + S(3) * .04); c.strokeStyle = 'rgba(60,80,90,0.8)'; c.lineWidth = 1; c.beginPath(); c.moveTo(dx - W * .015, dy); c.lineTo(dx + W * .015, dy); c.stroke(); c.fillStyle = 'rgba(120,180,200,0.6)'; ellP(dx, dy - H * .008, W * .02, H * .005);
     } else if (pr === 'tide') {
       // 干潟: 濡れた砂面+水溜りの映り込み+遠い海+干潟の鳥
       sky([[0,'#a8c0d0'],[.4,'#c8d0c8'],[1,'#a89878']]);
@@ -7082,12 +7056,12 @@ if (typeof document !== 'undefined') (() => {
         c.stroke();
       }
       // 水溜り(空を映す楕円)
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const px = W * (.15 + i * .22); const py = H * (.52 + rng() * .3); c.fillStyle = 'rgba(190,215,230,0.7)'; ellP(px, py, W * (.05 + rng() * .04), H * (.012 + rng() * .01));
         // きらめき
         c.fillStyle = `rgba(255,255,255,${.3 + Math.sin(t * 2 + i) * .2})`;
         ellP(px - W * .01, py - H * .004, W * .012, H * .003);
-      }
+      });
       // 干潟の鳥(くちばしを突くシギ)
       c.fillStyle = '#4a4a44';
       for (const [bx, by] of [[.3, .58], [.68, .65]]) {
@@ -7098,27 +7072,27 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#a8c898'],[.45,'#88a878'],[1,'#5a7850']]); const rng = L.mulberry32(17);
       // 天蓋(枝葉の塊)
       c.fillStyle = '#3a6038';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         ell(rng(), (.05 + rng() * .15), W * (.1 + rng() * .08), H * (.05 + rng() * .04));
-      }
+      });
       // 幹の列(奥→手前)
-      for (let row = 0; row < 2; row++) {
+      times(2, row => {
         const n = 5 + row * 2; const tw = W * (.012 + row * .01);
-        for (let i = 0; i < n; i++) {
+        times(n, i => {
           const tx = W * (.05 + i * .9 / n) + (row % 2) * W * .06; const ty0 = H * (.1 - row * .05), ty1 = H * (.8 + row * .1); c.fillStyle = row ? '#5a4838' : '#6a5848'; c.fillRect(tx - tw / 2, ty0, tw, ty1 - ty0);
-        }
-      }
+        });
+      });
       // 小径(中央へ収束する砂地)
       c.fillStyle = '#b8a888'; c.beginPath(); c.moveTo(W * .42, H); c.moveTo(W * .42, H); c.lineTo(W * .48, H * .5); c.lineTo(W * .52, H * .5); c.lineTo(W * .52, H * .5); c.lineTo(W * .58, H); c.closePath(); c.closePath(); c.fill();
       // 木漏れ日の光筋(斜めの半透明帯)
       c.fillStyle = 'rgba(255,245,200,0.22)';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const lx = W * (.2 + i * .2) + Math.sin(t * .3 + i) * W * .01; c.beginPath(); c.moveTo(lx, H * .1); c.moveTo(lx, H * .1); c.lineTo(lx + W * .05, H * .1); c.lineTo(lx + W * .14, H); c.lineTo(lx + W * .14, H); c.lineTo(lx + W * .09, H); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 舞う葉
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const lx = W * ((rng() + t * .03) % 1); const ly = H * ((rng() + t * .05) % 1); c.fillStyle = '#88aa55'; ellP(lx, ly, W * .006, H * .004, rng() * 3 + t);
-      }
+      });
     } else if (pr === 'brook') {
       // 渓流: 流れる水+飛び石+岸の緑+水しぶき
       sky([[0,'#90b8a8'],[.5,'#78a890'],[1,'#5a8068']]); const rng = L.mulberry32(49);
@@ -7126,9 +7100,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#4a7048'; c.fillRect(0, 0, W, H * .3); c.fillRect(0, H * .82, W, H * .18);
       // 草むら
       c.strokeStyle = '#5a8850'; ctx.lineWidth = 2;
-      for (let i = 0; i < 25; i++) {
+      times(25, i => {
         const gx = W * rng(); const gy = rng() > .5 ? H * (.26 + rng() * .04) : H * (.8 + rng() * .04); c.beginPath(); c.beginPath(); c.moveTo(gx, gy); c.quadraticCurveTo(gx + 2, gy - H * .02, gx + 4, gy - H * .03); c.stroke();
-      }
+      });
       // 水流(揺れる白線の帯)
       c.fillStyle = '#6a9aa8'; c.fillRect(0, H * .3, W, H * .52); c.strokeStyle = 'rgba(230,245,250,0.5)'; ctx.lineWidth = 2;
       for (let i = 0; i < 8; i++) {
@@ -7140,11 +7114,11 @@ if (typeof document !== 'undefined') (() => {
       }
       // 飛び石
       c.fillStyle = '#7a7268';
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const sx = W * (.15 + i * .18); const sy = H * (.5 + Math.sin(i * 1.9) * .12); ellP(sx, sy, W * .045, H * .02, .1 * i);
         // 石周りの白いしぶき
         c.strokeStyle = 'rgba(240,250,255,0.6)'; ctx.lineWidth = 1.5; c.beginPath(); c.arc(sx, sy, W * .05, Math.PI * .2, Math.PI * .8); c.stroke();
-      }
+      });
     } else if (pr === 'moor') {
       // ムーア: 霧の荒れ地+ヒースの紫+立石
       sky([[0,'#98a0a8'],[.5,'#a8a898'],[1,'#6a7058']]); const rng = L.mulberry32(64);
@@ -7154,20 +7128,20 @@ if (typeof document !== 'undefined') (() => {
         c.lineTo(W * i / 8, H * (.58 + Math.sin(i * 1.7) * .06));
       c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
       // ヒース(紫の点群)
-      for (let i = 0; i < 50; i++) {
+      times(50, i => {
         const px = W * rng(); const py = H * (.6 + rng() * .35);
         c.fillStyle = `hsla(${285 + rng() * 30},30%,${40 + rng() * 20}%,0.7)`;
         ellP(px, py, W * .007, H * .006);
-      }
+      });
       // 立石(先細りの岩3本)
       c.fillStyle = '#6a6a66';
       for (const [sx, sy, ss] of [[.25, .5, .05], [.55, .47, .065], [.8, .52, .04]]) {
         c.beginPath(); c.moveTo(W * sx - W * ss * .8, H * (sy + .15)); c.lineTo(W * sx - W * ss * .5, H * sy); c.quadraticCurveTo(W * sx, H * (sy - .03), W * sx + W * ss * .5, H * sy); c.lineTo(W * sx + W * ss * .8, H * (sy + .15)); c.closePath(); c.closePath(); c.fill();
       }
       // 流れる霧(半透明の帯)
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const mx = W * (((t * .02 + i * .35) % 1.3) - .15); c.fillStyle = 'rgba(220,225,225,0.25)'; ellP(mx, H * (.3 + i * .12), W * .3, H * .04);
-      }
+      });
     } else if (pr === 'onsen') {
       // 温泉: 立ち上る湯気+岩で縁どられた湯+遠景の山
       sky([[0,'#a8b8c8'],[.4,'#c8d0d8'],[1,'#98a088']]); const rng = L.mulberry32(88);
@@ -7179,29 +7153,29 @@ if (typeof document !== 'undefined') (() => {
       // 湯面(乳白色の青)
       c.fillStyle = '#b8d0d8'; ell(.5, .78, W * .42, H * .16);
       // 湯気(揺れて昇る半透明の帯)
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const sx = W * (.25 + i * .13); const rise = (t * .1 + i * .2) % 1;
         c.fillStyle = `rgba(255,255,255,${.35 * (1 - rise)})`;
         c.beginPath();
         c.ellipse(sx + Math.sin(t * 1.2 + i) * W * .02, H * (.75 - rise * .35),
           W * (.02 + rise * .03), H * .03, 0, 0, 7);
         c.fill();
-      }
+      });
       // 岩の縁取り
       c.fillStyle = '#7a7268';
-      for (let i = 0; i < 12; i++) {
+      times(12, i => {
         const a = i / 12 * Math.PI * 2; const rx = W * .5 + Math.cos(a) * W * .44; const ry = H * .78 + Math.sin(a) * H * .17;
         if (ry > H * .7) {
           ellP(rx, ry, W * (.03 + rng() * .02), H * (.02 + rng() * .015), rng());
         }
-      }
+      });
     } else if (pr === 'orchard') {
       // 果樹園: 青空+整列するリンゴの木+落ちる実
       sky([[0,'#88c0e0'],[.55,'#c8e0d8'],[1,'#7a9a55']]); const rng = L.mulberry32(55);
       // 木の列(奥→手前2段)
-      for (let row = 0; row < 2; row++) {
+      times(2, row => {
         const ty = H * (.45 + row * .2); const n = 4 + row * 2; const ts = W * (.05 + row * .025);
-        for (let i = 0; i < n; i++) {
+        times(n, i => {
           const tx = W * (.08 + i * .84 / n) + (row % 2) * W * .09; const sway = Math.sin(t * .9 + i * 1.3 + row) * W * .003;
           // 幹
           c.fillStyle = '#6a4a30'; c.fillRect(tx - ts * .08, ty, ts * .16, ts * 1.4);
@@ -7209,16 +7183,16 @@ if (typeof document !== 'undefined') (() => {
           c.fillStyle = '#4a7a38'; c.beginPath(); c.beginPath(); c.arc(tx + sway, ty - ts * .3, ts * .7, 0, 7); c.beginPath(); c.arc(tx + sway, ty - ts * .3, ts * .7, 0, 7); ctx.fill(); c.beginPath(); c.beginPath(); c.arc(tx - ts * .45 + sway, ty - ts * .05, ts * .45, 0, 7); c.beginPath(); c.arc(tx - ts * .45 + sway, ty - ts * .05, ts * .45, 0, 7); ctx.fill(); c.beginPath(); c.beginPath(); c.arc(tx + ts * .45 + sway, ty - ts * .05, ts * .45, 0, 7); c.beginPath(); c.arc(tx + ts * .45 + sway, ty - ts * .05, ts * .45, 0, 7); ctx.fill();
           // 実(赤い丸)
           c.fillStyle = '#d84038';
-          for (let a = 0; a < 5; a++) {
+          times(5, a => {
             const ax = tx + sway + (rng() - .5) * ts * 1.1; const ay = ty - ts * .35 + (rng() - .5) * ts * .7; dotP(ax, ay, ts * .09);
-          }
-        }
-      }
+          });
+        });
+      });
       // 地面の草と落ちた実
       c.fillStyle = '#6a8a48'; c.fillRect(0, H * .82, W, H * .18); c.fillStyle = '#c03830';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const ax = W * rng(); const ay = H * (.84 + rng() * .12); dotP(ax, ay, W * .006);
-      }
+      });
       // 落ちていく実(アニメ)
       const fall = (t * .15) % 1; c.fillStyle = '#d84038'; dot(.3, (.4 + fall * .45), W * .008);
     } else if (pr === 'cosmos') {
@@ -7226,53 +7200,53 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#8ab8d8'],[.5,'#c8d8e0'],[1,'#789a58']]);
       // 秋の薄い雲
       const rng = L.mulberry32(33); c.fillStyle = 'rgba(255,255,255,0.4)';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         ellP(W * (i * .28 + .1), H * (.1 + (i % 2) * .08), W * .1, H * .015, .05);
-      }
+      });
       // コスモスの群生(2段)
-      for (let row = 0; row < 2; row++) {
+      times(2, row => {
         const ry = H * (.62 + row * .18); const n = 7 + row * 3; const fs = W * (.014 + row * .01);
-        for (let i = 0; i < n; i++) {
+        times(n, i => {
           const fx = W * (.05 + i * .9 / n) + (row % 2) * W * .05; const sway = Math.sin(t * 1.5 + i * .7 + row) * W * .006;
           // 細い茎と葉
           c.strokeStyle = '#5a7a42'; ctx.lineWidth = Math.max(1, fs * .1); ctx.beginPath(); ctx.moveTo(fx, ry + fs * 3); ctx.lineTo(fx + sway, ry); ctx.stroke();
           // 8弁の花(白・ピンク・濃紅)
           const cx = fx + sway, cy = ry; const col = ['#f4e8f0', '#e8a0c0', '#d06090'][Math.floor(rng() * 3)]; c.fillStyle = col;
-          for (let p = 0; p < 8; p++) {
+          times(8, p => {
             const a = p * .785; ellP(cx + Math.cos(a) * fs, cy + Math.sin(a) * fs, fs * .55, fs * .28, a);
-          }
+          });
           c.fillStyle = '#e8c040'; dotP(cx, cy, fs * .35);
-        }
-      }
+        });
+      });
       // 舞うチョウ
-      for (let i = 0; i < 2; i++) {
+      times(2, i => {
         const bx = W * ((i * .4 + t * .05) % 1.1) - W * .05; const by = H * (.4 + Math.sin(t * 2.2 + i * 3) * .12 + i * .15); const flap = .5 + Math.abs(Math.sin(t * 8 + i)) * .5; c.fillStyle = 'rgba(240,240,255,0.85)'; c.beginPath(); c.beginPath(); c.ellipse(bx - W * .006, by, W * .008, H * .007 * flap, -.4, 0, 7); ellP(bx - W * .006, by, W * .008, H * .007 * flap, -.4); c.beginPath(); c.beginPath(); c.ellipse(bx + W * .006, by, W * .008, H * .007 * flap, .4, 0, 7); ellP(bx + W * .006, by, W * .008, H * .007 * flap, .4);
-      }
+      });
     } else if (pr === 'sunflowers') {
       // ひまわり畑: 青空+太陽+整列するひまわり+蜂
       sky([[0,'#7ab8e0'],[.55,'#b8d8e8'],[1,'#88a860']]);
       // 太陽
       c.fillStyle = '#fff2c8'; dot(.82,.14,W * .06); const rng = L.mulberry32(121);
       // ひまわりの列(奥→手前3段)
-      for (let row = 0; row < 3; row++) {
+      times(3, row => {
         const ry = H * (.55 + row * .15); const n = 6 + row * 2; const fs = W * (.02 + row * .012); // 花サイズ
-        for (let i = 0; i < n; i++) {
+        times(n, i => {
           const fx = W * (.06 + i * .88 / n) + (row % 2) * W * .04; const sway = Math.sin(t * 1.2 + i + row) * W * .004;
           // 茎
           c.strokeStyle = '#4a7038'; ctx.lineWidth = Math.max(1.5, fs * .12); ctx.beginPath(); ctx.moveTo(fx, ry + fs * 2.2); ctx.lineTo(fx + sway, ry); ctx.stroke();
           // 花弁(円周上の楕円)
           const cx = fx + sway, cy = ry; c.fillStyle = '#f0b428';
-          for (let p = 0; p < 10; p++) {
+          times(10, p => {
             const a = p * .628; ellP(cx + Math.cos(a) * fs, cy + Math.sin(a) * fs, fs * .45, fs * .2, a);
-          }
+          });
           // 中心
           c.fillStyle = '#6a4520'; dotP(cx, cy, fs * .55);
-        }
-      }
+        });
+      });
       // 飛ぶ蜂
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const bx = W * ((i * .3 + t * .04) % 1); const by = H * (.35 + Math.sin(t * 2 + i * 2) * .1 + i * .1); c.fillStyle = '#e0c040'; ellP(bx, by, W * .008, H * .006); c.fillStyle = '#38302a'; ellP(bx - W * .004, by, W * .002, H * .005);
-      }
+      });
     } else if (pr === 'wisteria') {
       // 藤棚: 上から垂れる花房+棚の梁+淡い空
       sky([[0,'#c8c2e0'],[.45,'#d8d4e8'],[1,'#b8c4a0']]); const rng = L.mulberry32(77);
@@ -7281,22 +7255,22 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 7; i++)
         c.fillRect(W * i / 6 - W * .008, H * .08, W * .016, H * .12);
       // 垂れる花房(小さい楕円の積み重ね)
-      for (let i = 0; i < 14; i++) {
+      times(14, i => {
         const fx = W * (.05 + rng() * .9); const sway = Math.sin(t * .8 + i) * W * .008; const len = H * (.18 + rng() * .25); const petals = 5 + Math.floor(rng() * 4); const hue = rng() > .3 ? 265 : 290; // 紫系/ピンク系
-        for (let k = 0; k < petals; k++) {
+        times(petals, k => {
           const py = H * .14 + len * k / petals; const pw = W * .028 * (1 - k / petals * .55);
           c.fillStyle = `hsla(${hue + rng() * 20},45%,${72 - k * 2}%,0.85)`;
           ellP(fx + sway * k / petals, py, pw, H * .022);
-        }
+        });
         // 房の先端
         c.fillStyle = `hsla(${hue},50%,65%,0.9)`;
         ellP(fx + sway, H * .14 + len, W * .008, H * .012);
-      }
+      });
       // 地面の緑と散った花びら
       c.fillStyle = '#9aa888'; c.fillRect(0, H * .85, W, H * .15); c.fillStyle = 'rgba(190,170,220,0.5)';
-      for (let i = 0; i < 20; i++) {
+      times(20, i => {
         const px = W * rng(), py = H * (.86 + rng() * .12); ellP(px, py, W * .005, H * .004, rng() * 3);
-      }
+      });
     } else if (pr === 'zen') {
       // 枯山水: 砂紋(同心波)+石組+遠景の陰
       sky([[0,'#d8cfb8'],[.6,'#cfc4a8'],[1,'#c0b294']]);
@@ -7308,9 +7282,9 @@ if (typeof document !== 'undefined') (() => {
         }
       }
       // 直線の梳き目(上段)
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const yy = H * (.22 + i * .045); c.beginPath(); c.moveTo(W * .08, yy); c.quadraticCurveTo(W * .5, yy + Math.sin(t * .3 + i) * H * .004, W * .92, yy); c.stroke();
-      }
+      });
       // 石(苔むした岩)
       for (const [rx, ry, rr] of rocks) {
         const g = Math.round(90 + rng() * 25);
@@ -7319,24 +7293,23 @@ if (typeof document !== 'undefined') (() => {
       }
       // 遠景: 砂利の縁
       c.fillStyle = 'rgba(110,95,70,0.35)';
-      for (let i = 0; i < 40; i++) {
+      times(40, i => {
         const px = W * rng(), py = H * (.12 + rng() * .1); c.fillRect(px, py, W * .006, W * .004);
-      }
+      });
     } else if (pr === 'storm') {
       // 嵐: 暗雲+雨筋+時折の稲妻
-      const flash = Math.max(0, Math.sin(t * .9)) ** 14; sky([[0,'#2a3038'],[.6,'#1a2028'],[1,'#10141a']]); const rng = L.mulberry32(95); // 稀に光る
+      const flash = Math.max(0, S(.9)) ** 14; sky([[0,'#2a3038'],[.6,'#1a2028'],[1,'#10141a']]); const rng = L.mulberry32(95); // 稀に光る
       // 暗雲(大きな楕円の塊)
       c.fillStyle = '#343c46';
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const cx = W * (i / 5) + Math.sin(t * .2 + i) * W * .02; ellP(cx, H * (.12 + (i % 2) * .06), W * .14, H * .05);
-      }
+      });
       // 稲妻(フラッシュ時にジグザグ)
       if (flash > .05) {
         c.strokeStyle = `rgba(255,250,200,${flash})`;
-        c.lineWidth = 3; const lx = W * (.3 + (Math.floor(t * .9 / Math.PI) % 3) * .2); c.beginPath(); c.moveTo(lx, H * .15); let ly = H * .15; const rng2 = L.mulberry32(7);
-        for (let i = 0; i < 5; i++) {
+        c.lineWidth = 3; const lx = W * (.3 + (Math.floor(t * .9 / Math.PI) % 3) * .2); c.beginPath(); c.moveTo(lx, H * .15); let ly = H * .15; scat(7, 5, (rng2, i) => {
           ly += H * .09; c.lineTo(lx + (rng2() - .5) * W * .08, ly);
-        }
+        });
         c.stroke();
         // 空全体のフラッシュ
         c.fillStyle = `rgba(200,210,255,${flash * .15})`;
@@ -7344,9 +7317,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 雨筋(斜めの線)
       c.strokeStyle = 'rgba(160,180,210,0.4)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 60; i++) {
+      times(60, i => {
         const rx = ((rng() + t * .7) % 1) * W * 1.2 - W * .1; const ry = ((rng() + t * .7) % 1) * H; c.beginPath(); c.moveTo(rx, ry); c.moveTo(rx, ry); c.lineTo(rx - W * .012, ry + H * .035); c.stroke();
-      }
+      });
       // 海面のうねり
       c.fillStyle = '#16202a'; c.fillRect(0, H * .85, W, H * .15); c.strokeStyle = 'rgba(180,200,220,0.3)'; c.lineWidth = 2; c.beginPath();
       for (let x = 0; x <= 10; x++) {
@@ -7357,11 +7330,11 @@ if (typeof document !== 'undefined') (() => {
       // 天文台: 天の川の夜空+白いドーム+開いたスリット
       sky([[0,'#0a0e24'],[.6,'#1a2040'],[1,'#2a2a3a']]); const rng = L.mulberry32(89);
       // 星
-      for (let i = 0; i < 120; i++) {
+      times(120, i => {
         const sx = rng() * W, sy = rng() * H * .65; const tw2 = .3 + .7 * Math.abs(Math.sin(t * 1.5 + i * 1.7));
         c.fillStyle = `rgba(235,240,255,${tw2})`;
         c.fillRect(sx, sy, 1.5, 1.5);
-      }
+      });
       // 天の川(斜めの淡い帯)
       c.save(); c.translate(W * .5, H * .3); c.rotate(-.4); const mg = c.createLinearGradient(0, -H * .08, 0, H * .08); mg.addColorStop(0, 'rgba(180,190,230,0)'); mg.addColorStop(.5, 'rgba(180,190,230,0.22)'); mg.addColorStop(1, 'rgba(180,190,230,0)'); c.fillStyle = mg; c.fillRect(-W, -H * .08, W * 2, H * .16); c.restore();
       // 山稜
@@ -7387,20 +7360,20 @@ if (typeof document !== 'undefined') (() => {
       }
       // 風車(回転する羽根)
       const wx = W * .72, wy = H * .55; c.strokeStyle = '#5a4a38'; c.lineWidth = 3; c.beginPath(); c.moveTo(wx - W * .015, wy + H * .18); c.lineTo(wx, wy); c.lineTo(wx + W * .015, wy + H * .18); c.stroke(); const wa = t * 1.2;
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const a = wa + i * Math.PI / 2; c.beginPath(); c.moveTo(wx, wy); c.lineTo(wx + Math.cos(a) * W * .05, wy + Math.sin(a) * W * .05); c.stroke();
         // 羽根の板
         c.fillStyle = '#8a7a62'; c.save(); c.translate(wx + Math.cos(a) * W * .04, wy + Math.sin(a) * W * .04); c.rotate(a); c.fillRect(0, -3, W * .02, 6); c.restore();
-      }
+      });
       // 干し草ロール
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const hx2 = W * (.1 + rng() * .5), hy2 = H * (.78 + (i % 2) * .08); c.fillStyle = '#c8a850'; ellP(hx2, hy2, W * .025, H * .03); c.strokeStyle = '#a08038'; c.lineWidth = 2; ellPS(hx2, hy2, W * .015, H * .018);
-      }
+      });
       // 揺れる草穂
       c.strokeStyle = '#9ab858'; c.lineWidth = 2;
-      for (let i = 0; i < 30; i++) {
+      times(30, i => {
         const gx = rng() * W, gy = H * (.8 + rng() * .18); const sway = Math.sin(t * 1.5 + i) * 4; c.beginPath(); c.moveTo(gx, gy); c.lineTo(gx + sway, gy - H * .03); c.stroke();
-      }
+      });
     } else if (pr === 'lagoon') {
       // ラグーン: 青空+浅瀬の縞+椰子の小島+飛ぶ海鳥
       sky([[0,'#8ec8e8'],[.45,'#5ab0d0'],[1,'#2a88a8']]); const rng = L.mulberry32(61);
@@ -7421,17 +7394,17 @@ if (typeof document !== 'undefined') (() => {
       c.strokeStyle = '#7a5a38'; c.lineWidth = W * .008; c.beginPath(); c.moveTo(ix, iy); c.quadraticCurveTo(ix - W * .01, iy - H * .1, ix - W * .03, iy - H * .14); c.stroke();
       // 葉
       c.strokeStyle = '#3a7a40'; c.lineWidth = 3;
-      for (let i = 0; i < 6; i++) {
-        const fa = i * 1.05 + Math.sin(t * .5) * .05; c.beginPath(); c.moveTo(ix - W * .03, iy - H * .14);
+      times(6, i => {
+        const fa = i * 1.05 + S(.5) * .05; c.beginPath(); c.moveTo(ix - W * .03, iy - H * .14);
         c.quadraticCurveTo(ix - W * .03 + Math.cos(fa) * W * .04, iy - H * .14 + Math.sin(fa) * W * .015,
           ix - W * .03 + Math.cos(fa) * W * .07, iy - H * .14 + Math.sin(fa) * W * .05 + H * .02);
         c.stroke();
-      }
+      });
       // 海鳥
       c.strokeStyle = '#f0f4f8'; c.lineWidth = 2;
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const bx = ((rng() + t * .04) % 1) * W; const by = H * (.15 + (i % 2) * .08) + Math.sin(t * 2 + i) * H * .02; c.beginPath(); c.moveTo(bx - 8, by); c.moveTo(bx - 8, by); c.quadraticCurveTo(bx - 3, by - 5, bx, by); c.quadraticCurveTo(bx + 3, by - 5, bx + 8, by); c.stroke();
-      }
+      });
     } else if (pr === 'cliff') {
       // 断崖海岸: 空+海+切り立つ崖+飛ぶカモメ
       sky([[0,'#a8c8e0'],[.5,'#6890b0'],[1,'#3a5a74']]); const rng = L.mulberry32(93);
@@ -7459,9 +7432,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#5a7a48'; ell(.15, .02, W * .16, H * .03);
       // カモメ
       c.strokeStyle = '#f0f4f8'; c.lineWidth = 2;
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const bx = ((rng() + t * .05) % 1) * W; const by = H * (.2 + (i % 3) * .1) + Math.sin(t * 2 + i) * H * .025; c.beginPath(); c.moveTo(bx - 9, by); c.moveTo(bx - 9, by); c.quadraticCurveTo(bx - 4, by - 6, bx, by); c.quadraticCurveTo(bx + 4, by - 6, bx + 9, by); c.stroke();
-      }
+      });
     } else if (pr === 'bayou') {
       // 湿地: 昏い空+水面+糸杉+垂れ下がる苔+ホタル
       sky([[0,'#4a5a48'],[.55,'#2a3a30'],[1,'#1a2820']]); const rng = L.mulberry32(87);
@@ -7469,34 +7442,34 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#2a4038'; c.fillRect(0, H * .62, W, H * .38);
       // 水面の光の揺らぎ
       c.strokeStyle = 'rgba(160,200,170,0.3)'; c.lineWidth = 2;
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const wy = H * (.65 + i * .04); const off = Math.sin(t * 1.5 + i) * W * .03; const wx = W * rng() + off; c.beginPath(); c.moveTo(wx - W * .1, wy); c.lineTo(wx + W * .1, wy); c.stroke();
-      }
+      });
       // 糸杉の幹と膝根
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const tx = W * (.12 + i * .26); const tw = W * (.02 + rng() * .015); c.fillStyle = '#3a3028'; c.beginPath(); c.moveTo(tx - tw * 1.8, H * .7); c.lineTo(tx - tw, H * .2); c.lineTo(tx + tw, H * .2); c.lineTo(tx + tw * 1.8, H * .7); c.closePath(); c.closePath(); c.fill(); // 広がる根元
         // 水面より下の反射(簡易)
         c.fillStyle = 'rgba(58,48,40,0.35)'; c.fillRect(tx - tw * 1.2, H * .7, tw * 2.4, H * .1);
         // 垂れ下がる苔
         c.strokeStyle = '#5a7a52'; c.lineWidth = 3;
-        for (let m = 0; m < 4; m++) {
+        times(4, m => {
           const mx = tx - tw + m * tw * .7; const ml = H * (.08 + rng() * .12); c.beginPath(); c.moveTo(mx, H * .25); c.quadraticCurveTo(mx + 4, H * .25 + ml * .6, mx + Math.sin(t + m) * 6, H * .25 + ml); c.stroke();
-        }
-      }
+        });
+      });
       // ホタル
-      for (let i = 0; i < 12; i++) {
+      times(12, i => {
         const fx = ((rng() + Math.sin(t * .4 + i * 2) * .05) % 1 + 1) % 1 * W; const fy = H * (.3 + (i % 5) * .12) + Math.sin(t * 1.2 + i) * H * .05; const fl = .4 + .6 * Math.abs(Math.sin(t * 2 + i * 1.3));
         c.fillStyle = `rgba(220,240,140,${fl})`;
         dotP(fx, fy, 2.5);
-      }
+      });
     } else if (pr === 'alps') {
       // アルプス: 雪の峰々+麓の山小屋+流れる雲
       sky([[0,'#7ab0d8'],[.55,'#c8dce8'],[1,'#6a8a6a']]); const rng = L.mulberry32(77);
       // 雲
       c.fillStyle = 'rgba(255,255,255,0.85)';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const cx = ((rng() + t * .01) % 1) * W; const cy = H * (.1 + (i % 2) * .08); c.beginPath(); c.ellipse(cx, cy, W * .07, H * .018, 0, 0, 7); c.ellipse(cx + W * .04, cy - 4, W * .05, H * .015, 0, 0, 7); c.fill();
-      }
+      });
       // 峰々(2層)
       for (const [py, pc, amp] of [[.62, '#8a9aa8', .18], [.68, '#5a6a78', .14]]) {
         c.fillStyle = pc; c.beginPath(); c.moveTo(0, H * py);
@@ -7507,9 +7480,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 雪(峰の上部を白く)
       c.fillStyle = 'rgba(255,255,255,0.8)';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const sx = W * (.12 + i * .22); c.beginPath(); c.moveTo(sx - W * .04, H * .55); c.moveTo(sx - W * .04, H * .55); c.lineTo(sx, H * .47); c.lineTo(sx + W * .04, H * .55); c.lineTo(sx + W * .04, H * .55); c.closePath(); c.lineTo(sx + W * .04, H * .55); c.closePath(); c.fill();
-      }
+      });
       // 麓の草原
       c.fillStyle = '#5a8a52'; c.fillRect(0, H * .72, W, H * .28);
       // 山小屋
@@ -7535,28 +7508,28 @@ if (typeof document !== 'undefined') (() => {
       }
       // 飛ぶ鳥
       c.strokeStyle = '#3a2620'; c.lineWidth = 2;
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const bx = ((rng() + t * .04) % 1) * W; const by = H * (.2 + (i % 2) * .1) + Math.sin(t * 2 + i) * H * .02; c.beginPath(); c.moveTo(bx - 8, by); c.moveTo(bx - 8, by); c.quadraticCurveTo(bx - 3, by - 5, bx, by); c.quadraticCurveTo(bx + 3, by - 5, bx + 8, by); c.stroke();
-      }
+      });
     } else if (pr === 'rainforest') {
       // 熱帯雨林: 霧+巨大な葉+木の幹+木漏れ日
       sky([[0,'#7ab880'],[.5,'#3a7a50'],[1,'#1a4030']]); const rng = L.mulberry32(63);
       // 木漏れ日(斜めの光筋)
       c.save(); c.globalAlpha = .15; c.fillStyle = '#e8f8c0';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const lx = W * (.1 + i * .25) + Math.sin(t * .3 + i) * W * .02; c.beginPath(); c.moveTo(lx, 0); c.moveTo(lx, 0); c.lineTo(lx + W * .06, 0); c.lineTo(lx + W * .18, H); c.lineTo(lx + W * .18, H); c.lineTo(lx + W * .1, H); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       c.restore();
       // 木の幹
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const tx = W * (i / 4.5) + W * .04; const tw = W * (.03 + rng() * .03); c.fillStyle = '#4a3828'; c.beginPath(); c.moveTo(tx - tw, H); c.quadraticCurveTo(tx - tw * .6, H * .5, tx - tw * 1.2, 0); c.lineTo(tx + tw * 1.2, 0); c.quadraticCurveTo(tx + tw * .6, H * .5, tx + tw, H); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 巨大な葉(前景と中景)
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const lx = rng() * W, ly = H * (.3 + rng() * .5); const ls = W * (.05 + rng() * .1), la = rng() * Math.PI * 2; const dark = rng() > .5; c.fillStyle = dark ? '#2a6a40' : '#4a9a58'; ellP(lx, ly + Math.sin(t * .8 + i) * 3, ls, ls * .35, la);
         // 葉脈
         c.strokeStyle = 'rgba(20,50,30,0.5)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(lx - Math.cos(la) * ls, ly - Math.sin(la) * ls); c.lineTo(lx + Math.cos(la) * ls, ly + Math.sin(la) * ls); c.stroke();
-      }
+      });
       // 霧
       c.fillStyle = 'rgba(180,220,190,0.12)'; c.fillRect(0, H * .55, W, H * .45);
     } else if (pr === 'lavender') {
@@ -7564,24 +7537,24 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#e8c8d8'],[.5,'#b890c8'],[1,'#6a4a78']]); c.fillStyle = 'rgba(255,220,180,0.85)'; dot(.7,.25,H * .08); const rng = L.mulberry32(57);
       // 遠景の木(プロヴァンス風の糸杉)
       c.fillStyle = '#4a5038';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const tx = W * (.15 + rng() * .7); ellP(tx, H * .5, W * .012, H * .05);
-      }
+      });
       // ラベンダーの列(紫の帯+穂の点)
       for (let row = 0; row < 5; row++) {
         const ry = H * (.58 + row * .085); c.fillStyle = ['#8a5aa8', '#7a4a98', '#9a6ab8'][row % 3]; c.beginPath(); c.moveTo(0, ry + H * .03);
         for (let x = 0; x <= 16; x++) c.lineTo(W * x / 16, ry + Math.sin(x * .7 + row) * 4);
         c.lineTo(W, ry + H * .09); c.lineTo(W, ry + H * .09); c.lineTo(0, ry + H * .09); c.closePath(); c.closePath(); c.fill();
         // 穂
-        for (let i = 0; i < 40 - row * 5; i++) {
+        times(40 - row * 5, i => {
           const hx2 = rng() * W; c.fillStyle = '#a878c8'; c.fillRect(hx2, ry + rng() * H * .04 - 4, 2.5, 5 + row);
-        }
+        });
       }
       // 飛ぶ蜂
       c.fillStyle = '#e8c830';
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const bx = ((rng() + t * .05 * (i % 2 ? 1 : -1)) % 1 + 1) % 1 * W; const by = H * (.55 + (i % 3) * .12) + Math.sin(t * 3 + i * 2) * H * .03; ellP(bx, by, W * .006, H * .004);
-      }
+      });
     } else if (pr === 'vineyard') {
       // 葡萄畑: 秋空+ぶどう棚の列+房+遠山
       sky([[0,'#e8d8b0'],[.5,'#c8b080'],[1,'#8a7048']]); c.fillStyle = 'rgba(255,225,160,0.85)'; dot(.25,.28,H * .08);
@@ -7603,9 +7576,9 @@ if (typeof document !== 'undefined') (() => {
           // ぶどう房
           if (rng() > .4) {
             c.fillStyle = '#6a3a7a';
-            for (let g = 0; g < 4; g++) {
+            times(4, g => {
               dotP(vx + (rng() - .5) * W * .015, ry - H * (.05 + row * .01) + g * 4, 3 + row);
-            }
+            });
           }
         }
       }
@@ -7614,28 +7587,28 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#0a3a5a'],[.5,'#0a4a6a'],[1,'#063048']]);
       // 光の筋
       c.fillStyle = 'rgba(150,220,255,0.1)';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         c.save(); c.translate(W * (.2 + i * .2), 0); c.rotate(.3); c.fillRect(-W * .015, 0, W * .03, H); c.restore();
-      }
+      });
       const rng = L.mulberry32(91);
       // 海底
       c.fillStyle = '#c8b088'; c.fillRect(0, H * .85, W, H * .15);
       // 珊瑚(枝状と円形)
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const cx = W * (.1 + rng() * .8), cy = H * (.86 + rng() * .1); const cc = ['#e07070', '#e8a050', '#c860a0', '#60a8b0'][i % 4]; c.strokeStyle = cc; c.lineWidth = W * .008;
-        for (let b = 0; b < 4; b++) {
+        times(4, b => {
           const ba = -Math.PI / 2 + (b - 1.5) * .5; c.beginPath(); c.moveTo(cx, cy);
           c.quadraticCurveTo(cx + Math.cos(ba) * W * .04, cy + Math.sin(ba) * H * .1,
             cx + Math.cos(ba) * W * .06, cy + Math.sin(ba) * H * .14);
           c.stroke();
-        }
+        });
         c.fillStyle = cc; dotP(cx + W * .05, cy - H * .02, W * .02);
-      }
+      });
       // 魚群(同じ方向へゆらぎながら泳ぐ)
       c.fillStyle = 'rgba(255,200,120,0.8)';
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const fx = ((rng() + t * .04) % 1.2 - .1) * W; const fy = H * (.25 + (i % 3) * .15) + Math.sin(t * 2 + i) * H * .02; c.beginPath(); c.ellipse(fx, fy, W * .012, H * .008, 0, 0, 7); c.ellipse(fx, fy, W * .012, H * .008, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(fx - W * .014, fy); c.moveTo(fx - W * .014, fy); c.lineTo(fx - W * .022, fy - H * .008); c.moveTo(fx - W * .014, fy); c.lineTo(fx - W * .022, fy - H * .008); c.lineTo(fx - W * .022, fy + H * .008); c.closePath(); c.closePath(); c.fill();
-      }
+      });
     } else if (pr === 'geyser') {
       // 間欠泉: 曇り空+岩場+噴き上がる水柱+湯気
       sky([[0,'#b8c4cc'],[.55,'#8a9aa4'],[1,'#5a6a72']]); const rng = L.mulberry32(67);
@@ -7643,25 +7616,25 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#7a7068'; c.fillRect(0, H * .72, W, H * .28);
       // 岩
       c.fillStyle = '#6a6058';
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         ellP(rng() * W, H * (.74 + rng() * .2), W * (.02 + rng() * .04), H * (.015 + rng() * .02));
-      }
+      });
       // 噴水の口(中央)
       const gx = W * .45, gy = H * .74; c.fillStyle = '#5a5048'; ellP(gx, gy, W * .09, H * .025);
       // 水柱(噴き上がりの周期)
-      const erupt = Math.max(0, Math.sin(t * 1.2)) ** .5;
+      const erupt = Math.max(0, S(1.2)) ** .5;
       if (erupt > .05) {
         c.fillStyle = 'rgba(220,235,245,0.85)'; const colH = H * .5 * erupt; c.beginPath(); c.moveTo(gx - W * .02, gy); c.quadraticCurveTo(gx - W * .04 * erupt, gy - colH * .7, gx - W * .015, gy - colH); c.quadraticCurveTo(gx, gy - colH * 1.1, gx + W * .015, gy - colH); c.quadraticCurveTo(gx + W * .04 * erupt, gy - colH * .7, gx + W * .02, gy); c.closePath(); c.closePath(); c.fill();
         // 頂の飛沫
-        for (let i = 0; i < 8; i++) {
+        times(8, i => {
           const a = rng() * Math.PI; c.fillStyle = 'rgba(230,242,250,0.8)'; dotP(gx + Math.cos(a) * W * .05 * erupt * (rng() + .3), gy - colH - rng() * H * .06, W * .008);
-        }
+        });
       }
       // 湯気(ゆらぐ)
       c.fillStyle = 'rgba(230,235,240,0.35)';
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const sx = gx + Math.sin(t * .6 + i * 2) * W * .05 + (rng() - .5) * W * .1; ellP(sx, gy - H * (.05 + i * .07), W * (.04 + i * .015), H * (.02 + i * .008));
-      }
+      });
     } else if (pr === 'pagoda') {
       // 五重塔: 夕暮れ+5層の屋根の塔+月+遠山
       sky([[0,'#3a3050'],[.5,'#80506a'],[1,'#c07858']]);
@@ -7673,7 +7646,7 @@ if (typeof document !== 'undefined') (() => {
       c.lineTo(W, H * .7); c.lineTo(0, H * .7); c.closePath(); c.fill();
       // 五重塔(中央右寄り)
       const px = W * .62, pbase = H * .85;
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const ty = pbase - H * .115 * i; const tw = W * (.11 - i * .012);
         // 階の柱
         c.fillStyle = '#4a3028'; c.fillRect(px - tw * .32, ty - H * .075, tw * .64, H * .075);
@@ -7681,29 +7654,29 @@ if (typeof document !== 'undefined') (() => {
         c.fillStyle = '#ffd890'; c.fillRect(px - tw * .1, ty - H * .06, tw * .2, H * .035);
         // 屋根(反った三角形)
         c.fillStyle = '#2a2030'; c.beginPath(); c.moveTo(px - tw * .55, ty - H * .075); c.quadraticCurveTo(px, ty - H * .115, px + tw * .55, ty - H * .075); c.lineTo(px + tw * .5, ty - H * .045); c.lineTo(px - tw * .5, ty - H * .045); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 相輪(頂の飾り)
       c.strokeStyle = '#d8b050'; c.lineWidth = 3; c.beginPath(); c.moveTo(px, pbase - H * .575); c.lineTo(px, pbase - H * .68); c.stroke(); c.fillStyle = '#d8b050';
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         ellP(px, pbase - H * (.6 + i * .025), W * .014, H * .006);
-      }
+      });
     } else if (pr === 'wheatfield') {
       // 麦畑: 夕空+風に揺れる金色の麦+遠景の木
       sky([[0,'#f0d8a0'],[.5,'#e8b870'],[1,'#b88840']]); c.fillStyle = 'rgba(255,230,160,0.9)'; dot(.75,.3,H * .09);
       // 遠景の木
       const rng = L.mulberry32(83); c.fillStyle = '#6a5838';
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const tx = rng() * W; ellP(tx, H * .58, W * .02, H * .035); c.fillRect(tx - 2, H * .58, 4, H * .03);
-      }
+      });
       // 麦畑(3層: 奥→手前ほど濃い)
-      for (let ly = 0; ly < 3; ly++) {
+      times(3, ly => {
         const baseY = H * (.62 + ly * .12); const shade = ['#c8a050', '#b88840', '#a07030'][ly]; c.fillStyle = shade; c.fillRect(0, baseY, W, H * .4);
         // 穂(風で揺れる短い線)
         c.strokeStyle = ['#e0c070', '#d0b060', '#c0a050'][ly]; c.lineWidth = 2; const n = 60 - ly * 15;
-        for (let i = 0; i < n; i++) {
+        times(n, i => {
           const hx2 = (i / n + (rng() * .01)) * W; const hy2 = baseY + rng() * H * .1; const sw = Math.sin(t * 1.5 + hx2 * .01 + ly) * W * .006; c.beginPath(); c.moveTo(hx2, hy2 + H * .02); c.quadraticCurveTo(hx2 + sw * .5, hy2 + H * .01, hx2 + sw, hy2); c.stroke();
-        }
-      }
+        });
+      });
     } else if (pr === 'bridge') {
       // 橋: 夕暮れ+吊り橋シルエット(主塔2基+ケーブル)+川
       sky([[0,'#f0a868'],[.5,'#c06068'],[1,'#4a4058']]);
@@ -7718,9 +7691,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 主塔2基
       c.fillStyle = '#2a2230';
-      for (const tx of [W * .25, W * .75]) {
+      ([W * .25, W * .75]).forEach(tx => {
         c.fillRect(tx - W * .012, H * .3, W * .024, H * .42); c.fillRect(tx - W * .02, H * .34, W * .04, H * .015); c.fillRect(tx - W * .02, H * .5, W * .04, H * .015);
-      }
+      });
       // メインケーブル(放物線)
       c.strokeStyle = '#2a2230'; c.lineWidth = 3; c.beginPath(); c.beginPath(); c.moveTo(0, H * .55); c.quadraticCurveTo(W * .25, H * .28, W * .5, H * .55); c.quadraticCurveTo(W * .75, H * .28, W, H * .55); c.stroke();
       // ハンガーロープ
@@ -7736,9 +7709,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillRect(0, H * .6, W, H * .03);
       // 橋の灯り
       c.fillStyle = '#ffd890';
-      for (let i = 0; i < 9; i++) {
+      times(9, i => {
         dot((.05 + i * .11),.585,3);
-      }
+      });
     } else if (pr === 'terraces') {
       // 棚田: 朝霧の空+段々の水田(緑と水面)+遠山
       sky([[0,'#dfe8e0'],[.55,'#a8c0a8'],[1,'#5a7a58']]);
@@ -7760,9 +7733,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 苗の点
       c.fillStyle = 'rgba(220,240,200,0.7)';
-      for (let i = 0; i < 40; i++) {
+      times(40, i => {
         const ty = H * (.55 + Math.floor(rng() * 6) * .07); c.fillRect(rng() * W, ty + rng() * H * .04, 2, 3);
-      }
+      });
     } else if (pr === 'harbor') {
       // 港: 朝焼け+灯台+帆船+波立つ海
       sky([[0,'#e8b890'],[.5,'#c87878'],[1,'#586878']]);
@@ -7784,7 +7757,7 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 3; i++) c.fillRect(W * .78, H * (.34 + i * .1), W * .035, H * .05);
       c.fillStyle = '#ffe8a0'; dot(.7975,.3,H * .025);
       // 灯りの光線(ゆっくり揺れる)
-      c.fillStyle = 'rgba(255,240,180,0.25)'; c.save(); c.translate(W * .7975, H * .3); c.rotate(Math.sin(t * .5) * .3); c.beginPath(); c.moveTo(0, 0); c.lineTo(W * .25, -H * .04); c.lineTo(W * .25, H * .04); c.closePath(); c.fill(); c.restore();
+      c.fillStyle = 'rgba(255,240,180,0.25)'; c.save(); c.translate(W * .7975, H * .3); c.rotate(S(.5) * .3); c.beginPath(); c.moveTo(0, 0); c.lineTo(W * .25, -H * .04); c.lineTo(W * .25, H * .04); c.closePath(); c.fill(); c.restore();
       // 帆船
       const bx = ((rng() + t * .03) % 1.2 - .1) * W, by = H * .7; c.fillStyle = '#5a4434'; c.beginPath(); c.moveTo(bx - W * .03, by); c.moveTo(bx - W * .03, by); c.lineTo(bx + W * .03, by); c.lineTo(bx + W * .02, by + H * .02); c.lineTo(bx + W * .02, by + H * .02); c.lineTo(bx - W * .02, by + H * .02); c.closePath(); c.closePath(); c.fill(); c.fillStyle = '#f0ece0'; c.beginPath(); c.moveTo(bx, by - H * .06); c.moveTo(bx, by - H * .06); c.lineTo(bx, by); c.moveTo(bx, by - H * .06); c.lineTo(bx, by); c.lineTo(bx + W * .028, by); c.closePath(); c.closePath(); c.fill(); c.beginPath(); c.moveTo(bx, by - H * .06);
       c.moveTo(bx, by - H * .06); c.lineTo(bx, by); c.moveTo(bx, by - H * .06); c.lineTo(bx, by); c.lineTo(bx - W * .022, by); c.closePath(); c.closePath(); c.fill();
@@ -7793,9 +7766,9 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#0a0a12'],[.75,'#101018'],[1,'#181820']]); const rng = L.mulberry32(97);
       // 星
       c.fillStyle = '#fff';
-      for (let i = 0; i < 60; i++) {
+      times(60, i => {
         c.fillRect(rng() * W, rng() * H * .6, 1.2, 1.2);
-      }
+      });
       // 地球(青い丸+白い雲筋)
       c.fillStyle = '#3a6ac8'; dot(.8,.18,H * .1); c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = H * .012; c.beginPath(); c.arc(W * .8, H * .18, H * .1, -.6, .9); c.stroke();
       // 地表
@@ -7807,29 +7780,29 @@ if (typeof document !== 'undefined') (() => {
       }
       c.stroke();
       // クレーター
-      for (let i = 0; i < 7; i++) {
+      times(7, i => {
         const crx = rng() * W, cry = H * (.8 + rng() * .15), crr = W * (.015 + rng() * .03); c.fillStyle = '#6e6e76'; ellP(crx, cry, crr, crr * .45); c.strokeStyle = '#a8a8b0'; c.lineWidth = 2; c.beginPath(); c.ellipse(crx, cry - 1, crr, crr * .45, 0, Math.PI, 0); c.stroke();
-      }
+      });
     } else if (pr === 'sakura') {
       // 桜並木: 淡い空 + 桜の木(ピンクの樹冠) + 散る花びら + 地面
       sky([[0,'#e8ecf4'],[.6,'#c8d0e0'],[1,'#98a4b8']]); const rng = L.mulberry32(37);
       // 地面(芝+花びら)
       c.fillStyle = '#7a9a6a'; c.fillRect(0, H * .8, W, H * .2); c.fillStyle = 'rgba(255,200,215,0.6)';
-      for (let i = 0; i < 30; i++) {
+      times(30, i => {
         ellP(rng() * W, H * (.8 + rng() * .18), W * .006, W * .003, rng() * 3);
-      }
+      });
       // 桜の木3本(幹+ピンクの塊)
       for (const [tx, th] of [[W * .15, .45], [W * .5, .52], [W * .85, .42]]) {
         const ty = H * .82; c.fillStyle = '#5a4030'; c.fillRect(tx - W * .007, ty - H * th * .55, W * .014, H * th * .55);
-        for (let b = 0; b < 10; b++) {
+        times(10, b => {
           c.fillStyle = ['#f0b8cc', '#e8a0bc', '#f5ccd8'][Math.floor(rng() * 3)]; dotP(tx + (rng() - .5) * W * .12, ty - H * th * (.5 + rng() * .45), W * (.025 + rng() * .03));
-        }
+        });
       }
       // 舞う花びら
       c.fillStyle = 'rgba(255,210,225,0.9)';
-      for (let i = 0; i < 16; i++) {
+      times(16, i => {
         const px = ((rng() + t * .06 * (0.4 + rng() * .6)) % 1) * W; const py = (rng() + .1 * Math.sin(t * 1.5 + i)) * H; c.save(); c.translate(px, py); c.rotate(t * 1.5 + i); ellP(0, 0, W * .004, W * .0025); c.restore();
-      }
+      });
     } else if (pr === 'ruins') {
       // 遺跡: 黄昏 + 崩れた石柱 + アーチ + 蔦
       sky([[0,'#d8a878'],[.55,'#a87858'],[1,'#584838']]); c.fillStyle = 'rgba(255,215,150,0.8)'; dot(.5,.45,H * .12); const rng = L.mulberry32(51);
@@ -7837,7 +7810,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#6a5a44'; c.fillRect(0, H * .78, W, H * .22);
       // 石柱(高さの違う4本、2本は欠けている)
       const colW = W * .045;
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const cx = W * (.18 + i * .2), ch = H * (.28 + rng() * .25); c.fillStyle = '#8a8078'; c.fillRect(cx - colW / 2, H * .78 - ch, colW, ch);
         // 柱頭
         c.fillRect(cx - colW * .7, H * .78 - ch - H * .02, colW * 1.4, H * .02);
@@ -7847,7 +7820,7 @@ if (typeof document !== 'undefined') (() => {
         }
         // 蔦(緑の曲線)
         c.strokeStyle = 'rgba(80,120,50,0.7)'; c.lineWidth = 3; c.beginPath(); c.moveTo(cx - colW / 2, H * .78); c.quadraticCurveTo(cx - colW, H * .78 - ch * .5, cx, H * .78 - ch); c.stroke();
-      }
+      });
       // 倒れた柱
       c.save(); c.translate(W * .6, H * .9); c.rotate(.12); c.fillStyle = '#7a7068'; c.fillRect(0, -H * .03, W * .25, H * .06); c.restore();
     } else if (pr === 'glacier') {
@@ -7862,14 +7835,14 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#3a6a86'; c.fillRect(0, H * .72, W, H * .28);
       // 浮氷
       c.fillStyle = 'rgba(220,235,245,0.85)';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const fx = rng() * W, fy = H * (.74 + rng() * .2); ellP(fx, fy, W * (.015 + rng() * .03), H * .012);
-      }
+      });
       // きらめく水面の光
       c.strokeStyle = 'rgba(220,240,255,0.4)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 12; i++) {
+      times(12, i => {
         const wx = rng() * W, wy = H * (.74 + rng() * .24); const tw = .5 + .5 * Math.sin(t * 2 + i); c.globalAlpha = .2 + .4 * tw; c.beginPath(); c.moveTo(wx, wy); c.lineTo(wx + W * .02, wy); c.stroke();
-      }
+      });
       c.globalAlpha = 1;
     } else if (pr === 'fjord') {
       // フィヨルド: 冷たい空 + 切り立つ山壁 + 静かな水面
@@ -7886,46 +7859,46 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = 'rgba(240,245,250,0.8)'; c.beginPath(); c.moveTo(0, H * .15); c.moveTo(0, H * .15); c.lineTo(W * .1, H * .2); c.moveTo(0, H * .15); c.lineTo(W * .1, H * .2); c.lineTo(W * .05, H * .24); c.lineTo(0, H * .22); c.lineTo(0, H * .22); c.closePath(); c.lineTo(0, H * .22); c.closePath(); c.fill();
       // 水面(下3割、穏やかな横線)
       c.fillStyle = '#4a7a8e'; c.fillRect(0, H * .7, W, H * .3); c.strokeStyle = 'rgba(200,230,240,0.35)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         const wy = H * (.72 + rng() * .25); const wx = rng() * W * .7, wl = W * (.05 + rng() * .12); c.beginPath(); c.moveTo(wx + Math.sin(t + i) * 5, wy); c.moveTo(wx + Math.sin(t + i) * 5, wy); c.lineTo(wx + wl, wy); c.stroke();
-      }
+      });
     } else if (pr === 'autumn') {
       // 紅葉: 淡い秋空 + 紅葉の木々 + 舞う紅葉 + 落ち葉の地面
       sky([[0,'#d8e0e8'],[.5,'#c8b890'],[1,'#9a7048']]); const rng = L.mulberry32(23);
       // 地面(落ち葉のじゅうたん)
       c.fillStyle = '#8a5a30'; c.fillRect(0, H * .78, W, H * .22); c.fillStyle = 'rgba(200,90,40,0.5)';
-      for (let i = 0; i < 40; i++) {
+      times(40, i => {
         ellP(rng() * W, H * (.78 + rng() * .2), W * .008, W * .004, rng() * 3);
-      }
+      });
       // 紅葉の木3本(幹+もこもこ樹冠)
       for (const [tx, th] of [[W * .18, .42], [W * .52, .5], [W * .85, .38]]) {
         const ty = H * .8; c.fillStyle = '#4a3020'; c.fillRect(tx - W * .008, ty - H * th * .6, W * .016, H * th * .6); const cols = ['#c8402a', '#e07020', '#d8a020'];
-        for (let b = 0; b < 9; b++) {
+        times(9, b => {
           c.fillStyle = cols[Math.floor(rng() * 3)]; dotP(tx + (rng() - .5) * W * .1, ty - H * th * (.55 + rng() * .4), W * (.02 + rng() * .025));
-        }
+        });
       }
       // 舞う紅葉
       c.fillStyle = 'rgba(210,80,40,0.8)';
-      for (let i = 0; i < 14; i++) {
+      times(14, i => {
         const lx = ((rng() + t * .05 * (0.4 + rng() * .6)) % 1) * W; const ly = (rng() + .08 * Math.sin(t * 2 + i)) * H; c.save(); c.translate(lx, ly); c.rotate(t * 2 + i); ellP(0, 0, W * .005, W * .003); c.restore();
-      }
+      });
     } else if (pr === 'falls') {
       // 滝: 山の緑 + 絶壁 + 落ちる水流 + 水しぶき
       sky([[0,'#8ec8e8'],[.5,'#5a9e6a'],[1,'#2e5e48']]); const rng = L.mulberry32(43);
       // 左右の崖
       c.fillStyle = '#4a5a4a'; c.beginPath(); c.moveTo(0, H); c.moveTo(0, H); c.lineTo(0, H * .2); c.lineTo(W * .3, H * .35); c.lineTo(W * .3, H * .35); c.lineTo(W * .35, H); c.closePath(); c.closePath(); c.fill(); c.beginPath(); c.moveTo(W, H); c.moveTo(W, H); c.lineTo(W, H * .25); c.lineTo(W * .7, H * .4); c.lineTo(W * .7, H * .4); c.lineTo(W * .65, H); c.closePath(); c.closePath(); c.fill();
       // 水流(中央、ゆらぐ帯)
-      c.fillStyle = 'rgba(220,240,255,0.85)'; c.beginPath(); c.moveTo(W * .38, 0); c.lineTo(W * .62, 0); c.lineTo(W * .58 + Math.sin(t * 2) * 4, H * .8); c.lineTo(W * .42 - Math.sin(t * 2) * 4, H * .8); c.closePath(); c.closePath(); c.fill();
+      c.fillStyle = 'rgba(220,240,255,0.85)'; c.beginPath(); c.moveTo(W * .38, 0); c.lineTo(W * .62, 0); c.lineTo(W * .58 + S(2) * 4, H * .8); c.lineTo(W * .42 - S(2) * 4, H * .8); c.closePath(); c.closePath(); c.fill();
       // 水の縞
       c.strokeStyle = 'rgba(140,190,230,0.6)'; c.lineWidth = 2;
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const wy = ((rng() + t * .3) % 1) * H * .8; c.beginPath(); c.moveTo(W * .4, wy); c.moveTo(W * .4, wy); c.lineTo(W * .6, wy + 8); c.stroke();
-      }
+      });
       // 水しぶき+池
       c.fillStyle = 'rgba(230,248,255,0.6)';
-      for (let i = 0; i < 16; i++) {
+      times(16, i => {
         const mx = W * (.4 + rng() * .2), my = H * (.78 + rng() * .06); const mr = W * (.004 + rng() * .008) * (0.7 + .3 * Math.sin(t * 3 + i)); dotP(mx, my, mr);
-      }
+      });
       c.fillStyle = 'rgba(70,140,160,0.8)'; c.fillRect(0, H * .82, W, H * .18);
     } else if (pr === 'oasis') {
       // オアシス: 砂漠の空 + 椰子2本 + 青い池 + 砂丘
@@ -7934,9 +7907,9 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#d8b070'; c.beginPath(); c.ellipse(W * .2, H * .8, W * .45, H * .16, 0, Math.PI, 0); c.fill(); c.fillStyle = '#c89a58'; c.fillRect(0, H * .78, W, H * .22);
       // 池
       c.fillStyle = 'rgba(60,150,190,0.9)'; ell(.45,.82,W * .16,H * .045); c.strokeStyle = 'rgba(200,240,255,0.5)'; c.lineWidth = 1.5;
-      for (let i = 0; i < 3; i++) {
+      times(3, i => {
         const ry = H * (.8 + i * .015); c.beginPath(); c.moveTo(W * .38, ry); c.quadraticCurveTo(W * .45, ry + 3, W * .52, ry); c.stroke();
-      }
+      });
       // 椰子の木2本(湾曲した幹+扇状の葉)
       for (const [px, flip] of [[W * .3, 1], [W * .62, -1]]) {
         const py = H * .78, ph = H * .28; c.strokeStyle = '#7a5a30'; c.lineWidth = W * .009; c.lineCap = 'round'; c.beginPath(); c.moveTo(px, py); c.moveTo(px, py); c.quadraticCurveTo(px + flip * W * .03, py - ph * .6, px + flip * W * .05, py - ph); c.stroke(); const tx = px + flip * W * .05, ty = py - ph; c.strokeStyle = '#3a7a3a'; c.lineWidth = W * .006;
@@ -7950,15 +7923,15 @@ if (typeof document !== 'undefined') (() => {
       // 地平線の草
       c.fillStyle = '#5e3818'; c.fillRect(0, H * .72, W, H * .28); const rng = L.mulberry32(67);
       // アカシアの木2本(傘状の樹冠)
-      for (const tx of [W * .2, W * .78]) {
+      ([W * .2, W * .78]).forEach(tx => {
         const th = H * .3, ty = H * .72; c.strokeStyle = '#2e1c10'; c.lineWidth = W * .008; c.lineCap = 'round'; c.beginPath(); c.moveTo(tx, ty); c.moveTo(tx, ty); c.quadraticCurveTo(tx + W * .01, ty - th * .6, tx + W * .02, ty - th); c.stroke(); c.beginPath(); c.beginPath(); c.moveTo(tx + W * .02, ty - th * .7); c.beginPath(); c.moveTo(tx + W * .02, ty - th * .7); c.lineTo(tx - W * .03, ty - th * .95); c.beginPath(); c.moveTo(tx + W * .02, ty - th * .7); c.lineTo(tx - W * .03, ty - th * .95); c.stroke(); c.beginPath(); c.beginPath(); c.moveTo(tx + W * .02, ty - th * .7); c.beginPath(); c.moveTo(tx + W * .02, ty - th * .7);
         c.lineTo(tx + W * .07, ty - th * .95); c.beginPath(); c.moveTo(tx + W * .02, ty - th * .7); c.lineTo(tx + W * .07, ty - th * .95); c.stroke(); c.fillStyle = '#3a2410'; ellP(tx + W * .02, ty - th, W * .1, H * .035);
-      }
+      });
       // 草の穂
       c.strokeStyle = 'rgba(60,35,15,0.8)'; c.lineWidth = 2;
-      for (let i = 0; i < 30; i++) {
+      times(30, i => {
         const gx = rng() * W, gy = H * (.75 + rng() * .22), gh = H * (.03 + rng() * .04); c.beginPath(); c.moveTo(gx, gy); c.moveTo(gx, gy); c.quadraticCurveTo(gx + 4, gy - gh * .6, gx + (rng() - .3) * 10, gy - gh); c.stroke();
-      }
+      });
     } else if (pr === 'bamboo') {
       // 竹林: 緑の光 + 竹の幹(節つき) + 舞う葉
       sky([[0,'#8fbf7a'],[.5,'#5e9e5a'],[1,'#2e5e40']]);
@@ -7975,9 +7948,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 舞う葉
       c.fillStyle = 'rgba(180,230,140,0.8)';
-      for (let i = 0; i < 12; i++) {
+      times(12, i => {
         const lx = ((rng() + t * .03 * (0.5 + rng() * .5)) % 1) * W; const ly = (rng() + .1 * Math.sin(t + i)) * H; const sz = W * .006; c.save(); c.translate(lx, ly); c.rotate(t + i); ellP(0, 0, sz * 2, sz); c.restore();
-      }
+      });
     } else if (pr === 'canyon') {
       // 渓谷: 夕焼け + 層状の赤岩岸壁(遠近3層)
       sky([[0,'#f0a860'],[.5,'#d4786a'],[1,'#8a4a44']]); c.fillStyle = 'rgba(255,225,170,0.85)'; dot(.5,.34,H * .1); const rng = L.mulberry32(31);
@@ -7994,9 +7967,9 @@ if (typeof document !== 'undefined') (() => {
       }
       // 前景の岩棚(縞模様)
       c.fillStyle = '#4a2620'; c.fillRect(0, H * .88, W, H * .12); c.strokeStyle = 'rgba(200,120,80,0.4)'; c.lineWidth = 2;
-      for (let i = 0; i < 4; i++) {
+      times(4, i => {
         const sy = H * (.9 + i * .025); c.beginPath(); c.moveTo(0, sy); c.lineTo(W, sy + (rng() - .5) * 6); c.stroke();
-      }
+      });
     } else if (pr === 'castle') {
       // 城: 夕暮れ+塔2基+城壁+旗+窓の灯り
       sky([[0,'#e89a5f'],[.55,'#c86a78'],[1,'#4a3050']]);
@@ -8004,18 +7977,18 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = 'rgba(255,215,150,0.9)'; dot(.72,.3,H * .09); const rng = L.mulberry32(55);
       // 城壁+塔
       c.fillStyle = '#3a2b42'; const wallY = H * .62, towerH = H * .34; c.fillRect(0, wallY, W, H - wallY);
-      for (const tx of [W * .16, W * .84]) {
+      ([W * .16, W * .84]).forEach(tx => {
         c.fillRect(tx - W * .07, wallY - towerH, W * .14, towerH + H * .1);
         // 尖り屋根
         c.beginPath(); c.moveTo(tx - W * .085, wallY - towerH); c.lineTo(tx + W * .085, wallY - towerH); c.lineTo(tx, wallY - towerH - H * .14); c.closePath(); c.closePath(); c.fill();
         // 旗(なびく)
         c.strokeStyle = '#3a2b42'; c.lineWidth = 2; c.beginPath(); c.moveTo(tx, wallY - towerH - H * .14); c.lineTo(tx, wallY - towerH - H * .2); c.stroke(); c.fillStyle = '#c0303f'; const fw = Math.sin(t * 3 + tx) * W * .008; c.beginPath(); c.moveTo(tx, wallY - towerH - H * .2); c.lineTo(tx + W * .045 + fw, wallY - towerH - H * .185); c.lineTo(tx, wallY - towerH - H * .17); c.closePath(); c.closePath(); c.fill(); c.fillStyle = '#3a2b42';
-      }
+      });
       // 窓の灯り
       c.fillStyle = 'rgba(255,210,120,0.85)';
-      for (let i = 0; i < 14; i++) {
+      times(14, i => {
         const wx = W * (.1 + rng() * .8), wy = wallY + H * (.03 + rng() * .28); c.fillRect(wx, wy, W * .008, H * .018);
-      }
+      });
       // 門アーチ
       c.fillStyle = 'rgba(20,12,26,0.8)'; c.beginPath(); c.arc(W * .5, H * .98, W * .06, Math.PI, 0); c.fill();
     } else if (pr === 'cave') {
@@ -8025,29 +7998,29 @@ if (typeof document !== 'undefined') (() => {
       const lg = c.createLinearGradient(W * .3, 0, W * .55, H); lg.addColorStop(0, 'rgba(200,225,255,0.22)'); lg.addColorStop(1, 'rgba(200,225,255,0)'); c.fillStyle = lg; c.beginPath(); c.moveTo(W * .32, 0); c.moveTo(W * .32, 0); c.lineTo(W * .48, 0); c.moveTo(W * .32, 0); c.lineTo(W * .48, 0); c.lineTo(W * .68, H); c.moveTo(W * .32, 0); c.lineTo(W * .48, 0); c.lineTo(W * .68, H); c.lineTo(W * .4, H); c.closePath(); c.closePath(); c.fill();
       // 鍾乳石(天井から下がる三角)
       const rng = L.mulberry32(77); c.fillStyle = '#2a3242';
-      for (let i = 0; i < 12; i++) {
+      times(12, i => {
         const sx = rng() * W, sw = W * (.015 + rng() * .025), sh = H * (.06 + rng() * .14); c.beginPath(); c.moveTo(sx - sw, 0); c.moveTo(sx - sw, 0); c.lineTo(sx + sw, 0); c.moveTo(sx - sw, 0); c.lineTo(sx + sw, 0); c.lineTo(sx + (rng() - .5) * sw, sh); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 石筍(床から)
       c.fillStyle = '#232a38';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const sx = rng() * W, sw = W * (.02 + rng() * .03), sh = H * (.05 + rng() * .1); c.beginPath(); c.moveTo(sx - sw, H); c.moveTo(sx - sw, H); c.lineTo(sx + sw, H); c.moveTo(sx - sw, H); c.lineTo(sx + sw, H); c.lineTo(sx + (rng() - .5) * sw, H - sh); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 底の水面の輝き
       c.fillStyle = 'rgba(120,170,220,0.15)'; ell(.5,.97,W * .45,H * .05); c.strokeStyle = 'rgba(160,200,240,0.3)'; c.lineWidth = 1;
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const wy = H * (.9 + rng() * .08); const wx = rng() * W * .8, wl = W * (.05 + rng() * .1); c.beginPath(); c.moveTo(wx + Math.sin(t + i) * 6, wy); c.moveTo(wx + Math.sin(t + i) * 6, wy); c.lineTo(wx + wl + Math.sin(t + i) * 6, wy); c.stroke();
-      }
+      });
     } else if (pr === 'fireworks') {
       // 花火: 夜空 + 時間で打ち上がる放射状の花火 + 都市の明かり
       sky([[0,'#06091c'],[.75,'#101a3a'],[1,'#1c1430']]);
       // 都市の灯り(地平線近くの点)
       const rng = L.mulberry32(41); c.fillStyle = 'rgba(255,210,140,0.5)';
-      for (let i = 0; i < 40; i++) {
+      times(40, i => {
         c.fillRect(rng() * W, H * (.9 + rng() * .08), 2, 2);
-      }
+      });
       // 花火: 3発を時間オフセットでループ(上昇→放射→減衰)
-      for (let j = 0; j < 3; j++) {
+      times(3, j => {
         const cyc = ((t * .3 + j * .37) % 1); const fx = W * (.2 + .3 * j) + Math.sin(j * 7) * W * .06; const fyy = H * (.22 + .12 * j); const hue = [330, 45, 200][j];
         if (cyc < .3) {
           // 上昇中の弾
@@ -8057,25 +8030,25 @@ if (typeof document !== 'undefined') (() => {
         } else {
           const boom = (cyc - .3) / .7; const rr = boom * H * .16; const a = Math.max(0, (1 - boom) * .9); const rng2 = L.mulberry32(100 + j); // 0→1 膨張&減衰
           ctx.fillStyle = `hsla(${hue},90%,${65 + boom * 15}%,${a})`;
-          for (let k = 0; k < 26; k++) {
+          times(26, k => {
             const ang = k * .2418 + rng2() * .15; const d = rr * (.6 + .4 * rng2()); dotP(fx + Math.cos(ang) * d, fyy + Math.sin(ang) * d + boom * boom * H * .05, 1.6 + (1 - boom) * 1.4);
-          }
+          });
         }
-      }
+      });
     } else if (pr === 'cloudsea') {
       // 雲海: 暁の空 + 雲の海 + 突き出る峰々 + 朝日
       sky([[0,'#ffb37a'],[.45,'#ffd0a8'],[.6,'#e8f0f8'],[1,'#c8d8e8']]); c.fillStyle = 'rgba(255,235,200,0.9)'; dot(.68,.3,H * .06);
       // 峰々(雲から突き出る)
       const rng = L.mulberry32(17); c.fillStyle = '#5a6a80';
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const px2 = W * (.1 + .2 * i) + (rng() - .5) * W * .08; const ph2 = H * (.1 + rng() * .12); c.beginPath(); c.moveTo(px2 - W * .09, H * .62); c.moveTo(px2 - W * .09, H * .62); c.lineTo(px2, H * .62 - ph2); c.moveTo(px2 - W * .09, H * .62); c.lineTo(px2, H * .62 - ph2); c.lineTo(px2 + W * .09, H * .62); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 雲の海(横長の重なる白楕円+ゆっくり流れる)
-      for (let i = 0; i < 30; i++) {
+      times(30, i => {
         const cx2 = ((rng() + t * .012) % 1) * W * 1.2 - W * .1; const cy2 = H * (.6 + rng() * .35); const cr = H * (.04 + rng() * .07);
         c.fillStyle = `rgba(255,255,255,${.5 + .4 * rng()})`;
         ellP(cx2, cy2, cr * 1.9, cr);
-      }
+      });
     } else if (pr === 'lake') {
       // 湖畔: 空 + 山並み + 湖面の反射 + さざ波
       sky([[0,'#a8d8f0'],[.45,'#d8ecf6'],[.5,'#7fa8c8'],[1,'#3a6080']]); const hr2 = H * .5; // 水面ライン
@@ -8090,10 +8063,9 @@ if (typeof document !== 'undefined') (() => {
         c.lineTo(W, H * base); c.closePath(); c.fill(); c.restore(); c.globalAlpha = 1;
       }
       // さざ波(ゆれる水平線)
-      c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 1.2; const rng3 = L.mulberry32(55);
-      for (let i = 0; i < 12; i++) {
+      c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 1.2; scat(55, 12, (rng3, i) => {
         const wy = hr2 + H * (.05 + rng3() * .4); const wx = rng3() * W * .8; const wl = W * (.06 + rng3() * .14); c.beginPath(); c.moveTo(wx + Math.sin(t * 1.2 + i) * 8, wy); c.lineTo(wx + wl + Math.sin(t * 1.2 + i) * 8, wy); c.stroke();
-      }
+      });
     } else if (pr === 'shrine') {
       // 神社: 夕暮れ空 + 大きな鳥居シルエット + 灯籠の灯り + 遠山
       sky([[0,'#2b2150'],[.5,'#8a3a5c'],[.75,'#e0703f'],[1,'#3a2030']]);
@@ -8110,9 +8082,9 @@ if (typeof document !== 'undefined') (() => {
       c.beginPath(); c.moveTo(tx - tw * .52, ty + H * .02); c.quadraticCurveTo(tx, ty - H * .05, tx + tw * .52, ty + H * .02); c.lineTo(tx + tw * .52, ty + H * .07); c.quadraticCurveTo(tx, ty, tx - tw * .52, ty + H * .07); c.closePath(); c.closePath(); c.fill(); c.fillRect(tx - pw / 2, ty - H * .01, pw, H * .18); // 額束(中央柱)
       // 灯籠の灯り
       const rng = L.mulberry32(99); c.fillStyle = 'rgba(255,190,110,0.85)';
-      for (let i = 0; i < 8; i++) {
+      times(8, i => {
         const lx = (rng() < .5 ? -1 : 1) * (W * .18 + rng() * W * .22) + W * .5; const ly = H * (.72 + rng() * .18); dotP(lx, ly, 3 + rng() * 3);
-      }
+      });
     } else if (pr === 'snowfield') {
       // 雪原: 曇り空 + 白い起伏 + 遠景の針葉樹 + 降る雪
       sky([[0,'#aebfcb'],[.5,'#d5e0e8'],[.51,'#eef4f8'],[1,'#d8e6ee']]);
@@ -8120,17 +8092,17 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#f4f9fc'; c.beginPath(); c.beginPath(); c.moveTo(0, H); c.quadraticCurveTo(W * .3, H * .55, W * .6, H * .66); c.quadraticCurveTo(W * .85, H * .74, W, H * .64); c.quadraticCurveTo(W * .85, H * .74, W, H * .64); c.lineTo(W, H); c.quadraticCurveTo(W * .85, H * .74, W, H * .64); c.lineTo(W, H); c.closePath(); c.quadraticCurveTo(W * .85, H * .74, W, H * .64); c.lineTo(W, H); c.closePath(); c.fill();
       // 遠景の木
       const rng = L.mulberry32(48); c.fillStyle = 'rgba(70,95,90,0.5)';
-      for (let i = 0; i < 7; i++) {
+      times(7, i => {
         const tx = rng() * W, th = H * (.06 + rng() * .05), ty = H * (.52 + rng() * .04);
-        for (let k = 0; k < 3; k++) {
+        times(3, k => {
           c.beginPath(); c.moveTo(tx - th * (.7 - k * .2), ty - k * th * .3); c.lineTo(tx + th * (.7 - k * .2), ty - k * th * .3); c.lineTo(tx, ty - k * th * .3 - th * .45); c.closePath(); c.closePath(); c.fill();
-        }
-      }
+        });
+      });
       // 降る雪
       c.fillStyle = 'rgba(255,255,255,0.9)';
-      for (let i = 0; i < 40; i++) {
+      times(40, i => {
         const sx = (rng() + t * .03 * (0.5 + rng())) % 1 * W; const sy = (rng() + t * .08 * (0.6 + rng() * .8)) % 1 * H; dotP(sx, sy, 1 + rng() * 2);
-      }
+      });
     } else if (pr === 'meadow') {
       // 草原: 青空 + なだらかな緑の丘2層 + 草花 + 飛ぶ蝶
       sky([[0,'#8fd0ff'],[.55,'#cdeffa'],[.56,'#79c26a'],[1,'#4e9a44']]);
@@ -8139,19 +8111,19 @@ if (typeof document !== 'undefined') (() => {
       c.quadraticCurveTo(W * .6, H * .55, W, H * .78); c.lineTo(W, H); c.closePath(); c.quadraticCurveTo(W * .6, H * .55, W, H * .78); c.lineTo(W, H); c.closePath(); c.fill();
       // 花
       const rng = L.mulberry32(75); const fcols = ['#ff8fb3', '#fff3b0', '#ffffff', '#ffd166'];
-      for (let i = 0; i < 26; i++) {
+      times(26, i => {
         const fx = rng() * W, fy = H * (.62 + rng() * .34); c.fillStyle = fcols[Math.floor(rng() * fcols.length)];
-        for (let k = 0; k < 4; k++) {
+        times(4, k => {
           dotP(fx + Math.cos(k * 1.57) * 4, fy + Math.sin(k * 1.57) * 4, 3.5);
-        }
-      }
+        });
+      });
       // 蝶
       const bt = t * 2;
       for (const [bx0, by0, ph] of [[.25, .35, 0], [.7, .42, 2]]) {
         const bx = W * (bx0 + .06 * Math.sin(bt + ph)), by = H * (by0 + .04 * Math.sin(bt * 1.7 + ph)); c.fillStyle = 'rgba(255,255,255,0.85)';
-        for (const s of [-1, 1]) {
+        ([-1, 1]).forEach(s => {
           ellP(bx + s * 6, by, 5 * (0.6 + .4 * Math.abs(Math.sin(bt * 3 + ph))), 8, s * .3);
-        }
+        });
       }
     } else if (pr === 'volcano') {
       // 火山: 暗い空 + 噴火する山 + 火の粉 + 溶岩の帯
@@ -8160,33 +8132,33 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#241317'; c.beginPath(); c.moveTo(mx - W * .45, mbot); c.moveTo(mx - W * .45, mbot); c.lineTo(mx - W * .08, mtop); c.moveTo(mx - W * .45, mbot); c.lineTo(mx - W * .08, mtop); c.lineTo(mx + W * .08, mtop); c.moveTo(mx - W * .45, mbot); c.lineTo(mx - W * .08, mtop); c.lineTo(mx + W * .08, mtop); c.lineTo(mx + W * .45, mbot); c.closePath(); c.closePath(); c.fill();
       // 火口の輝き + 溶岩筋
       c.fillStyle = 'rgba(255,90,40,0.9)'; ellP(mx, mtop + H * .02, W * .08, H * .025); c.strokeStyle = 'rgba(255,120,50,0.75)'; c.lineWidth = H * .02; c.lineCap = 'round'; const rng = L.mulberry32(84);
-      for (const s of [-1, 1]) {
+      ([-1, 1]).forEach(s => {
         c.beginPath(); c.beginPath(); c.moveTo(mx + s * W * .05, mtop + H * .03); c.quadraticCurveTo(mx + s * W * .14, mtop + H * .3, mx + s * W * .22, mbot); c.stroke();
-      }
+      });
       // 火の粉
       c.fillStyle = 'rgba(255,150,70,0.8)';
-      for (let i = 0; i < 22; i++) {
+      times(22, i => {
         const fx = mx + (rng() - .5) * W * .5; const fy = mtop - ((rng() + t * .15) % 1) * H * .5; const fr = 1 + rng() * 3; dotP(fx, fy, fr);
-      }
+      });
       // 噴煙
       c.fillStyle = 'rgba(60,45,50,0.5)';
-      for (let i = 0; i < 6; i++) {
+      times(6, i => {
         const sx = mx + Math.sin(t * .6 + i) * W * .05 + (i - 3) * W * .02; const sy = mtop - H * (.08 + i * .07); dotP(sx, sy, H * (.05 + i * .015));
-      }
+      });
     } else if (pr === 'rainbow') {
       // 虹: 淡い空 + 同心円弧の7色虹 + 両端の雲
       sky([[0,'#bfe3ff'],[1,'#eaf6ff']]); const rcx = W * .5, rcy = H * .95, rmax = H * .78; const cols = ['#ff5a5a', '#ff9f43', '#ffd43b', '#69db7c', '#4dabf7', '#748ffc', '#b197fc'];
-      for (let i = 0; i < 7; i++) {
+      times(7, i => {
         c.strokeStyle = cols[i]; c.lineWidth = rmax / 7; c.globalAlpha = .65; c.beginPath(); c.arc(rcx, rcy, rmax - i * rmax / 7 - rmax / 14, Math.PI, Math.PI * 2); c.stroke();
-      }
+      });
       c.globalAlpha = 1;
       // 雲(虹の両端)
       const rng = L.mulberry32(63); c.fillStyle = 'rgba(255,255,255,0.9)';
-      for (const cx of [rcx - rmax * .8, rcx + rmax * .8]) {
-        for (let k = 0; k < 5; k++) {
+      ([rcx - rmax * .8, rcx + rmax * .8]).forEach(cx => {
+        times(5, k => {
           dotP(cx + (rng() - .5) * W * .14, rcy - rng() * H * .06, 14 + rng() * 16);
-        }
-      }
+        });
+      });
     } else if (pr === 'mtn') {
       // 山並み: 朝焼けの空 + 稜線シルエット2枚 + 朝日
       sky([[0,'#ffb37a'],[.4,'#ffd9b0'],[.7,'#aebfd0']]); c.fillStyle = 'rgba(255,235,200,0.9)'; dot(.6,.38,H * .07);
@@ -8200,26 +8172,24 @@ if (typeof document !== 'undefined') (() => {
       }
     } else if (pr === 'space') {
       // 宇宙: 漆黒 + 星々 + リング付き惑星(土星風)
-      sky([[0,'#03040c'],[1,'#0d1230']]); const rng = L.mulberry32(414);
-      for (let i = 0; i < 130; i++) {
+      sky([[0,'#03040c'],[1,'#0d1230']]); scat(414, 130, (rng, i) => {
         const tw = .4 + .6 * Math.abs(Math.sin(t * .8 + i * 2.3));
         c.fillStyle = `rgba(255,255,255,${.2 + .6 * tw * rng()})`;
         c.fillRect(rng() * W, rng() * H, 1.4, 1.4);
-      }
+      });
       // 惑星: 帯グラデーションの球体 + 傾いたリング
       const px2 = W * .72, py2 = H * .4, pr2 = H * .2; const pg = c.createLinearGradient(px2 - pr2, py2 - pr2, px2 + pr2, py2 + pr2); pg.addColorStop(0, '#e8c98a'); pg.addColorStop(.5, '#b98d4f'); pg.addColorStop(1, '#6e4f2a'); c.fillStyle = pg; dotP(px2, py2, pr2); c.strokeStyle = 'rgba(230,210,170,0.55)'; c.lineWidth = H * .02; ellPS(px2, py2 + pr2 * .1, pr2 * 1.8, pr2 * .45, -.18);
     } else if (pr === 'sea') {
       // 海中: 深い青 + 差し込む光の柱 + 昇る泡(決定論的)
       sky([[0,'#0a4d7a'],[.6,'#0b3a63'],[1,'#061f38']]);
       // 光の柱(斜めの柔らかい帯)
-      for (let i = 0; i < 5; i++) {
+      times(5, i => {
         const lx = W * (.15 + i * .18); const g2 = c.createLinearGradient(lx, 0, lx + W * .12, H); g2.addColorStop(0, 'rgba(180,230,255,0.18)'); g2.addColorStop(1, 'rgba(180,230,255,0)'); c.fillStyle = g2; c.beginPath(); c.moveTo(lx, 0); c.moveTo(lx, 0); c.lineTo(lx + W * .05, 0); c.lineTo(lx + W * .05 + W * .14, H); c.lineTo(lx + W * .05 + W * .14, H); c.lineTo(lx + W * .14, H); c.closePath(); c.closePath(); c.fill();
-      }
+      });
       // 昇る泡
-      const rng = L.mulberry32(202);
-      for (let i = 0; i < 22; i++) {
+      scat(202, 22, (rng, i) => {
         const bx = rng() * W, r2 = 1.5 + rng() * 4; const by = (1 - ((rng() + t * (.03 + .03 * rng())) % 1)) * H; c.strokeStyle = 'rgba(200,235,255,0.5)'; c.lineWidth = 1; dotPS(bx + Math.sin(t + i) * 4, by, r2);
-      }
+      });
     } else if (pr === 'desert') {
       // 砂漠: 空+大きな太陽+うねる砂丘(決定論的)
       sky([[0,'#ffd9a0'],[.45,'#ffedcf'],[.46,'#e8b968'],[1,'#c98f3d']]); c.fillStyle = 'rgba(255,240,200,0.95)'; dot(.5,.3,H * .11);
@@ -8233,12 +8203,11 @@ if (typeof document !== 'undefined') (() => {
       }
     } else if (pr === 'aurora') {
       // オーロラ: 夜空 + ゆらめく光のカーテン + 星
-      sky([[0,'#050a18'],[1,'#101c30']]); const rng = L.mulberry32(777);
-      for (let i = 0; i < 60; i++) {
+      sky([[0,'#050a18'],[1,'#101c30']]); scat(777, 60, (rng, i) => {
         const tw = .3 + .7 * Math.abs(Math.sin(t * .7 + i * 1.9));
         c.fillStyle = `rgba(255,255,255,${.2 + .55 * tw * rng()})`;
         c.fillRect(rng() * W, rng() * H * .7, 1.3, 1.3);
-      }
+      });
       // 光のカーテン: 縦波の半透明帯を色違いで重ねる
       for (const [hue, ph0, amp] of [[140, 0, .5], [190, 2.1, .34], [280, 4.2, .22]]) {
         c.fillStyle = `hsla(${hue},85%,60%,${amp * .4})`;
@@ -8253,10 +8222,10 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#12351f'],[.6,'#1d4d2a'],[1,'#0e2413']]);
       // 木漏れ日(柔らかい光斑)
       const rng = L.mulberry32(313);
-      for (let i = 0; i < 10; i++) {
+      times(10, i => {
         c.fillStyle = `rgba(230,255,190,${.05 + .08 * rng()})`;
         dotP(rng() * W, rng() * H * .5, 10 + rng() * 26);
-      }
+      });
       // 前景の針葉樹(2段三角)
       for (let i = 0; i < 9; i++) {
         const tx = rng() * W, th = H * (.3 + rng() * .28), tw = th * .42, ty = H;
@@ -8271,10 +8240,9 @@ if (typeof document !== 'undefined') (() => {
       // 太陽
       c.fillStyle = 'rgba(255,245,200,0.95)'; dot(.78,.18,H * .09);
       // 波の輝き線(ゆっくり流れる)
-      c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = 1.4; const rng = L.mulberry32(909);
-      for (let i = 0; i < 14; i++) {
+      c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = 1.4; scat(909, 14, (rng, i) => {
         const wy = H * (.54 + rng() * .22), wl = W * (.06 + rng() * .18); const wx = ((rng() + t * .02) % 1) * W; c.globalAlpha = .3 + .4 * rng(); c.beginPath(); c.moveTo(wx, wy); c.lineTo(wx + wl, wy); c.stroke();
-      }
+      });
       c.globalAlpha = 1;
     } else if (pr === 'grid') {
       // サイバー格子: シンセウェイブ風 — 暗い空 + 消失点に収束する発光格子
@@ -8284,9 +8252,9 @@ if (typeof document !== 'undefined') (() => {
         c.beginPath(); c.moveTo(W / 2 + i * W * .06, horizon); c.lineTo(W / 2 + i * W * .3, H); c.stroke();
       }
       // 横線: スクロールする透視線
-      for (let k = 0; k < 9; k++) {
+      times(9, k => {
         const f = ((k / 9 + t * .12) % 1); const y = horizon + f * f * (H - horizon); c.globalAlpha = .25 + .55 * f; c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke();
-      }
+      });
       c.globalAlpha = 1;
       // 地平線の輝き
       const hg = c.createLinearGradient(0, horizon - 14, 0, horizon + 14); hg.addColorStop(0, 'rgba(255,110,200,0)'); hg.addColorStop(.5, 'rgba(255,150,220,0.55)'); hg.addColorStop(1, 'rgba(255,110,200,0)'); c.fillStyle = hg; c.fillRect(0, horizon - 14, W, 28);
