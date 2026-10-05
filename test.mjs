@@ -510,7 +510,7 @@ const mkUI = (seed, opts = {}) => {
     Blob: class { constructor(parts, opts) { this.parts = parts; this.type = opts && opts.type } },
     File: class { constructor(p, n, o) { this.name = n; this.type = o && o.type } },
     FileReader: class { readAsDataURL() { setTimeout(() => this.onload && this.onload({ target: { result: 'data:,' } }), 0) } },
-    MediaRecorder: class { static isTypeSupported() { return true } start() {} stop() { if (this.onstop) this.onstop() } requestData() {} },
+    MediaRecorder: class { static isTypeSupported() { return true } constructor() { this.state = 'inactive'; (h.recs ||= []).push(this) } start() { this.state = 'recording' } pause() { this.state = 'paused' } resume() { this.state = 'recording' } stop() { this.state = 'inactive'; if (this.onstop) this.onstop() } requestData() {} },
     Math: Object.assign(Object.create(Math), { random: () => { h.rs = ((h.rs || 0) * 1103515245 + 12345) % 2147483648; return h.rs / 2147483648 } }),
     Uint8ClampedArray, Uint8Array, Promise,
   };
@@ -648,6 +648,13 @@ const mkUI = (seed, opts = {}) => {
   ok(vEl.paused === true, 'visibilitychange pauses bg video when hidden');
   documentStub.hidden = false; (docListeners.visibilitychange || []).forEach(f => f());
   ok(vEl.paused === false, 'visibilitychange resumes bg video when visible');
+  getEl('btn-rec').click();
+  const recEl = (h.recs || []).pop();
+  documentStub.hidden = true; (docListeners.visibilitychange || []).forEach(f => f());
+  const recHidden = recEl.state;
+  documentStub.hidden = false; (docListeners.visibilitychange || []).forEach(f => f());
+  ok(recHidden === 'paused' && recEl.state === 'recording', 'recorder pauses when hidden, resumes when visible');
+  getEl('btn-rec').click();
   const ls2 = sandbox2.localStorage; const origSet = ls2.setItem;
   ls2.setItem = () => { throw new Error('QuotaExceededError') };
   let qErr = null;

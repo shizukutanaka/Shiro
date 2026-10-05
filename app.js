@@ -8394,6 +8394,9 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { const v = mediaV(); if (v) { v._wasPlaying = !v.paused; v.pause() } const bv = bgV(); if (bv) { bv._wasPlaying = !bv.paused; bv.pause() } }
     else if (!$('chk-freeze').checked) { const v = mediaV(); if (v && v._wasPlaying) v.play().catch(() => {}); const bv = bgV(); if (bv && bv._wasPlaying) bv.play().catch(() => {}) }
+    const rec = state.recorder;
+    if (rec && rec.state === 'recording' && document.hidden) rec.pause();
+    else if (rec && rec.state === 'paused' && !document.hidden) rec.resume();
   });
 
   clk('btn-random', () => {
