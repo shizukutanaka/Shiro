@@ -8475,10 +8475,21 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   function renderFavs() {
     const bar = $('fav-bar'); bar.innerHTML = '';
     for (const f of state.favs) {
-      const d = mk('div'); d.className = 'fav'; d.title = f.name; d.draggable = true;
+      const d = mk('div'); d.className = 'fav'; d.title = f.name; d.draggable = true; d.tabIndex = 0; d.role = 'button';
       d.innerHTML = `<img alt=""><span></span><button class="del" title="削除">×</button>`;
       d.querySelector('img').src = f.thumb || ''; d.querySelector('span').textContent = f.name;
-      d.addEventListener('click', () => { state.params = L.clampParams(f.params); syncUI() });
+      const apply = () => { state.params = L.clampParams(f.params); syncUI() };
+      const del = () => { state.favs = state.favs.filter(x => x.id !== f.id); saveFavs(); renderFavs() };
+      d.addEventListener('click', apply);
+      d.addEventListener('keydown', ev => {
+        ev.stopPropagation(); const i = state.favs.findIndex(x => x.id === f.id);
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); apply() }
+        else if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); del() }
+        else if (ev.shiftKey && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight')) {
+          ev.preventDefault(); const j = ev.key === 'ArrowLeft' ? i - 1 : i + 1;
+          if (i >= 0 && j >= 0 && j < state.favs.length) { const [mv] = state.favs.splice(i, 1); state.favs.splice(j, 0, mv); saveFavs(); renderFavs() }
+        }
+      });
 
       d.addEventListener('dragstart', ev => { ev.dataTransfer.setData('text/plain', f.id); ev.dataTransfer.effectAllowed = 'move' });
       d.addEventListener('dragover', ev => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move' });
@@ -8493,11 +8504,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         ev.stopPropagation(); const n = prompt('新しい名前', f.name);
         if (n !== null) { f.name = n || f.name; saveFavs(); renderFavs() }
       });
-      d.querySelector('.del').addEventListener('click', ev => {
-        ev.stopPropagation();
-        state.favs = state.favs.filter(x => x.id !== f.id);
-        saveFavs(); renderFavs()
-      });
+      d.querySelector('.del').addEventListener('click', ev => { ev.stopPropagation(); del() });
       bar.appendChild(d)
     }
   }
