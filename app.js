@@ -1,7 +1,7 @@
 'use strict';
 
 const ShiroLib = (() => {
-  const PI = Math.PI, MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, FL = Math.floor;
+  const PI = Math.PI, MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, FL = Math.floor, PW = Math.pow, SG = Math.sign, RN = Math.random;
 
   const clamp01 = v => MN(1, MX(0, v));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -180,7 +180,7 @@ const ShiroLib = (() => {
   }
 
   function drawCastShadow(c, silCanvas, wPix, hPix, cx, baseY, dir, alpha, soft) {
-      const gA=v=>c.globalAlpha = v, flT=v=>c.filter = v;
+      const {gA, flT} = ctxH(c);
     const skew = (dir - .5) * 1.6;
     if (AB(skew) < .05 || alpha <= 0) return;
     c.save();
@@ -189,7 +189,7 @@ const ShiroLib = (() => {
   }
 
   function drawRimLight(c, silCanvas, wPix, hPix, cx, baseY, dir, strength) {
-      const gA=v=>c.globalAlpha = v, flT=v=>c.filter = v;
+      const {gA, flT} = ctxH(c);
     if (strength <= 0) return;
     const dx = (dir - .5) * -wPix * .08; const g = 1.06; c.save();
     flT(`blur(${MX(1, wPix * .05)}px)`);
@@ -197,7 +197,7 @@ const ShiroLib = (() => {
   }
 
   function drawStickerOutline(c, silCanvas, wPix, hPix, cx, baseY, strength) {
-      const gA=v=>c.globalAlpha = v;
+      const {gA} = ctxH(c);
     if (strength <= 0) return;
     const r = MX(1, RD(strength * wPix * .045)); c.save(); gA(MN(1, strength * 1.5));
     spt(0, 16, i => {
@@ -207,7 +207,7 @@ const ShiroLib = (() => {
   }
 
   function drawVignette(c, w, h, strength) {
-      const FS=v=>c.fillStyle = v;
+      const {FS} = ctxH(c);
     if (strength <= 0) return;
     const g = c.createRadialGradient(w / 2, h / 2, MN(w, h) * .35, w / 2, h / 2, MX(w, h) * .78); g.addColorStop(0, 'rgba(0,0,0,0)');
     g.addColorStop(1, `rgba(0,0,0,${strength * .45})`);
@@ -215,7 +215,7 @@ const ShiroLib = (() => {
   }
 
   function drawWatermark(c, text, w, h, opacity, pos = 'br') {
-      const fT=v=>c.font = v, tA=v=>c.textAlign = v, FS=v=>c.fillStyle = v;
+      const {fT, tA, FS} = ctxH(c);
     if (!text || opacity <= 0) return;
     const fs = MX(12, RD(h * .032)); c.save();
     fT(`600 ${fs}px "Hiragino Sans","Segoe UI",sans-serif`);
@@ -274,7 +274,7 @@ const ShiroLib = (() => {
       }
       case 'bow': {
 
-        const b = Math.pow(MX(0, S(1.4)), .7); Object.assign(q, {headTilt: b * .55, bob: -b * .05, lArm: .05, rArm: .05, lElb: 0, rElb: 0});break
+        const b = PW(MX(0, S(1.4)), .7); Object.assign(q, {headTilt: b * .55, bob: -b * .05, lArm: .05, rArm: .05, lElb: 0, rElb: 0});break
       }
       case 'stretch': {
 
@@ -283,7 +283,7 @@ const ShiroLib = (() => {
       }
       case 'sleep': {
 
-        const cyc = (tt % 3) / 3; const d = cyc < .7 ? Math.pow(cyc / .7, 2) : MX(0, 1 - (cyc - .7) / .3); Object.assign(q, {headTilt: d * .4, bob: -d * .02, lean: d * .06, lArm: .06, rArm: .06, lElb: .1, rElb: .1});break
+        const cyc = (tt % 3) / 3; const d = cyc < .7 ? PW(cyc / .7, 2) : MX(0, 1 - (cyc - .7) / .3); Object.assign(q, {headTilt: d * .4, bob: -d * .02, lean: d * .06, lArm: .06, rArm: .06, lElb: .1, rElb: .1});break
       }
       case 'flip': {
 
@@ -295,7 +295,7 @@ const ShiroLib = (() => {
       }
       case 'peek': {
 
-        const ph = (tt % 4) / 4; const d = SI(ph * PI * 2); const e = MN(1, AB(d) * 2.4); Object.assign(q, {lean: .3 * Math.sign(d) * e, sway: .09 * d, headTilt: -.4 * Math.sign(d) * e, lArm: .14, rArm: .14});
+        const ph = (tt % 4) / 4; const d = SI(ph * PI * 2); const e = MN(1, AB(d) * 2.4); Object.assign(q, {lean: .3 * SG(d) * e, sway: .09 * d, headTilt: -.4 * SG(d) * e, lArm: .14, rArm: .14});
         break
       }
       case 'cheer': {
@@ -330,7 +330,7 @@ const ShiroLib = (() => {
       }
       case 'kick': {
 
-        const kk = Math.pow(A(3), 3); Object.assign(q, {rThigh: -1.3 * kk, rKnee: .3, lean: -.12 * kk, lArm: -.3 * kk, rArm: .3 * kk, headTilt: -.08 * kk});break
+        const kk = PW(A(3), 3); Object.assign(q, {rThigh: -1.3 * kk, rKnee: .3, lean: -.12 * kk, lArm: -.3 * kk, rArm: .3 * kk, headTilt: -.08 * kk});break
       }
       case 'float': {
 
@@ -484,7 +484,7 @@ const ShiroLib = (() => {
       }
       case 'chacha': {
 
-        const cc = tt * 4.4; const step = SI(cc); const trip = Math.sign(SI(cc * 1.5)) * MN(1, AB(SI(cc * 1.5)) * 3); Object.assign(q, {sway: .1 * trip, bob: .02 * AB(step), lKnee: .3 * MX(0, step), rKnee: -.3 * MX(0, -step), lArm: .55 + .35 * step, rArm: .55 - .35 * step, lElb: .6, rElb: .6, lean: .04 * trip});
+        const cc = tt * 4.4; const step = SI(cc); const trip = SG(SI(cc * 1.5)) * MN(1, AB(SI(cc * 1.5)) * 3); Object.assign(q, {sway: .1 * trip, bob: .02 * AB(step), lKnee: .3 * MX(0, step), rKnee: -.3 * MX(0, -step), lArm: .55 + .35 * step, rArm: .55 - .35 * step, lElb: .6, rElb: .6, lean: .04 * trip});
         break
       }
       case 'pasodoble': {
@@ -1157,7 +1157,7 @@ const ShiroLib = (() => {
   }
 
   function capsule(ctx, x1, y1, x2, y2, w, col, line) {
-      const lC=v=>ctx.lineCap = v, SS=v=>ctx.strokeStyle = v, lnW=v=>ctx.lineWidth = v;
+      const {lC, SS, lnW} = ctxH(ctx);
     lC('round');
     if (line > 0) {
       SS('rgba(40,44,54,.85)'); lnW(w + line); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
@@ -1166,7 +1166,7 @@ const ShiroLib = (() => {
   }
 
   function contactShadow(ctx, cx, baseY, rx, alpha, col) {
-      const FS=v=>ctx.fillStyle = v;
+      const {FS} = ctxH(ctx);
     if (alpha <= 0 || rx <= 0) return;
     const g = ctx.createRadialGradient(cx, baseY, 0, cx, baseY, rx);
     g.addColorStop(0, col || `rgba(0,0,0,${alpha})`);
@@ -1178,7 +1178,7 @@ const ShiroLib = (() => {
   }
 
   function drawGlow(ctx, silCanvas, wPix, hPix, cx, baseY, strength) {
-      const gA=v=>ctx.globalAlpha = v, flT=v=>ctx.filter = v;
+      const {gA, flT} = ctxH(ctx);
     if (strength <= 0) return;
     ctx.save(); gA(strength * .55);
     flT(`blur(${RD(4 + strength * 14)}px)`);
@@ -1186,7 +1186,7 @@ const ShiroLib = (() => {
   }
 
   function drawReflection(ctx, src, cx, baseY, wPix, hPix, strength) {
-      const gA=v=>ctx.globalAlpha = v;
+      const {gA} = ctxH(ctx);
     if (strength <= 0) return;
     ctx.save(); gA(strength * .38); ctx.translate(cx, baseY); ctx.scale(1, -1); ctx.drawImage(src, -wPix / 2, -hPix, wPix, hPix); ctx.restore()
   }
@@ -1370,7 +1370,7 @@ const ShiroLib = (() => {
   }
 
   function drawBubble(c, text, x, topY, W, H, hue) {
-      const lnW=v=>c.lineWidth = v, fT=v=>c.font = v, tA=v=>c.textAlign = v, FS=v=>c.fillStyle = v, SS=v=>c.strokeStyle = v;
+      const {lnW, fT, tA, FS, SS} = ctxH(c);
     if (!text) return;
     const fs = MX(13, RD(H * .03)); c.save();
     fT(`600 ${fs}px "Hiragino Sans","Segoe UI",sans-serif`);
@@ -3621,12 +3621,12 @@ const ShiroLib = (() => {
   }
 
   function defaultBackdrop(c, W, H) {
-      const FS=v=>c.fillStyle = v;
+      const {FS} = ctxH(c);
     const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2a3550'); g.addColorStop(.6, '#3b4a6b'); g.addColorStop(1, '#1d2230'); FS(g); c.fillRect(0, 0, W, H)
   }
 
   function drawCover(c, img, fit, blurPx, sat, con, offX, offY, zoom = 0, W, H) {
-      const flT=v=>c.filter = v;
+      const {flT} = ctxH(c);
     const iw = img.naturalWidth || img.videoWidth, ih = img.naturalHeight || img.videoHeight;
     if (!iw || !ih) return;
     const s = (fit === 'contain' ? MN(W / iw, H / ih) : MX(W / iw, H / ih)) * (1 + zoom); const dw = iw * s, dh = ih * s;
@@ -3938,7 +3938,7 @@ const ShiroLib = (() => {
       FS('rgba(200,180,230,.08)'); sV(); tR(W * .5, H * .22); rO(-.3); rect(-W, -H * .06, W * 2, H * .12); rS();
 
       scat(777, 90, (rngU, i) => {
-        const sx = W * rngU(); const sy = H * .48 * Math.pow(rngU(), 1.4);
+        const sx = W * rngU(); const sy = H * .48 * PW(rngU(), 1.4);
         FS(`rgba(255,250,240,${.3 + rngU() * .7})`);
         rect(sx, sy, 1.5, 1.5)
       });
@@ -3952,7 +3952,7 @@ const ShiroLib = (() => {
       FS(lg(0, H * .5, 0, H,[0, '#3a2058',1, '#150a30'])); bnd(.5);
 
       scat(777, 90, (rngV, i) => {
-        const sx = W * rngV(); const sy = H - H * .48 * Math.pow(rngV(), 1.4);
+        const sx = W * rngV(); const sy = H - H * .48 * PW(rngV(), 1.4);
         FS(`rgba(255,250,240,${.15 + rngV() * .35})`);
         rect(sx, sy, 1.5, 1.5)
       });
@@ -8109,13 +8109,13 @@ const ShiroLib = (() => {
     defaultParams, clampParams, randomParams, drawBubble,
     serializePreset, parsePreset, parseFavList,
     keyAlpha, erodeAlpha, despill, blinkOpen, drawParticles, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory, drawBackdrop, shined,
-    MIME_CANDIDATES, pickMime,
+    MIME_CANDIDATES, pickMime, ctxH,
   }
 })();
 if (typeof globalThis !== 'undefined') globalThis.ShiroLib = ShiroLib;
 
 if (typeof document !== 'undefined') (() => {
-    const PI = Math.PI, MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, FL = Math.floor;
+    const PI = Math.PI, MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, FL = Math.floor, PW = Math.pow, SG = Math.sign, RN = Math.random;
 const K0='#4a3828', K1='rgba(250,252,255,.8)';
   const L = ShiroLib;
   const $ = id => document.getElementById(id);
@@ -8173,7 +8173,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   }
   const shnCv = mk('canvas'), snc = shnCv.getContext('2d');
   function drawMedia(c, t) {
-      const gA=v=>c.globalAlpha = v, flT=v=>c.filter = v;
+      const {gA, flT} = L.ctxH(c);
     const el = state.media.el; const iw = el.naturalWidth || el.videoWidth, ih = el.naturalHeight || el.videoHeight;
     if (!iw || !ih) return;
     const src = state.params.keyThresh > 0 ? keyedMediaCanvas() : el;
@@ -8218,7 +8218,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
   const t0 = performance.now();
   function frame() {
-      const gA=v=>ctx.globalAlpha = v, lnW=v=>ctx.lineWidth = v, fT=v=>ctx.font = v, tA=v=>ctx.textAlign = v, flT=v=>ctx.filter = v, FS=v=>ctx.fillStyle = v, SS=v=>ctx.strokeStyle = v;
+      const {gA, lnW, fT, tA, flT, FS, SS} = L.ctxH(ctx);
     const liveT = (performance.now() - t0) / 1000; const p = state.params;
 
     const t = state.frozenT !== null ? state.frozenT + (p.tOffset - .5) * 4 : liveT; ctx.clearRect(0, 0, W, H);
@@ -8226,7 +8226,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     const shaking = p.shake > 0 || p.camZoom > .02;
     if (shaking) {
 
-      const os = 1 + p.shake * .04 + SI(t * .6) * p.camZoom * .22; ctx.save(); ctx.translate(W / 2 + (Math.random() - .5) * p.shake * 16, H / 2 + (Math.random() - .5) * p.shake * 16); ctx.scale(os, os); ctx.translate(-W / 2, -H / 2)
+      const os = 1 + p.shake * .04 + SI(t * .6) * p.camZoom * .22; ctx.save(); ctx.translate(W / 2 + (RN() - .5) * p.shake * 16, H / 2 + (RN() - .5) * p.shake * 16); ctx.scale(os, os); ctx.translate(-W / 2, -H / 2)
     }
     L.drawBackdrop(ctx, p, t, state.bg, W, H);
 
@@ -8306,7 +8306,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     if (p.grain > 0) {
       ctx.save(); gA(p.grain * .15);
 
-      ctx.drawImage(grainCv(), -Math.random() * 64, -Math.random() * 64, W + 128, H + 128); ctx.restore()
+      ctx.drawImage(grainCv(), -RN() * 64, -RN() * 64, W + 128, H + 128); ctx.restore()
     }
     if (p.title) {
       const fs = 18 + p.titleSize * 66; ctx.save();
@@ -8399,7 +8399,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   });
 
   $('btn-random').addEventListener('click', () => {
-    state.params = L.randomParams(L.mulberry32((Math.random() * 4294967296) >>> 0)); syncUI()
+    state.params = L.randomParams(L.mulberry32((RN() * 4294967296) >>> 0)); syncUI()
   });
   $('btn-reset').addEventListener('click', () => { state.params = L.defaultParams(); syncUI() });
 
@@ -8528,7 +8528,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     const f = e.target.files[0]; if (!f) return;
     f.text().then(txt => {
       const list = L.parseFavList(txt);
-      for (const it of list) it.id = it.id || 'f' + Math.random().toString(36).slice(2);
+      for (const it of list) it.id = it.id || 'f' + RN().toString(36).slice(2);
       state.favs = state.favs.concat(list); saveFavs(); renderFavs(); err('')
     }).catch(() => err('お気に入りファイルを読み込めませんでした'));
     e.target.value = ''
