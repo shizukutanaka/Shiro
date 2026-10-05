@@ -6,7 +6,7 @@
  * 依存ゼロ・ビルド不要。純粋ロジックは ShiroLib に集約し test.mjs から検証する。
  */
 const ShiroLib = (() => {
-  const PI = Math.PI, MX = Math.max, MN = Math.min;
+  const PI = Math.PI, MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, FL = Math.floor;
 
   const clamp01 = v => MN(1, MX(0, v));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -103,16 +103,16 @@ const ShiroLib = (() => {
       const v = p ? Number(p[k]) : NaN; o[k] = clamp01(Number.isFinite(v) ? v : d[k]);
     }
     o.anim = ANIMS.includes(p && p.anim) ? p.anim : d.anim; o.bgFit = FITS.includes(p && p.bgFit) ? p.bgFit : d.bgFit; o.acc = ACCS.includes(p && p.acc) ? p.acc : d.acc; o.acc2 = ACCS.includes(p && p.acc2) ? p.acc2 : d.acc2; o.bgPreset = BGS.includes(p && p.bgPreset) ? p.bgPreset : d.bgPreset; o.watermark = String(p && p.watermark || '').slice(0, 60); o.bubble = String(p && p.bubble || '').slice(0, 24); o.title = String(p && p.title || '').slice(0, 40); o.eyeStyle = EYES.includes(p && p.eyeStyle) ? p.eyeStyle : d.eyeStyle; o.subjFx = SUBJFX.includes(p && p.subjFx) ? p.subjFx : d.subjFx;
-    o.grade = GRADES.includes(p && p.grade) ? p.grade : d.grade; o.blend = BLENDS.includes(p && p.blend) ? p.blend : d.blend; o.particles = PARTICLES.includes(p && p.particles) ? p.particles : d.particles; o.wmPos = WMPOS.includes(p && p.wmPos) ? p.wmPos : d.wmPos; o.hair = HAIRS.includes(p && p.hair) ? p.hair : d.hair; o.vidQ = VIDQS.includes(p && p.vidQ) ? p.vidQ : d.vidQ; o.flip = !!(p && p.flip); const sv = p ? +p.seed : NaN; o.seed = (Number.isFinite(sv) ? Math.abs(Math.floor(sv)) : d.seed) >>> 0;
+    o.grade = GRADES.includes(p && p.grade) ? p.grade : d.grade; o.blend = BLENDS.includes(p && p.blend) ? p.blend : d.blend; o.particles = PARTICLES.includes(p && p.particles) ? p.particles : d.particles; o.wmPos = WMPOS.includes(p && p.wmPos) ? p.wmPos : d.wmPos; o.hair = HAIRS.includes(p && p.hair) ? p.hair : d.hair; o.vidQ = VIDQS.includes(p && p.vidQ) ? p.vidQ : d.vidQ; o.flip = !!(p && p.flip); const sv = p ? +p.seed : NaN; o.seed = (Number.isFinite(sv) ? AB(FL(sv)) : d.seed) >>> 0;
     return o;
   }
 
   function randomParams(rng) {
     const p = defaultParams();
     for (const k of NUM_KEYS) p[k] = rng();
-    p.anim = ANIMS[Math.floor(rng() * ANIMS.length)]; p.acc = ACCS[Math.floor(rng() * ACCS.length)]; p.acc2 = rng() < .7 ? 'none' : ACCS[Math.floor(rng() * ACCS.length)]; p.eyeStyle = EYES[Math.floor(rng() * EYES.length)]; p.hair = HAIRS[Math.floor(rng() * HAIRS.length)]; p.hairHue = rng(); p.subjFx = rng() < .75 ? 'none' : SUBJFX[1 + Math.floor(rng() * 3)]; p.grade = rng() < .6 ? 'none' : GRADES[1 + Math.floor(rng() * 4)]; p.blend = rng() < .75 ? 'none' : BLENDS[1 + Math.floor(rng() * 3)]; p.flip = rng() < .35; p.bgPreset = rng() < .7 ? 'gradient' : BGS[1 + Math.floor(rng() * (BGS.length - 1))]; p.x = .3 + rng() * .4;
+    p.anim = ANIMS[FL(rng() * ANIMS.length)]; p.acc = ACCS[FL(rng() * ACCS.length)]; p.acc2 = rng() < .7 ? 'none' : ACCS[FL(rng() * ACCS.length)]; p.eyeStyle = EYES[FL(rng() * EYES.length)]; p.hair = HAIRS[FL(rng() * HAIRS.length)]; p.hairHue = rng(); p.subjFx = rng() < .75 ? 'none' : SUBJFX[1 + FL(rng() * 3)]; p.grade = rng() < .6 ? 'none' : GRADES[1 + FL(rng() * 4)]; p.blend = rng() < .75 ? 'none' : BLENDS[1 + FL(rng() * 3)]; p.flip = rng() < .35; p.bgPreset = rng() < .7 ? 'gradient' : BGS[1 + FL(rng() * (BGS.length - 1))]; p.x = .3 + rng() * .4;
     p.y = .6 + rng() * .35; p.scale = .4 + rng() * .5; p.opacity = .6 + rng() * .4; p.keyThresh = rng() < .5 ? 0 : rng() * .6; p.bgDim = rng() * .5; p.bgBlur = rng() < .6 ? 0 : rng() * .6; p.castDir = rng(); p.rim = rng() * .7; p.eyeHue = rng(); p.clothHue = rng() < .4 ? 0 : rng(); p.outline = rng() < .5 ? 0 : rng() * .7; p.vignette = rng() < .6 ? 0 : rng() * .6; p.watermark = ''; p.wmOpacity = .4; p.vidSpeed = .5; p.blush = rng() * .6; p.headTilt = .35 + rng() * .3; p.bgSat = .3 + rng() * .7; p.bgContrast = .35 + rng() * .5; p.reflect = rng() < .6 ? 0 : rng() * .8; p.tOffset = .5; p.grain = rng() < .7 ? 0 : rng() * .5;
-    p.trail = rng() < .7 ? 0 : rng() * .7; p.subjHue = .4 + rng() * .2; p.pixel = rng() < .75 ? 0 : rng() * .7; p.shake = rng() < .7 ? 0 : rng() * .5; p.glow = rng() < .7 ? 0 : rng() * .8; p.eyeSize = .3 + rng() * .5; p.duo = rng() < .7 ? 0 : rng() * .7; p.rot = .35 + rng() * .3; p.bgX = .5; p.bgY = .5; p.seed = Math.floor(rng() * 4294967295); // 背景オフセットはランダムにしない(構図崩壊防止)
+    p.trail = rng() < .7 ? 0 : rng() * .7; p.subjHue = .4 + rng() * .2; p.pixel = rng() < .75 ? 0 : rng() * .7; p.shake = rng() < .7 ? 0 : rng() * .5; p.glow = rng() < .7 ? 0 : rng() * .8; p.eyeSize = .3 + rng() * .5; p.duo = rng() < .7 ? 0 : rng() * .7; p.rot = .35 + rng() * .3; p.bgX = .5; p.bgY = .5; p.seed = FL(rng() * 4294967295); // 背景オフセットはランダムにしない(構図崩壊防止)
     return clampParams(p);
   }
 
@@ -138,7 +138,7 @@ const ShiroLib = (() => {
   function keyAlpha(r, g, b, thresh, soft) {
     if (thresh <= 0) return 255;
     const d = 255 - MN(r, g, b); const T = thresh * 200, S = 1 + soft * 120;
-    return Math.round(MX(0, MN(255, (d - T) / S * 255)));
+    return RD(MX(0, MN(255, (d - T) / S * 255)));
   }
 
   // スピル除去: 半透明エッジ画素の彩度を輝度へ寄せ、白背景の色反射残りを消す。
@@ -173,7 +173,7 @@ const ShiroLib = (() => {
   function blinkOpen(t, seed) {
     const ph = t % (3.2 + ((seed || 0) % 97) / 97 * 1.4);
     if (ph >= .18) return 1;
-    const s = Math.abs(ph - .09) / .09; // 0..1..0 の三角形
+    const s = AB(ph - .09) / .09; // 0..1..0 の三角形
     return MN(1, s * 1.4);
   }
 
@@ -181,7 +181,7 @@ const ShiroLib = (() => {
   // silCanvas は濃色シルエット済みキャンバス(下部=足元)。castDir .5=真下(省略可)
   function drawCastShadow(c, silCanvas, wPix, hPix, cx, baseY, dir, alpha, soft) {
     const skew = (dir - .5) * 1.6;
-    if (Math.abs(skew) < .05 || alpha <= 0) return;
+    if (AB(skew) < .05 || alpha <= 0) return;
     c.save();
     c.filter = `blur(${MX(1, wPix * (.02 + (soft == null ? .4 : soft) * .08))}px)`;
     c.globalAlpha = alpha; c.translate(cx, baseY); c.transform(1, 0, -skew, .32, 0, 0); c.drawImage(silCanvas, -wPix / 2, -hPix, wPix, hPix); c.restore();
@@ -200,9 +200,9 @@ const ShiroLib = (() => {
   // silCanvas は #ffffff 着色済みのシルエット。2重リングで隙間なく塗る。
   function drawStickerOutline(c, silCanvas, wPix, hPix, cx, baseY, strength) {
     if (strength <= 0) return;
-    const r = MX(1, Math.round(strength * wPix * .045)); c.save(); c.globalAlpha = MN(1, strength * 1.5);
+    const r = MX(1, RD(strength * wPix * .045)); c.save(); c.globalAlpha = MN(1, strength * 1.5);
     for (let i = 0; i < 16; i++) {
-      const a = i / 16 * PI * 2; const dx = Math.cos(a) * r, dy = Math.sin(a) * r; c.drawImage(silCanvas, cx - wPix / 2 + dx, baseY - hPix + dy, wPix, hPix); c.drawImage(silCanvas, cx - wPix / 2 + dx * .55, baseY - hPix + dy * .55, wPix, hPix);
+      const a = i / 16 * PI * 2; const dx = CO(a) * r, dy = SI(a) * r; c.drawImage(silCanvas, cx - wPix / 2 + dx, baseY - hPix + dy, wPix, hPix); c.drawImage(silCanvas, cx - wPix / 2 + dx * .55, baseY - hPix + dy * .55, wPix, hPix);
     }
     c.restore();
   }
@@ -218,7 +218,7 @@ const ShiroLib = (() => {
   // 透かし(ウォーターマーク): クリエイターが作品に入れる署名テキスト。右下・影付き白文字。
   function drawWatermark(c, text, w, h, opacity, pos = 'br') {
     if (!text || opacity <= 0) return;
-    const fs = MX(12, Math.round(h * .032)); c.save();
+    const fs = MX(12, RD(h * .032)); c.save();
     c.font = `600 ${fs}px "Hiragino Sans","Segoe UI",sans-serif`;
     c.textAlign = pos[1] === 'r' ? 'right' : 'left'; c.textBaseline = pos[0] === 't' ? 'top' : 'bottom'; c.shadowColor = 'rgba(0,0,0,.55)'; c.shadowBlur = fs * .3; c.shadowOffsetY = 1;
     c.fillStyle = `rgba(255,255,255,${opacity})`;
@@ -242,7 +242,7 @@ const ShiroLib = (() => {
   // 正面図の関節人形。y は足元=0・上向き正、全長 1.0 の正規化空間。
   function mannequinPose(p, t) {
     const s = .4 + p.animSpeed * 2.2, tt = t * s;
-    const S = f => Math.sin(tt * f), C = f => Math.cos(tt * f), A = f => Math.abs(S(f));
+    const S = f => SI(tt * f), C = f => CO(tt * f), A = f => AB(S(f));
     const q = {
       bob: 0, sway: 0, lean: 0, headTilt: 0,
       lThigh: 0, rThigh: 0, lKnee: 0, rKnee: 0, lShin: 0, rShin: 0,
@@ -250,24 +250,24 @@ const ShiroLib = (() => {
     };
     switch (p.anim) {
       case 'wave':
-        Object.assign(q, {bob: .012 * S(2), lean: .04 * Math.sin(tt), rArm: 2.5, rElb: .5 * S(6) + .3, lArm: .12, headTilt: .1 * S(2)});break;
+        Object.assign(q, {bob: .012 * S(2), lean: .04 * SI(tt), rArm: 2.5, rElb: .5 * S(6) + .3, lArm: .12, headTilt: .1 * S(2)});break;
       case 'walk': {
-        const w = S(3); Object.assign(q, {lThigh: .55 * w, rThigh: -.55 * w, lKnee: MX(0, .7 * Math.sin(tt * 3 + PI / 2)), rKnee: MX(0, .7 * Math.sin(tt * 3 - PI / 2)), lArm: .1 - .4 * w, rArm: .1 + .4 * w, bob: .02 * Math.abs(C(3)), sway: .01 * w});break;
+        const w = S(3); Object.assign(q, {lThigh: .55 * w, rThigh: -.55 * w, lKnee: MX(0, .7 * SI(tt * 3 + PI / 2)), rKnee: MX(0, .7 * SI(tt * 3 - PI / 2)), lArm: .1 - .4 * w, rArm: .1 + .4 * w, bob: .02 * AB(C(3)), sway: .01 * w});break;
       }
       case 'dance': {
-        const w = S(4); Object.assign(q, {sway: .05 * w, bob: .03 * Math.abs(w), lArm: 1.2 + .9 * S(4), rArm: 1.2 - .9 * S(4), lElb: .5, rElb: .5, lean: .06 * w, headTilt: .15 * w, lThigh: .15 * w, rThigh: -.15 * w});break;
+        const w = S(4); Object.assign(q, {sway: .05 * w, bob: .03 * AB(w), lArm: 1.2 + .9 * S(4), rArm: 1.2 - .9 * S(4), lElb: .5, rElb: .5, lean: .06 * w, headTilt: .15 * w, lThigh: .15 * w, rThigh: -.15 * w});break;
       }
       case 'jump': {
-        const air = Math.sin((tt % 1) * PI); q.bob = .13 * air; q.lThigh = q.rThigh = -.1 * air; q.lKnee = q.rKnee = .9 * air; Object.assign(q, {lArm: .1 - 1.9 * air, rArm: .1 + 1.9 * air, lElb: .3, rElb: .3, lean: .03 * S(4)});// 0→1→0 の放物線で1秒周期の跳躍 // 両腕を上げる
+        const air = SI((tt % 1) * PI); q.bob = .13 * air; q.lThigh = q.rThigh = -.1 * air; q.lKnee = q.rKnee = .9 * air; Object.assign(q, {lArm: .1 - 1.9 * air, rArm: .1 + 1.9 * air, lElb: .3, rElb: .3, lean: .03 * S(4)});// 0→1→0 の放物線で1秒周期の跳躍 // 両腕を上げる
         break;
       }
       case 'nod': {
         // うなずき: 頭を周期的に前後に傾けるあいづち動作
-        const n = S(2.4); Object.assign(q, {headTilt: .22 * n, bob: .008 * Math.abs(n), lean: .02 * n, lArm: .1, rArm: .1});break;
+        const n = S(2.4); Object.assign(q, {headTilt: .22 * n, bob: .008 * AB(n), lean: .02 * n, lArm: .1, rArm: .1});break;
       }
       case 'run': {
         // 走る: 歩行の2倍弱の脚回転 + 前傾 + 肘を畳む
-        const w = S(5); Object.assign(q, {lThigh: .8 * w, rThigh: -.8 * w, lKnee: MX(0, 1.1 * Math.sin(tt * 5 + PI / 2)), rKnee: MX(0, 1.1 * Math.sin(tt * 5 - PI / 2)), lArm: .3 - .7 * w, rArm: .3 + .7 * w, lElb: 1.1, rElb: 1.1, bob: .04 * Math.abs(C(5)), lean: .12});break;
+        const w = S(5); Object.assign(q, {lThigh: .8 * w, rThigh: -.8 * w, lKnee: MX(0, 1.1 * SI(tt * 5 + PI / 2)), rKnee: MX(0, 1.1 * SI(tt * 5 - PI / 2)), lArm: .3 - .7 * w, rArm: .3 + .7 * w, lElb: 1.1, rElb: 1.1, bob: .04 * AB(C(5)), lean: .12});break;
       }
       case 'talk': {
         // おしゃべり: ゆるい待機 + 会話っぽい小さな頭の動き(口の開閉は描画側で処理)
@@ -283,7 +283,7 @@ const ShiroLib = (() => {
       }
       case 'stretch': {
         // 背伸び: 両腕を頭上に伸ばしてゆっくり持ち上がる(顔も上向き)
-        const u = .5 + .5 * Math.sin(tt * 1.6 - PI / 2); Object.assign(q, {bob: .05 * u, lArm: -(.1 + 2.5 * u), rArm: .1 + 2.5 * u, lElb: .05, rElb: .05, lean: -.05 * u, headTilt: -.12 * u});q.lKnee = q.rKnee = .06 * u; // 0→1→0 ゆったり // 爪先立ちぎみ
+        const u = .5 + .5 * SI(tt * 1.6 - PI / 2); Object.assign(q, {bob: .05 * u, lArm: -(.1 + 2.5 * u), rArm: .1 + 2.5 * u, lElb: .05, rElb: .05, lean: -.05 * u, headTilt: -.12 * u});q.lKnee = q.rKnee = .06 * u; // 0→1→0 ゆったり // 爪先立ちぎみ
         break;
       }
       case 'sleep': {
@@ -296,11 +296,11 @@ const ShiroLib = (() => {
       }
       case 'clap': {
         // 拍手: 両腕を胸の前で交互に合わせる(2.5Hzの往復)
-        const c = S(8); Object.assign(q, {lArm: -.55 + .3 * c, rArm: .55 + .3 * c, lElb: .85, rElb: .85, bob: .015 * Math.abs(c), headTilt: .08 * S(2)});break;
+        const c = S(8); Object.assign(q, {lArm: -.55 + .3 * c, rArm: .55 + .3 * c, lElb: .85, rElb: .85, bob: .015 * AB(c), headTilt: .08 * S(2)});break;
       }
       case 'peek': {
         // のぞき: 4秒周期で体を左右に大きく傾けて交互に覗き込む
-        const ph = (tt % 4) / 4; const d = Math.sin(ph * PI * 2); const e = MN(1, Math.abs(d) * 2.4); Object.assign(q, {lean: .3 * Math.sign(d) * e, sway: .09 * d, headTilt: -.4 * Math.sign(d) * e, lArm: .14, rArm: .14});// -1..1 で左右往復 // 端で急ぐ滑らかさ // 首は逆に傾げてこちらを覗く
+        const ph = (tt % 4) / 4; const d = SI(ph * PI * 2); const e = MN(1, AB(d) * 2.4); Object.assign(q, {lean: .3 * Math.sign(d) * e, sway: .09 * d, headTilt: -.4 * Math.sign(d) * e, lArm: .14, rArm: .14});// -1..1 で左右往復 // 端で急ぐ滑らかさ // 首は逆に傾げてこちらを覗く
         break;
       }
       case 'cheer': {
@@ -347,7 +347,7 @@ const ShiroLib = (() => {
       }
       case 'moonwalk': {
         // ムーンウォーク: 低い膝の交互スライド+後傾で後ろに滑る
-        const w = S(4); Object.assign(q, {lThigh: .3 * w, rThigh: -.3 * w, lKnee: MX(0, .35 * Math.sin(tt * 4 + PI / 2)), rKnee: MX(0, .35 * Math.sin(tt * 4 - PI / 2)), lean: -.08, sway: .02 * w, lArm: .25 - .3 * w, rArm: .25 + .3 * w, lElb: .8, rElb: .8, bob: .015 * Math.abs(C(4))});break;
+        const w = S(4); Object.assign(q, {lThigh: .3 * w, rThigh: -.3 * w, lKnee: MX(0, .35 * SI(tt * 4 + PI / 2)), rKnee: MX(0, .35 * SI(tt * 4 - PI / 2)), lean: -.08, sway: .02 * w, lArm: .25 - .3 * w, rArm: .25 + .3 * w, lElb: .8, rElb: .8, bob: .015 * AB(C(4))});break;
       }
       case 'salute': {
         // 敬礼: 右腕を額へ(4秒周期で挙げ→保持→下げ)
@@ -364,11 +364,11 @@ const ShiroLib = (() => {
       }
       case 'surf': {
         // サーフィン: 膝を落として横乗り、両腕でバランス(波に揺れる)
-        const wv = S(2.4); Object.assign(q, {lean: .18 + .08 * wv, sway: .05 * S(1.6), lThigh: .3, rThigh: -.2, lKnee: .55, rKnee: .5, lArm: 1.1 + .15 * wv, rArm: .6 - .15 * wv, lElb: .3, rElb: .4, headTilt: -.1 * wv, bob: .015 * Math.abs(wv)});break;
+        const wv = S(2.4); Object.assign(q, {lean: .18 + .08 * wv, sway: .05 * S(1.6), lThigh: .3, rThigh: -.2, lKnee: .55, rKnee: .5, lArm: 1.1 + .15 * wv, rArm: .6 - .15 * wv, lElb: .3, rElb: .4, headTilt: -.1 * wv, bob: .015 * AB(wv)});break;
       }
       case 'march': {
         // マーチング: 膝を高く交互に上げて腕を大きく振る
-        const ph2 = tt * 3.4; const lp = MX(0, Math.sin(ph2)), rp = MX(0, -Math.sin(ph2)); Object.assign(q, {lThigh: .55 * lp, rThigh: -.55 * rp, lKnee: .9 * lp, rKnee: -.9 * rp, lArm: .7 * lp, rArm: -.7 * rp, lElb: .3, rElb: -.3, bob: .02 * Math.abs(Math.sin(ph2)), lean: .06});break;
+        const ph2 = tt * 3.4; const lp = MX(0, SI(ph2)), rp = MX(0, -SI(ph2)); Object.assign(q, {lThigh: .55 * lp, rThigh: -.55 * rp, lKnee: .9 * lp, rKnee: -.9 * rp, lArm: .7 * lp, rArm: -.7 * rp, lElb: .3, rElb: -.3, bob: .02 * AB(SI(ph2)), lean: .06});break;
       }
       case 'zombie': {
         // ゾンビ: 両腕を前に突き出して左右に揺れながら引き摺る
@@ -376,12 +376,12 @@ const ShiroLib = (() => {
       }
       case 'robot': {
         // ロボット: 階段状の値でカクカク動く(量子化サイン)
-        const rq = (v, s) => Math.round(v * s) / s;
-        const ph3 = tt * 2.2; Object.assign(q, {lArm: .5 + .5 * rq(Math.sin(ph3), 2), rArm: .5 + .5 * rq(Math.sin(ph3 + PI / 2), 2), lElb: .8 * rq(Math.sin(ph3 + 1), 2), rElb: .8 * rq(Math.cos(ph3), 2), headTilt: .3 * rq(Math.sin(ph3 * .5), 2), lean: .1 * rq(Math.cos(ph3 * .7), 2), lKnee: .2 * MX(0, rq(Math.sin(ph3), 2)), rKnee: -.2 * MX(0, -rq(Math.sin(ph3), 2))});break;
+        const rq = (v, s) => RD(v * s) / s;
+        const ph3 = tt * 2.2; Object.assign(q, {lArm: .5 + .5 * rq(SI(ph3), 2), rArm: .5 + .5 * rq(SI(ph3 + PI / 2), 2), lElb: .8 * rq(SI(ph3 + 1), 2), rElb: .8 * rq(CO(ph3), 2), headTilt: .3 * rq(SI(ph3 * .5), 2), lean: .1 * rq(CO(ph3 * .7), 2), lKnee: .2 * MX(0, rq(SI(ph3), 2)), rKnee: -.2 * MX(0, -rq(SI(ph3), 2))});break;
       }
       case 'hula': {
         // フラダンス: 腰を円く揺らし、両腕を左右に大きく波打たせる
-        const hw = tt * 2.6; Object.assign(q, {sway: .14 * Math.sin(hw), lean: .1 * Math.sin(hw + .5), lArm: .8 + .35 * Math.sin(hw), rArm: .8 - .35 * Math.sin(hw), lElb: .9, rElb: .9, headTilt: .08 * Math.sin(hw + 1), lKnee: .15, rKnee: -.15, bob: .012 * Math.abs(Math.sin(hw * 2))});break;
+        const hw = tt * 2.6; Object.assign(q, {sway: .14 * SI(hw), lean: .1 * SI(hw + .5), lArm: .8 + .35 * SI(hw), rArm: .8 - .35 * SI(hw), lElb: .9, rElb: .9, headTilt: .08 * SI(hw + 1), lKnee: .15, rKnee: -.15, bob: .012 * AB(SI(hw * 2))});break;
       }
       case 'yoga': {
         // ヨガ(木のポーズ): 片足立ち+合掌+呼吸する上下
@@ -389,19 +389,19 @@ const ShiroLib = (() => {
       }
       case 'punch': {
         // パンチ: 交互に前方へジャブ(腕が伸びて戻る)
-        const ph4 = tt * 3.2; const lj = MX(0, Math.sin(ph4)) ** 3, rj = MX(0, -Math.sin(ph4)) ** 3; Object.assign(q, {lArm: .9 + .7 * lj, rArm: .9 + .7 * rj, lElb: 1.6 * (1 - lj), rElb: 1.6 * (1 - rj), lean: .08 + .06 * (lj - rj), headTilt: .05 * (rj - lj), bob: .01 * Math.abs(Math.sin(ph4))});break;
+        const ph4 = tt * 3.2; const lj = MX(0, SI(ph4)) ** 3, rj = MX(0, -SI(ph4)) ** 3; Object.assign(q, {lArm: .9 + .7 * lj, rArm: .9 + .7 * rj, lElb: 1.6 * (1 - lj), rElb: 1.6 * (1 - rj), lean: .08 + .06 * (lj - rj), headTilt: .05 * (rj - lj), bob: .01 * AB(SI(ph4))});break;
       }
       case 'shuffle': {
         // シャッフル: 高速で膝を交互に上げる走り幅跳び系ステップ
-        const ph5 = tt * 9; const ls = Math.sin(ph5) > 0 ? 1 : 0, rs = 1 - ls; Object.assign(q, {lThigh: .5 * ls, rThigh: -.5 * rs, lKnee: .8 * ls, rKnee: -.8 * rs, lArm: .4 * rs, rArm: .4 * ls, lElb: .6, rElb: .6, lean: .08, bob: .025 * Math.abs(Math.sin(ph5))});break;
+        const ph5 = tt * 9; const ls = SI(ph5) > 0 ? 1 : 0, rs = 1 - ls; Object.assign(q, {lThigh: .5 * ls, rThigh: -.5 * rs, lKnee: .8 * ls, rKnee: -.8 * rs, lArm: .4 * rs, rArm: .4 * ls, lElb: .6, rElb: .6, lean: .08, bob: .025 * AB(SI(ph5))});break;
       }
       case 'lunge': {
         // ランジ: 交互に深く沈み込む前後の脚開き
-        const ph6 = tt * 2.2; const ld = MX(0, Math.sin(ph6)), rd = MX(0, -Math.sin(ph6)); Object.assign(q, {lThigh: .8 * ld, rThigh: -.8 * rd, lKnee: 1.1 * ld, rKnee: -1.1 * rd, bob: -.06 * (ld + rd), lean: .1, lArm: .3, rArm: .3, lElb: .5, rElb: .5});break;
+        const ph6 = tt * 2.2; const ld = MX(0, SI(ph6)), rd = MX(0, -SI(ph6)); Object.assign(q, {lThigh: .8 * ld, rThigh: -.8 * rd, lKnee: 1.1 * ld, rKnee: -1.1 * rd, bob: -.06 * (ld + rd), lean: .1, lArm: .3, rArm: .3, lElb: .5, rElb: .5});break;
       }
       case 'cossack': {
         // コサック: 腕を組んで脚を交互に前へ蹴り出す
-        const ph7 = tt * 4; const lc = Math.sin(ph7) > 0 ? 1 : 0, rc = 1 - lc; Object.assign(q, {lThigh: .7 * lc, rThigh: -.7 * rc, lKnee: .1, rKnee: -.1, lArm: .55, rArm: .55, lElb: 1.5, rElb: 1.5, bob: -.05 + .02 * Math.sin(ph7 * 2), lean: .06});break;
+        const ph7 = tt * 4; const lc = SI(ph7) > 0 ? 1 : 0, rc = 1 - lc; Object.assign(q, {lThigh: .7 * lc, rThigh: -.7 * rc, lKnee: .1, rKnee: -.1, lArm: .55, rArm: .55, lElb: 1.5, rElb: 1.5, bob: -.05 + .02 * SI(ph7 * 2), lean: .06});break;
       }
       case 'hop': {
         // ぴょんぴょん: 両足で小刻みに跳ねる(膝を揃えて曲げ伸ばし)
@@ -417,28 +417,28 @@ const ShiroLib = (() => {
       }
       case 'twist': {
         // ツイスト: 腰を交互にひねるダンス(膝を交互に)
-        const tw = S(6); Object.assign(q, {sway: .05 * tw, lThigh: MX(0, tw) * .3, rThigh: -MX(0, -tw) * .3, lKnee: MX(0, tw) * .35, rKnee: -MX(0, -tw) * .35, lArm: .5 - .15 * tw, rArm: .5 + .15 * tw, lElb: .8, rElb: .8, lean: .04 * tw, bob: .02 * Math.abs(tw)});break;
+        const tw = S(6); Object.assign(q, {sway: .05 * tw, lThigh: MX(0, tw) * .3, rThigh: -MX(0, -tw) * .3, lKnee: MX(0, tw) * .35, rKnee: -MX(0, -tw) * .35, lArm: .5 - .15 * tw, rArm: .5 + .15 * tw, lElb: .8, rElb: .8, lean: .04 * tw, bob: .02 * AB(tw)});break;
       }
       case 'swim': {
         // 泳ぎ(クロール): 交互に回る腕+キックする脚+上下に波打つ体
-        const sw = tt * 3; Object.assign(q, {rArm: 1.4 + .9 * Math.sin(sw), rElb: .4, lArm: 1.4 + .9 * Math.sin(sw + PI), lElb: .4, lKnee: .3 * Math.abs(Math.sin(sw)), rKnee: -.3 * Math.abs(Math.sin(sw + PI)), lean: .15, bob: .03 * Math.sin(sw), headTilt: .2});break;
+        const sw = tt * 3; Object.assign(q, {rArm: 1.4 + .9 * SI(sw), rElb: .4, lArm: 1.4 + .9 * SI(sw + PI), lElb: .4, lKnee: .3 * AB(SI(sw)), rKnee: -.3 * AB(SI(sw + PI)), lean: .15, bob: .03 * SI(sw), headTilt: .2});break;
       }
       case 'bodyroll': {
         // ボディロール: 頭→腰へ波が伝わる蛇行ダンス
-        const br2 = tt * 2.6; Object.assign(q, {lean: .14 * Math.sin(br2), sway: .1 * Math.sin(br2 - .8), headTilt: .25 * Math.sin(br2 - 1.6), lArm: .45 + .1 * Math.sin(br2 - 1.2), rArm: .45 + .1 * Math.sin(br2 - 1.2), lElb: .6, rElb: .6, bob: .02 * Math.sin(br2 - .5)});break;
+        const br2 = tt * 2.6; Object.assign(q, {lean: .14 * SI(br2), sway: .1 * SI(br2 - .8), headTilt: .25 * SI(br2 - 1.6), lArm: .45 + .1 * SI(br2 - 1.2), rArm: .45 + .1 * SI(br2 - 1.2), lElb: .6, rElb: .6, bob: .02 * SI(br2 - .5)});break;
       }
       case 'charleston': {
         // チャールストン: 膝を内↔外交互に、腕を左右に振る
-        const ch = S(5); Object.assign(q, {lKnee: .3 + .3 * ch, rKnee: -(.3 - .3 * ch), lThigh: .15 * ch, rThigh: -.15 * ch, lArm: .5 - .3 * ch, rArm: .5 + .3 * ch, lElb: .7, rElb: .7, lean: .06 * ch, bob: .02 * Math.abs(ch)});break;
+        const ch = S(5); Object.assign(q, {lKnee: .3 + .3 * ch, rKnee: -(.3 - .3 * ch), lThigh: .15 * ch, rThigh: -.15 * ch, lArm: .5 - .3 * ch, rArm: .5 + .3 * ch, lElb: .7, rElb: .7, lean: .06 * ch, bob: .02 * AB(ch)});break;
       }
       case 'vogue': {
         // ヴォーグ: 角張った腕のポーズをパキッと切り替える
-        const vg = Math.floor(tt * 2.4) % 4; const ease = MN(1, (tt * 2.4 % 1) * 6); const poses = [[1.4, .3, .3, 1.5], [.3, 1.4, 1.5, .3], [1.0, 1.0, .9, .9], [.6, .6, 1.6, 1.6]]; const [ra, la, re, le] = poses[vg]; Object.assign(q, {rArm: ra * ease, lArm: la * ease, rElb: re, lElb: le, headTilt: (vg % 2 ? .2 : -.2) * ease, lean: (vg % 2 ? .05 : -.05) * ease});// 速い遷移
+        const vg = FL(tt * 2.4) % 4; const ease = MN(1, (tt * 2.4 % 1) * 6); const poses = [[1.4, .3, .3, 1.5], [.3, 1.4, 1.5, .3], [1.0, 1.0, .9, .9], [.6, .6, 1.6, 1.6]]; const [ra, la, re, le] = poses[vg]; Object.assign(q, {rArm: ra * ease, lArm: la * ease, rElb: re, lElb: le, headTilt: (vg % 2 ? .2 : -.2) * ease, lean: (vg % 2 ? .05 : -.05) * ease});// 速い遷移
         break;
       }
       case 'stomp': {
         // ストンプ: 交互に足を強く踏み下ろす(体ごと沈む)
-        const st = tt * 3.4; const lSt = MX(0, Math.sin(st)) ** 2; const rSt = MX(0, Math.sin(st + PI)) ** 2; Object.assign(q, {lThigh: .5 * lSt, rThigh: -.5 * rSt, lKnee: .6 * lSt, rKnee: -.6 * rSt, bob: -.03 * (lSt + rSt), lean: .06 * Math.sin(st), lArm: .6 - .3 * lSt, rArm: .6 - .3 * rSt, lElb: .8, rElb: .8});break;
+        const st = tt * 3.4; const lSt = MX(0, SI(st)) ** 2; const rSt = MX(0, SI(st + PI)) ** 2; Object.assign(q, {lThigh: .5 * lSt, rThigh: -.5 * rSt, lKnee: .6 * lSt, rKnee: -.6 * rSt, bob: -.03 * (lSt + rSt), lean: .06 * SI(st), lArm: .6 - .3 * lSt, rArm: .6 - .3 * rSt, lElb: .8, rElb: .8});break;
       }
       case 'krump': {
         // クランプ: 胸を弾く爆発的な動き+腕を大きく振る
@@ -446,701 +446,701 @@ const ShiroLib = (() => {
       }
       case 'waltz': {
         // ワルツ: 3拍子のゆったりした起伏+左右ステップ+優雅な腕
-        const wz = tt * 2.1; const beat = Math.sin(wz * 3); Object.assign(q, {bob: .03 * beat, sway: .08 * Math.sin(wz), lean: .07 * Math.sin(wz + .5), lArm: .7 + .15 * Math.sin(wz), rArm: .7 - .15 * Math.sin(wz), lElb: .5, rElb: .5, lKnee: .2 * MX(0, Math.sin(wz * 3)), rKnee: -.2 * MX(0, Math.sin(wz * 3 + PI)), headTilt: .1 * Math.sin(wz)});break;
+        const wz = tt * 2.1; const beat = SI(wz * 3); Object.assign(q, {bob: .03 * beat, sway: .08 * SI(wz), lean: .07 * SI(wz + .5), lArm: .7 + .15 * SI(wz), rArm: .7 - .15 * SI(wz), lElb: .5, rElb: .5, lKnee: .2 * MX(0, SI(wz * 3)), rKnee: -.2 * MX(0, SI(wz * 3 + PI)), headTilt: .1 * SI(wz)});break;
       }
       case 'tarantella': {
         // タランテラ: 両腕を頭上で振りながら速い足捌き+回るような揺れ
-        const ta = tt * 4.5; Object.assign(q, {lArm: 1.3 + .25 * Math.sin(ta), rArm: 1.3 - .25 * Math.sin(ta), lElb: .5, rElb: .5});const lp2 = MX(0, Math.sin(ta * 1.5)), rp2 = MX(0, Math.sin(ta * 1.5 + PI)); Object.assign(q, {lKnee: .4 * lp2, rKnee: -.4 * rp2, sway: .09 * Math.sin(ta * .5), lean: .06 * Math.sin(ta * .5 + 1), bob: .025 * Math.abs(Math.sin(ta))});break;
+        const ta = tt * 4.5; Object.assign(q, {lArm: 1.3 + .25 * SI(ta), rArm: 1.3 - .25 * SI(ta), lElb: .5, rElb: .5});const lp2 = MX(0, SI(ta * 1.5)), rp2 = MX(0, SI(ta * 1.5 + PI)); Object.assign(q, {lKnee: .4 * lp2, rKnee: -.4 * rp2, sway: .09 * SI(ta * .5), lean: .06 * SI(ta * .5 + 1), bob: .025 * AB(SI(ta))});break;
       }
       case 'capoeira': {
         // カポエイラ: ジンガ(低い構えで左右に体重移動)+脚の振り
-        const cp = tt * 2.8; const gd = Math.sin(cp); Object.assign(q, {sway: .16 * gd, lean: .1 * gd, bob: .05 + .02 * Math.abs(gd), lArm: .5 + .3 * MX(0, gd), rArm: .5 + .3 * MX(0, -gd), lElb: .6, rElb: .6});// 交互に脚を前へ振る
+        const cp = tt * 2.8; const gd = SI(cp); Object.assign(q, {sway: .16 * gd, lean: .1 * gd, bob: .05 + .02 * AB(gd), lArm: .5 + .3 * MX(0, gd), rArm: .5 + .3 * MX(0, -gd), lElb: .6, rElb: .6});// 交互に脚を前へ振る
         Object.assign(q, {lThigh: .4 * MX(0, -gd), rThigh: -.4 * MX(0, gd), lKnee: .3 * MX(0, -gd), rKnee: -.3 * MX(0, gd), headTilt: -.06 * gd});break;
       }
       case 'belly': {
         // ベリーダンス: 腰の8の字+蛇行する腕
-        const bd = tt * 3.4; Object.assign(q, {sway: .1 * Math.sin(bd), bob: .02 * Math.abs(Math.sin(bd * 2)), lArm: .9 + .35 * Math.sin(bd * .8), rArm: .9 - .35 * Math.sin(bd * .8), lElb: .4 + .3 * Math.sin(bd * .8 + 1), rElb: .4 - .3 * Math.sin(bd * .8 + 1), lKnee: .15 * MX(0, Math.sin(bd)), rKnee: -.15 * MX(0, -Math.sin(bd)), headTilt: .06 * Math.sin(bd * .5)});break;
+        const bd = tt * 3.4; Object.assign(q, {sway: .1 * SI(bd), bob: .02 * AB(SI(bd * 2)), lArm: .9 + .35 * SI(bd * .8), rArm: .9 - .35 * SI(bd * .8), lElb: .4 + .3 * SI(bd * .8 + 1), rElb: .4 - .3 * SI(bd * .8 + 1), lKnee: .15 * MX(0, SI(bd)), rKnee: -.15 * MX(0, -SI(bd)), headTilt: .06 * SI(bd * .5)});break;
       }
       case 'flamenco': {
         // フラメンコ: 片腕を頭上に掲げて誇らしげ+リズムに合わせ踏み鳴らす
-        const fm = tt * 3.8; const st = MX(0, Math.sin(fm * 2)) ** 2; Object.assign(q, {rArm: 1.45, rElb: .3, lArm: .55, lElb: 1.1, lean: -.04, rKnee: -.4 * st, lKnee: .1, bob: -.025 * st, headTilt: -.06, sway: .03 * Math.sin(fm * .7)});break;
+        const fm = tt * 3.8; const st = MX(0, SI(fm * 2)) ** 2; Object.assign(q, {rArm: 1.45, rElb: .3, lArm: .55, lElb: 1.1, lean: -.04, rKnee: -.4 * st, lKnee: .1, bob: -.025 * st, headTilt: -.06, sway: .03 * SI(fm * .7)});break;
       }
       case 'samba': {
         // サンバ: 高速の腰バウンス+交互に前後する腕
-        const sb = tt * 6; Object.assign(q, {bob: .035 * Math.abs(Math.sin(sb)), sway: .05 * Math.sin(sb * .5), lArm: .6 + .5 * Math.sin(sb * .5), rArm: .6 - .5 * Math.sin(sb * .5), lElb: .7, rElb: .7, lKnee: .25 * MX(0, Math.sin(sb)), rKnee: -.25 * MX(0, -Math.sin(sb)), headTilt: .05 * Math.sin(sb * .5)});break;
+        const sb = tt * 6; Object.assign(q, {bob: .035 * AB(SI(sb)), sway: .05 * SI(sb * .5), lArm: .6 + .5 * SI(sb * .5), rArm: .6 - .5 * SI(sb * .5), lElb: .7, rElb: .7, lKnee: .25 * MX(0, SI(sb)), rKnee: -.25 * MX(0, -SI(sb)), headTilt: .05 * SI(sb * .5)});break;
       }
       case 'tango': {
         // タンゴ: スタッカートのステップ+鋭い頭の切り替えし
-        const tg = tt * 3.2; const snap = Math.floor(tg / PI) % 2 ? 1 : -1; const ease = MN(1, (tg % PI) * 4); Object.assign(q, {headTilt: .25 * snap * ease, sway: .08 * snap, lean: .05 * snap, lArm: .5 + .2 * snap, rArm: .5 - .2 * snap, lElb: .9, rElb: .9});// 半周期ごとに反転 // 始めに速く止まる
+        const tg = tt * 3.2; const snap = FL(tg / PI) % 2 ? 1 : -1; const ease = MN(1, (tg % PI) * 4); Object.assign(q, {headTilt: .25 * snap * ease, sway: .08 * snap, lean: .05 * snap, lArm: .5 + .2 * snap, rArm: .5 - .2 * snap, lElb: .9, rElb: .9});// 半周期ごとに反転 // 始めに速く止まる
         // 断続的な脚の運び
-        Object.assign(q, {lThigh: .3 * MX(0, snap * Math.sin(tg * 2)), rThigh: -.3 * MX(0, -snap * Math.sin(tg * 2)), bob: .015 * Math.abs(Math.sin(tg * 2))});break;
+        Object.assign(q, {lThigh: .3 * MX(0, snap * SI(tg * 2)), rThigh: -.3 * MX(0, -snap * SI(tg * 2)), bob: .015 * AB(SI(tg * 2))});break;
       }
       case 'swing': {
         // スウィング(リンディ): 弾むキックステップ+全身のバウンス
-        const sw = tt * 4.2; const k = Math.sin(sw); Object.assign(q, {bob: .04 * Math.abs(Math.sin(sw * .5)), sway: .07 * k, lKnee: .35 * MX(0, k), rKnee: -.35 * MX(0, -k), lThigh: .2 * MX(0, k), rThigh: -.2 * MX(0, -k), lArm: .55 + .3 * k, rArm: .55 - .3 * k, lElb: .6, rElb: .6, lean: .04 * k});break;
+        const sw = tt * 4.2; const k = SI(sw); Object.assign(q, {bob: .04 * AB(SI(sw * .5)), sway: .07 * k, lKnee: .35 * MX(0, k), rKnee: -.35 * MX(0, -k), lThigh: .2 * MX(0, k), rThigh: -.2 * MX(0, -k), lArm: .55 + .3 * k, rArm: .55 - .3 * k, lElb: .6, rElb: .6, lean: .04 * k});break;
       }
       case 'polka': {
         // ポルカ: 3歩+ホップの弾むリズム
-        const pk = tt * 3.6; const ph = pk % (PI * 2); const hop2 = ph > PI * 1.5 ? Math.sin((ph - PI * 1.5) * 4) : 0; q.bob = .04 * Math.abs(hop2) + .015 * Math.abs(Math.sin(pk)); const st2 = Math.sin(pk); Object.assign(q, {lKnee: .35 * MX(0, st2), rKnee: -.35 * MX(0, -st2), sway: .08 * st2, lArm: .5 + .25 * st2, rArm: .5 - .25 * st2, lElb: .5, rElb: .5, lean: .05 * st2, headTilt: .06 * st2});break;
+        const pk = tt * 3.6; const ph = pk % (PI * 2); const hop2 = ph > PI * 1.5 ? SI((ph - PI * 1.5) * 4) : 0; q.bob = .04 * AB(hop2) + .015 * AB(SI(pk)); const st2 = SI(pk); Object.assign(q, {lKnee: .35 * MX(0, st2), rKnee: -.35 * MX(0, -st2), sway: .08 * st2, lArm: .5 + .25 * st2, rArm: .5 - .25 * st2, lElb: .5, rElb: .5, lean: .05 * st2, headTilt: .06 * st2});break;
       }
       case 'foxtrot': {
         // フォックストロット: 滑らかなスローステップ+わずかな昇降
-        const fx = tt * 2.4; const rise = Math.sin(fx); Object.assign(q, {bob: .02 * rise, sway: .1 * Math.sin(fx * .5), lean: .06 * Math.sin(fx * .5 + .7), lArm: .65 + .1 * Math.sin(fx * .5), rArm: .65 - .1 * Math.sin(fx * .5), lElb: .4, rElb: .4, lThigh: .15 * MX(0, Math.sin(fx)), rThigh: -.15 * MX(0, -Math.sin(fx)), lKnee: .1 * MX(0, Math.sin(fx)), rKnee: -.1 * MX(0, -Math.sin(fx)), headTilt: .05 * Math.sin(fx * .5)});break;
+        const fx = tt * 2.4; const rise = SI(fx); Object.assign(q, {bob: .02 * rise, sway: .1 * SI(fx * .5), lean: .06 * SI(fx * .5 + .7), lArm: .65 + .1 * SI(fx * .5), rArm: .65 - .1 * SI(fx * .5), lElb: .4, rElb: .4, lThigh: .15 * MX(0, SI(fx)), rThigh: -.15 * MX(0, -SI(fx)), lKnee: .1 * MX(0, SI(fx)), rKnee: -.1 * MX(0, -SI(fx)), headTilt: .05 * SI(fx * .5)});break;
       }
       case 'chacha': {
         // チャチャ: 速い横ステップ(チャチャチャ)+腰の切れ
-        const cc = tt * 4.4; const step = Math.sin(cc); const trip = Math.sign(Math.sin(cc * 1.5)) * MN(1, Math.abs(Math.sin(cc * 1.5)) * 3); Object.assign(q, {sway: .1 * trip, bob: .02 * Math.abs(step), lKnee: .3 * MX(0, step), rKnee: -.3 * MX(0, -step), lArm: .55 + .35 * step, rArm: .55 - .35 * step, lElb: .6, rElb: .6, lean: .04 * trip});// 3連ステップ感
+        const cc = tt * 4.4; const step = SI(cc); const trip = Math.sign(SI(cc * 1.5)) * MN(1, AB(SI(cc * 1.5)) * 3); Object.assign(q, {sway: .1 * trip, bob: .02 * AB(step), lKnee: .3 * MX(0, step), rKnee: -.3 * MX(0, -step), lArm: .55 + .35 * step, rArm: .55 - .35 * step, lElb: .6, rElb: .6, lean: .04 * trip});// 3連ステップ感
         break;
       }
       case 'pasodoble': {
         // パソドブレ: 両腕を頭上に構えて力強く踏み回る
-        const pd = tt * 2.2; const stamp = MX(0, Math.sin(pd * 2)) ** .5; Object.assign(q, {lArm: -.9 + .1 * Math.sin(pd), rArm: .9 - .1 * Math.sin(pd), lElb: -.4, rElb: -.4, lKnee: .3 * stamp, rKnee: -.3 * stamp, bob: .03 * stamp, lean: .08 * Math.sin(pd), spin: .15 * Math.sin(pd * .5), headTilt: .1 * Math.sin(pd * .5 + 1)});// 腕を頭上で湾曲 // ゆるい旋回 // 誇らしげな顔上げ
+        const pd = tt * 2.2; const stamp = MX(0, SI(pd * 2)) ** .5; Object.assign(q, {lArm: -.9 + .1 * SI(pd), rArm: .9 - .1 * SI(pd), lElb: -.4, rElb: -.4, lKnee: .3 * stamp, rKnee: -.3 * stamp, bob: .03 * stamp, lean: .08 * SI(pd), spin: .15 * SI(pd * .5), headTilt: .1 * SI(pd * .5 + 1)});// 腕を頭上で湾曲 // ゆるい旋回 // 誇らしげな顔上げ
         break;
       }
       case 'cancan': {
         // カンカン: 交互に高く蹴り上げる+腕を横に広げる
-        const cn = tt * 5; const kick = MX(0, Math.sin(cn)); Object.assign(q, {lThigh: -.1 - 1.1 * MX(0, Math.sin(cn)), rThigh: -.1 - 1.1 * MX(0, -Math.sin(cn)), lKnee: .4, rKnee: .4, lArm: -1.2, rArm: 1.2, lElb: -.15, rElb: -.15, bob: .04 * kick, lean: .06 * Math.sin(cn)});// 左脚キック // 腕を横にピンと広げる
+        const cn = tt * 5; const kick = MX(0, SI(cn)); Object.assign(q, {lThigh: -.1 - 1.1 * MX(0, SI(cn)), rThigh: -.1 - 1.1 * MX(0, -SI(cn)), lKnee: .4, rKnee: .4, lArm: -1.2, rArm: 1.2, lElb: -.15, rElb: -.15, bob: .04 * kick, lean: .06 * SI(cn)});// 左脚キック // 腕を横にピンと広げる
         break;
       }
       case 'mazurka': {
         // マズルカ: ホップ+かかと打ち+優雅な腕
-        const mz = tt * 3; const beat = Math.sin(mz * 3); const hop = MX(0, Math.sin(mz)); Object.assign(q, {bob: .05 * hop, lThigh: -.15 + .25 * Math.sin(mz * 1.5), rThigh: -.15 - .25 * Math.sin(mz * 1.5), lKnee: .5 * MX(0, Math.sin(mz * 1.5)), rKnee: .5 * MX(0, -Math.sin(mz * 1.5)), lArm: -.6 - .3 * Math.sin(mz), rArm: .6 - .3 * Math.sin(mz), lElb: -.5, rElb: -.5, lean: .06 * beat, headTilt: .08 * beat});// 3拍子
+        const mz = tt * 3; const beat = SI(mz * 3); const hop = MX(0, SI(mz)); Object.assign(q, {bob: .05 * hop, lThigh: -.15 + .25 * SI(mz * 1.5), rThigh: -.15 - .25 * SI(mz * 1.5), lKnee: .5 * MX(0, SI(mz * 1.5)), rKnee: .5 * MX(0, -SI(mz * 1.5)), lArm: -.6 - .3 * SI(mz), rArm: .6 - .3 * SI(mz), lElb: -.5, rElb: -.5, lean: .06 * beat, headTilt: .08 * beat});// 3拍子
         break;
       }
       case 'minuet': {
         // メヌエット: ゆったり3拍子の淑やかなステップ+カーテシー気味の膝曲げ
-        const mn = tt * 1.8; const step = Math.sin(mn); const curtsey = MX(0, Math.sin(mn * .5 + PI / 4)) ** 2; Object.assign(q, {bob: .015 * Math.abs(step) - .06 * curtsey, lThigh: -.1 - .18 * MX(0, step), rThigh: -.1 - .18 * MX(0, -step), lKnee: .25 + .4 * curtsey, rKnee: .25 + .4 * curtsey, lArm: -.35 - .2 * step, rArm: .35 - .2 * step, lElb: -.65, rElb: -.65, lean: .03 * step, headTilt: .06 * Math.sin(mn * .5)});// 周期末に深くお辞儀 // 腕を優雅に円く保持 // 淑やかな首
+        const mn = tt * 1.8; const step = SI(mn); const curtsey = MX(0, SI(mn * .5 + PI / 4)) ** 2; Object.assign(q, {bob: .015 * AB(step) - .06 * curtsey, lThigh: -.1 - .18 * MX(0, step), rThigh: -.1 - .18 * MX(0, -step), lKnee: .25 + .4 * curtsey, rKnee: .25 + .4 * curtsey, lArm: -.35 - .2 * step, rArm: .35 - .2 * step, lElb: -.65, rElb: -.65, lean: .03 * step, headTilt: .06 * SI(mn * .5)});// 周期末に深くお辞儀 // 腕を優雅に円く保持 // 淑やかな首
         break;
       }
       case 'bolero': {
         // ボレロ: ゆったりした旋回+片腕を頭上に掲げる優雅な動き
-        const bo = tt * 1.4; const rise = Math.sin(bo * .5); Object.assign(q, {lArm: -.4 - .9 * MX(0, rise), rArm: .4 + .2 * Math.sin(bo), lElb: -.5 - .3 * MX(0, rise), rElb: -.4, spin: .2 * Math.sin(bo * .5), sway: .06 * Math.sin(bo), bob: .02 * Math.abs(Math.sin(bo * 1.5)), lKnee: .15, rKnee: .15, headTilt: -.08 * MX(0, rise), lean: .04 * Math.sin(bo * .5)});// 左腕がゆっくり上がる // ゆるい旋回 // 掲げた腕を仰ぐ
+        const bo = tt * 1.4; const rise = SI(bo * .5); Object.assign(q, {lArm: -.4 - .9 * MX(0, rise), rArm: .4 + .2 * SI(bo), lElb: -.5 - .3 * MX(0, rise), rElb: -.4, spin: .2 * SI(bo * .5), sway: .06 * SI(bo), bob: .02 * AB(SI(bo * 1.5)), lKnee: .15, rKnee: .15, headTilt: -.08 * MX(0, rise), lean: .04 * SI(bo * .5)});// 左腕がゆっくり上がる // ゆるい旋回 // 掲げた腕を仰ぐ
         break;
       }
       case 'sirtaki': {
         // シルタキ: ゆっくり始まり加速する横ステップ+腕を伸ばす
-        const sk = tt * (1.6 + MN(1, tt % 8 / 6) * 2.4); const st = Math.sin(sk); Object.assign(q, {sway: .14 * st, bob: .035 * Math.abs(st), lThigh: -.12 - .22 * MX(0, st), rThigh: -.12 - .22 * MX(0, -st), lKnee: .35 * MX(0, st), rKnee: .35 * MX(0, -st), lArm: -.95, rArm: .95, lElb: -.1, rElb: -.1, lean: .05 * st});// 段々速く // 両腕を横に伸ばして肩を組む
+        const sk = tt * (1.6 + MN(1, tt % 8 / 6) * 2.4); const st = SI(sk); Object.assign(q, {sway: .14 * st, bob: .035 * AB(st), lThigh: -.12 - .22 * MX(0, st), rThigh: -.12 - .22 * MX(0, -st), lKnee: .35 * MX(0, st), rKnee: .35 * MX(0, -st), lArm: -.95, rArm: .95, lElb: -.1, rElb: -.1, lean: .05 * st});// 段々速く // 両腕を横に伸ばして肩を組む
         break;
       }
       case 'reel': {
         // リール: 速い足捌き+回り込み+腰に手(スコットランド舞踏)
-        const rl = tt * 5.2; const st = Math.sin(rl); Object.assign(q, {lThigh: -.1 - .3 * MX(0, st), rThigh: -.1 - .3 * MX(0, -st), lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), bob: .045 * Math.abs(st), sway: .1 * Math.sin(rl * .5), spin: .3 * Math.sin(rl * .25), lArm: -.35, rArm: .35, lElb: -.9, rElb: -.9});// 輪を描いて回り込む // ゆるい旋回 // 腰に手
+        const rl = tt * 5.2; const st = SI(rl); Object.assign(q, {lThigh: -.1 - .3 * MX(0, st), rThigh: -.1 - .3 * MX(0, -st), lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), bob: .045 * AB(st), sway: .1 * SI(rl * .5), spin: .3 * SI(rl * .25), lArm: -.35, rArm: .35, lElb: -.9, rElb: -.9});// 輪を描いて回り込む // ゆるい旋回 // 腰に手
         break;
       }
       case 'hora': {
         // ホラ: 輪になり横ステップを繰り返す+跳ねる膝
-        const hr2 = tt * 3.4; const st = Math.sin(hr2); Object.assign(q, {sway: .16 * Math.sin(hr2 * .5), lThigh: -.1 - .35 * MX(0, st), rThigh: -.1 - .35 * MX(0, -st), lKnee: .55 * MX(0, st), rKnee: .55 * MX(0, -st), bob: .05 * Math.abs(st), lArm: -.85, rArm: .85, lElb: -.2, rElb: -.2, spin: .25 * Math.sin(hr2 * .5)});// 輪を周る移動 // 隣と肩を組む腕
+        const hr2 = tt * 3.4; const st = SI(hr2); Object.assign(q, {sway: .16 * SI(hr2 * .5), lThigh: -.1 - .35 * MX(0, st), rThigh: -.1 - .35 * MX(0, -st), lKnee: .55 * MX(0, st), rKnee: .55 * MX(0, -st), bob: .05 * AB(st), lArm: -.85, rArm: .85, lElb: -.2, rElb: -.2, spin: .25 * SI(hr2 * .5)});// 輪を周る移動 // 隣と肩を組む腕
         break;
       }
       case 'gavotte': {
         // ガヴォット: 4拍子の跳ねる歩み+片脚を上げて回る
-        const gv = tt * 3.2; const hop = MX(0, Math.sin(gv * 2)); Object.assign(q, {bob: .06 * hop, lThigh: -.1 - .5 * MX(0, Math.sin(gv * 2 - 1)), rThigh: -.1 - .3 * MX(0, -Math.sin(gv * 2)), lKnee: .6 * MX(0, Math.sin(gv * 2 - 1)), rKnee: .4, lArm: -.5 - .4 * Math.sin(gv * .5), rArm: .5 - .4 * Math.sin(gv * .5), lElb: -.6, rElb: -.6, lean: .07 * Math.sin(gv), headTilt: .08 * Math.sin(gv + 1)});// 脚を高く
+        const gv = tt * 3.2; const hop = MX(0, SI(gv * 2)); Object.assign(q, {bob: .06 * hop, lThigh: -.1 - .5 * MX(0, SI(gv * 2 - 1)), rThigh: -.1 - .3 * MX(0, -SI(gv * 2)), lKnee: .6 * MX(0, SI(gv * 2 - 1)), rKnee: .4, lArm: -.5 - .4 * SI(gv * .5), rArm: .5 - .4 * SI(gv * .5), lElb: -.6, rElb: -.6, lean: .07 * SI(gv), headTilt: .08 * SI(gv + 1)});// 脚を高く
         break;
       }
       case 'czardas': {
         // チャルダッシュ: 前半ラッサン(緩)→後半フリス(速)の脚捌き
-        const slow = (tt % 10) < 5; const cz = tt * (slow ? 1.8 : 4.6); const st = Math.sin(cz); Object.assign(q, {lThigh: -.12 - .35 * MX(0, st), rThigh: -.12 - .35 * MX(0, -st), lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), bob: .04 * Math.abs(st), sway: .1 * st, lArm: slow ? -.4 : -.7, rArm: slow ? .4 : .7, lElb: slow ? -.8 : -.4, rElb: slow ? -.8 : -.4, lean: .06 * st});// 腰手→胸上げ
+        const slow = (tt % 10) < 5; const cz = tt * (slow ? 1.8 : 4.6); const st = SI(cz); Object.assign(q, {lThigh: -.12 - .35 * MX(0, st), rThigh: -.12 - .35 * MX(0, -st), lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), bob: .04 * AB(st), sway: .1 * st, lArm: slow ? -.4 : -.7, rArm: slow ? .4 : .7, lElb: slow ? -.8 : -.4, rElb: slow ? -.8 : -.4, lean: .06 * st});// 腰手→胸上げ
         break;
       }
       case 'morris': {
         // モリスダンス: ホップ+手ぬぐいを振る両腕の交互上げ
-        const mr = tt * 3.6; const hop = MX(0, Math.sin(mr)); const arm = Math.floor(mr / PI) % 2 ? 1 : -1; Object.assign(q, {bob: .05 * hop, lThigh: -.08 - .3 * MX(0, Math.sin(mr - .8)), rThigh: -.08 - .3 * MX(0, Math.sin(mr + .8)), lKnee: .5 * MX(0, Math.sin(mr - .8)), rKnee: .5 * MX(0, Math.sin(mr + .8)), lArm: -.5 - .9 * MX(0, arm), rArm: -.5 - .9 * MX(0, -arm), lElb: -.3, rElb: -.3, sway: .08 * Math.sin(mr * .5), headTilt: .07 * Math.sin(mr)});// 手ぬぐいを高く
+        const mr = tt * 3.6; const hop = MX(0, SI(mr)); const arm = FL(mr / PI) % 2 ? 1 : -1; Object.assign(q, {bob: .05 * hop, lThigh: -.08 - .3 * MX(0, SI(mr - .8)), rThigh: -.08 - .3 * MX(0, SI(mr + .8)), lKnee: .5 * MX(0, SI(mr - .8)), rKnee: .5 * MX(0, SI(mr + .8)), lArm: -.5 - .9 * MX(0, arm), rArm: -.5 - .9 * MX(0, -arm), lElb: -.3, rElb: -.3, sway: .08 * SI(mr * .5), headTilt: .07 * SI(mr)});// 手ぬぐいを高く
         break;
       }
       case 'jig': {
         // ジグ: 上体は硬く直立、足だけ高速で交互に蹴る
-        const jg = tt * 7; const st = Math.sin(jg); Object.assign(q, {lThigh: -.15 - .5 * MX(0, st), rThigh: -.15 - .5 * MX(0, -st), lKnee: .8 * MX(0, st), rKnee: .8 * MX(0, -st), bob: .03 * Math.abs(st), lArm: -.35, rArm: -.35, lElb: -1, rElb: -1, lean: 0, sway: 0, headTilt: .03 * Math.sin(jg * .25)});// 腰に手 // 上体固定
+        const jg = tt * 7; const st = SI(jg); Object.assign(q, {lThigh: -.15 - .5 * MX(0, st), rThigh: -.15 - .5 * MX(0, -st), lKnee: .8 * MX(0, st), rKnee: .8 * MX(0, -st), bob: .03 * AB(st), lArm: -.35, rArm: -.35, lElb: -1, rElb: -1, lean: 0, sway: 0, headTilt: .03 * SI(jg * .25)});// 腰に手 // 上体固定
         break;
       }
       case 'bourree': {
         // ブーレ: つま先で刻む小さな横ステップ+腕を流れるように
-        const br = tt * 4.4; const st = Math.sin(br); const drift = S(.8) * .12; Object.assign(q, {sway: .1 * st, bob: .025 * Math.abs(st), lThigh: -.15 - .2 * MX(0, st), rThigh: -.15 - .2 * MX(0, -st), lKnee: .25 + .15 * MX(0, st), rKnee: .25 + .15 * MX(0, -st), lArm: -.9 - .3 * Math.sin(br * .5), rArm: -.9 - .3 * Math.sin(br * .5 + 1.5), lElb: -.5, rElb: -.5, lean: .05 * st + drift * .3, headTilt: .06 * Math.sin(br * .5)});// 横への流れ // つま先立ち気味(膝小さめ) // 優雅な流れる腕
+        const br = tt * 4.4; const st = SI(br); const drift = S(.8) * .12; Object.assign(q, {sway: .1 * st, bob: .025 * AB(st), lThigh: -.15 - .2 * MX(0, st), rThigh: -.15 - .2 * MX(0, -st), lKnee: .25 + .15 * MX(0, st), rKnee: .25 + .15 * MX(0, -st), lArm: -.9 - .3 * SI(br * .5), rArm: -.9 - .3 * SI(br * .5 + 1.5), lElb: -.5, rElb: -.5, lean: .05 * st + drift * .3, headTilt: .06 * SI(br * .5)});// 横への流れ // つま先立ち気味(膝小さめ) // 優雅な流れる腕
         break;
       }
       case 'sarabande': {
         // サラバンド: 緩やかで威厳ある3拍子、意図的な体重移動+ゆっくり回る腕
-        const sb = tt * 1.6; const st = Math.sin(sb); const shift = Math.sin(sb * .5); Object.assign(q, {sway: .14 * shift, lean: .09 * shift, bob: .03 * Math.abs(st), lThigh: -.12 - .25 * MX(0, st), rThigh: -.12 - .25 * MX(0, -st), lKnee: .35 * MX(0, st), rKnee: .35 * MX(0, -st), lArm: -.7 - .5 * Math.sin(sb * .5 + .6), rArm: -.7 - .5 * Math.sin(sb * .5 + 2), lElb: -.4, rElb: -.4, headTilt: .08 * shift});// 左右に大きく重心移動 // ゆっくり回る腕
+        const sb = tt * 1.6; const st = SI(sb); const shift = SI(sb * .5); Object.assign(q, {sway: .14 * shift, lean: .09 * shift, bob: .03 * AB(st), lThigh: -.12 - .25 * MX(0, st), rThigh: -.12 - .25 * MX(0, -st), lKnee: .35 * MX(0, st), rKnee: .35 * MX(0, -st), lArm: -.7 - .5 * SI(sb * .5 + .6), rArm: -.7 - .5 * SI(sb * .5 + 2), lElb: -.4, rElb: -.4, headTilt: .08 * shift});// 左右に大きく重心移動 // ゆっくり回る腕
         break;
       }
       case 'pavane': {
         // パヴァーヌ: 滑るような行進歩み+緩やかな昇降+格式ある姿勢
-        const pv = tt * 1.4; const st = Math.sin(pv); const rise = Math.sin(pv * .5); Object.assign(q, {bob: .035 * Math.abs(rise), sway: .06 * st, lThigh: -.1 - .18 * MX(0, st), rThigh: -.1 - .18 * MX(0, -st), lKnee: .2 * MX(0, st), rKnee: .2 * MX(0, -st), lArm: -.55 - .15 * st, rArm: -.55 - .15 * st, lElb: -.2, rElb: -.2, lean: .04 * st, headTilt: .04 * Math.sin(pv * .5)});// 2拍に1回の昇降 // 膝を控えめに(滑る歩み) // 前に伸ばした儀礼的な腕
+        const pv = tt * 1.4; const st = SI(pv); const rise = SI(pv * .5); Object.assign(q, {bob: .035 * AB(rise), sway: .06 * st, lThigh: -.1 - .18 * MX(0, st), rThigh: -.1 - .18 * MX(0, -st), lKnee: .2 * MX(0, st), rKnee: .2 * MX(0, -st), lArm: -.55 - .15 * st, rArm: -.55 - .15 * st, lElb: -.2, rElb: -.2, lean: .04 * st, headTilt: .04 * SI(pv * .5)});// 2拍に1回の昇降 // 膝を控えめに(滑る歩み) // 前に伸ばした儀礼的な腕
         break;
       }
       case 'allemande': {
         // アルマンド: 優美な歩み+頭上で組んだ腕の円弧+軽い揺れ
-        const al = tt * 2; const st = Math.sin(al); Object.assign(q, {lThigh: -.15 - .25 * MX(0, st), rThigh: -.15 - .25 * MX(0, -st), lKnee: .4 * MX(0, st), rKnee: .4 * MX(0, -st), bob: .03 * Math.abs(st), sway: .09 * st, lArm: -1.6 - .15 * Math.sin(al * .5), rArm: -1.6 - .15 * Math.sin(al * .5 + .8), lElb: -.9, rElb: -.9, lean: .05 * st, headTilt: .07 * Math.sin(al * .5 + .4)});// 頭上の円弧 // 肘を深く曲げて組む
+        const al = tt * 2; const st = SI(al); Object.assign(q, {lThigh: -.15 - .25 * MX(0, st), rThigh: -.15 - .25 * MX(0, -st), lKnee: .4 * MX(0, st), rKnee: .4 * MX(0, -st), bob: .03 * AB(st), sway: .09 * st, lArm: -1.6 - .15 * SI(al * .5), rArm: -1.6 - .15 * SI(al * .5 + .8), lElb: -.9, rElb: -.9, lean: .05 * st, headTilt: .07 * SI(al * .5 + .4)});// 頭上の円弧 // 肘を深く曲げて組む
         break;
       }
       case 'courante': {
         // クーラント: 軽やかな小走りの歩み+小さな跳躍(バロック舞曲)
-        const cr = tt * 3.4; const st = Math.sin(cr); const jump = MX(0, Math.sin(cr * .5)); Object.assign(q, {bob: .07 * jump, lThigh: -.15 - .4 * MX(0, st), rThigh: -.15 - .4 * MX(0, -st), lKnee: .55 * MX(0, st), rKnee: .55 * MX(0, -st), sway: .07 * st, lArm: -.6 - .3 * st, rArm: -.6 - .3 * st, lElb: -.35, rElb: -.35, lean: .05 * st, headTilt: .06 * Math.sin(cr * .5)});// 2拍に1回の小跳躍 // 軽く振れる腕
+        const cr = tt * 3.4; const st = SI(cr); const jump = MX(0, SI(cr * .5)); Object.assign(q, {bob: .07 * jump, lThigh: -.15 - .4 * MX(0, st), rThigh: -.15 - .4 * MX(0, -st), lKnee: .55 * MX(0, st), rKnee: .55 * MX(0, -st), sway: .07 * st, lArm: -.6 - .3 * st, rArm: -.6 - .3 * st, lElb: -.35, rElb: -.35, lean: .05 * st, headTilt: .06 * SI(cr * .5)});// 2拍に1回の小跳躍 // 軽く振れる腕
         break;
       }
       case 'rigaudon': {
         // リゴドン: 陽気なホップ+交互に踵を突き出す
-        const rg = tt * 4; const st = Math.sin(rg); const hop = Math.abs(Math.sin(rg * .5)); Object.assign(q, {bob: .06 * hop, lThigh: -.2 - .35 * MX(0, st), rThigh: -.2 - .35 * MX(0, -st), lKnee: .15 * MX(0, st), rKnee: .15 * MX(0, -st), sway: .08 * st, lArm: -.5 - .4 * Math.sin(rg * .5), rArm: -.5 - .4 * Math.sin(rg * .5 + 1), lElb: -.5, rElb: -.5, lean: .06 * st, headTilt: .08 * Math.sin(rg * .5)});// 踵を前に突き出す(膝を伸ばし気味)
+        const rg = tt * 4; const st = SI(rg); const hop = AB(SI(rg * .5)); Object.assign(q, {bob: .06 * hop, lThigh: -.2 - .35 * MX(0, st), rThigh: -.2 - .35 * MX(0, -st), lKnee: .15 * MX(0, st), rKnee: .15 * MX(0, -st), sway: .08 * st, lArm: -.5 - .4 * SI(rg * .5), rArm: -.5 - .4 * SI(rg * .5 + 1), lElb: -.5, rElb: -.5, lean: .06 * st, headTilt: .08 * SI(rg * .5)});// 踵を前に突き出す(膝を伸ばし気味)
         break;
       }
       case 'passepied': {
         // パスピエ: 3/8拍子の速い小ステップ+頭上に挙げた腕
-        const ps = tt * 4.8; const st = Math.sin(ps); Object.assign(q, {lThigh: -.15 - .3 * MX(0, st), rThigh: -.15 - .3 * MX(0, -st), lKnee: .4 * MX(0, st), rKnee: .4 * MX(0, -st), bob: .035 * Math.abs(st), sway: .08 * st, lArm: -1.3 - .25 * Math.sin(ps * .5), rArm: -1.3 - .25 * Math.sin(ps * .5 + 1.2), lElb: -.6, rElb: -.6, lean: .05 * st, headTilt: .06 * Math.sin(ps * .33)});// 頭上に優雅に
+        const ps = tt * 4.8; const st = SI(ps); Object.assign(q, {lThigh: -.15 - .3 * MX(0, st), rThigh: -.15 - .3 * MX(0, -st), lKnee: .4 * MX(0, st), rKnee: .4 * MX(0, -st), bob: .035 * AB(st), sway: .08 * st, lArm: -1.3 - .25 * SI(ps * .5), rArm: -1.3 - .25 * SI(ps * .5 + 1.2), lElb: -.6, rElb: -.6, lean: .05 * st, headTilt: .06 * SI(ps * .33)});// 頭上に優雅に
         break;
       }
       case 'hambo': {
         // ハンボ: 3/4拍子+1拍目の深い沈み+旋回(スウェーデンの民俗ダンス)
-        const hb = tt * 3.4; const beat = Math.floor(hb) % 3; const dip = beat === 0 ? .06 : .02; const st = Math.sin(hb * PI * 2 / 3); Object.assign(q, {bob: dip * (0.5 + 0.5 * Math.sin(hb)), lean: .12 * Math.sin(hb * .66), spin: .35 * Math.sin(hb * .22), lArm: -.9 - .3 * Math.sin(hb * .5), rArm: -.9 - .3 * Math.sin(hb * .5 + .8), lElb: -.45, rElb: -.45, lThigh: -.1 - .2 * MX(0, st), rThigh: -.1 - .2 * MX(0, -st), sway: .07 * st, headTilt: .05 * Math.sin(hb * .4)});// 1拍目に深く沈む // ゆっくり旋回
+        const hb = tt * 3.4; const beat = FL(hb) % 3; const dip = beat === 0 ? .06 : .02; const st = SI(hb * PI * 2 / 3); Object.assign(q, {bob: dip * (0.5 + 0.5 * SI(hb)), lean: .12 * SI(hb * .66), spin: .35 * SI(hb * .22), lArm: -.9 - .3 * SI(hb * .5), rArm: -.9 - .3 * SI(hb * .5 + .8), lElb: -.45, rElb: -.45, lThigh: -.1 - .2 * MX(0, st), rThigh: -.1 - .2 * MX(0, -st), sway: .07 * st, headTilt: .05 * SI(hb * .4)});// 1拍目に深く沈む // ゆっくり旋回
         break;
       }
       case 'galliard': {
         // ガリアード: サンクパス(4回の交互キック+最後の跳躍)
-        const gl = tt * 4.4; const step = gl % 5; const kick = Math.sin(step * PI); const side = Math.floor(gl / 5) % 2 === 0 ? 1 : -1; const leap = step > 4 ? 1 : 0; Object.assign(q, {lThigh: side > 0 ? -.3 - .5 * MX(0, kick) : -.15, rThigh: side < 0 ? -.3 - .5 * MX(0, kick) : -.15, lKnee: .5 * MX(0, kick), rKnee: .5 * MX(0, kick), bob: .1 * leap * Math.sin((step - 4) * PI), sway: .1 * side, lArm: -.7 - .5 * side * kick, rArm: -.7 - .5 * -side * kick, lElb: -.4, rElb: -.4, headTilt: .06 * side, spin: .1 * side * leap});// 左右交互
+        const gl = tt * 4.4; const step = gl % 5; const kick = SI(step * PI); const side = FL(gl / 5) % 2 === 0 ? 1 : -1; const leap = step > 4 ? 1 : 0; Object.assign(q, {lThigh: side > 0 ? -.3 - .5 * MX(0, kick) : -.15, rThigh: side < 0 ? -.3 - .5 * MX(0, kick) : -.15, lKnee: .5 * MX(0, kick), rKnee: .5 * MX(0, kick), bob: .1 * leap * SI((step - 4) * PI), sway: .1 * side, lArm: -.7 - .5 * side * kick, rArm: -.7 - .5 * -side * kick, lElb: -.4, rElb: -.4, headTilt: .06 * side, spin: .1 * side * leap});// 左右交互
         break;
       }
       case 'saltarello': {
         // サルタレッロ: 連続する小跳躍+交互に後ろへ蹴り上げる脚
-        const sa = tt * 5.2; const hop = Math.abs(Math.sin(sa)); const st = Math.sin(sa); Object.assign(q, {bob: .07 * hop, lKnee: .55 * MX(0, st), rKnee: .55 * MX(0, -st), lThigh: -.1 - .15 * MX(0, st), rThigh: -.1 - .15 * MX(0, -st), sway: .09 * st, lArm: -.6 - .45 * Math.sin(sa * .5), rArm: -.6 - .45 * Math.sin(sa * .5 + PI), lElb: -.5, rElb: -.5, lean: .06 * st, headTilt: .05 * Math.sin(sa * .7)});// 左膝を後ろへ折る
+        const sa = tt * 5.2; const hop = AB(SI(sa)); const st = SI(sa); Object.assign(q, {bob: .07 * hop, lKnee: .55 * MX(0, st), rKnee: .55 * MX(0, -st), lThigh: -.1 - .15 * MX(0, st), rThigh: -.1 - .15 * MX(0, -st), sway: .09 * st, lArm: -.6 - .45 * SI(sa * .5), rArm: -.6 - .45 * SI(sa * .5 + PI), lElb: -.5, rElb: -.5, lean: .06 * st, headTilt: .05 * SI(sa * .7)});// 左膝を後ろへ折る
         break;
       }
       case 'bransle': {
         // ブランル: 連なって左右に揺れる横ステップ+小さなキック
-        const br = tt * 3.6; const st = Math.sin(br); Object.assign(q, {sway: .16 * st, lean: .1 * st, lThigh: -.1 - .2 * MX(0, st), rThigh: -.1 - .2 * MX(0, -st), lKnee: .3 * MX(0, -st), rKnee: .3 * MX(0, st), bob: .03 * Math.abs(st), lArm: -.4 - .25 * st, rArm: -.4 - .25 * -st, lElb: -.3, rElb: -.3, headTilt: .08 * st});// 大きく左右に揺れる // 揺れと逆側に小キック
+        const br = tt * 3.6; const st = SI(br); Object.assign(q, {sway: .16 * st, lean: .1 * st, lThigh: -.1 - .2 * MX(0, st), rThigh: -.1 - .2 * MX(0, -st), lKnee: .3 * MX(0, -st), rKnee: .3 * MX(0, st), bob: .03 * AB(st), lArm: -.4 - .25 * st, rArm: -.4 - .25 * -st, lElb: -.3, rElb: -.3, headTilt: .08 * st});// 大きく左右に揺れる // 揺れと逆側に小キック
         break;
       }
       case 'farandole': {
         // ファランドール: 手を繋いで連なり弾む走りステップ
-        const fa = tt * 5.5; const st = Math.sin(fa); Object.assign(q, {bob: .06 * Math.abs(st), lThigh: -.2 - .35 * MX(0, st), rThigh: -.2 - .35 * MX(0, -st), lKnee: .45 * MX(0, -st), rKnee: .45 * MX(0, st), sway: .11 * st, lArm: -.9, rArm: -.9, lElb: -.2, rElb: -.2, lean: .08 * st, spin: .12 * Math.sin(fa * .3), headTilt: .05 * st});// 小さく弾む // 両側の手を繋ぐように伸ばす // 列が蛇行する感じ
+        const fa = tt * 5.5; const st = SI(fa); Object.assign(q, {bob: .06 * AB(st), lThigh: -.2 - .35 * MX(0, st), rThigh: -.2 - .35 * MX(0, -st), lKnee: .45 * MX(0, -st), rKnee: .45 * MX(0, st), sway: .11 * st, lArm: -.9, rArm: -.9, lElb: -.2, rElb: -.2, lean: .08 * st, spin: .12 * SI(fa * .3), headTilt: .05 * st});// 小さく弾む // 両側の手を繋ぐように伸ばす // 列が蛇行する感じ
         break;
       }
       case 'canarie': {
         // カナリー: 速い足踏み+小跳躍(カナリア諸島発の宮廷舞踊)
-        const cn = tt * 6.4; const st = Math.sin(cn); Object.assign(q, {lThigh: -.25 - .4 * MX(0, st), rThigh: -.25 - .4 * MX(0, -st), lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), bob: .05 * Math.abs(st) + .04 * MX(0, Math.sin(cn * .5)), sway: .07 * st, lArm: -.5 - .5 * Math.sin(cn * .5), rArm: -.5 - .5 * Math.sin(cn * .5 + PI), lElb: -.55, rElb: -.55, lean: .05 * st, headTilt: .04 * Math.sin(cn * .8)});// 踏み+跳ね
+        const cn = tt * 6.4; const st = SI(cn); Object.assign(q, {lThigh: -.25 - .4 * MX(0, st), rThigh: -.25 - .4 * MX(0, -st), lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), bob: .05 * AB(st) + .04 * MX(0, SI(cn * .5)), sway: .07 * st, lArm: -.5 - .5 * SI(cn * .5), rArm: -.5 - .5 * SI(cn * .5 + PI), lElb: -.55, rElb: -.55, lean: .05 * st, headTilt: .04 * SI(cn * .8)});// 踏み+跳ね
         break;
       }
       case 'volta': {
         // ヴォルタ(ラ・ヴォルタ): 回りながら跳ねるエリザベス朝の舞踊
-        const vo = tt * 4.2; const st = Math.sin(vo); Object.assign(q, {spin: .9 * Math.sin(vo * .25), bob: .08 * Math.abs(st), lThigh: -.3 - .3 * MX(0, st), rThigh: -.3 - .3 * MX(0, -st), lKnee: .4 * MX(0, -st), rKnee: .4 * MX(0, st), lArm: -1.1 - .3 * st, rArm: -1.1 - .3 * -st, lElb: -.5, rElb: -.5, lean: .1 * st, headTilt: .07 * Math.sin(vo * .5)});// 大きく旋回 // 相手を抱えるように高い腕
+        const vo = tt * 4.2; const st = SI(vo); Object.assign(q, {spin: .9 * SI(vo * .25), bob: .08 * AB(st), lThigh: -.3 - .3 * MX(0, st), rThigh: -.3 - .3 * MX(0, -st), lKnee: .4 * MX(0, -st), rKnee: .4 * MX(0, st), lArm: -1.1 - .3 * st, rArm: -1.1 - .3 * -st, lElb: -.5, rElb: -.5, lean: .1 * st, headTilt: .07 * SI(vo * .5)});// 大きく旋回 // 相手を抱えるように高い腕
         break;
       }
       case 'jota': {
         // ホタ: カスタネットを鳴らす頭上の腕+小さな跳躍ステップ(アラゴン)
-        const jo = tt * 5.8; const st = Math.sin(jo); Object.assign(q, {bob: .055 * Math.abs(st), lThigh: -.2 - .3 * MX(0, st), rThigh: -.2 - .3 * MX(0, -st), lKnee: .4 * MX(0, -st), rKnee: .4 * MX(0, st), lArm: -2.3 + .25 * Math.sin(jo * 2), rArm: -2.3 - .25 * Math.sin(jo * 2), lElb: -.9, rElb: -.9, sway: .08 * st, spin: .2 * Math.sin(jo * .3), headTilt: .06 * Math.sin(jo * .6)});// 頭上でカスタネット
+        const jo = tt * 5.8; const st = SI(jo); Object.assign(q, {bob: .055 * AB(st), lThigh: -.2 - .3 * MX(0, st), rThigh: -.2 - .3 * MX(0, -st), lKnee: .4 * MX(0, -st), rKnee: .4 * MX(0, st), lArm: -2.3 + .25 * SI(jo * 2), rArm: -2.3 - .25 * SI(jo * 2), lElb: -.9, rElb: -.9, sway: .08 * st, spin: .2 * SI(jo * .3), headTilt: .06 * SI(jo * .6)});// 頭上でカスタネット
         break;
       }
       case 'fandango': {
         // ファンダンゴ: カスタネットの腕を大きく回す求愛の踊り+回転
-        const fd = tt * 4.6; const st = Math.sin(fd); Object.assign(q, {spin: .5 * Math.sin(fd * .35), bob: .05 * Math.abs(st), lThigh: -.15 - .3 * MX(0, st), rThigh: -.15 - .3 * MX(0, -st), lKnee: .35 * MX(0, -st), rKnee: .35 * MX(0, st), lArm: -1.8 - .5 * Math.sin(fd), rArm: -1.8 - .5 * Math.sin(fd + PI), lElb: -.7, rElb: -.7, sway: .1 * st, lean: .07 * st, headTilt: .08 * Math.sin(fd * .5)});// 近づいたり離れたり // 頭上で大きく回る
+        const fd = tt * 4.6; const st = SI(fd); Object.assign(q, {spin: .5 * SI(fd * .35), bob: .05 * AB(st), lThigh: -.15 - .3 * MX(0, st), rThigh: -.15 - .3 * MX(0, -st), lKnee: .35 * MX(0, -st), rKnee: .35 * MX(0, st), lArm: -1.8 - .5 * SI(fd), rArm: -1.8 - .5 * SI(fd + PI), lElb: -.7, rElb: -.7, sway: .1 * st, lean: .07 * st, headTilt: .08 * SI(fd * .5)});// 近づいたり離れたり // 頭上で大きく回る
         break;
       }
       case 'zapateado': {
         // サパテアド: 打楽器的な速い足踏み+腰を据えた姿勢
-        const zp = tt * 7.2; const st = Math.sin(zp); Object.assign(q, {lThigh: -.28 - .35 * MX(0, st), rThigh: -.28 - .35 * MX(0, -st), lKnee: .3 * MX(0, st), rKnee: .3 * MX(0, -st), bob: .025 * Math.abs(st), lArm: -.35 - .15 * st, rArm: -.35 - .15 * -st, lElb: -.25, rElb: -.25, sway: .05 * st, lean: .04 * st, headTilt: .03 * Math.sin(zp * .5)});// 踵を打ち鳴らす // 上体は安定 // 腰の近くで押さえる
+        const zp = tt * 7.2; const st = SI(zp); Object.assign(q, {lThigh: -.28 - .35 * MX(0, st), rThigh: -.28 - .35 * MX(0, -st), lKnee: .3 * MX(0, st), rKnee: .3 * MX(0, -st), bob: .025 * AB(st), lArm: -.35 - .15 * st, rArm: -.35 - .15 * -st, lElb: -.25, rElb: -.25, sway: .05 * st, lean: .04 * st, headTilt: .03 * SI(zp * .5)});// 踵を打ち鳴らす // 上体は安定 // 腰の近くで押さえる
         break;
       }
       case 'korobushka': {
         // コロブーシュカ: ロシア民謡の購けやかな足踏み+胸の前で組む手
-        const kb = tt * 5.5; const st = Math.sin(kb); Object.assign(q, {lThigh: -.55 * MX(0, st), rThigh: -.55 * MX(0, -st), lKnee: .4 * MX(0, -st), rKnee: .4 * MX(0, st), lArm: -.7 - .25 * st, rArm: -.7 - .25 * -st, lElb: -.8, rElb: -.8, bob: .03 * Math.abs(st), sway: .08 * st, lean: .05 * st, spin: .15 * Math.sin(kb * .4), headTilt: .05 * Math.sin(kb * .5)});// 前腕を上げる // 胸前で組む
+        const kb = tt * 5.5; const st = SI(kb); Object.assign(q, {lThigh: -.55 * MX(0, st), rThigh: -.55 * MX(0, -st), lKnee: .4 * MX(0, -st), rKnee: .4 * MX(0, st), lArm: -.7 - .25 * st, rArm: -.7 - .25 * -st, lElb: -.8, rElb: -.8, bob: .03 * AB(st), sway: .08 * st, lean: .05 * st, spin: .15 * SI(kb * .4), headTilt: .05 * SI(kb * .5)});// 前腕を上げる // 胸前で組む
         break;
       }
       case 'trepak': {
         // トレパク: 組み腕+交互に脚を蹴り出すロシア踊り
-        const tp = tt * 5.8; const st = Math.sin(tp); Object.assign(q, {lThigh: -.5 * MX(0, st) - .15, rThigh: -.5 * MX(0, -st) - .15, lKnee: .1, rKnee: .1, lArm: -.55, rArm: -.55, lElb: -.9, rElb: -.9, bob: .02 + .04 * Math.abs(st), sway: .07 * st, lean: .06 * st, spin: .1 * Math.sin(tp * .5), headTilt: .04 * st});// 蹴り出し脚は伸びる // 腰/胸の前で組む // キックに合わせて沈む // 徐々に回る
+        const tp = tt * 5.8; const st = SI(tp); Object.assign(q, {lThigh: -.5 * MX(0, st) - .15, rThigh: -.5 * MX(0, -st) - .15, lKnee: .1, rKnee: .1, lArm: -.55, rArm: -.55, lElb: -.9, rElb: -.9, bob: .02 + .04 * AB(st), sway: .07 * st, lean: .06 * st, spin: .1 * SI(tp * .5), headTilt: .04 * st});// 蹴り出し脚は伸びる // 腰/胸の前で組む // キックに合わせて沈む // 徐々に回る
         break;
       }
       case 'legenyes': {
         // レゲーニェシュ: ルーマニアの男性踊り — 踵を打ち合わせ+脚を弾く
-        const lg = tt * 6.0; const st = Math.sin(lg); const click = MX(0, Math.sin(lg * 2)); Object.assign(q, {lThigh: -.4 * MX(0, st) - .1, rThigh: -.4 * MX(0, -st) - .1, lKnee: .35 * MX(0, -st), rKnee: .35 * MX(0, st), bob: .05 * click, lArm: -.6 - .2 * st, rArm: -.6 - .2 * -st, lElb: -.55, rElb: -.55, sway: .08 * st, lean: .04 * st, spin: .12 * Math.sin(lg * .33), headTilt: .05 * st});// 踵打ちフェーズ // ジャンプして踵を合わせる // 腰に手+時々上げる
+        const lg = tt * 6.0; const st = SI(lg); const click = MX(0, SI(lg * 2)); Object.assign(q, {lThigh: -.4 * MX(0, st) - .1, rThigh: -.4 * MX(0, -st) - .1, lKnee: .35 * MX(0, -st), rKnee: .35 * MX(0, st), bob: .05 * click, lArm: -.6 - .2 * st, rArm: -.6 - .2 * -st, lElb: -.55, rElb: -.55, sway: .08 * st, lean: .04 * st, spin: .12 * SI(lg * .33), headTilt: .05 * st});// 踵打ちフェーズ // ジャンプして踵を合わせる // 腰に手+時々上げる
         break;
       }
       case 'kalamatianos': {
         // カラマティアノス: ギリシャの7/8輪踊り — 連なって横に流れる
-        const kl = tt * 4.6; const st = Math.sin(kl); const ph = tt * 2.2; Object.assign(q, {lThigh: -.35 * MX(0, st) - .05, rThigh: -.35 * MX(0, -st) - .05, lKnee: .3 * MX(0, -st), rKnee: .3 * MX(0, st), lArm: -.9, rArm: -.9, lElb: -.25, rElb: -.25, bob: .03 * Math.abs(st), sway: .12 * st, lean: .06 * st, spin: .3 * Math.sin(ph), headTilt: .06 * Math.sin(kl * .5)});// 周回位相 // 両腕を広げて隣と繋ぐ // 連れて大きく揺れる // 輪を周る向きの変化
+        const kl = tt * 4.6; const st = SI(kl); const ph = tt * 2.2; Object.assign(q, {lThigh: -.35 * MX(0, st) - .05, rThigh: -.35 * MX(0, -st) - .05, lKnee: .3 * MX(0, -st), rKnee: .3 * MX(0, st), lArm: -.9, rArm: -.9, lElb: -.25, rElb: -.25, bob: .03 * AB(st), sway: .12 * st, lean: .06 * st, spin: .3 * SI(ph), headTilt: .06 * SI(kl * .5)});// 周回位相 // 両腕を広げて隣と繋ぐ // 連れて大きく揺れる // 輪を周る向きの変化
         break;
       }
       case 'kolo': {
         // コロ: セルビアの輪踊り — 小刻みな横ステップ+膝の弾み
-        const ko = tt * 5.2; const st = Math.sin(ko); Object.assign(q, {lThigh: -.3 * MX(0, st), rThigh: -.3 * MX(0, -st), lKnee: .35 * Math.abs(st), rKnee: .35 * Math.abs(st), lArm: -.75, rArm: -.75, lElb: -.5, rElb: -.5, bob: .04 * Math.abs(Math.sin(ko * 1.5)), sway: .1 * st, lean: .05 * st, spin: .25 * S(2.0), headTilt: .05 * Math.sin(ko * .5)});// 膝の弾み // 腰に繋ぐ腕
+        const ko = tt * 5.2; const st = SI(ko); Object.assign(q, {lThigh: -.3 * MX(0, st), rThigh: -.3 * MX(0, -st), lKnee: .35 * AB(st), rKnee: .35 * AB(st), lArm: -.75, rArm: -.75, lElb: -.5, rElb: -.5, bob: .04 * AB(SI(ko * 1.5)), sway: .1 * st, lean: .05 * st, spin: .25 * S(2.0), headTilt: .05 * SI(ko * .5)});// 膝の弾み // 腰に繋ぐ腕
         break;
       }
       case 'dabke': {
         // ダブケ: レバントの連踊り — 強い踏み込み+跳ね上げる脚
-        const dk2 = tt * 5.0; const st = Math.sin(dk2); Object.assign(q, {lThigh: -.5 * MX(0, st), rThigh: -.5 * MX(0, -st), lKnee: .5 * MX(0, -st), rKnee: .5 * MX(0, st), bob: .045 * Math.abs(st), lArm: -.85, rArm: -.85, lElb: -.35, rElb: -.35, sway: .09 * st, lean: .07 * st, spin: .2 * S(1.8), headTilt: .05 * st});// 踏み込みの沈み // 肩を組む腕
+        const dk2 = tt * 5.0; const st = SI(dk2); Object.assign(q, {lThigh: -.5 * MX(0, st), rThigh: -.5 * MX(0, -st), lKnee: .5 * MX(0, -st), rKnee: .5 * MX(0, st), bob: .045 * AB(st), lArm: -.85, rArm: -.85, lElb: -.35, rElb: -.35, sway: .09 * st, lean: .07 * st, spin: .2 * S(1.8), headTilt: .05 * st});// 踏み込みの沈み // 肩を組む腕
         break;
       }
       case 'sardana': {
         // サルダナ: カタルーニャの輪踊り — 挙げた腕+軽やかな足運び
-        const sd = tt * 4.0; const st = Math.sin(sd); Object.assign(q, {lThigh: -.3 * MX(0, st), rThigh: -.3 * MX(0, -st), lKnee: .3 * MX(0, -st), rKnee: .3 * MX(0, st), lArm: -1.5 - .2 * st, rArm: -1.5 - .2 * -st, lElb: -.2, rElb: -.2, bob: .025 * Math.abs(st), sway: .1 * st, lean: .04 * st, spin: .35 * S(1.6), headTilt: .04 * Math.sin(sd * .5)});// 肩より高く円を作る腕 // 輪の周回
+        const sd = tt * 4.0; const st = SI(sd); Object.assign(q, {lThigh: -.3 * MX(0, st), rThigh: -.3 * MX(0, -st), lKnee: .3 * MX(0, -st), rKnee: .3 * MX(0, st), lArm: -1.5 - .2 * st, rArm: -1.5 - .2 * -st, lElb: -.2, rElb: -.2, bob: .025 * AB(st), sway: .1 * st, lean: .04 * st, spin: .35 * S(1.6), headTilt: .04 * SI(sd * .5)});// 肩より高く円を作る腕 // 輪の周回
         break;
       }
       case 'zeybek': {
         // ゼイベク: トルコの勇士踊り — 鷹のように横に張った腕+ゆっくり膝を深く
-        const zb = tt * 3.6; const st = Math.sin(zb); Object.assign(q, {lArm: -1.15, rArm: -1.15, lElb: -.1, rElb: -.1, lThigh: -.45 * MX(0, st), rThigh: -.45 * MX(0, -st), lKnee: .55 * Math.abs(st), rKnee: .55 * Math.abs(st), bob: .05 * Math.abs(st), sway: .12 * st, lean: .1 * st, spin: .18 * S(1.4), headTilt: .06 * st});// 水平に張る腕 // 片膝を深く // 深く沈む // 左右に大きく寄せる
+        const zb = tt * 3.6; const st = SI(zb); Object.assign(q, {lArm: -1.15, rArm: -1.15, lElb: -.1, rElb: -.1, lThigh: -.45 * MX(0, st), rThigh: -.45 * MX(0, -st), lKnee: .55 * AB(st), rKnee: .55 * AB(st), bob: .05 * AB(st), sway: .12 * st, lean: .1 * st, spin: .18 * S(1.4), headTilt: .06 * st});// 水平に張る腕 // 片膝を深く // 深く沈む // 左右に大きく寄せる
         break;
       }
       case 'tsamiko': {
         // ツァーミコ: ギリシャの男踊り — 高い跳躍+ゆっくり脚を振り上げる
-        const ts = tt * 4.2; const st = Math.sin(ts); const leap = MX(0, Math.sin(ts * .5)); Object.assign(q, {lThigh: -.7 * MX(0, st), rThigh: -.7 * MX(0, -st), lKnee: .2 * MX(0, st), rKnee: .2 * MX(0, -st), bob: -.06 * leap, lArm: -1.3 - .3 * st, rArm: -1.3 - .3 * -st, lElb: -.15, rElb: -.15, sway: .1 * st, lean: .08 * st, spin: .4 * leap * Math.sin(ts * .25), headTilt: .05 * st});// 緩急 // 高く跳ぶ // 跳躍で旋回
+        const ts = tt * 4.2; const st = SI(ts); const leap = MX(0, SI(ts * .5)); Object.assign(q, {lThigh: -.7 * MX(0, st), rThigh: -.7 * MX(0, -st), lKnee: .2 * MX(0, st), rKnee: .2 * MX(0, -st), bob: -.06 * leap, lArm: -1.3 - .3 * st, rArm: -1.3 - .3 * -st, lElb: -.15, rElb: -.15, sway: .1 * st, lean: .08 * st, spin: .4 * leap * SI(ts * .25), headTilt: .05 * st});// 緩急 // 高く跳ぶ // 跳躍で旋回
         break;
       }
       case 'seguidilla': {
         // セギディーリャ: スペインのカスタネット踊り — 速い3拍子の足捌き+頭上の腕
-        const sg = tt * 6; const st = Math.sin(sg); const beat = Math.sin(sg * 1.5); Object.assign(q, {lArm: -1.5 + .2 * st, rArm: -1.5 + .2 * -st, lElb: -.5, rElb: -.5, lThigh: -.2 * MX(0, beat), rThigh: -.2 * MX(0, -beat), lKnee: .15 * Math.abs(beat), rKnee: .15 * Math.abs(beat), bob: -.015 * Math.abs(st), sway: .06 * st, lean: .06 * beat, headTilt: .07 * st, spin: .25 * Math.sin(sg * .33)});// 頭上に組む腕 // ペアの回り込み
+        const sg = tt * 6; const st = SI(sg); const beat = SI(sg * 1.5); Object.assign(q, {lArm: -1.5 + .2 * st, rArm: -1.5 + .2 * -st, lElb: -.5, rElb: -.5, lThigh: -.2 * MX(0, beat), rThigh: -.2 * MX(0, -beat), lKnee: .15 * AB(beat), rKnee: .15 * AB(beat), bob: -.015 * AB(st), sway: .06 * st, lean: .06 * beat, headTilt: .07 * st, spin: .25 * SI(sg * .33)});// 頭上に組む腕 // ペアの回り込み
         break;
       }
       case 'sevillanas': {
         // セビジャーナス: セビーリャの祭り踊り — 腕を大きく回す+優雅な足捌き
-        const sv = tt * 4.6; const st = Math.sin(sv); const arm = Math.sin(sv * .8); Object.assign(q, {lArm: -1.1 + .6 * arm, rArm: -1.1 - .6 * arm, lElb: -.3 + .2 * arm, rElb: -.3 - .2 * arm, lThigh: -.18 * MX(0, st), rThigh: -.18 * MX(0, -st), lKnee: .12 * Math.abs(st), rKnee: .12 * Math.abs(st), bob: -.012 * Math.abs(st), sway: .08 * st, lean: .07 * st, headTilt: .08 * arm, spin: .3 * Math.sin(sv * .4)});// 大きく回す腕 // 腕に合わせて頭も
+        const sv = tt * 4.6; const st = SI(sv); const arm = SI(sv * .8); Object.assign(q, {lArm: -1.1 + .6 * arm, rArm: -1.1 - .6 * arm, lElb: -.3 + .2 * arm, rElb: -.3 - .2 * arm, lThigh: -.18 * MX(0, st), rThigh: -.18 * MX(0, -st), lKnee: .12 * AB(st), rKnee: .12 * AB(st), bob: -.012 * AB(st), sway: .08 * st, lean: .07 * st, headTilt: .08 * arm, spin: .3 * SI(sv * .4)});// 大きく回す腕 // 腕に合わせて頭も
         break;
       }
       case 'forro': {
         // フォホー: ブラジルの密着ペアダンス — 小刻みな左右ステップ+揺れる腰
-        const fr = tt * 5; const st = Math.sin(fr); const side = Math.sin(fr * .5); Object.assign(q, {sway: .12 * side, lean: .06 * side, bob: -.015 * Math.abs(st), lThigh: -.15 * MX(0, side), rThigh: -.15 * MX(0, -side), lKnee: .2 * MX(0, -side), rKnee: .2 * MX(0, side), lArm: -.9 + .15 * st, rArm: -.9 - .15 * st, lElb: -.6, rElb: -.6, headTilt: .09 * side, spin: .15 * Math.sin(fr * .25)});// 2拍で左右 // 相手を抱くように前へ
+        const fr = tt * 5; const st = SI(fr); const side = SI(fr * .5); Object.assign(q, {sway: .12 * side, lean: .06 * side, bob: -.015 * AB(st), lThigh: -.15 * MX(0, side), rThigh: -.15 * MX(0, -side), lKnee: .2 * MX(0, -side), rKnee: .2 * MX(0, side), lArm: -.9 + .15 * st, rArm: -.9 - .15 * st, lElb: -.6, rElb: -.6, headTilt: .09 * side, spin: .15 * SI(fr * .25)});// 2拍で左右 // 相手を抱くように前へ
         break;
       }
       case 'schuhplattler': {
         // シュープラットラー: バイエルンの叩き踊り — 太腿/靴を叩く動作+ホップ
-        const sp = tt * 5.5; const st = Math.sin(sp); const slap = MX(0, Math.sin(sp * 2)); Object.assign(q, {bob: -.02 * Math.abs(st), lKnee: .5 * slap, rKnee: .15, lThigh: -.55 * slap, rThigh: -.1, lArm: -.5 - .4 * slap, rArm: -.6 + .3 * st, lElb: -.5, rElb: -.3, lean: .1 * st, sway: .06 * st, spin: .35 * Math.sin(sp * .5), headTilt: .06 * st});// 叩く瞬間 // 脚を上げて叩く // 太腿へ手を伸ばす // ゆっくり回る
+        const sp = tt * 5.5; const st = SI(sp); const slap = MX(0, SI(sp * 2)); Object.assign(q, {bob: -.02 * AB(st), lKnee: .5 * slap, rKnee: .15, lThigh: -.55 * slap, rThigh: -.1, lArm: -.5 - .4 * slap, rArm: -.6 + .3 * st, lElb: -.5, rElb: -.3, lean: .1 * st, sway: .06 * st, spin: .35 * SI(sp * .5), headTilt: .06 * st});// 叩く瞬間 // 脚を上げて叩く // 太腿へ手を伸ばす // ゆっくり回る
         break;
       }
       case 'halay': {
         // ハライ: トルコ/クルドの連踊り — 肩を組んで小刻みに踏む+揺れる列
-        const hl = tt * 5; const st = Math.sin(hl); const step = Math.sin(hl * 2); Object.assign(q, {sway: .05 * st, bob: -.012 * Math.abs(step), lThigh: -.12 * MX(0, step), rThigh: -.12 * MX(0, -step), lKnee: .18 * Math.abs(step), rKnee: .18 * Math.abs(step), lArm: -.35, rArm: -.35, lElb: -.9, rElb: -.9, lean: .05 * st, headTilt: .05 * st, spin: .12 * Math.sin(hl * .3)});// 隣の肩に手
+        const hl = tt * 5; const st = SI(hl); const step = SI(hl * 2); Object.assign(q, {sway: .05 * st, bob: -.012 * AB(step), lThigh: -.12 * MX(0, step), rThigh: -.12 * MX(0, -step), lKnee: .18 * AB(step), rKnee: .18 * AB(step), lArm: -.35, rArm: -.35, lElb: -.9, rElb: -.9, lean: .05 * st, headTilt: .05 * st, spin: .12 * SI(hl * .3)});// 隣の肩に手
         break;
       }
       case 'polska': {
         // ポルスカ: 北欧の旋回ペアダンス — 3拍子の深い起伏+連続旋回
-        const pk = tt * 3.4; const st = Math.sin(pk); Object.assign(q, {bob: -.04 * MX(0, -st), spin: 1.2 * st, sway: .07 * st, lean: .09 * st, lArm: -1.0 + .15 * st, rArm: -1.0 - .15 * st, lElb: -.5, rElb: -.5, lThigh: -.15 * MX(0, st), rThigh: -.15 * MX(0, -st), lKnee: .12 * Math.abs(st), rKnee: .12 * Math.abs(st), headTilt: .06 * st});// 1拍目の沈み // 連続して回る // 組む腕
+        const pk = tt * 3.4; const st = SI(pk); Object.assign(q, {bob: -.04 * MX(0, -st), spin: 1.2 * st, sway: .07 * st, lean: .09 * st, lArm: -1.0 + .15 * st, rArm: -1.0 - .15 * st, lElb: -.5, rElb: -.5, lThigh: -.15 * MX(0, st), rThigh: -.15 * MX(0, -st), lKnee: .12 * AB(st), rKnee: .12 * AB(st), headTilt: .06 * st});// 1拍目の沈み // 連続して回る // 組む腕
         break;
       }
       case 'cumbia': {
         // クンビア: コロンビアの輪踊り — 小さな後退ステップ+回る腰+ろうそくを抱く腕
-        const cb = tt * 4.4; const st = Math.sin(cb); const hip = Math.sin(cb * 2); Object.assign(q, {sway: .1 * st, lean: .05 * hip, bob: -.012 * Math.abs(st), lThigh: -.15 * MX(0, -st), rThigh: -.15 * MX(0, st), lKnee: .15 * Math.abs(st), rKnee: .15 * Math.abs(st), lArm: -.7 - .2 * st, rArm: -.4 + .15 * hip, lElb: -.3, rElb: -.5, headTilt: .06 * st, spin: .35 * Math.sin(cb * .33)});// 片腕はろうそくを掲げる // もう片腕はスカートを持つ // 輪を周る
+        const cb = tt * 4.4; const st = SI(cb); const hip = SI(cb * 2); Object.assign(q, {sway: .1 * st, lean: .05 * hip, bob: -.012 * AB(st), lThigh: -.15 * MX(0, -st), rThigh: -.15 * MX(0, st), lKnee: .15 * AB(st), rKnee: .15 * AB(st), lArm: -.7 - .2 * st, rArm: -.4 + .15 * hip, lElb: -.3, rElb: -.5, headTilt: .06 * st, spin: .35 * SI(cb * .33)});// 片腕はろうそくを掲げる // もう片腕はスカートを持つ // 輪を周る
         break;
       }
       case 'landler': {
         // レントラー: オーストリアのゆったり円舞 — 手を打つ+ホップ+旋回
-        const ld = tt * 3.6; const st = Math.sin(ld); const clap = MX(0, Math.sin(ld * 3)); Object.assign(q, {bob: -.03 * Math.abs(st), spin: .8 * st, sway: .06 * st, lArm: -.6 - .5 * clap, rArm: -.6 - .5 * clap, lElb: -.4, rElb: -.4, lThigh: -.2 * MX(0, st), rThigh: -.2 * MX(0, -st), lKnee: .15 * Math.abs(st), rKnee: .15 * Math.abs(st), lean: .06 * st, headTilt: .07 * st});// 手拍子 // 大きく旋回 // 手を打つために前方へ
+        const ld = tt * 3.6; const st = SI(ld); const clap = MX(0, SI(ld * 3)); Object.assign(q, {bob: -.03 * AB(st), spin: .8 * st, sway: .06 * st, lArm: -.6 - .5 * clap, rArm: -.6 - .5 * clap, lElb: -.4, rElb: -.4, lThigh: -.2 * MX(0, st), rThigh: -.2 * MX(0, -st), lKnee: .15 * AB(st), rKnee: .15 * AB(st), lean: .06 * st, headTilt: .07 * st});// 手拍子 // 大きく旋回 // 手を打つために前方へ
         break;
       }
       case 'hopak': {
         // ホパーク: ウクライナの祝祭踊り — 大きな跳躍+屈伸の脚捌き+誇らしげな腕
-        const hp = tt * 5; const st = Math.sin(hp); const jump = MX(0, Math.sin(hp * .5)); Object.assign(q, {bob: -.05 * jump, lThigh: -.6 * jump, rThigh: -.25 * MX(0, -st), lKnee: .7 * jump, rKnee: .3 * MX(0, -st), lArm: -1.5 - .2 * st, rArm: -.4 + .3 * st, lElb: -.2, rElb: -.4, sway: .07 * st, lean: .08 * st, spin: .5 * Math.sin(hp * .25), headTilt: .05 * st});// 高い跳躍 // 誇らしげに頭上へ
+        const hp = tt * 5; const st = SI(hp); const jump = MX(0, SI(hp * .5)); Object.assign(q, {bob: -.05 * jump, lThigh: -.6 * jump, rThigh: -.25 * MX(0, -st), lKnee: .7 * jump, rKnee: .3 * MX(0, -st), lArm: -1.5 - .2 * st, rArm: -.4 + .3 * st, lElb: -.2, rElb: -.4, sway: .07 * st, lean: .08 * st, spin: .5 * SI(hp * .25), headTilt: .05 * st});// 高い跳躍 // 誇らしげに頭上へ
         break;
       }
       case 'kalbelia': {
         // カルベリア: ラジャスタンの蛇踊り — 渦巻く旋回+後ろへそる上体+腕を波立たせる
-        const kb = tt * 4.4; const st = Math.sin(kb); Object.assign(q, {spin: .6 * Math.sin(kb * .5), sway: .12 * st, lean: -.15 * Math.abs(Math.sin(kb * .5)), bob: -.03 * Math.abs(st), lArm: -.9 - .5 * st, rArm: -.9 + .5 * st, lElb: -.4 - .3 * st, rElb: -.4 + .3 * st, lThigh: -.1 * st, rThigh: .1 * st, lKnee: .15, rKnee: .15, headTilt: .1 * Math.sin(kb * .5)});// 渦巻き旋回 // 後ろへそる // 蛇のようにうねる腕
+        const kb = tt * 4.4; const st = SI(kb); Object.assign(q, {spin: .6 * SI(kb * .5), sway: .12 * st, lean: -.15 * AB(SI(kb * .5)), bob: -.03 * AB(st), lArm: -.9 - .5 * st, rArm: -.9 + .5 * st, lElb: -.4 - .3 * st, rElb: -.4 + .3 * st, lThigh: -.1 * st, rThigh: .1 * st, lKnee: .15, rKnee: .15, headTilt: .1 * SI(kb * .5)});// 渦巻き旋回 // 後ろへそる // 蛇のようにうねる腕
         break;
       }
       case 'bhangra': {
         // バングラ: パンジャブの豊作踊り — 弾む肩+高く挙げる両腕+キック
-        const bh = tt * 5.4; const st = Math.sin(bh); const beat = Math.sin(bh * 2); Object.assign(q, {bob: -.04 * Math.abs(st), lArm: -1.8 - .2 * beat, rArm: -1.8 + .2 * beat, lElb: -.5 - .3 * st, rElb: -.5 + .3 * st, lThigh: -.35 * MX(0, st), rThigh: -.35 * MX(0, -st), lKnee: .4 * MX(0, st), rKnee: .4 * MX(0, -st), sway: .1 * st, lean: .06 * st, spin: .3 * Math.sin(bh * .25), headTilt: .07 * st});// 弾む // 両腕を頭上に突き上げる // 指を鳴らすように // 肩を上下する
+        const bh = tt * 5.4; const st = SI(bh); const beat = SI(bh * 2); Object.assign(q, {bob: -.04 * AB(st), lArm: -1.8 - .2 * beat, rArm: -1.8 + .2 * beat, lElb: -.5 - .3 * st, rElb: -.5 + .3 * st, lThigh: -.35 * MX(0, st), rThigh: -.35 * MX(0, -st), lKnee: .4 * MX(0, st), rKnee: .4 * MX(0, -st), sway: .1 * st, lean: .06 * st, spin: .3 * SI(bh * .25), headTilt: .07 * st});// 弾む // 両腕を頭上に突き上げる // 指を鳴らすように // 肩を上下する
         break;
       }
       case 'kathak': {
         // カタック: 北インドの古典舞踊 — 速いピルエット+足を打ち鳴らす+優美な手
-        const kt = tt * 4.8; const st = Math.sin(kt); Object.assign(q, {spin: .9 * Math.sin(kt * .4), bob: -.02 * Math.abs(st), lThigh: -.35 * MX(0, st), rThigh: -.1, lKnee: .5 * MX(0, st), rKnee: .15, lArm: -1.1 - .4 * st, rArm: -.7 + .5 * st, lElb: -.35, rElb: -.6, sway: .06 * st, lean: .05 * Math.sin(kt * .5), headTilt: .1 * Math.sin(kt * .5)});// ピルエット // 交互に足を打つ // 優美に広げる腕 // ムドラーの手の形
+        const kt = tt * 4.8; const st = SI(kt); Object.assign(q, {spin: .9 * SI(kt * .4), bob: -.02 * AB(st), lThigh: -.35 * MX(0, st), rThigh: -.1, lKnee: .5 * MX(0, st), rKnee: .15, lArm: -1.1 - .4 * st, rArm: -.7 + .5 * st, lElb: -.35, rElb: -.6, sway: .06 * st, lean: .05 * SI(kt * .5), headTilt: .1 * SI(kt * .5)});// ピルエット // 交互に足を打つ // 優美に広げる腕 // ムドラーの手の形
         break;
       }
       case 'bharat': {
         // バラタナティヤム: 南インドの古典舞踊 — 深いアラヤムディ(膝開き)+打つ足+斜めの首
-        const bt = tt * 4.6; const st = Math.sin(bt); const stamp = MX(0, Math.sin(bt * 2)); Object.assign(q, {bob: .04 + .02 * stamp, lThigh: -.5, rThigh: -.5, lKnee: .6 + .2 * stamp, rKnee: .6 - .2 * stamp, lArm: -1.0 - .3 * st, rArm: -1.0 + .3 * st, lElb: -.5, rElb: -.5, sway: .08 * st, lean: .03 * st, headTilt: .12 * st, spin: .2 * Math.sin(bt * .3)});// 常に膝を開く低姿勢 // アラヤムディ(半開き膝) // 横に張った腕 // ハスタ(手の印) // 腰の揺れ // 斜めに傾ける首(特徴的)
+        const bt = tt * 4.6; const st = SI(bt); const stamp = MX(0, SI(bt * 2)); Object.assign(q, {bob: .04 + .02 * stamp, lThigh: -.5, rThigh: -.5, lKnee: .6 + .2 * stamp, rKnee: .6 - .2 * stamp, lArm: -1.0 - .3 * st, rArm: -1.0 + .3 * st, lElb: -.5, rElb: -.5, sway: .08 * st, lean: .03 * st, headTilt: .12 * st, spin: .2 * SI(bt * .3)});// 常に膝を開く低姿勢 // アラヤムディ(半開き膝) // 横に張った腕 // ハスタ(手の印) // 腰の揺れ // 斜めに傾ける首(特徴的)
         break;
       }
       case 'odissi': {
         // オリッシー: 東インドの古典舞踊 — トリバンガ(3S字ポーズ)+腰を突き出す
-        const od = tt * 3.6; const st = Math.sin(od); Object.assign(q, {sway: .14 * st, lean: -.08 * st, headTilt: .14 * st, bob: .02 + .02 * Math.abs(st), lThigh: -.3 + .1 * st, rThigh: -.3 - .1 * st, lKnee: .4, rKnee: .4, lArm: -.8 - .3 * st, rArm: -.8 + .3 * st, lElb: -.6 + .2 * st, rElb: -.6 - .2 * st, spin: .15 * Math.sin(od * .5)});// 腰を左右へ突き出す(トリバンガ) // 上体は逆に傾ぐ // 頭も反対へ(S字) // 低い座姿勢 // 柔らかく彫像のような腕
+        const od = tt * 3.6; const st = SI(od); Object.assign(q, {sway: .14 * st, lean: -.08 * st, headTilt: .14 * st, bob: .02 + .02 * AB(st), lThigh: -.3 + .1 * st, rThigh: -.3 - .1 * st, lKnee: .4, rKnee: .4, lArm: -.8 - .3 * st, rArm: -.8 + .3 * st, lElb: -.6 + .2 * st, rElb: -.6 - .2 * st, spin: .15 * SI(od * .5)});// 腰を左右へ突き出す(トリバンガ) // 上体は逆に傾ぐ // 頭も反対へ(S字) // 低い座姿勢 // 柔らかく彫像のような腕
         break;
       }
       case 'garba': {
         // ガルバ: グジャラートの円舞 — リズミカルな手拍子+周る+2歩ステップ
-        const gb = tt * 4.6; const st = Math.sin(gb); const clap = Math.abs(Math.sin(gb * 2)); Object.assign(q, {lArm: -.5 - .8 * clap, rArm: -.5 - .8 * clap, lElb: -.6 - .3 * clap, rElb: -.6 - .3 * clap, spin: .5 * Math.sin(gb * .33), sway: .1 * st, bob: -.03 * Math.abs(st), lThigh: -.25 * st, rThigh: -.25 * -st, lKnee: .3 * MX(0, st), rKnee: .3 * MX(0, -st), lean: .06 * st, headTilt: .08 * st});// 胸の前+頭上で打つ手拍子 // ゆっくり周る
+        const gb = tt * 4.6; const st = SI(gb); const clap = AB(SI(gb * 2)); Object.assign(q, {lArm: -.5 - .8 * clap, rArm: -.5 - .8 * clap, lElb: -.6 - .3 * clap, rElb: -.6 - .3 * clap, spin: .5 * SI(gb * .33), sway: .1 * st, bob: -.03 * AB(st), lThigh: -.25 * st, rThigh: -.25 * -st, lKnee: .3 * MX(0, st), rKnee: .3 * MX(0, -st), lean: .06 * st, headTilt: .08 * st});// 胸の前+頭上で打つ手拍子 // ゆっくり周る
         break;
       }
       case 'bihu': {
         // ビーフー: アッサムの豊作祭踊り — 速い足捌き+両手を腰に高く挙げる
-        const bu = tt * 5.2; const st = Math.sin(bu); Object.assign(q, {bob: -.04 * Math.abs(st), lThigh: -.4 * st, rThigh: .4 * st, lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), lArm: -1.3 - .4 * st, rArm: -1.3 + .4 * st, lElb: -.7 - .2 * st, rElb: -.7 + .2 * st, sway: .12 * st, lean: .07 * st, spin: .3 * Math.sin(bu * .33), headTilt: .1 * Math.sin(bu * .5)});// 交互に速く踏む // 腰に手を当て高く広げる腕 // 腰を大きく揺らす
+        const bu = tt * 5.2; const st = SI(bu); Object.assign(q, {bob: -.04 * AB(st), lThigh: -.4 * st, rThigh: .4 * st, lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), lArm: -1.3 - .4 * st, rArm: -1.3 + .4 * st, lElb: -.7 - .2 * st, rElb: -.7 + .2 * st, sway: .12 * st, lean: .07 * st, spin: .3 * SI(bu * .33), headTilt: .1 * SI(bu * .5)});// 交互に速く踏む // 腰に手を当て高く広げる腕 // 腰を大きく揺らす
         break;
       }
       case 'lavani': {
         // ラヴァニ: マハラシュトラの力強い民俗踊り — 激しい腰つき+手首を回す腕
-        const lv = tt * 5.6; const st = Math.sin(lv); Object.assign(q, {sway: .16 * st, bob: -.03 * Math.abs(st), lThigh: -.3 * st, rThigh: .3 * st, lKnee: .35, rKnee: .35, lArm: -1.1 - .35 * Math.sin(lv * 1.5), rArm: -1.1 + .35 * Math.sin(lv * 1.5), lElb: -.5 - .4 * Math.sin(lv * 3), rElb: -.5 + .4 * Math.sin(lv * 3), lean: .08 * st, spin: .25 * Math.sin(lv * .3), headTilt: .12 * st});// 大きく振る腰 // 手首を回す腕 // 回す手首
+        const lv = tt * 5.6; const st = SI(lv); Object.assign(q, {sway: .16 * st, bob: -.03 * AB(st), lThigh: -.3 * st, rThigh: .3 * st, lKnee: .35, rKnee: .35, lArm: -1.1 - .35 * SI(lv * 1.5), rArm: -1.1 + .35 * SI(lv * 1.5), lElb: -.5 - .4 * SI(lv * 3), rElb: -.5 + .4 * SI(lv * 3), lean: .08 * st, spin: .25 * SI(lv * .3), headTilt: .12 * st});// 大きく振る腰 // 手首を回す腕 // 回す手首
         break;
       }
       case 'dandiya': {
         // ダンディヤ: グジャラートの棒踊り — 交互に打ち合わせる棒+回るステップ
-        const dd = tt * 5; const st = Math.sin(dd); const hit = Math.abs(Math.sin(dd * 1.5)); Object.assign(q, {lArm: -.7 - 1.0 * hit, rArm: -.7 - 1.0 * (1 - hit), lElb: -.4 - .3 * hit, rElb: -.4 - .3 * (1 - hit), spin: .4 * Math.sin(dd * .3), sway: .08 * st, bob: -.03 * Math.abs(st), lThigh: -.2 * st, rThigh: -.2 * -st, lKnee: .25, rKnee: .25, lean: .05 * st, headTilt: .07 * st});// 棒を打ち下ろす+挙げる // ペアで周る
+        const dd = tt * 5; const st = SI(dd); const hit = AB(SI(dd * 1.5)); Object.assign(q, {lArm: -.7 - 1.0 * hit, rArm: -.7 - 1.0 * (1 - hit), lElb: -.4 - .3 * hit, rElb: -.4 - .3 * (1 - hit), spin: .4 * SI(dd * .3), sway: .08 * st, bob: -.03 * AB(st), lThigh: -.2 * st, rThigh: -.2 * -st, lKnee: .25, rKnee: .25, lean: .05 * st, headTilt: .07 * st});// 棒を打ち下ろす+挙げる // ペアで周る
         break;
       }
       case 'ghoomar': {
         // グーマル: ラジャスタンの回転踊り — 絶え間ない旋回+頭上の優雅な腕
-        const gh = tt * 3.8; const st = Math.sin(gh); Object.assign(q, {spin: 1.2 * Math.sin(gh * .2), sway: .1 * Math.sin(gh * .4), bob: -.02 * Math.abs(st), lArm: -1.4 - .2 * st, rArm: -1.4 + .2 * st, lElb: -.5 - .15 * st, rElb: -.5 + .15 * st, lThigh: -.15 * st, rThigh: .15 * st, lKnee: .2, rKnee: .2, lean: .05 * Math.sin(gh * .4), headTilt: .09 * Math.sin(gh * .4)});// 大きくゆるやかに周り続ける // 頭上で揺れる腕
+        const gh = tt * 3.8; const st = SI(gh); Object.assign(q, {spin: 1.2 * SI(gh * .2), sway: .1 * SI(gh * .4), bob: -.02 * AB(st), lArm: -1.4 - .2 * st, rArm: -1.4 + .2 * st, lElb: -.5 - .15 * st, rElb: -.5 + .15 * st, lThigh: -.15 * st, rThigh: .15 * st, lKnee: .2, rKnee: .2, lean: .05 * SI(gh * .4), headTilt: .09 * SI(gh * .4)});// 大きくゆるやかに周り続ける // 頭上で揺れる腕
         break;
       }
       case 'khorovod': {
         // ホロヴォド: スラヴの輪踊り — 歌いながら周る連動した歩み+内へ外への揺れ
-        const kh = tt * 4.4; const st = Math.sin(kh); const inward = Math.sin(kh * .4); Object.assign(q, {spin: .5 * Math.sin(kh * .5), sway: .06 * st, bob: -.02 * Math.abs(st), lArm: -.9 - .3 * inward, rArm: -.9 + .3 * inward, lElb: -.3, rElb: -.3, lThigh: -.15 * st, rThigh: -.15 * -st, lKnee: .2, rKnee: .2, lean: .04 * inward, headTilt: .06 * st});// 輪が広がったり縮んだり // 繋いだ手+内外で高低 // 中心へ傾ける
+        const kh = tt * 4.4; const st = SI(kh); const inward = SI(kh * .4); Object.assign(q, {spin: .5 * SI(kh * .5), sway: .06 * st, bob: -.02 * AB(st), lArm: -.9 - .3 * inward, rArm: -.9 + .3 * inward, lElb: -.3, rElb: -.3, lThigh: -.15 * st, rThigh: -.15 * -st, lKnee: .2, rKnee: .2, lean: .04 * inward, headTilt: .06 * st});// 輪が広がったり縮んだり // 繋いだ手+内外で高低 // 中心へ傾ける
         break;
       }
       case 'lezginka': {
         // レズギンカ: コーカサスの鷲踊り — 高く挙げた腕+つま先立ち+脚の踏み替え
-        const lz = tt * 6.2; const st = Math.sin(lz); const hop = Math.abs(Math.sin(lz * .6)); Object.assign(q, {lArm: -1.7 - .15 * st, rArm: -1.7 + .15 * st, lElb: -.15, rElb: -.15, lThigh: -.3 * st, rThigh: -.3 * -st, lKnee: .35 + .2 * hop, rKnee: .35 + .2 * (1 - hop), lShin: -.25 * MX(0, -st), rShin: -.25 * MX(0, st), bob: -.04 * hop, sway: .05 * st, lean: .03 * st, headTilt: .05 * st});// 鷲の翼のように高く張る // 蹴り出し // つま先立ちの上昇
+        const lz = tt * 6.2; const st = SI(lz); const hop = AB(SI(lz * .6)); Object.assign(q, {lArm: -1.7 - .15 * st, rArm: -1.7 + .15 * st, lElb: -.15, rElb: -.15, lThigh: -.3 * st, rThigh: -.3 * -st, lKnee: .35 + .2 * hop, rKnee: .35 + .2 * (1 - hop), lShin: -.25 * MX(0, -st), rShin: -.25 * MX(0, st), bob: -.04 * hop, sway: .05 * st, lean: .03 * st, headTilt: .05 * st});// 鷲の翼のように高く張る // 蹴り出し // つま先立ちの上昇
         break;
       }
       case 'krakowiak': {
         // クラコヴィアク: ポーランドの誇り高き馬力踊り — 陽気なギャロップ+胸を張る
-        const kr = tt * 5.4; const st = Math.sin(kr); const gallop = Math.abs(Math.sin(kr)); Object.assign(q, {lean: -.06, bob: -.05 * gallop, sway: .07 * st, lArm: .4, rArm: -.5, lElb: -.8, rElb: -.4, lThigh: -.4 * st, rThigh: -.4 * -st, lKnee: .4 + .15 * gallop, rKnee: .4 + .15 * gallop, lShin: -.2 * MX(0, -st), rShin: -.2 * MX(0, st), headTilt: .05 * st});// 胸を張った誇り高い姿勢 // 弾むギャロップ // 一方は腰に一方は挙げる(誇りの構え)
+        const kr = tt * 5.4; const st = SI(kr); const gallop = AB(SI(kr)); Object.assign(q, {lean: -.06, bob: -.05 * gallop, sway: .07 * st, lArm: .4, rArm: -.5, lElb: -.8, rElb: -.4, lThigh: -.4 * st, rThigh: -.4 * -st, lKnee: .4 + .15 * gallop, rKnee: .4 + .15 * gallop, lShin: -.2 * MX(0, -st), rShin: -.2 * MX(0, st), headTilt: .05 * st});// 胸を張った誇り高い姿勢 // 弾むギャロップ // 一方は腰に一方は挙げる(誇りの構え)
         break;
       }
       case 'verbunk': {
         // ヴェルブンク: ハンガリーの新兵勧誘踊り — ゆったりした威厳+踵の打ち合わせ
-        const vb = tt * 3.6; const st = Math.sin(vb); const click = Math.abs(Math.sin(vb * .8)); Object.assign(q, {lean: -.04, bob: -.03 * click, sway: .06 * st, lArm: .5 - .3 * st, rArm: -1.1 + .4 * st, lElb: -.9, rElb: -.5, lThigh: -.25 * st, rThigh: -.25 * -st});// 踵打ちの瞬間 // 反り返る誇り // 手を腰に近い構え(馬鞭を振る) // 帽子を振る腕
+        const vb = tt * 3.6; const st = SI(vb); const click = AB(SI(vb * .8)); Object.assign(q, {lean: -.04, bob: -.03 * click, sway: .06 * st, lArm: .5 - .3 * st, rArm: -1.1 + .4 * st, lElb: -.9, rElb: -.5, lThigh: -.25 * st, rThigh: -.25 * -st});// 踵打ちの瞬間 // 反り返る誇り // 手を腰に近い構え(馬鞭を振る) // 帽子を振る腕
         // 踵を鳴らす脚の引き寄せ
         Object.assign(q, {lKnee: .3, rKnee: .3, lShin: -.3 * click, rShin: -.1 * (1 - click), headTilt: -.06 * st});// 左足が踵打ちに跳ぶ
         break;
       }
       case 'sirba': {
         // スルバ: ルーマニアの高速輪踊り — 肩を組み片足の蹴りを高速連打
-        const sb = tt * 7.8; const st = Math.sin(sb); const hop = Math.abs(Math.sin(sb)); Object.assign(q, {bob: -.045 * hop, sway: .05 * st, lArm: .2, rArm: .2, lElb: -1.0, rElb: -1.0, lThigh: -.35 * st, rThigh: -.35 * -st, lKnee: .4, rKnee: .4, lShin: -.45 * MX(0, -st), rShin: -.45 * MX(0, st), lean: .05 * st, headTilt: .06 * st});// 両腕を肩に回した組み姿勢 // 交互に前へ蹴る
+        const sb = tt * 7.8; const st = SI(sb); const hop = AB(SI(sb)); Object.assign(q, {bob: -.045 * hop, sway: .05 * st, lArm: .2, rArm: .2, lElb: -1.0, rElb: -1.0, lThigh: -.35 * st, rThigh: -.35 * -st, lKnee: .4, rKnee: .4, lShin: -.45 * MX(0, -st), rShin: -.45 * MX(0, st), lean: .05 * st, headTilt: .06 * st});// 両腕を肩に回した組み姿勢 // 交互に前へ蹴る
         break;
       }
       case 'hasapiko': {
         // ハサピコ: ギリシャの肉屋踊り — 肩に腕を乗せた連れ踊り+ゆったり横ステップ+踵の打ち
-        const hs = tt * 4.2; const st = Math.sin(hs); const tap = Math.abs(Math.sin(hs * .75)); Object.assign(q, {sway: .08 * st, bob: -.025 * tap, lArm: .3, rArm: .3, lElb: -1.1, rElb: -1.1, lThigh: -.3 * st, rThigh: -.3 * -st, lKnee: .35, rKnee: .35, lShin: -.3 * MX(0, -st), rShin: -.3 * MX(0, st), lean: .04 * st, headTilt: .05 * st});// 連なって左右に移る // 両腕を隣の肩に乗せた構え
+        const hs = tt * 4.2; const st = SI(hs); const tap = AB(SI(hs * .75)); Object.assign(q, {sway: .08 * st, bob: -.025 * tap, lArm: .3, rArm: .3, lElb: -1.1, rElb: -1.1, lThigh: -.3 * st, rThigh: -.3 * -st, lKnee: .35, rKnee: .35, lShin: -.3 * MX(0, -st), rShin: -.3 * MX(0, st), lean: .04 * st, headTilt: .05 * st});// 連なって左右に移る // 両腕を隣の肩に乗せた構え
         break;
       }
       case 'oberek': {
         // オベレク: ポーランドの旋回踊り — 速い回転+軽快な足運び+挙げた腕
-        const ob = tt * 5.6; const st = Math.sin(ob); const lift = Math.abs(Math.sin(ob * .5)); Object.assign(q, {bob: -.04 * lift, sway: .06 * st, lean: .12 * st, headTilt: -.1 * st, lArm: -1.2 - .15 * st, rArm: .5 + .1 * -st, lElb: -.5, rElb: -.25, lThigh: -.4 * MX(0, st), rThigh: -.4 * MX(0, -st), lKnee: .5 * MX(0, -st), rKnee: .5 * MX(0, st), lShin: -.3 * MX(0, -st), rShin: -.3 * MX(0, st)});// 小さな跳ね上がり // 旋回にともなう左右への振れ // 遠心力で大きく傾く // 首は逆向きに保つ // 片腕を頭上に円を描く // もう片腕は横に張る // 軽快に脚を踏み替える
+        const ob = tt * 5.6; const st = SI(ob); const lift = AB(SI(ob * .5)); Object.assign(q, {bob: -.04 * lift, sway: .06 * st, lean: .12 * st, headTilt: -.1 * st, lArm: -1.2 - .15 * st, rArm: .5 + .1 * -st, lElb: -.5, rElb: -.25, lThigh: -.4 * MX(0, st), rThigh: -.4 * MX(0, -st), lKnee: .5 * MX(0, -st), rKnee: .5 * MX(0, st), lShin: -.3 * MX(0, -st), rShin: -.3 * MX(0, st)});// 小さな跳ね上がり // 旋回にともなう左右への振れ // 遠心力で大きく傾く // 首は逆向きに保つ // 片腕を頭上に円を描く // もう片腕は横に張る // 軽快に脚を踏み替える
         break;
       }
       case 'tropanka': {
         // トロパンカ: ブルガリアの連踊り — 力強い足踏み(スタンプ)+半円の揺れ
-        const tr = tt * 6.4; const st = Math.sin(tr); const stamp = Math.abs(Math.sin(tr * .5)); Object.assign(q, {bob: -.02 - .05 * stamp, sway: .07 * st, lArm: .45, rArm: .45, lElb: -.8, rElb: -.8, lThigh: -.55 * MX(0, st), rThigh: -.55 * MX(0, -st), lKnee: .6 * MX(0, st), rKnee: .6 * MX(0, -st), lShin: .25 * MX(0, st), rShin: .25 * MX(0, -st), lean: .05 * -st, headTilt: .04 * st});// 踏み込みで深く沈む // 半円の列とともに横へ // 隣と手を繋いだ低い構え // 片脚を大きく上げてスタンプ // 踵を強く打ち下ろす
+        const tr = tt * 6.4; const st = SI(tr); const stamp = AB(SI(tr * .5)); Object.assign(q, {bob: -.02 - .05 * stamp, sway: .07 * st, lArm: .45, rArm: .45, lElb: -.8, rElb: -.8, lThigh: -.55 * MX(0, st), rThigh: -.55 * MX(0, -st), lKnee: .6 * MX(0, st), rKnee: .6 * MX(0, -st), lShin: .25 * MX(0, st), rShin: .25 * MX(0, -st), lean: .05 * -st, headTilt: .04 * st});// 踏み込みで深く沈む // 半円の列とともに横へ // 隣と手を繋いだ低い構え // 片脚を大きく上げてスタンプ // 踵を強く打ち下ろす
         break;
       }
       case 'tinikling': {
         // ティニクリング: フィリピンの竹竿踊り — 打ち合う竹を避ける小刻みホップ+優雅な腕
-        const tk = tt * 8.0; const st = Math.sin(tk); const hop = Math.abs(Math.sin(tk * .5)); Object.assign(q, {bob: -.035 * hop, sway: .03 * st, lThigh: -.5 * MX(0, st), rThigh: -.5 * MX(0, -st), lKnee: .7 * MX(0, st), rKnee: .7 * MX(0, -st), lShin: .3 * MX(0, -st), rShin: .3 * MX(0, st), lArm: -1.1 - .15 * st, rArm: -1.1 - .15 * -st, lElb: -.4, rElb: -.4, lean: .06 * -st, headTilt: .06 * st});// 片脚での連続ホップ // 竹竿を避ける交互の足上げ // 優美に挙げた腕(手首を揺らす)
+        const tk = tt * 8.0; const st = SI(tk); const hop = AB(SI(tk * .5)); Object.assign(q, {bob: -.035 * hop, sway: .03 * st, lThigh: -.5 * MX(0, st), rThigh: -.5 * MX(0, -st), lKnee: .7 * MX(0, st), rKnee: .7 * MX(0, -st), lShin: .3 * MX(0, -st), rShin: .3 * MX(0, st), lArm: -1.1 - .15 * st, rArm: -1.1 - .15 * -st, lElb: -.4, rElb: -.4, lean: .06 * -st, headTilt: .06 * st});// 片脚での連続ホップ // 竹竿を避ける交互の足上げ // 優美に挙げた腕(手首を揺らす)
         break;
       }
       case 'gumboot': {
         // ガムブーツ: 南アの鉱山労働者踊り — ゴム長靴を叩く太腿の上げ+腕の打ち
-        const gb = tt * 5.2; const st = Math.sin(gb); const slap = MX(0, Math.sin(gb)); Object.assign(q, {bob: -.03 - .04 * Math.abs(Math.sin(gb * .5)), lean: .12, lThigh: -.7 * MX(0, st), rThigh: -.7 * MX(0, -st), lKnee: .8 * MX(0, st), rKnee: .8 * MX(0, -st), lArm: .55 + .2 * slap, rArm: .55 + .2 * (1 - slap), lElb: -.6, rElb: -.6, headTilt: .08, sway: .04 * st});// 前傾で長靴へ腕を伸ばす // 交互に太腿を高く上げる // 腕で靴を叩く
+        const gb = tt * 5.2; const st = SI(gb); const slap = MX(0, SI(gb)); Object.assign(q, {bob: -.03 - .04 * AB(SI(gb * .5)), lean: .12, lThigh: -.7 * MX(0, st), rThigh: -.7 * MX(0, -st), lKnee: .8 * MX(0, st), rKnee: .8 * MX(0, -st), lArm: .55 + .2 * slap, rArm: .55 + .2 * (1 - slap), lElb: -.6, rElb: -.6, headTilt: .08, sway: .04 * st});// 前傾で長靴へ腕を伸ばす // 交互に太腿を高く上げる // 腕で靴を叩く
         break;
       }
       case 'halling': {
         // ハリング: ノルウェーのアクロバット踊り — 深く沈み→爆発的な高キック
-        const ha = tt * 4.4; const st = Math.sin(ha); const crouch = MX(0, -st); const kick = MX(0, st); Object.assign(q, {bob: -.01 - .09 * crouch + .02 * kick, lThigh: -.95 * kick, lKnee: .15 * kick + .5 * crouch, lShin: .2 * kick, rThigh: -.15 * crouch, rKnee: .55 * crouch, lArm: .5 * crouch - .3 * kick, rArm: .5 * crouch - .3 * kick, lElb: -.5, rElb: -.5, lean: .15 * crouch - .1 * kick, headTilt: .06 * st});// 前半で深く沈む // 後半で蹴り上げる // 頭の高さまで蹴り上げる // 軸脚は踏ん張る // 沈むとき腕を前へ、蹴るとき振り上げ
+        const ha = tt * 4.4; const st = SI(ha); const crouch = MX(0, -st); const kick = MX(0, st); Object.assign(q, {bob: -.01 - .09 * crouch + .02 * kick, lThigh: -.95 * kick, lKnee: .15 * kick + .5 * crouch, lShin: .2 * kick, rThigh: -.15 * crouch, rKnee: .55 * crouch, lArm: .5 * crouch - .3 * kick, rArm: .5 * crouch - .3 * kick, lElb: -.5, rElb: -.5, lean: .15 * crouch - .1 * kick, headTilt: .06 * st});// 前半で深く沈む // 後半で蹴り上げる // 頭の高さまで蹴り上げる // 軸脚は踏ん張る // 沈むとき腕を前へ、蹴るとき振り上げ
         break;
       }
       case 'haka': {
         // ハカ: マオリの戦踊り — 開脚で膝を深く+太腿を叩く+激しい足踏み
-        const hk = tt * 5.5; const st = Math.sin(hk); const stomp = Math.abs(st); const slap = MX(0, Math.sin(hk * .5)); Object.assign(q, {bob: -.06 - .04 * stomp, lThigh: -.25 - .1 * stomp, rThigh: -.25 - .1 * stomp, lKnee: .5, rKnee: .5, lShin: .15 * st, rShin: -.15 * st, lArm: .6 * slap, rArm: .6 * (1 - slap), lElb: -.7, rElb: -.7, lean: .18, headTilt: .1 * Math.sin(hk * .25)});// 両足の強い足踏み // 太腿/胸を叩く // 腰を深く落とす // 開脚の膝張り // 交互に身体を叩く // 威嚇の前傾 // 顔を左右に突き出す
+        const hk = tt * 5.5; const st = SI(hk); const stomp = AB(st); const slap = MX(0, SI(hk * .5)); Object.assign(q, {bob: -.06 - .04 * stomp, lThigh: -.25 - .1 * stomp, rThigh: -.25 - .1 * stomp, lKnee: .5, rKnee: .5, lShin: .15 * st, rShin: -.15 * st, lArm: .6 * slap, rArm: .6 * (1 - slap), lElb: -.7, rElb: -.7, lean: .18, headTilt: .1 * SI(hk * .25)});// 両足の強い足踏み // 太腿/胸を叩く // 腰を深く落とす // 開脚の膝張り // 交互に身体を叩く // 威嚇の前傾 // 顔を左右に突き出す
         break;
       }
       case 'marinera': {
         // マリネラ: ペルーの優雅な対舞 — 手ぬぐいを掲げる腕+軽いステップ
-        const mr = tt * 4; const st = Math.sin(mr); const wave = Math.sin(mr * 1.5); Object.assign(q, {bob: -.015 + .02 * Math.abs(st), sway: .06 * st, lArm: -.6 - .15 * wave, lElb: -.3, rArm: .5, rElb: -.5, lThigh: -.2 * MX(0, st), rThigh: -.2 * MX(0, -st), lKnee: .25 * MX(0, st), rKnee: .25 * MX(0, -st), headTilt: .09 * wave, lean: .03 * st});// 手ぬぐいを振る // 柔らかい浮き沈み // 漂うような横揺れ // 片腕を高く掲げて揺らす // 片腕は腰に添える // 交互に脚を軽く上げる // 優雅に傾ぐ首
+        const mr = tt * 4; const st = SI(mr); const wave = SI(mr * 1.5); Object.assign(q, {bob: -.015 + .02 * AB(st), sway: .06 * st, lArm: -.6 - .15 * wave, lElb: -.3, rArm: .5, rElb: -.5, lThigh: -.2 * MX(0, st), rThigh: -.2 * MX(0, -st), lKnee: .25 * MX(0, st), rKnee: .25 * MX(0, -st), headTilt: .09 * wave, lean: .03 * st});// 手ぬぐいを振る // 柔らかい浮き沈み // 漂うような横揺れ // 片腕を高く掲げて揺らす // 片腕は腰に添える // 交互に脚を軽く上げる // 優雅に傾ぐ首
         break;
       }
       case 'sagayan': {
         // サガヤン: フィリピンの戦踊り — 盾と剣を持つ跳躍+激しい振り
-        const sg = tt * 5.8; const st = Math.sin(sg); const lunge = MX(0, Math.sin(sg * .7)); Object.assign(q, {bob: -.05 - .06 * lunge, lean: .2 * lunge, lThigh: -.4 * MX(0, st), rThigh: -.4 * MX(0, -st), lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), lShin: .2 * MX(0, st), rShin: .2 * MX(0, -st), lArm: -.35 - .25 * lunge, lElb: -.4, rArm: .55, rElb: -.75, sway: .05 * st, headTilt: .08 * st});// 突進の跳躍 // 深い膝+跳ね // 突進する前傾 // 交互の踏み込み // 剣を振る腕(頭上) // 盾を構える腕(体の前)
+        const sg = tt * 5.8; const st = SI(sg); const lunge = MX(0, SI(sg * .7)); Object.assign(q, {bob: -.05 - .06 * lunge, lean: .2 * lunge, lThigh: -.4 * MX(0, st), rThigh: -.4 * MX(0, -st), lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), lShin: .2 * MX(0, st), rShin: .2 * MX(0, -st), lArm: -.35 - .25 * lunge, lElb: -.4, rArm: .55, rElb: -.75, sway: .05 * st, headTilt: .08 * st});// 突進の跳躍 // 深い膝+跳ね // 突進する前傾 // 交互の踏み込み // 剣を振る腕(頭上) // 盾を構える腕(体の前)
         break;
       }
       case 'malambo': {
         // マランボ: アルゼンチン・ガウチョの足技踊り — サパテオの速い足踏み
-        const mb = tt * 7.5; const st = Math.sin(mb); const stamp = Math.abs(st); const sweep = Math.sin(mb * .4); Object.assign(q, {bob: -.03 - .035 * stamp, lThigh: -.35 * MX(0, st), rThigh: -.35 * MX(0, -st), lKnee: .3 * MX(0, st), rKnee: .3 * MX(0, -st), lShin: .15 * MX(0, sweep), rShin: .15 * MX(0, -sweep), lArm: -.5 - .1 * Math.sin(mb), lElb: -.3, rArm: .3 + .2 * Math.sin(mb * .5), rElb: -.4, sway: .04 * st, headTilt: .05 * Math.sin(mb * .3)});// 連続する鋭いスタンプ // 脚の払い(セピジャード) // 低い腰+連続接地 // 交互の鋭い踏み // 脚の払い筋 // ボレアドーラを回す腕(頭上) // 反対腕は腰の低い回し
+        const mb = tt * 7.5; const st = SI(mb); const stamp = AB(st); const sweep = SI(mb * .4); Object.assign(q, {bob: -.03 - .035 * stamp, lThigh: -.35 * MX(0, st), rThigh: -.35 * MX(0, -st), lKnee: .3 * MX(0, st), rKnee: .3 * MX(0, -st), lShin: .15 * MX(0, sweep), rShin: .15 * MX(0, -sweep), lArm: -.5 - .1 * SI(mb), lElb: -.3, rArm: .3 + .2 * SI(mb * .5), rElb: -.4, sway: .04 * st, headTilt: .05 * SI(mb * .3)});// 連続する鋭いスタンプ // 脚の払い(セピジャード) // 低い腰+連続接地 // 交互の鋭い踏み // 脚の払い筋 // ボレアドーラを回す腕(頭上) // 反対腕は腰の低い回し
         break;
       }
       case 'caporales': {
         // カポラレス: ボリビアの力強い踊り — 大きな跳躍+脚の蹴り出し+腕の振り
-        const cp = tt * 6.2; const st = Math.sin(cp); const jump = Math.abs(Math.sin(cp * .5)); Object.assign(q, {bob: -.02 - .08 * jump, lThigh: -.5 * MX(0, st), rThigh: -.5 * MX(0, -st), lKnee: .6 * MX(0, st), rKnee: .6 * MX(0, -st), lShin: .25 * MX(0, st), rShin: .25 * MX(0, -st), lArm: .45 * MX(0, st) - .15, rArm: .45 * MX(0, -st) - .15, lElb: -.65, rElb: -.65, lean: .1 * jump, sway: .05 * st, headTilt: .06 * Math.sin(cp * .3)});// 両足跳躍 // 高く飛ぶ // 交互の深い蹴り出し // 靴の鈴を鳴らす脚 // 肘を張った力強い振り
+        const cp = tt * 6.2; const st = SI(cp); const jump = AB(SI(cp * .5)); Object.assign(q, {bob: -.02 - .08 * jump, lThigh: -.5 * MX(0, st), rThigh: -.5 * MX(0, -st), lKnee: .6 * MX(0, st), rKnee: .6 * MX(0, -st), lShin: .25 * MX(0, st), rShin: .25 * MX(0, -st), lArm: .45 * MX(0, st) - .15, rArm: .45 * MX(0, -st) - .15, lElb: -.65, rElb: -.65, lean: .1 * jump, sway: .05 * st, headTilt: .06 * SI(cp * .3)});// 両足跳躍 // 高く飛ぶ // 交互の深い蹴り出し // 靴の鈴を鳴らす脚 // 肘を張った力強い振り
         break;
       }
       case 'huayno': {
         // ワイノ: アンデスの祭り踊り — 軽い小跳躍+スキップ+両腕の揺れ
-        const hy = tt * 5; const st = Math.sin(hy); const hop = Math.abs(Math.sin(hy)); Object.assign(q, {bob: -.015 - .035 * hop, lThigh: -.3 * MX(0, st), rThigh: -.3 * MX(0, -st), lKnee: .4 * MX(0, st), rKnee: .4 * MX(0, -st), lArm: .35 - .25 * st, rArm: .35 + .25 * st, lElb: -.35, rElb: -.35, sway: .07 * st, headTilt: .08 * Math.sin(hy * .5), lean: .04 * st});// 連続する小跳躍 // 弾む腰 // 交互の膝上げ // 交互に上下する腕 // 左右に振る
+        const hy = tt * 5; const st = SI(hy); const hop = AB(SI(hy)); Object.assign(q, {bob: -.015 - .035 * hop, lThigh: -.3 * MX(0, st), rThigh: -.3 * MX(0, -st), lKnee: .4 * MX(0, st), rKnee: .4 * MX(0, -st), lArm: .35 - .25 * st, rArm: .35 + .25 * st, lElb: -.35, rElb: -.35, sway: .07 * st, headTilt: .08 * SI(hy * .5), lean: .04 * st});// 連続する小跳躍 // 弾む腰 // 交互の膝上げ // 交互に上下する腕 // 左右に振る
         break;
       }
       case 'cueca': {
         // クエカ: チリの国舞 — 片腕でハンカチを頭上に掲げ、優雅に周る
-        const cq = tt * 2.2; const st = Math.sin(cq); Object.assign(q, {bob: -.02 + .012 * Math.sin(cq * 2), sway: .08 * st, lThigh: -.22 * MX(0, st), rThigh: -.22 * MX(0, -st), lKnee: .28 * MX(0, st), rKnee: .28 * MX(0, -st), rArm: 1.35 + .18 * Math.sin(cq * 3), rElb: -.3 + .12 * Math.sin(cq * 3), lArm: .45, lElb: -.5, headTilt: .08 * Math.sin(cq), lean: .05 * st});// 相手を周る揺れ // 軽い交互ステップ // 頭上の腕(ハンカチを振る) // 腰に添えた反対腕
+        const cq = tt * 2.2; const st = SI(cq); Object.assign(q, {bob: -.02 + .012 * SI(cq * 2), sway: .08 * st, lThigh: -.22 * MX(0, st), rThigh: -.22 * MX(0, -st), lKnee: .28 * MX(0, st), rKnee: .28 * MX(0, -st), rArm: 1.35 + .18 * SI(cq * 3), rElb: -.3 + .12 * SI(cq * 3), lArm: .45, lElb: -.5, headTilt: .08 * SI(cq), lean: .05 * st});// 相手を周る揺れ // 軽い交互ステップ // 頭上の腕(ハンカチを振る) // 腰に添えた反対腕
         break;
       }
       case 'morenada': {
         // モレナーダ: ボリビアの重厚な踊り — 仮面の衣装+力強いスタンプ+前傾の揺れ
-        const mr = tt * 2.6; const st = Math.sin(mr); Object.assign(q, {bob: .02 + .03 * Math.abs(st), sway: .12 * st, lThigh: -.35 * MX(0, st), rThigh: -.35 * MX(0, -st), lKnee: .45 * MX(0, st), rKnee: .45 * MX(0, -st), lShin: .15 * MX(0, -st), rShin: .15 * MX(0, st), lArm: .5 + .2 * st, rArm: .5 - .2 * st, lElb: -.4, rElb: -.4, lean: .1, headTilt: .06 * st});// ずっしり沈む腰 // 大きな左右の揺れ // 重い交互の腿上げ // 打ち下ろすスタンプ // 重い衣装の腕 // 仮面の重さの前傾
+        const mr = tt * 2.6; const st = SI(mr); Object.assign(q, {bob: .02 + .03 * AB(st), sway: .12 * st, lThigh: -.35 * MX(0, st), rThigh: -.35 * MX(0, -st), lKnee: .45 * MX(0, st), rKnee: .45 * MX(0, -st), lShin: .15 * MX(0, -st), rShin: .15 * MX(0, st), lArm: .5 + .2 * st, rArm: .5 - .2 * st, lElb: -.4, rElb: -.4, lean: .1, headTilt: .06 * st});// ずっしり沈む腰 // 大きな左右の揺れ // 重い交互の腿上げ // 打ち下ろすスタンプ // 重い衣装の腕 // 仮面の重さの前傾
         break;
       }
       case 'diablada': {
         // ディアブラーダ: ボリビアの悪魔踊り — 高い跳躍+角のように掲げる腕
-        const db = tt * 3.4; const jump = MX(0, Math.sin(db)); const crouch = MX(0, -Math.sin(db)); Object.assign(q, {bob: -.06 * jump + .04 * crouch, lThigh: -.6 * crouch - .2 * jump, rThigh: -.6 * crouch - .2 * jump, lKnee: .7 * crouch, rKnee: .7 * crouch, lShin: .2 * jump, rShin: .2 * jump});// 爆発的な跳び上がり // 着地の深い沈み // 宙での蹴り
+        const db = tt * 3.4; const jump = MX(0, SI(db)); const crouch = MX(0, -SI(db)); Object.assign(q, {bob: -.06 * jump + .04 * crouch, lThigh: -.6 * crouch - .2 * jump, rThigh: -.6 * crouch - .2 * jump, lKnee: .7 * crouch, rKnee: .7 * crouch, lShin: .2 * jump, rShin: .2 * jump});// 爆発的な跳び上がり // 着地の深い沈み // 宙での蹴り
         // 角のようにV字に掲げる腕(左右を交互に強く)
-        const horn = Math.sin(db * .5); Object.assign(q, {lArm: 1.1 + .3 * MX(0, horn) - .3 * crouch, rArm: 1.1 + .3 * MX(0, -horn) - .3 * crouch, lElb: -.25, rElb: -.25, lean: .15 * crouch - .05 * jump, sway: .1 * horn, headTilt: .08 * horn});break;
+        const horn = SI(db * .5); Object.assign(q, {lArm: 1.1 + .3 * MX(0, horn) - .3 * crouch, rArm: 1.1 + .3 * MX(0, -horn) - .3 * crouch, lElb: -.25, rElb: -.25, lean: .15 * crouch - .05 * jump, sway: .1 * horn, headTilt: .08 * horn});break;
       }
       case 'carnavalito': {
         // カルナバリート: アンデスの祝祭輪踊り — 連続ジャンプ+頭上で紙吹雪旗を振る腕+円を描く揺れ
-        const cv = tt * 4.4; const st = Math.sin(cv); const hop = Math.abs(Math.sin(cv)); Object.assign(q, {bob: -.015 - .05 * hop, lThigh: -.4 * MX(0, st), rThigh: -.4 * MX(0, -st), lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), rArm: 1.3 + .25 * Math.sin(cv * 2), rElb: -.35 + .15 * Math.sin(cv * 2), lArm: .4 + .15 * st, lElb: -.3, sway: .1 * st, lean: .04 * st, headTilt: .1 * Math.sin(cv * .5)});// 連続ジャンプ // 交互に跳ね上げる膝 // 頭上で旗を回す腕 // 横に張る反対腕 // 輪の流れ // 祝祭の首振り
+        const cv = tt * 4.4; const st = SI(cv); const hop = AB(SI(cv)); Object.assign(q, {bob: -.015 - .05 * hop, lThigh: -.4 * MX(0, st), rThigh: -.4 * MX(0, -st), lKnee: .5 * MX(0, st), rKnee: .5 * MX(0, -st), rArm: 1.3 + .25 * SI(cv * 2), rElb: -.35 + .15 * SI(cv * 2), lArm: .4 + .15 * st, lElb: -.3, sway: .1 * st, lean: .04 * st, headTilt: .1 * SI(cv * .5)});// 連続ジャンプ // 交互に跳ね上げる膝 // 頭上で旗を回す腕 // 横に張る反対腕 // 輪の流れ // 祝祭の首振り
         break;
       }
       case 'tinku': {
         // ティンク: ボリビアの儀礼格闘踊り — 身構え+交互の打ち出し+踏み込み
-        const tk = tt * 3.8; const st = Math.sin(tk); const punch = MX(0, st); const punch2 = MX(0, -st); Object.assign(q, {bob: .01 - .02 * Math.abs(st), lThigh: -.4 * punch - .15, rThigh: -.4 * punch2 - .15, lKnee: .45 * punch, rKnee: .45 * punch2, lArm: .4 - .55 * punch, rArm: .4 - .55 * punch2, lElb: -.7 + .45 * punch, rElb: -.7 + .45 * punch2, lean: .08, sway: .06 * st, headTilt: .05 * st});// 左打ちの位相 // 右打ちの位相 // 踏み込み脚 // 前に突き出す腕 // 構え→伸ばす肘 // 構えの前傾
+        const tk = tt * 3.8; const st = SI(tk); const punch = MX(0, st); const punch2 = MX(0, -st); Object.assign(q, {bob: .01 - .02 * AB(st), lThigh: -.4 * punch - .15, rThigh: -.4 * punch2 - .15, lKnee: .45 * punch, rKnee: .45 * punch2, lArm: .4 - .55 * punch, rArm: .4 - .55 * punch2, lElb: -.7 + .45 * punch, rElb: -.7 + .45 * punch2, lean: .08, sway: .06 * st, headTilt: .05 * st});// 左打ちの位相 // 右打ちの位相 // 踏み込み脚 // 前に突き出す腕 // 構え→伸ばす肘 // 構えの前傾
         break;
       }
       case 'zamba': {
         // サンバ(アルゼンチン): 優雅な対舞 — パニュエロを掲げる片腕+8の字を描く揺れ
-        const zb = tt * 2.0; const st = Math.sin(zb); Object.assign(q, {bob: -.015 + .015 * Math.sin(zb * 2), sway: .1 * st, lThigh: -.2 * MX(0, st), rThigh: -.2 * MX(0, -st), lKnee: .25 * MX(0, st), rKnee: .25 * MX(0, -st), rArm: 1.25 + .2 * Math.sin(zb * 2.5), rElb: -.35 + .12 * Math.sin(zb * 2.5), lArm: .35 + .1 * st, lElb: -.35, headTilt: .09 * Math.sin(zb * .5), lean: .04 * st});// 相手を8の字に周る // ゆったりした横ステップ // パニュエロを振る頭上の腕 // 優しく開いた反対腕 // 流れる視線
+        const zb = tt * 2.0; const st = SI(zb); Object.assign(q, {bob: -.015 + .015 * SI(zb * 2), sway: .1 * st, lThigh: -.2 * MX(0, st), rThigh: -.2 * MX(0, -st), lKnee: .25 * MX(0, st), rKnee: .25 * MX(0, -st), rArm: 1.25 + .2 * SI(zb * 2.5), rElb: -.35 + .12 * SI(zb * 2.5), lArm: .35 + .1 * st, lElb: -.35, headTilt: .09 * SI(zb * .5), lean: .04 * st});// 相手を8の字に周る // ゆったりした横ステップ // パニュエロを振る頭上の腕 // 優しく開いた反対腕 // 流れる視線
         break;
       }
       case 'singkil': {
         // シンキル: フィリピン・マラナオの宮廷踊り — 交差する竹竿を跨ぐ高い足+扇を翳す両腕
-        const sg = tt * 2.8; const st = Math.sin(sg); const step = MX(0, st); const step2 = MX(0, -st); Object.assign(q, {bob: -.02 - .02 * Math.abs(st), lThigh: -.55 * step, rThigh: -.55 * step2, lKnee: .65 * step, rKnee: .65 * step2, lShin: .2 * step2, rShin: .2 * step});// 竹竿を跨ぐ交互の高踏み // 竿を跨ぐ高い腿上げ // 着地の伸ばし
+        const sg = tt * 2.8; const st = SI(sg); const step = MX(0, st); const step2 = MX(0, -st); Object.assign(q, {bob: -.02 - .02 * AB(st), lThigh: -.55 * step, rThigh: -.55 * step2, lKnee: .65 * step, rKnee: .65 * step2, lShin: .2 * step2, rShin: .2 * step});// 竹竿を跨ぐ交互の高踏み // 竿を跨ぐ高い腿上げ // 着地の伸ばし
         // 扇を翳す両腕(顔の高さで交互に開閉)
-        Object.assign(q, {lArm: .9 + .2 * Math.sin(sg * 1.5), rArm: .9 + .2 * Math.sin(sg * 1.5 + PI), lElb: -.5, rElb: -.5, sway: .08 * st, headTilt: .1 * Math.sin(sg * .5), lean: .03});// 首の優雅な流れ
+        Object.assign(q, {lArm: .9 + .2 * SI(sg * 1.5), rArm: .9 + .2 * SI(sg * 1.5 + PI), lElb: -.5, rElb: -.5, sway: .08 * st, headTilt: .1 * SI(sg * .5), lean: .03});// 首の優雅な流れ
         break;
       }
       case 'kecak': {
         // ケチャ: バリの猿の詠唱踊り — 座り込み+掲げる両腕+揺れる指先の波
-        const kc = tt * 4; const st = Math.sin(kc); Object.assign(q, {bob: .045, lThigh: -.8, rThigh: -.8, lKnee: 1.1, rKnee: 1.1, lShin: -.9, rShin: -.9});// 座り込む低い腰 // 胡座(両膝を横に開く)
+        const kc = tt * 4; const st = SI(kc); Object.assign(q, {bob: .045, lThigh: -.8, rThigh: -.8, lKnee: 1.1, rKnee: 1.1, lShin: -.9, rShin: -.9});// 座り込む低い腰 // 胡座(両膝を横に開く)
         // チャクのリズムで交互に掲げる両腕(指先を震わせる)
-        Object.assign(q, {lArm: 1.3 + .35 * MX(0, st), rArm: 1.3 + .35 * MX(0, -st), lElb: -.2 + .2 * st, rElb: -.2 - .2 * st, sway: .07 * st, lean: .06 + .05 * Math.sin(kc * .5), headTilt: .08 * st});// 唱和の揺れ
+        Object.assign(q, {lArm: 1.3 + .35 * MX(0, st), rArm: 1.3 + .35 * MX(0, -st), lElb: -.2 + .2 * st, rElb: -.2 - .2 * st, sway: .07 * st, lean: .06 + .05 * SI(kc * .5), headTilt: .08 * st});// 唱和の揺れ
         break;
       }
       case 'saman': {
         // サマン: アチェの千手踊り — 正座+胸叩きと頭上の一斉振り
-        const sm = tt * 5; const ph = Math.sin(sm); const up = MX(0, Math.sin(sm * .5)); Object.assign(q, {bob: .05, lThigh: -.9, rThigh: -.9, lKnee: 1.35, rKnee: 1.35, lShin: -.95, rShin: -.95});// 速い叩きのリズム // 頭上へ流す拍 // 正座の低い姿勢 // 正座(膝を立てず畳む)
+        const sm = tt * 5; const ph = SI(sm); const up = MX(0, SI(sm * .5)); Object.assign(q, {bob: .05, lThigh: -.9, rThigh: -.9, lKnee: 1.35, rKnee: 1.35, lShin: -.95, rShin: -.95});// 速い叩きのリズム // 頭上へ流す拍 // 正座の低い姿勢 // 正座(膝を立てず畳む)
         // 胸を叩く腕(交互の速い打ち)と頭上の流れの合成
         Object.assign(q, {lArm: .45 + .9 * up + .15 * MX(0, ph), rArm: .45 + .9 * up + .15 * MX(0, -ph), lElb: -.75 + .55 * up, rElb: -.75 + .55 * up, sway: .1 * ph * (1 - up), headTilt: .12 * ph, lean: .08 + .04 * ph});// 揃った体の揺れ // 首のリズム打ち
         break;
       }
       case 'robam': {
         // ロバム: クメール・アプサラ古典舞踊 — 深い膝の反り+指を反らす優美な腕
-        const rb = tt * 1.4; const st = Math.sin(rb); const pose = Math.sin(rb * .5); Object.assign(q, {bob: .02 + .015 * Math.abs(st), lThigh: -.3, rThigh: -.3, lKnee: .55, rKnee: .55, lShin: -.3 * MX(0, pose), rShin: -.3 * MX(0, -pose)});// 極めてゆったり // 静止ポーズ間の緩移行 // 常に膝を折る // 開いた深い膝(プリエ) // 爪先立ちの反り足
+        const rb = tt * 1.4; const st = SI(rb); const pose = SI(rb * .5); Object.assign(q, {bob: .02 + .015 * AB(st), lThigh: -.3, rThigh: -.3, lKnee: .55, rKnee: .55, lShin: -.3 * MX(0, pose), rShin: -.3 * MX(0, -pose)});// 極めてゆったり // 静止ポーズ間の緩移行 // 常に膝を折る // 開いた深い膝(プリエ) // 爪先立ちの反り足
         // 反らした指先の腕(片方は頭上、片方は胸元)
         Object.assign(q, {lArm: 1.1 + .15 * st, rArm: .55 + .1 * st, lElb: -.3, rElb: -.9, sway: .06 * pose, headTilt: .15 * pose, lean: .04 * pose});// 胸元は深く折る // アプサラの首傾げ
         break;
       }
       case 'indlamu': {
         // インドラム: ズールーの戦士踊り — 頭ほど高く蹴り上げて力強く踏み降ろす
-        const id = tt * 3.2; const st = Math.sin(id); const kick = MX(0, Math.sin(id * .5)); const kick2 = MX(0, Math.sin(id * .5 + PI)); Object.assign(q, {bob: -.03 * (kick + kick2) + .02 * Math.abs(st), lThigh: -1.0 * kick, rThigh: -1.0 * kick2, lKnee: .5 * kick, rKnee: .5 * kick2, lShin: .8 * kick, rShin: .8 * kick2});// 片脚ずつの高キック // 蹴り上げで伸び、踏みで沈む // 腰上まで上げる高キック // 脚を前に伸ばす
+        const id = tt * 3.2; const st = SI(id); const kick = MX(0, SI(id * .5)); const kick2 = MX(0, SI(id * .5 + PI)); Object.assign(q, {bob: -.03 * (kick + kick2) + .02 * AB(st), lThigh: -1.0 * kick, rThigh: -1.0 * kick2, lKnee: .5 * kick, rKnee: .5 * kick2, lShin: .8 * kick, rShin: .8 * kick2});// 片脚ずつの高キック // 蹴り上げで伸び、踏みで沈む // 腰上まで上げる高キック // 脚を前に伸ばす
         // 力強く振る腕(蹴りと逆側が前)
         Object.assign(q, {lArm: .5 + .7 * kick2, rArm: .5 + .7 * kick, lElb: -.3, rElb: -.3, sway: .05 * st, lean: -.03 * (kick - kick2), headTilt: .04 * st});// 反り気味の戦士の体
         break;
       }
       case 'adumu': {
         // アドゥム: マサイの跳躍踊り — 真上に高く跳ぶ+真っ直ぐな体+少しの膝
-        const ad = tt * 4.2; const jmp = MX(0, Math.sin(ad)); Object.assign(q, {bob: -.09 * jmp, lThigh: -.05 * jmp, rThigh: -.05 * jmp, lKnee: .12 * jmp, rKnee: .12 * jmp, lShin: .15 * jmp, rShin: .15 * jmp});// 反復ジャンプ // 高い垂直跳躍 // ほぼ伸ばした脚 // 空中の爪先
+        const ad = tt * 4.2; const jmp = MX(0, SI(ad)); Object.assign(q, {bob: -.09 * jmp, lThigh: -.05 * jmp, rThigh: -.05 * jmp, lKnee: .12 * jmp, rKnee: .12 * jmp, lShin: .15 * jmp, rShin: .15 * jmp});// 反復ジャンプ // 高い垂直跳躍 // ほぼ伸ばした脚 // 空中の爪先
         // 脇に添えた腕(ほぼ動かさない戦士の姿勢)
-        Object.assign(q, {lArm: .15, rArm: .15, lElb: -.1, rElb: -.1, sway: .02 * Math.sin(ad * .5), lean: .02, headTilt: .03 * Math.sin(ad * .5)});// 真っ直ぐな背筋
+        Object.assign(q, {lArm: .15, rArm: .15, lElb: -.1, rElb: -.1, sway: .02 * SI(ad * .5), lean: .02, headTilt: .03 * SI(ad * .5)});// 真っ直ぐな背筋
         break;
       }
       case 'eskista': {
         // エスキスタ: エチオピアの肩踊り — 激しい肩の弾ませ+胸の張り+最小の足
-        const es = tt * 6; const st = Math.sin(es); const fast = Math.sin(es * 1.5); Object.assign(q, {bob: -.01 + .015 * Math.abs(st), lThigh: -.05, rThigh: -.05, lKnee: .08, rKnee: .08});// 弾む上半身 // ほぼ直立
+        const es = tt * 6; const st = SI(es); const fast = SI(es * 1.5); Object.assign(q, {bob: -.01 + .015 * AB(st), lThigh: -.05, rThigh: -.05, lKnee: .08, rKnee: .08});// 弾む上半身 // ほぼ直立
         // 肩の激しい上下(腕で表現するショルダーシミー)
         Object.assign(q, {lArm: .35 + .35 * st, rArm: .35 + .35 * -st, lElb: -.6 + .25 * fast, rElb: -.6 - .25 * fast, sway: .06 * st, lean: .06 + .05 * fast, headTilt: .1 * fast});// 体幹の揺れ // 胸の張り出し // 首の流れ
         break;
       }
       case 'gnawa': {
         // グナワ: モロッコのトランス踊り — 連続の回旋+頭の揺れ+沈み込む跳躍
-        const gn = tt * 4.5; const st = Math.sin(gn); const hop = MX(0, Math.sin(gn * 1.5)); Object.assign(q, {bob: -.04 * hop - .01, lThigh: -.3 * hop, rThigh: -.3 * MX(0, -Math.sin(gn * 1.5)), lKnee: .4 * hop, rKnee: .4 * MX(0, -Math.sin(gn * 1.5))});// 沈み込みつつ跳ねる
+        const gn = tt * 4.5; const st = SI(gn); const hop = MX(0, SI(gn * 1.5)); Object.assign(q, {bob: -.04 * hop - .01, lThigh: -.3 * hop, rThigh: -.3 * MX(0, -SI(gn * 1.5)), lKnee: .4 * hop, rKnee: .4 * MX(0, -SI(gn * 1.5))});// 沈み込みつつ跳ねる
         // 振り回す両腕(カウリ帽の房を回す動き)
-        Object.assign(q, {lArm: .7 + .4 * st, rArm: .7 - .4 * st, lElb: -.4, rElb: -.4, sway: .25 * st, lean: .12 * st, headTilt: .25 * Math.sin(gn * 1.5)});// 激しい回旋の傾き // 前後の揺れ // 頭の大きな揺れ
+        Object.assign(q, {lArm: .7 + .4 * st, rArm: .7 - .4 * st, lElb: -.4, rElb: -.4, sway: .25 * st, lean: .12 * st, headTilt: .25 * SI(gn * 1.5)});// 激しい回旋の傾き // 前後の揺れ // 頭の大きな揺れ
         break;
       }
       case 'piring': {
         // ピリン: ミナンカバウの皿踊り — 両手に皿+早い足捌き+優雅な回旋
-        const pi = tt * 3.5; const st = Math.sin(pi); Object.assign(q, {bob: -.02 + .03 * Math.abs(Math.sin(pi * 2)), lThigh: -.15 + .25 * MX(0, st), rThigh: -.15 + .25 * MX(0, -st), lKnee: .2 * MX(0, st), rKnee: .2 * MX(0, -st)});// 細かい弾み // 交互の足上げ
+        const pi = tt * 3.5; const st = SI(pi); Object.assign(q, {bob: -.02 + .03 * AB(SI(pi * 2)), lThigh: -.15 + .25 * MX(0, st), rThigh: -.15 + .25 * MX(0, -st), lKnee: .2 * MX(0, st), rKnee: .2 * MX(0, -st)});// 細かい弾み // 交互の足上げ
         // 皿を持つ両腕(頭上に掲げる)
         Object.assign(q, {lArm: 1.1 + .15 * st, rArm: 1.1 - .15 * st, lElb: -.3, rElb: -.3, sway: .12 * st, lean: .04, headTilt: .08 * st});// 肘を立て皿を掲げる // 回旋の傾き
         break;
       }
       case 'pangalay': {
         // パンガライ: タウスグの指甲舞踊 — 波打つ腕+深い膝+優雅な首
-        const pg = tt * 2.2; const st = Math.sin(pg); const wave = Math.sin(pg * 2); Object.assign(q, {bob: .04, lThigh: -.35, rThigh: -.35, lKnee: .5, rKnee: .5, lShin: .3, rShin: .3});// 沈んだ重心 // 深い膝
+        const pg = tt * 2.2; const st = SI(pg); const wave = SI(pg * 2); Object.assign(q, {bob: .04, lThigh: -.35, rThigh: -.35, lKnee: .5, rKnee: .5, lShin: .3, rShin: .3});// 沈んだ重心 // 深い膝
         // 波打つ両腕(指先の波を肘で表現)
         Object.assign(q, {lArm: .9 + .2 * wave, rArm: .9 - .2 * wave, lElb: -.5 + .15 * st, rElb: -.5 - .15 * st, sway: .08 * st, lean: .06, headTilt: .12 * st});// 緩やかな体幹 // 大きく傾ぐ首
         break;
       }
       case 'kartuli': {
         // カルトゥリ: ジョージアの宮廷踊り — 高く挙げた腕+滑る歩+誇り高い胸
-        const kt = tt * 1.8; const st = Math.sin(kt); Object.assign(q, {bob: -.01 + .02 * Math.abs(Math.sin(kt * 2)), lThigh: -.1 + .15 * MX(0, st), rThigh: -.1 + .15 * MX(0, -st), lKnee: .1, rKnee: .1, lShin: .08, rShin: .08});// 滑らかな起伏 // 滑る歩行
+        const kt = tt * 1.8; const st = SI(kt); Object.assign(q, {bob: -.01 + .02 * AB(SI(kt * 2)), lThigh: -.1 + .15 * MX(0, st), rThigh: -.1 + .15 * MX(0, -st), lKnee: .1, rKnee: .1, lShin: .08, rShin: .08});// 滑らかな起伏 // 滑る歩行
         // 高く優雅に挙げる両腕
         Object.assign(q, {lArm: 1.25 + .1 * st, rArm: 1.25 - .1 * st, lElb: -.15, rElb: -.15, sway: .05 * st, lean: .1, headTilt: .04 * st});// ほぼ真っ直ぐ // 誇り高く張った胸
         break;
       }
       case 'lazgi': {
         // ラズギ: ホレズムの速い踊り — 肩の細かい弾き+速い腕+鋭い首
-        const lz = tt * 5; const st = Math.sin(lz); const flick = Math.sin(lz * 3); Object.assign(q, {bob: -.02 + .02 * Math.abs(flick), lThigh: -.1 + .1 * st, rThigh: -.1 - .1 * st, lKnee: .15, rKnee: .15});// 細かい弾み
+        const lz = tt * 5; const st = SI(lz); const flick = SI(lz * 3); Object.assign(q, {bob: -.02 + .02 * AB(flick), lThigh: -.1 + .1 * st, rThigh: -.1 - .1 * st, lKnee: .15, rKnee: .15});// 細かい弾み
         // 速い腕の動き(交互に鋭く振る)
         Object.assign(q, {lArm: .8 + .3 * st, rArm: .8 - .3 * st, lElb: -.3 + .2 * flick, rElb: -.3 - .2 * flick, sway: .1 * st, lean: .05, headTilt: .2 * flick});// 鋭い首の振り
         break;
       }
       case 'springar': {
         // スプリンガル: ノルウェーの3拍子踊り — 転がる三連ステップ+交互の脚上げ
-        const sp = tt * 3; const st = Math.sin(sp); const trip = Math.sin(sp * 1.5); Object.assign(q, {bob: -.015 + .03 * Math.abs(trip), lThigh: -.1 + .2 * MX(0, st), rThigh: -.1 + .2 * MX(0, -st), lKnee: .15 * MX(0, st), rKnee: .15 * MX(0, -st), lShin: .1 * MX(0, st), rShin: .1 * MX(0, -st)});// 3拍子の転がる起伏 // 交互の脚上げ
+        const sp = tt * 3; const st = SI(sp); const trip = SI(sp * 1.5); Object.assign(q, {bob: -.015 + .03 * AB(trip), lThigh: -.1 + .2 * MX(0, st), rThigh: -.1 + .2 * MX(0, -st), lKnee: .15 * MX(0, st), rKnee: .15 * MX(0, -st), lShin: .1 * MX(0, st), rShin: .1 * MX(0, -st)});// 3拍子の転がる起伏 // 交互の脚上げ
         // 落ち着いた両腕(腰のあたり)
         Object.assign(q, {lArm: .2 + .1 * st, rArm: .2 - .1 * st, lElb: -.25, rElb: -.25, sway: .12 * st, lean: .06, headTilt: .06 * st});// 3拍子の横揺れ
         break;
       }
       case 'ganggang': {
         // カンカンスレ: 円陣の踊り — 掲げた両腕+ゆれる輪+連続の小跳ね
-        const gg = tt * 2.8; const st = Math.sin(gg); const bounce = Math.abs(Math.sin(gg * 1.5)); Object.assign(q, {bob: -.03 * bounce, lThigh: -.12 * bounce, rThigh: -.12 * (1 - bounce), lKnee: .18 * bounce, rKnee: .18 * (1 - bounce)});// 小刻みの跳ね
+        const gg = tt * 2.8; const st = SI(gg); const bounce = AB(SI(gg * 1.5)); Object.assign(q, {bob: -.03 * bounce, lThigh: -.12 * bounce, rThigh: -.12 * (1 - bounce), lKnee: .18 * bounce, rKnee: .18 * (1 - bounce)});// 小刻みの跳ね
         // 掲げた両腕(V字に高く)
         Object.assign(q, {lArm: 1.2 + .15 * st, rArm: 1.2 - .15 * st, lElb: -.2, rElb: -.2, sway: .15 * st, lean: .05 * st, headTilt: .1 * st});// 輪のゆれる移動
         break;
       }
       case 'biyelgee': {
         // ビエルゲー: モンゴルの上半身踊り — 低い姿勢+騎馬の腕+胸の弾み
-        const bi = tt * 2.5; const st = Math.sin(bi); const chest = Math.sin(bi * 2); Object.assign(q, {bob: .05, lThigh: -.45, rThigh: -.45, lKnee: .5, rKnee: .5, lShin: .35, rShin: .35});// 低い姿勢(沈み込み) // 深い膝の開脚
+        const bi = tt * 2.5; const st = SI(bi); const chest = SI(bi * 2); Object.assign(q, {bob: .05, lThigh: -.45, rThigh: -.45, lKnee: .5, rKnee: .5, lShin: .35, rShin: .35});// 低い姿勢(沈み込み) // 深い膝の開脚
         // 騎馬手綱の両腕(前に構える)
         Object.assign(q, {lArm: .55 + .2 * st, rArm: .55 - .2 * st, lElb: -.5 + .15 * chest, rElb: -.5 - .15 * chest, sway: .08 * st, lean: .08 + .04 * chest, headTilt: .06 * st});// 胸の前後弾み
         break;
       }
       case 'saidi': {
         // サイディ: エジプトの杖踊り — 杖を頭上に掲げて回す構え+交互の打ち込み
-        const sd = tt * 3; const st = Math.sin(sd); const strike = Math.sin(sd * 2); q.bob = -.015 + .02 * Math.abs(strike); // 構えの開脚(腰を落として)
+        const sd = tt * 3; const st = SI(sd); const strike = SI(sd * 2); q.bob = -.015 + .02 * AB(strike); // 構えの開脚(腰を落として)
         Object.assign(q, {lThigh: -.3, rThigh: -.3, lKnee: .35, rKnee: .35});// 杖を掲げる片腕+反対の守り腕
         Object.assign(q, {lArm: 1.1 + .25 * st, rArm: .4 - .3 * MX(0, strike), lElb: -.25, rElb: -.5 + .2 * strike, sway: .12 * st, lean: .1 + .05 * strike, headTilt: .07 * st});// 打ち込み時の前傾
         break;
       }
       case 'horon': {
         // ホロン: 黒海の高速連踊り — 水平に伸ばした両腕+肩の震え+速い足捌き
-        const hr = tt * 5; const st = Math.sin(hr); const tremble = Math.sin(hr * 4); q.bob = -.01 + .02 * Math.abs(st); // 肩の小刻み震え
+        const hr = tt * 5; const st = SI(hr); const tremble = SI(hr * 4); q.bob = -.01 + .02 * AB(st); // 肩の小刻み震え
         // 速い足捌き(交互の小刻みステップ)
-        Object.assign(q, {lThigh: -.15 + .2 * MX(0, st), rThigh: -.15 + .2 * MX(0, -st), lKnee: .2 + .15 * Math.abs(st), rKnee: .2 + .15 * Math.abs(st)});// 水平に張った両腕(連れ踊りの肩掛け)+震え
+        Object.assign(q, {lThigh: -.15 + .2 * MX(0, st), rThigh: -.15 + .2 * MX(0, -st), lKnee: .2 + .15 * AB(st), rKnee: .2 + .15 * AB(st)});// 水平に張った両腕(連れ踊りの肩掛け)+震え
         Object.assign(q, {lArm: .95 + .08 * tremble, rArm: .95 - .08 * tremble, lElb: -.1, rElb: -.1, sway: .1 * st, lean: .04 * tremble, headTilt: .05 * tremble});// 肩の上下震えを体へ伝搬
         break;
       }
       case 'jarabe': {
         // ハラベ: メキシコの帽子踊り — アーチの腕+優雅な旋回+つま先の足打ち
-        const jb = tt * 2.6; const st = Math.sin(jb); const tap = Math.sin(jb * 2); q.bob = -.015 + .025 * Math.abs(tap); // つま先の足打ち(交互の前出し)
+        const jb = tt * 2.6; const st = SI(jb); const tap = SI(jb * 2); q.bob = -.015 + .025 * AB(tap); // つま先の足打ち(交互の前出し)
         Object.assign(q, {lThigh: -.25 * MX(0, tap), rThigh: -.25 * MX(0, -tap), lKnee: .3 * MX(0, tap), rKnee: .3 * MX(0, -tap)});// 頭上のアーチ腕+腰の反対腕(帽子踊りの姿勢)
         Object.assign(q, {lArm: 1.05 + .12 * st, rArm: .35 - .1 * st, lElb: -.55, rElb: -.6, sway: .14 * st, lean: .08 * st, headTilt: .09 * st});// 優雅な旋回の移動
         break;
       }
       case 'frevo': {
         // フレヴォ: ペルナンブコの傘踊り — 傘を掲げる腕+高キック+跳躍
-        const fv = tt * 4.5; const st = Math.sin(fv); const kick = Math.sin(fv * 2); const leap = MX(0, Math.sin(fv * 1.5)); q.bob = -.02 - .07 * leap; // 連続する跳躍
+        const fv = tt * 4.5; const st = SI(fv); const kick = SI(fv * 2); const leap = MX(0, SI(fv * 1.5)); q.bob = -.02 - .07 * leap; // 連続する跳躍
         // 高キック(交互の鋭い蹴り)
         Object.assign(q, {lThigh: -.2 - .5 * MX(0, kick), rThigh: -.2 - .5 * MX(0, -kick), lKnee: .25 + .3 * MX(0, -kick), rKnee: .25 + .3 * MX(0, kick), lShin: .35, rShin: .35});// 傘を掲げる腕+バランスの反対腕
         Object.assign(q, {lArm: 1.15 + .15 * st, rArm: .6 - .3 * st, lElb: -.2, rElb: -.35, sway: .2 * st, lean: .12 * st, headTilt: .1 * st});break;
       }
       case 'siva': {
         // シヴァ: サモアの優雅な踊り — 波打つ両腕+腰の大きな揺れ
-        const sv = tt * 1.8; const st = Math.sin(sv); const wave = Math.sin(sv * 2); q.bob = -.01 + .02 * Math.abs(st); // 腰の揺れ(左右の大きな横揺れ)
+        const sv = tt * 1.8; const st = SI(sv); const wave = SI(sv * 2); q.bob = -.01 + .02 * AB(st); // 腰の揺れ(左右の大きな横揺れ)
         Object.assign(q, {lThigh: -.12 + .1 * st, rThigh: -.12 - .1 * st, lKnee: .15, rKnee: .15});// 波打つ両腕(交互の流れる動き)
         Object.assign(q, {lArm: .7 + .35 * wave, rArm: .7 - .35 * wave, lElb: -.4 - .2 * wave, rElb: -.4 + .2 * wave, sway: .18 * st, lean: .06 * st, headTilt: .12 * st});break;
       }
       case 'gorshey': {
         // ゴルシェ: チベットの円舞 — 長袖を振る腕+弾むステップ+輪の移動
-        const gs = tt * 2.4; const st = Math.sin(gs); const flap = Math.sin(gs * 1.5); q.bob = -.02 + .03 * Math.abs(flap); // 弾むステップ(交互の軽い脚上げ)
-        Object.assign(q, {lThigh: -.1 + .18 * MX(0, st), rThigh: -.1 + .18 * MX(0, -st), lKnee: .2 + .1 * Math.abs(st), rKnee: .2 + .1 * Math.abs(st)});// 長袖を振る両腕(大きく開いて横に流す)
+        const gs = tt * 2.4; const st = SI(gs); const flap = SI(gs * 1.5); q.bob = -.02 + .03 * AB(flap); // 弾むステップ(交互の軽い脚上げ)
+        Object.assign(q, {lThigh: -.1 + .18 * MX(0, st), rThigh: -.1 + .18 * MX(0, -st), lKnee: .2 + .1 * AB(st), rKnee: .2 + .1 * AB(st)});// 長袖を振る両腕(大きく開いて横に流す)
         Object.assign(q, {lArm: .8 + .4 * flap, rArm: .8 - .4 * flap, lElb: -.3 - .15 * flap, rElb: -.3 + .15 * flap, sway: .16 * st, lean: .07 * st, headTilt: .08 * st});// 円陣の回る移動
         break;
       }
       case 'seannos': {
         // シェーン・ノース: アイルランドの古式ソロ踊り — 低い姿勢+早い打足+垂れた腕
-        const sn = tt * 3.4; const st = Math.sin(sn); const batter = Math.sin(sn * 3); Object.assign(q, {bob: .05 + .03 * Math.abs(batter), lThigh: -.15 + .2 * MX(0, batter), rThigh: -.15 + .2 * MX(0, -batter), lKnee: .3, rKnee: .3, lShin: -.05 + .15 * MX(0, -batter), rShin: -.05 + .15 * MX(0, batter)});// 低く地に張る // つま先での打足
+        const sn = tt * 3.4; const st = SI(sn); const batter = SI(sn * 3); Object.assign(q, {bob: .05 + .03 * AB(batter), lThigh: -.15 + .2 * MX(0, batter), rThigh: -.15 + .2 * MX(0, -batter), lKnee: .3, rKnee: .3, lShin: -.05 + .15 * MX(0, -batter), rShin: -.05 + .15 * MX(0, batter)});// 低く地に張る // つま先での打足
         // 腕はだらりと下げて小さく揺れる
         Object.assign(q, {lArm: .12 + .06 * st, rArm: .12 - .06 * st, lElb: -.08, rElb: -.08, sway: .14 * st, lean: .05, headTilt: .08 * batter});break;
       }
       case 'salegy': {
         // サレギ: マダガスカルの祭り踊り — 速い腰揺れ+突き出す腕+軽いホップ
-        const sy = tt * 4.5; const st = Math.sin(sy); const hop = Math.sin(sy * 2); Object.assign(q, {bob: -.01 - .03 * Math.abs(hop), lThigh: -.12 + .15 * MX(0, st), rThigh: -.12 + .15 * MX(0, -st), lKnee: .18, rKnee: .18});// 腰の速い揺れ(体を左右に打つ)
+        const sy = tt * 4.5; const st = SI(sy); const hop = SI(sy * 2); Object.assign(q, {bob: -.01 - .03 * AB(hop), lThigh: -.12 + .15 * MX(0, st), rThigh: -.12 + .15 * MX(0, -st), lKnee: .18, rKnee: .18});// 腰の速い揺れ(体を左右に打つ)
         q.sway = .2 * st; q.lean = .08 * st; // 突き出す両腕(前へ交互にパンプ)
         Object.assign(q, {lArm: .45 + .3 * MX(0, hop), rArm: .45 + .3 * MX(0, -hop), lElb: -.5, rElb: -.5, headTilt: .1 * st});break;
       }
       case 'otea': {
         // オテア: タヒチの祭典踊り — 激しい腰シミー+深い膝+優美な腕
-        const ot = tt * 3; const shimmy = S(9); const st = Math.sin(ot); Object.assign(q, {bob: .04 + .015 * Math.abs(shimmy), lThigh: -.3, rThigh: -.3, lKnee: .35, rKnee: .35, lShin: .05, rShin: .05});// 高速の腰シミー // 深い膝の低姿勢
+        const ot = tt * 3; const shimmy = S(9); const st = SI(ot); Object.assign(q, {bob: .04 + .015 * AB(shimmy), lThigh: -.3, rThigh: -.3, lKnee: .35, rKnee: .35, lShin: .05, rShin: .05});// 高速の腰シミー // 深い膝の低姿勢
         // 腰の高速シミー(体の横振り)
         q.sway = .12 * shimmy; q.lean = .03; // 優美な両腕(頭を囲む丸いフレーム+小さな揺れ)
         Object.assign(q, {lArm: .95 + .1 * st, rArm: .95 - .1 * st, lElb: -.7, rElb: -.7, headTilt: .05 * shimmy});break;
       }
       case 'meke': {
         // メケ: フィジーの戦舞踊 — 棍棒を掲げる腕+交互の突き出し+大きな踏み込み
-        const mk = tt * 3.2; const st = Math.sin(mk); const thrust = Math.sin(mk * 2); Object.assign(q, {bob: -.02 - .04 * Math.abs(st), lThigh: -.25 + .2 * MX(0, st), rThigh: -.25 + .2 * MX(0, -st), lKnee: .3, rKnee: .3});// 弾む大きな動き
+        const mk = tt * 3.2; const st = SI(mk); const thrust = SI(mk * 2); Object.assign(q, {bob: -.02 - .04 * AB(st), lThigh: -.25 + .2 * MX(0, st), rThigh: -.25 + .2 * MX(0, -st), lKnee: .3, rKnee: .3});// 弾む大きな動き
         // 棍棒の腕(高く掲げて突き出す)
         Object.assign(q, {lArm: 1.05 + .1 * st, lElb: -.15, rArm: .35 + .5 * MX(0, thrust), rElb: -.4 + .2 * MX(0, -thrust), sway: .15 * st, lean: .1, headTilt: .06 * st});// 交互の突き出し // 前傾の構え
         break;
       }
       case 'singsing': {
         // シンシン: PNGの祭典踊り — 飛び跳ねる両脚+槍を構える腕+揺れる胴
-        const sg = tt * 4; const jump = Math.abs(Math.sin(sg)); const thrust = Math.sin(sg * 1.5); Object.assign(q, {bob: -.02 - .06 * jump, lThigh: -.3 - .15 * jump, rThigh: -.3 - .15 * jump, lKnee: .35, rKnee: .35, lShin: -.1, rShin: -.1});// 連続の跳躍
+        const sg = tt * 4; const jump = AB(SI(sg)); const thrust = SI(sg * 1.5); Object.assign(q, {bob: -.02 - .06 * jump, lThigh: -.3 - .15 * jump, rThigh: -.3 - .15 * jump, lKnee: .35, rKnee: .35, lShin: -.1, rShin: -.1});// 連続の跳躍
         // 槍を構える両腕(上に掲げて揺する)
-        Object.assign(q, {lArm: 1.0 + .15 * thrust, rArm: 1.0 - .15 * thrust, lElb: -.25, rElb: -.25, sway: .12 * Math.sin(sg * .7), lean: .12, headTilt: .07 * thrust});// 前傾の構え
+        Object.assign(q, {lArm: 1.0 + .15 * thrust, rArm: 1.0 - .15 * thrust, lElb: -.25, rElb: -.25, sway: .12 * SI(sg * .7), lean: .12, headTilt: .07 * thrust});// 前傾の構え
         break;
       }
       case 'lakalaka': {
         // ラカラカ: トンガの儀礼踊り — 厳かな体揺れ+正確な交互の腕振り
-        const lk = tt * 2.6; const st = Math.sin(lk); const gesture = Math.sin(lk * 2); Object.assign(q, {bob: .01 + .02 * Math.abs(st), lThigh: -.08, rThigh: -.08, lKnee: .1, rKnee: .1});// 僅かな揺れ(落ち着き)
+        const lk = tt * 2.6; const st = SI(lk); const gesture = SI(lk * 2); Object.assign(q, {bob: .01 + .02 * AB(st), lThigh: -.08, rThigh: -.08, lKnee: .1, rKnee: .1});// 僅かな揺れ(落ち着き)
         // 正確な腕の振り(交互に上げ下げする儀礼的な動作)
         Object.assign(q, {lArm: .6 + .45 * MX(0, gesture), rArm: .6 + .45 * MX(0, -gesture), lElb: -.35 - .1 * gesture, rElb: -.35 + .1 * gesture, sway: .1 * st, lean: .04, headTilt: .06 * st});// 端正な体揺れ
         break;
       }
       case 'toka': {
         // トカ: バヌアトの祭り踊り — 深いスタンプ+左右の重い揺れ+供物の腕
-        const tk = tt * 3; const stamp = Math.sin(tk * 2); const st = Math.sin(tk); Object.assign(q, {bob: .04 + .05 * Math.abs(stamp), lThigh: -.25 + .3 * MX(0, stamp), rThigh: -.25 + .3 * MX(0, -stamp), lKnee: .35, rKnee: .35, lShin: -.15 * MX(0, -stamp), rShin: -.15 * MX(0, stamp)});// 重い沈み込み // 交互の大きなスタンプ
+        const tk = tt * 3; const stamp = SI(tk * 2); const st = SI(tk); Object.assign(q, {bob: .04 + .05 * AB(stamp), lThigh: -.25 + .3 * MX(0, stamp), rThigh: -.25 + .3 * MX(0, -stamp), lKnee: .35, rKnee: .35, lShin: -.15 * MX(0, -stamp), rShin: -.15 * MX(0, stamp)});// 重い沈み込み // 交互の大きなスタンプ
         // 供物を捧げる両腕(前へゆっくり上げ下げ)
         Object.assign(q, {lArm: .5 + .2 * st, rArm: .5 - .2 * st, lElb: -.45, rElb: -.45, sway: .18 * st, lean: .08, headTilt: .09 * st});// 左右の重い揺れ
         break;
       }
       case 'vira': {
         // ヴィラ: ポルトガルの旋回踊り — 速い足捌き+回転の傾き+掲げる腕
-        const vr = tt * 5; const st = Math.sin(vr); const step = Math.sin(vr * 3); Object.assign(q, {bob: .03 + .02 * Math.abs(st), lThigh: -.15 + .2 * MX(0, step), rThigh: -.15 + .2 * MX(0, -step), lKnee: .22, rKnee: .22, lShin: -.08 * MX(0, -step), rShin: -.08 * MX(0, step)});// 交互の速い足捌き
+        const vr = tt * 5; const st = SI(vr); const step = SI(vr * 3); Object.assign(q, {bob: .03 + .02 * AB(st), lThigh: -.15 + .2 * MX(0, step), rThigh: -.15 + .2 * MX(0, -step), lKnee: .22, rKnee: .22, lShin: -.08 * MX(0, -step), rShin: -.08 * MX(0, step)});// 交互の速い足捌き
         // 頭上で揺れる両腕(組んで掲げる)
         Object.assign(q, {lArm: .9 + .15 * st, rArm: .9 - .15 * st, lElb: -.2, rElb: -.2, sway: .22 * st, lean: .06, headTilt: .1 * st});// 回転の大きな傾き
         break;
       }
       case 'yarkhushta': {
         // ヤルフシュタ: アルメニアの戦士踊り — 重いスタンプ+組んだ腕+左右の揺れ
-        const yk = tt * 3.4; const stamp2 = Math.sin(yk * 2); const st = Math.sin(yk); Object.assign(q, {bob: .05 + .05 * Math.abs(stamp2), lThigh: -.3 + .35 * MX(0, stamp2), rThigh: -.3 + .35 * MX(0, -stamp2), lKnee: .4, rKnee: .4, lShin: -.12 * MX(0, -stamp2), rShin: -.12 * MX(0, stamp2)});// 深い沈み込み // 力強い交互スタンプ
+        const yk = tt * 3.4; const stamp2 = SI(yk * 2); const st = SI(yk); Object.assign(q, {bob: .05 + .05 * AB(stamp2), lThigh: -.3 + .35 * MX(0, stamp2), rThigh: -.3 + .35 * MX(0, -stamp2), lKnee: .4, rKnee: .4, lShin: -.12 * MX(0, -stamp2), rShin: -.12 * MX(0, stamp2)});// 深い沈み込み // 力強い交互スタンプ
         // 肩に組んだ腕(水平に近い連携の姿勢)
         Object.assign(q, {lArm: .28 + .08 * st, rArm: .28 - .08 * st, lElb: -.15, rElb: -.15, sway: .14 * st, lean: .1, headTilt: .05 * st});// 連携の重い揺れ
         break;
       }
       case 'yalli': {
         // ヤッル: アゼルバイジャンの連舞 — 肩を組んだ前後の波+小さな足運び
-        const yl = tt * 2.8; const st = Math.sin(yl); const wave = Math.sin(yl * 1.4); Object.assign(q, {bob: .02 + .02 * Math.abs(st), lThigh: -.12 + .1 * MX(0, wave), rThigh: -.12 + .1 * MX(0, -wave), lKnee: .18, rKnee: .18});// 小さな前後の足運び
+        const yl = tt * 2.8; const st = SI(yl); const wave = SI(yl * 1.4); Object.assign(q, {bob: .02 + .02 * AB(st), lThigh: -.12 + .1 * MX(0, wave), rThigh: -.12 + .1 * MX(0, -wave), lKnee: .18, rKnee: .18});// 小さな前後の足運び
         // 肩に組んだ腕(連なった姿勢の水平腕)
         Object.assign(q, {lArm: .22 + .06 * st, rArm: .22 - .06 * st, lElb: -.12, rElb: -.12, sway: .16 * st, lean: .05 * wave, headTilt: .05 * st});// 一列の波のような揺れ // 前後への小さな傾き
         break;
       }
       case 'ardha': {
         // アルダ: サウジの剣舞踊 — 前後の揺れ+剣を掲げる腕+厳かな歩
-        const ad = tt * 2.8; const st = Math.sin(ad); const raise = Math.sin(ad * 1.5); Object.assign(q, {bob: .03 + .025 * Math.abs(st), lThigh: -.1 + .08 * MX(0, st), rThigh: -.1 + .08 * MX(0, -st), lKnee: .15, rKnee: .15});// 厳かな前後の歩
+        const ad = tt * 2.8; const st = SI(ad); const raise = SI(ad * 1.5); Object.assign(q, {bob: .03 + .025 * AB(st), lThigh: -.1 + .08 * MX(0, st), rThigh: -.1 + .08 * MX(0, -st), lKnee: .15, rKnee: .15});// 厳かな前後の歩
         // 剣を掲げる右腕(頭上でゆっくり上下)
         Object.assign(q, {lArm: .35 + .1 * st, rArm: 1.05 + .1 * raise, lElb: -.2, rElb: -.1, sway: .1 * st, lean: .07, headTilt: .06 * st});// 列の揺れ
         break;
       }
       case 'stambeli': {
         // スタンベリ: チュニジアの儀式踊り — トランスの揺れ+首の沈み+開いた腕
-        const sb = tt * 3.2; const st = Math.sin(sb); const trance = Math.sin(sb * 1.7); Object.assign(q, {bob: .035 + .03 * Math.abs(trance), lThigh: -.18, rThigh: -.18, lKnee: .28, rKnee: .28});// 揺れる沈み込み
+        const sb = tt * 3.2; const st = SI(sb); const trance = SI(sb * 1.7); Object.assign(q, {bob: .035 + .03 * AB(trance), lThigh: -.18, rThigh: -.18, lKnee: .28, rKnee: .28});// 揺れる沈み込み
         // 開いた腕(儀式的に横に広げて小刻みに振る)
         Object.assign(q, {lArm: .55 + .12 * trance, rArm: .55 - .12 * trance, lElb: -.3, rElb: -.3, sway: .15 * st, lean: .1, headTilt: .12 * trance});// 左右のトランス揺れ // 首の大きな揺れ
         break;
       }
       case 'ondunda': {
         // オンドゥンダ: ヒンバの輪踊り — 拍手の腕+砂を蹴る足+ゆったり揺れ
-        const od = tt * 3.6; const st = Math.sin(od); const clap2 = Math.sin(od * 2); Object.assign(q, {bob: .03 + .02 * Math.abs(st), lThigh: -.12 + .18 * MX(0, clap2), rThigh: -.12 + .18 * MX(0, -clap2), lKnee: .2, rKnee: .2, lShin: -.1 * MX(0, -clap2), rShin: -.1 * MX(0, clap2)});// 砂を蹴る小さな脚上げ
+        const od = tt * 3.6; const st = SI(od); const clap2 = SI(od * 2); Object.assign(q, {bob: .03 + .02 * AB(st), lThigh: -.12 + .18 * MX(0, clap2), rThigh: -.12 + .18 * MX(0, -clap2), lKnee: .2, rKnee: .2, lShin: -.1 * MX(0, -clap2), rShin: -.1 * MX(0, clap2)});// 砂を蹴る小さな脚上げ
         // 拍手する腕(前で合わせる交互の動き)
         Object.assign(q, {lArm: .45 + .2 * MX(0, clap2), rArm: .45 + .2 * MX(0, -clap2), lElb: -.5, rElb: -.5, sway: .1 * st, lean: .06, headTilt: .07 * st});// ゆったりした輪の揺れ
         break;
       }
       case 'lamvong': {
         // ラムヴォン: ラオスの輪踊り — 優美な指先の腕+滑る横歩+ゆるい揺れ
-        const lv = tt * 2.2; const st = Math.sin(lv); const gl = Math.sin(lv * 1.3); Object.assign(q, {bob: .018 + .015 * Math.abs(st), lThigh: -.08 + .06 * MX(0, gl), rThigh: -.08 + .06 * MX(0, -gl), lKnee: .12, rKnee: .12});// 沈み気味の滑らかな揺れ // 滑る横歩
+        const lv = tt * 2.2; const st = SI(lv); const gl = SI(lv * 1.3); Object.assign(q, {bob: .018 + .015 * AB(st), lThigh: -.08 + .06 * MX(0, gl), rThigh: -.08 + .06 * MX(0, -gl), lKnee: .12, rKnee: .12});// 沈み気味の滑らかな揺れ // 滑る横歩
         // 優美な腕(枠を作るような曲線の構え)
-        Object.assign(q, {lArm: .4 + .15 * Math.sin(lv * 1.5), rArm: .4 - .15 * Math.sin(lv * 1.5), lElb: -.35 + .1 * st, rElb: -.35 - .1 * st, sway: .12 * st, lean: .05 * st, headTilt: .08 * Math.sin(lv * 1.3 + .5)});// 指先を反らす優美な肘 // 輪を描く横揺れ // 斜めの優美な首
+        Object.assign(q, {lArm: .4 + .15 * SI(lv * 1.5), rArm: .4 - .15 * SI(lv * 1.5), lElb: -.35 + .1 * st, rElb: -.35 - .1 * st, sway: .12 * st, lean: .05 * st, headTilt: .08 * SI(lv * 1.3 + .5)});// 指先を反らす優美な肘 // 輪を描く横揺れ // 斜めの優美な首
         break;
       }
       case 'still': break;
       default: // idle
-        Object.assign(q, {bob: .012 * S(2), lean: .02 * Math.sin(tt), lArm: .1 + .05 * S(1.3), rArm: .1 - .05 * S(1.3), headTilt: .06 * S(.7)});}
+        Object.assign(q, {bob: .012 * S(2), lean: .02 * SI(tt), lArm: .1 + .05 * S(1.3), rArm: .1 - .05 * S(1.3), headTilt: .06 * S(.7)});}
     return q;
   }
 
@@ -1151,14 +1151,14 @@ const ShiroLib = (() => {
     // legs: hip -> knee -> ankle
     const legL = legFrac / 2;
     for (const [side, hipX, thA, knA, shn] of [['l', -hipHalf, q.lThigh, q.lKnee, q.lShin || 0], ['r', hipHalf, q.rThigh, q.rKnee, q.rShin || 0]]) {
-      const hx = hipX, hy = legFrac; const kx = hx + Math.sin(thA) * legL, ky = hy - Math.cos(thA) * legL; const shA = thA - knA + shn; const ax = kx + Math.sin(shA) * legL, ay = ky - Math.cos(shA) * legL; K[side + 'Hip'] = [hx, hy]; K[side + 'Knee'] = [kx, ky]; K[side + 'Ank'] = [ax, MX(.015, ay)];
+      const hx = hipX, hy = legFrac; const kx = hx + SI(thA) * legL, ky = hy - CO(thA) * legL; const shA = thA - knA + shn; const ax = kx + SI(shA) * legL, ay = ky - CO(shA) * legL; K[side + 'Hip'] = [hx, hy]; K[side + 'Knee'] = [kx, ky]; K[side + 'Ank'] = [ax, MX(.015, ay)];
     }
     // arms: shoulder -> elbow -> wrist (angle 0 = down)
     const up = armLen / 2;
     for (const [side, sgn, aA, eA] of [['l', -1, q.lArm, q.lElb], ['r', 1, q.rArm, q.rElb]]) {
-      const sx = sgn * shHalf, sy = shY; const ex = sx + sgn * Math.sin(aA) * up, ey = sy - Math.cos(aA) * up; const fa = aA - eA * sgn; const wx = ex + sgn * Math.sin(fa) * up, wy = ey - Math.cos(fa) * up; K[side + 'Sh'] = [sx, sy]; K[side + 'Elb'] = [ex, ey]; K[side + 'Wri'] = [wx, wy];
+      const sx = sgn * shHalf, sy = shY; const ex = sx + sgn * SI(aA) * up, ey = sy - CO(aA) * up; const fa = aA - eA * sgn; const wx = ex + sgn * SI(fa) * up, wy = ey - CO(fa) * up; K[side + 'Sh'] = [sx, sy]; K[side + 'Elb'] = [ex, ey]; K[side + 'Wri'] = [wx, wy];
     }
-    K.neckB = [0, torsoTop - .01]; K.neckT = [0, torsoTop + neck * .6]; K.headC = [Math.sin(q.headTilt + (p.headTilt - .5) * .5) * headR, torsoTop + neck + headR]; K.pelvis = [0, legFrac + .02]; K.torsoTop = [0, torsoTop]; K.headR = headR; K.shHalf = shHalf; K.hipHalf = hipHalf;
+    K.neckB = [0, torsoTop - .01]; K.neckT = [0, torsoTop + neck * .6]; K.headC = [SI(q.headTilt + (p.headTilt - .5) * .5) * headR, torsoTop + neck + headR]; K.pelvis = [0, legFrac + .02]; K.torsoTop = [0, torsoTop]; K.headR = headR; K.shHalf = shHalf; K.hipHalf = hipHalf;
     return K;
   }
 
@@ -1186,7 +1186,7 @@ const ShiroLib = (() => {
   function drawGlow(ctx, silCanvas, wPix, hPix, cx, baseY, strength) {
     if (strength <= 0) return;
     ctx.save(); ctx.globalAlpha = strength * .55;
-    ctx.filter = `blur(${Math.round(4 + strength * 14)}px)`;
+    ctx.filter = `blur(${RD(4 + strength * 14)}px)`;
     ctx.drawImage(silCanvas, cx - wPix * .56, baseY - hPix * 1.06, wPix * 1.12, hPix * 1.12); ctx.restore();
   }
 
@@ -1198,24 +1198,28 @@ const ShiroLib = (() => {
 
   // ctx に (cx, baseY) を足元・高さ hPix で描画。q は mannequinPose の結果。
   function drawMannequin(ctx, p, t, cx, baseY, hPix) {
+      const dot = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); };
+      const dots = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke(); };
+      const ell = (x, y, rx, ry, rot) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, 7); ctx.fill(); };
+      const ells = (x, y, rx, ry, rot) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, 7); ctx.stroke(); };
     const q = mannequinPose(p, t); const K = skeleton(p, q); const g = 1 - p.tone * .55; // tone: 0=白, 1=グレー
     // clothHue 0付近は無彩色(白モデル)のまま、上げると衣装色として着色
-    const hue = Math.round(p.clothHue * 360), sat = p.clothHue < .03 ? 0 : 55;
-    const col = `hsl(${hue},${sat}%,${Math.round(96 * g)}%)`;
-    const shade = `hsl(${hue},${sat}%,${Math.round(85 * g)}%)`;
+    const hue = RD(p.clothHue * 360), sat = p.clothHue < .03 ? 0 : 55;
+    const col = `hsl(${hue},${sat}%,${RD(96 * g)}%)`;
+    const shade = `hsl(${hue},${sat}%,${RD(85 * g)}%)`;
     const lw = (0.5 + p.line * 4);
     const px = (x, y) => [cx + (x + q.sway) * hPix, baseY - (y + q.bob) * hPix];
     const limbW = hPix * (.045 + .02 * p.shoulder); const bodyW = hPix * (.10 + .06 * p.shoulder);
 
-    contactShadow(ctx, cx, baseY, hPix * (.16 + .07 * p.shoulder), p.shadow * .5, `hsla(${Math.round((p.shadowHue == null ? .62 : p.shadowHue) * 360)},45%,12%,${p.shadow * .5})`);
+    contactShadow(ctx, cx, baseY, hPix * (.16 + .07 * p.shoulder), p.shadow * .5, `hsla(${RD((p.shadowHue == null ? .62 : p.shadowHue) * 360)},45%,12%,${p.shadow * .5})`);
 
     ctx.save(); ctx.globalAlpha = p.opacity;
     if (p.flip) { ctx.translate(2 * cx, 0); ctx.scale(-1, 1); }
 
     // ケープ: 肩から背後へなびく布(衣装色を濃くして継承)
     if (p.acc === 'cape') {
-      const cs = `hsla(${hue},${MX(sat, 45)}%,${Math.round(38 + 12 * g)}%,0.95)`;
-      const sw = (q.lean * 2 + Math.sin(t * 1.8) * .05) * hPix; const [lShx, lShy] = px(...K.lSh), [rShx, rShy] = px(...K.rSh), [pelx, pely] = px(...K.pelvis); ctx.fillStyle = cs; ctx.beginPath(); ctx.moveTo(lShx, lShy); ctx.quadraticCurveTo(lShx - bodyW + sw, pely + hPix * .06, pelx + sw * 1.5, pely + hPix * .3); ctx.quadraticCurveTo(rShx + bodyW + sw, pely + hPix * .06, rShx, rShy); ctx.closePath(); ctx.closePath(); ctx.fill();
+      const cs = `hsla(${hue},${MX(sat, 45)}%,${RD(38 + 12 * g)}%,0.95)`;
+      const sw = (q.lean * 2 + SI(t * 1.8) * .05) * hPix; const [lShx, lShy] = px(...K.lSh), [rShx, rShy] = px(...K.rSh), [pelx, pely] = px(...K.pelvis); ctx.fillStyle = cs; ctx.beginPath(); ctx.moveTo(lShx, lShy); ctx.quadraticCurveTo(lShx - bodyW + sw, pely + hPix * .06, pelx + sw * 1.5, pely + hPix * .3); ctx.quadraticCurveTo(rShx + bodyW + sw, pely + hPix * .06, rShx, rShy); ctx.closePath(); ctx.closePath(); ctx.fill();
     }
 
     // legs
@@ -1226,27 +1230,27 @@ const ShiroLib = (() => {
     capsule(ctx, ...px(...K.pelvis), ...px(...K.torsoTop), bodyW, col, lw);
     // arms
     for (const s of ['l', 'r']) {
-      const [sh, el, wr] = [K[s + 'Sh'], K[s + 'Elb'], K[s + 'Wri']]; capsule(ctx, ...px(...sh), ...px(...el), limbW * .8, col, lw); capsule(ctx, ...px(...el), ...px(...wr), limbW * .7, shade, lw); const [wx, wy] = px(...wr); ctx.fillStyle = shade; ctx.beginPath(); ctx.arc(wx, wy, limbW * .55, 0, 7); ctx.fill(); // hand
+      const [sh, el, wr] = [K[s + 'Sh'], K[s + 'Elb'], K[s + 'Wri']]; capsule(ctx, ...px(...sh), ...px(...el), limbW * .8, col, lw); capsule(ctx, ...px(...el), ...px(...wr), limbW * .7, shade, lw); const [wx, wy] = px(...wr); ctx.fillStyle = shade; dot(wx,wy,limbW * .55); // hand
     }
     // neck + head
     capsule(ctx, ...px(...K.neckB), ...px(...K.neckT), limbW * .7, col, lw); const [hx, hy] = px(...K.headC), hr = K.headR * hPix;
     // 髪: キャラクリの顔。hairHueで着色、hair形状は手続き描画
     const hs = p.hair || 'none';
-    const hairC = `hsl(${Math.round(p.hairHue * 360)},50%,${Math.round(26 + 16 * g)}%)`;
+    const hairC = `hsl(${RD(p.hairHue * 360)},50%,${RD(26 + 16 * g)}%)`;
     if (hs === 'long' || hs === 'twin' || hs === 'bob') {
       // 後ろ髪: 頭の背面へ垂れる髪を顔より先に描く
-      ctx.fillStyle = hairC; ctx.beginPath(); ctx.ellipse(hx, hy + hr * .5, hr * 1.22, hr * (hs === 'long' ? 1.55 : hs === 'bob' ? .95 : .75), 0, 0, 7); ctx.fill();
+      ctx.fillStyle = hairC; ell(hx,hy + hr * .5,hr * 1.22,hr * (hs === 'long' ? 1.55 : hs === 'bob' ? .95 : .75),0);
       if (hs === 'twin') for (const s of [-1, 1]) {
-        ctx.beginPath(); ctx.ellipse(hx + s * hr * 1.18, hy + hr * .75, hr * .3, hr * .8, s * .4, 0, 7); ctx.fill();
+        ell(hx + s * hr * 1.18,hy + hr * .75,hr * .3,hr * .8,s * .4);
       }
     }
     ctx.fillStyle = col;
     if (lw > 0) { ctx.strokeStyle = 'rgba(40,44,54,0.85)'; ctx.lineWidth = lw; }
-    ctx.beginPath(); ctx.arc(hx, hy, hr, 0, 7); ctx.fill();
+    dot(hx,hy,hr);
     if (lw > 0) ctx.stroke();
     if (hs === 'pony') {
       // ポニーテール: 頭の右後ろから流れる髪束
-      ctx.fillStyle = hairC; ctx.beginPath(); ctx.moveTo(hx + hr * .55, hy - hr * .95); ctx.quadraticCurveTo(hx + hr * 1.55, hy - hr * .55, hx + hr * 1.35, hy + hr * .95); ctx.quadraticCurveTo(hx + hr * .9, hy + hr * .45, hx + hr * .75, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.beginPath(); ctx.arc(hx + hr * .52, hy - hr * .82, hr * .16, 0, 7); ctx.beginPath(); ctx.arc(hx + hr * .52, hy - hr * .82, hr * .16, 0, 7); ctx.fill(); // 結び目
+      ctx.fillStyle = hairC; ctx.beginPath(); ctx.moveTo(hx + hr * .55, hy - hr * .95); ctx.quadraticCurveTo(hx + hr * 1.55, hy - hr * .55, hx + hr * 1.35, hy + hr * .95); ctx.quadraticCurveTo(hx + hr * .9, hy + hr * .45, hx + hr * .75, hy - hr * .5); ctx.closePath(); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.beginPath(); ctx.arc(hx + hr * .52, hy - hr * .82, hr * .16, 0, 7); dot(hx + hr * .52,hy - hr * .82,hr * .16); // 結び目
     }
     if (hs === 'mush') {
       // マッシュルーム: 頭全体を覆う丸いキノコ頭(顔の下半分だけ残す)
@@ -1256,14 +1260,14 @@ const ShiroLib = (() => {
       // パーマ: 頭全体を覆うモコモコの縮れ毛(重なる小円)
       ctx.fillStyle = hairC; const rng2 = mulberry32(31);
       for (let i = 0; i < 14; i++) {
-        const a = PI + (i / 13) * PI; const rr = hr * (1.02 + rng2() * .18); ctx.beginPath(); ctx.arc(hx + Math.cos(a) * rr, hy - hr * .05 + Math.sin(a) * rr, hr * (.3 + rng2() * .14), 0, 7); ctx.fill(); // 上半周に配置
+        const a = PI + (i / 13) * PI; const rr = hr * (1.02 + rng2() * .18); dot(hx + CO(a) * rr,hy - hr * .05 + SI(a) * rr,hr * (.3 + rng2() * .14)); // 上半周に配置
       }
     }
     if (hs === 'braid') {
       // 三つ編み: 側頭部から垂れる玉髪(交互ずれの連続円+先の結び目)
       ctx.fillStyle = hairC; const bx = hx + hr * .8, by = hy - hr * .1;
       for (let k = 0; k < 6; k++) {
-        ctx.beginPath(); ctx.ellipse(bx + ((k % 2) ? .07 : -.07) * hr, by + k * hr * .32, hr * .19, hr * .22, 0, 0, 7); ctx.fill();
+        ell(bx + ((k % 2) ? .07 : -.07) * hr,by + k * hr * .32,hr * .19,hr * .22,0);
       }
       ctx.fillStyle = 'rgba(52,56,68,0.95)'; ctx.fillRect(bx - hr * .1, by + 6 * hr * .32 - hr * .06, hr * .2, hr * .1);
     }
@@ -1275,7 +1279,7 @@ const ShiroLib = (() => {
       // お団子: 頭頂両サイドの丸いお団子
       ctx.fillStyle = hairC;
       for (const s of [-1, 1]) {
-        ctx.beginPath(); ctx.arc(hx + s * hr * .8, hy - hr * .85, hr * .34, 0, 7); ctx.fill();
+        dot(hx + s * hr * .8,hy - hr * .85,hr * .34);
       }
     }
     if (hs === 'ahoge') {
@@ -1284,7 +1288,7 @@ const ShiroLib = (() => {
     }
     if (hs === 'mohawk') {
       // モヒカン: 頭頂の縦帯(前髪キャップは描かず剥ぎ感を出す)
-      ctx.fillStyle = hairC; ctx.beginPath(); ctx.ellipse(hx, hy - hr * 1.05, hr * .24, hr * .5, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = hairC; ell(hx,hy - hr * 1.05,hr * .24,hr * .5,0);
     }
     if (hs !== 'none' && hs !== 'mohawk') {
       // 前髪+キャップ: 頭の上半分を覆い、ギザギザ前髪で顔を残す
@@ -1293,7 +1297,7 @@ const ShiroLib = (() => {
     // eyes (素朴な2点、まばたきで縦につぶれる)
     // eyes: スタイル別(ふつう2点/ウィンク/うっとり^^/ハート)。dotのみ瞬きでつぶれる
     const eo = MX(.12, blinkOpen(t, p.seed));
-    const eyeCol = `hsla(${Math.round(p.eyeHue * 360)},65%,42%,0.9)`;
+    const eyeCol = `hsla(${RD(p.eyeHue * 360)},65%,42%,0.9)`;
     const es = p.eyeStyle || 'dot'; const esz = .6 + p.eyeSize * .8; // 目の大きさスケール(0.6-1.4)
     for (const s of [-1, 1]) {
       const ex = hx + s * hr * (.26 + .24 * (p.eyeGap == null ? .5 : p.eyeGap)), ey = hy - hr * .08;
@@ -1308,16 +1312,15 @@ const ShiroLib = (() => {
         // 星目: 5点スター(アイドル/魔法少女系の定番)
         ctx.fillStyle = eyeCol; ctx.beginPath(); const sr = hr * .17 * esz;
         for (let k = 0; k < 10; k++) {
-          const a = -PI / 2 + k * PI / 5, rr = k % 2 ? sr * .45 : sr; const mx = ex + Math.cos(a) * rr, my2 = ey + Math.sin(a) * rr; k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
+          const a = -PI / 2 + k * PI / 5, rr = k % 2 ? sr * .45 : sr; const mx = ex + CO(a) * rr, my2 = ey + SI(a) * rr; k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
         }
         ctx.closePath(); ctx.fill();
       } else if (es === 'wide') {
       // 見開き目: 大きな白目+小さい瞳(驚き・キラキラ)
-      ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.beginPath(); ctx.beginPath(); ctx.arc(ex - eo, ey, esz * .62 * eo, 0, 7); ctx.beginPath(); ctx.arc(ex - eo, ey, esz * .62 * eo, 0, 7); ctx.fill(); ctx.beginPath(); ctx.beginPath(); ctx.arc(ex + eo, ey, esz * .62 * eo, 0, 7); ctx.beginPath(); ctx.arc(ex + eo, ey, esz * .62 * eo, 0, 7); ctx.fill(); ctx.fillStyle = eyeCol; ctx.beginPath(); ctx.beginPath(); ctx.arc(ex - eo, ey, esz * .3 * eo, 0, 7); ctx.beginPath(); ctx.arc(ex - eo, ey, esz * .3 * eo, 0, 7); ctx.fill(); ctx.beginPath(); ctx.beginPath(); ctx.arc(ex + eo, ey, esz * .3 * eo, 0, 7); ctx.beginPath();
-      ctx.arc(ex + eo, ey, esz * .3 * eo, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.beginPath(); ctx.beginPath(); ctx.arc(ex - eo, ey, esz * .62 * eo, 0, 7); dot(ex - eo,ey,esz * .62 * eo); ctx.beginPath(); ctx.beginPath(); ctx.arc(ex + eo, ey, esz * .62 * eo, 0, 7); dot(ex + eo,ey,esz * .62 * eo); ctx.fillStyle = eyeCol; ctx.beginPath(); ctx.beginPath(); ctx.arc(ex - eo, ey, esz * .3 * eo, 0, 7); dot(ex - eo,ey,esz * .3 * eo); ctx.beginPath(); ctx.beginPath(); ctx.arc(ex + eo, ey, esz * .3 * eo, 0, 7); dot(ex + eo,ey,esz * .3 * eo);
     } else if (es === 'cat') {
         // 猫目: 縦長の縦孔瞳孔(瞬きと連動)
-        ctx.fillStyle = eyeCol; ctx.beginPath(); ctx.ellipse(ex, ey, MX(.8, hr * .045 * esz), MX(1, hr * .15 * esz * MX(.15, eo)), 0, 0, 7); ctx.fill();
+        ctx.fillStyle = eyeCol; ell(ex,ey,MX(.8, hr * .045 * esz),MX(1, hr * .15 * esz * MX(.15, eo)),0);
       } else if (es === 'xx') {
         // バツ目: ✕✕(気絶・KO系の定番記号)
         ctx.strokeStyle = eyeCol; ctx.lineWidth = MX(1.2, hr * .05 * esz); const rr = hr * .13 * esz; ctx.beginPath(); ctx.moveTo(ex - rr, ey - rr); ctx.moveTo(ex - rr, ey - rr); ctx.lineTo(ex + rr, ey + rr); ctx.moveTo(ex + rr, ey - rr); ctx.moveTo(ex + rr, ey - rr); ctx.lineTo(ex - rr, ey + rr); ctx.stroke();
@@ -1325,12 +1328,12 @@ const ShiroLib = (() => {
         // ぐるぐる目: 渦巻き(旋回する小円弧の連鎖で近似)
         ctx.strokeStyle = eyeCol; ctx.lineWidth = MX(1, hr * .06 * esz); ctx.beginPath(); const dr = hr * .16 * esz;
         for (let k = 0; k < 8; k++) {
-          const a = k * 1.05, r2 = dr * (1 - k / 10); const mx = ex + Math.cos(a) * r2, my2 = ey + Math.sin(a) * r2; k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
+          const a = k * 1.05, r2 = dr * (1 - k / 10); const mx = ex + CO(a) * r2, my2 = ey + SI(a) * r2; k ? ctx.lineTo(mx, my2) : ctx.moveTo(mx, my2);
         }
         ctx.stroke();
       } else if (es === 'crying') {
         // 泣き目: ふつうの瞳 + 目尻側に涙滴(瞬きにも連動)
-        ctx.fillStyle = eyeCol; ctx.beginPath(); ctx.ellipse(ex, ey, MX(1, hr * .09 * esz), MX(.5, hr * .09 * esz * eo), 0, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(130,175,255,0.85)'; const tx2 = ex + s * hr * .14, ty2 = ey + hr * .16; ctx.beginPath(); ctx.moveTo(tx2, ty2 - hr * .05); ctx.quadraticCurveTo(tx2 + hr * .07, ty2 + hr * .02, tx2, ty2 + hr * .09); ctx.quadraticCurveTo(tx2 - hr * .07, ty2 + hr * .02, tx2, ty2 - hr * .05); ctx.fill();
+        ctx.fillStyle = eyeCol; ell(ex,ey,MX(1, hr * .09 * esz),MX(.5, hr * .09 * esz * eo),0); ctx.fillStyle = 'rgba(130,175,255,0.85)'; const tx2 = ex + s * hr * .14, ty2 = ey + hr * .16; ctx.beginPath(); ctx.moveTo(tx2, ty2 - hr * .05); ctx.quadraticCurveTo(tx2 + hr * .07, ty2 + hr * .02, tx2, ty2 + hr * .09); ctx.quadraticCurveTo(tx2 - hr * .07, ty2 + hr * .02, tx2, ty2 - hr * .05); ctx.fill();
       } else {
         ctx.fillStyle = eyeCol; ctx.beginPath();
         // gaze: 瞳を左右にずらす(目線)
@@ -1338,13 +1341,13 @@ const ShiroLib = (() => {
         // 瞳のハイライト(キャッチライト): 生き生きした目にする白点
         if (eo > .4) {
           ctx.fillStyle = `rgba(255,255,255,${.85 * eo})`;
-          ctx.beginPath(); ctx.arc(gx - hr * .03 * esz, ey - hr * .035 * esz * eo, MX(.6, hr * .028 * esz), 0, 7); ctx.fill();
+          dot(gx - hr * .03 * esz,ey - hr * .035 * esz * eo,MX(.6, hr * .028 * esz));
         }
       }
     }
     // 眉毛: brow<.5 で垂れ眉(困り) / >.5 で内側が下がるきりっと眉
     const bt = (p.brow - .5) * hr * .3;
-    if (Math.abs(bt) > hr * .02) {
+    if (AB(bt) > hr * .02) {
       ctx.strokeStyle = 'rgba(60,64,74,0.8)'; ctx.lineWidth = MX(1, hr * .07);
       for (const s of [-1, 1]) {
         const by = hy - hr * .36; ctx.beginPath(); ctx.moveTo(hx + s * hr * .18, by + bt); ctx.lineTo(hx + s * hr * .56, by - bt * .3); ctx.stroke();
@@ -1354,24 +1357,24 @@ const ShiroLib = (() => {
     if (p.blush > .02) {
       ctx.fillStyle = `rgba(255,120,140,${p.blush * .4})`;
       for (const s of [-1, 1]) {
-        ctx.beginPath(); ctx.ellipse(hx + s * hr * .55, hy + hr * .18, hr * .16, hr * .09, 0, 0, 7); ctx.fill();
+        ell(hx + s * hr * .55,hy + hr * .18,hr * .16,hr * .09,0);
       }
     }
     // mouth: smile .5=直線、>で笑顔・<でしかめ面
     const mw = hr * .32, my = hy + hr * .38, curv = (p.smile - .5) * hr * .8;
-    if (Math.abs(curv) > hr * .03) {
+    if (AB(curv) > hr * .03) {
       ctx.strokeStyle = 'rgba(60,64,74,0.7)'; ctx.lineWidth = MX(1, hr * .07); ctx.beginPath(); ctx.beginPath(); ctx.moveTo(hx - mw, my); ctx.quadraticCurveTo(hx, my + curv * 2, hx + mw, my); ctx.quadraticCurveTo(hx, my + curv * 2, hx + mw, my); ctx.stroke();
     }
     // おしゃべり: 口が周期的に開閉(話している表情)
     if (p.anim === 'talk') {
-      const mo = Math.abs(Math.sin(t * 5.5));
+      const mo = AB(SI(t * 5.5));
       ctx.fillStyle = `rgba(120,40,45,${.55 * mo})`;
-      ctx.beginPath(); ctx.ellipse(hx, my + curv * 1.1, mw * .45, MX(1, hr * .11 * mo), 0, 0, 7); ctx.fill();
+      ell(hx,my + curv * 1.1,mw * .45,MX(1, hr * .11 * mo),0);
     } else if (p.smile > .78) {
       // 大きな笑顔(smile>.78)では口を開いて赤味を見せる表情に
       const op = (p.smile - .78) / .22;
       ctx.fillStyle = `rgba(120,40,45,${.55 * op})`;
-      ctx.beginPath(); ctx.ellipse(hx, my + curv * 1.1, mw * .5, MX(1, hr * .1 * op), 0, 0, 7); ctx.fill();
+      ell(hx,my + curv * 1.1,mw * .5,MX(1, hr * .1 * op),0);
     }
     drawAccessory(ctx, p.acc, hx, hy, hr, p.accHue);
     if (p.acc2 && p.acc2 !== 'none' && p.acc2 !== p.acc) drawAccessory(ctx, p.acc2, hx, hy, hr, p.accHue);
@@ -1381,10 +1384,10 @@ const ShiroLib = (() => {
   // ふきだし: モデルの頭の上にセリフの吹き出しを描く(丸角矩形+尾)
   function drawBubble(c, text, x, topY, W, H, hue) {
     if (!text) return;
-    const fs = MX(13, Math.round(H * .03)); c.save();
+    const fs = MX(13, RD(H * .03)); c.save();
     c.font = `600 ${fs}px "Hiragino Sans","Segoe UI",sans-serif`;
     const tw = MN(c.measureText(text).width, W * .6); const bw = tw + fs * 1.4, bh = fs * 2; const bx = MN(MX(x - bw / 2, 6), W - bw - 6); const by = MX(6, topY - bh - fs * 1.2); const r = fs * .5;
-    c.fillStyle = `hsla(${Math.round((hue == null ? 0 : hue) * 360)},60%,96%,0.94)`;
+    c.fillStyle = `hsla(${RD((hue == null ? 0 : hue) * 360)},60%,96%,0.94)`;
     c.strokeStyle = 'rgba(40,44,54,0.8)'; c.lineWidth = MX(1, fs * .08); c.beginPath(); c.moveTo(bx + r, by); c.lineTo(bx + bw - r, by); c.lineTo(bx + bw - r, by); c.quadraticCurveTo(bx + bw, by, bx + bw, by + r); c.lineTo(bx + bw, by + bh - r); c.lineTo(bx + bw, by + bh - r); c.quadraticCurveTo(bx + bw, by + bh, bx + bw - r, by + bh); c.lineTo(bx + r, by + bh); c.lineTo(bx + r, by + bh); c.quadraticCurveTo(bx, by + bh, bx, by + bh - r); c.lineTo(bx, by + r); c.lineTo(bx, by + r); c.quadraticCurveTo(bx, by, bx + r, by); c.closePath();
     // 尾(モデル方向へ三角)
     const tx = MN(MX(x, bx + fs), bx + bw - fs); c.moveTo(tx - fs * .3, by + bh - 1); c.lineTo(tx + fs * .3, by + bh - 1); c.lineTo(x, topY - fs * .2); c.closePath(); c.fill(); c.fill(); c.stroke(); c.fillStyle = '#22252e'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, bx + bw / 2, by + bh / 2, tw + fs); c.restore();
@@ -1400,16 +1403,20 @@ const ShiroLib = (() => {
   }
 
   function drawParticles(ctx, W, H, type, t, seed) {
-    const S = f => Math.sin(t * f), A = f => Math.abs(S(f));
+      const dot = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); };
+      const dots = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke(); };
+      const ell = (x, y, rx, ry, rot) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, 7); ctx.fill(); };
+      const ells = (x, y, rx, ry, rot) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, 7); ctx.stroke(); };
+    const S = f => SI(t * f), A = f => AB(S(f));
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
     const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : type === 'notes' ? 18 : type === 'hearts' ? 20 : type === 'spark' ? 46 : type === 'wind' ? 14 : 42; ctx.save();
     for (let i = 0; i < N; i++) {
       if (type === 'snow') {
-        const x = h(i, 0) * W + Math.sin(t * .8 + h(i, 1) * 7) * W * .02; const y = ((h(i, 1) + t * (.04 + .06 * h(i, 2))) % 1) * H;
+        const x = h(i, 0) * W + SI(t * .8 + h(i, 1) * 7) * W * .02; const y = ((h(i, 1) + t * (.04 + .06 * h(i, 2))) % 1) * H;
         ctx.fillStyle = `rgba(255,255,255,${.4 + .5 * h(i, 4)})`;
-        ctx.beginPath(); ctx.arc(x, y, 1 + 2.5 * h(i, 3), 0, 7); ctx.fill();
+        dot(x,y,1 + 2.5 * h(i, 3));
       } else if (type === 'sparkle') {
-        const a = .25 + .75 * Math.abs(Math.sin(t * (.8 + h(i, 2) * 2.2) + h(i, 3) * 7)); const x = h(i, 0) * W, y = h(i, 1) * H, r = 2 + 4 * h(i, 4);
+        const a = .25 + .75 * AB(SI(t * (.8 + h(i, 2) * 2.2) + h(i, 3) * 7)); const x = h(i, 0) * W, y = h(i, 1) * H, r = 2 + 4 * h(i, 4);
         ctx.strokeStyle = `rgba(255,230,140,${a})`; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.beginPath(); ctx.moveTo(x - r, y); ctx.beginPath(); ctx.moveTo(x - r, y); ctx.lineTo(x + r, y); ctx.moveTo(x, y - r); ctx.moveTo(x, y - r); ctx.lineTo(x, y + r); ctx.moveTo(x, y - r); ctx.lineTo(x, y + r); ctx.stroke();
       } else if (type === 'rain') {
@@ -1419,60 +1426,60 @@ const ShiroLib = (() => {
         ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 3, y + 9 + 6 * h(i, 3)); ctx.stroke();
       } else if (type === 'leaf') {
         // 落ち葉: 揺れながら回転して舞い落ちる
-        const x = h(i, 0) * W + Math.sin(t * .7 + h(i, 1) * 8) * W * .06; const y = ((h(i, 1) + t * (.04 + .03 * h(i, 2))) % 1) * H;
+        const x = h(i, 0) * W + SI(t * .7 + h(i, 1) * 8) * W * .06; const y = ((h(i, 1) + t * (.04 + .03 * h(i, 2))) % 1) * H;
         ctx.fillStyle = `hsla(${30 + 40 * h(i, 3)},60%,${35 + 25 * h(i, 4)}%,.8)`;
-        ctx.beginPath(); ctx.ellipse(x, y, 2.5 + 2.5 * h(i, 3), 1.2 + 1.2 * h(i, 3), Math.sin(t * 1.6 + i * 2) * 1.4, 0, 7); ctx.fill();
+        ell(x,y,2.5 + 2.5 * h(i, 3),1.2 + 1.2 * h(i, 3),SI(t * 1.6 + i * 2) * 1.4);
       } else if (type === 'ember') {
         // 火の粉: 揺らめきながら上昇
-        const x = h(i, 0) * W + Math.sin(t * 1.4 + h(i, 1) * 9) * W * .04; const y = (1 - ((h(i, 1) + t * (.05 + .05 * h(i, 2))) % 1)) * H; const fl = .4 + .6 * Math.abs(Math.sin(t * 3 + i));
+        const x = h(i, 0) * W + SI(t * 1.4 + h(i, 1) * 9) * W * .04; const y = (1 - ((h(i, 1) + t * (.05 + .05 * h(i, 2))) % 1)) * H; const fl = .4 + .6 * AB(SI(t * 3 + i));
         ctx.fillStyle = `rgba(255,${120 + 80 * h(i, 3) | 0},60,${fl * .85})`;
-        ctx.beginPath(); ctx.arc(x, y, 1 + 1.8 * h(i, 3), 0, 7); ctx.fill();
+        dot(x,y,1 + 1.8 * h(i, 3));
       } else if (type === 'bubble') {
         // 泡: ゆらゆら上昇する泡(輪郭線)
-        const x = h(i, 0) * W + Math.sin(t * .9 + h(i, 1) * 8) * W * .05; const y = (1 - ((h(i, 1) + t * (.04 + .04 * h(i, 2))) % 1)) * H;
+        const x = h(i, 0) * W + SI(t * .9 + h(i, 1) * 8) * W * .05; const y = (1 - ((h(i, 1) + t * (.04 + .04 * h(i, 2))) % 1)) * H;
         ctx.strokeStyle = `rgba(170,215,255,${.35 + .35 * h(i, 4)})`;
-        ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 2 + 4 * h(i, 3), 0, 7); ctx.stroke();
+        ctx.lineWidth = 1; dots(x,y,2 + 4 * h(i, 3));
       } else if (type === 'confetti') {
         // 紙吹雪: カラフルな長方形がひらひら回転しながら舞い落ちる
-        const x = h(i, 0) * W + Math.sin(t * (1 + h(i, 2)) + h(i, 1) * 9) * W * .06; const y = ((h(i, 1) + t * (.1 + .09 * h(i, 2))) % 1) * H;
-        ctx.fillStyle = `hsla(${Math.round(h(i, 3) * 360)},85%,62%,${.6 + .3 * h(i, 4)})`;
-        ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(t * 3 + i * 2.7) * 2.4); ctx.fillRect(-2.5 - 2.5 * h(i, 4), -1.4, 5 + 5 * h(i, 4), 2.8); ctx.restore();
+        const x = h(i, 0) * W + SI(t * (1 + h(i, 2)) + h(i, 1) * 9) * W * .06; const y = ((h(i, 1) + t * (.1 + .09 * h(i, 2))) % 1) * H;
+        ctx.fillStyle = `hsla(${RD(h(i, 3) * 360)},85%,62%,${.6 + .3 * h(i, 4)})`;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(SI(t * 3 + i * 2.7) * 2.4); ctx.fillRect(-2.5 - 2.5 * h(i, 4), -1.4, 5 + 5 * h(i, 4), 2.8); ctx.restore();
       } else if (type === 'firefly') {
         // ホタル: ぼんやり光りながら漂う(夜空・夕焼けと相性)
-        const x = h(i, 0) * W + Math.sin(t * .5 + i * 1.7) * W * .07; const y = h(i, 1) * H * .85 + Math.cos(t * .4 + i * 2.3) * H * .05; const a = MX(0, .15 + .8 * Math.sin(t * (1.2 + h(i, 2)) + h(i, 3) * 9));
+        const x = h(i, 0) * W + SI(t * .5 + i * 1.7) * W * .07; const y = h(i, 1) * H * .85 + CO(t * .4 + i * 2.3) * H * .05; const a = MX(0, .15 + .8 * SI(t * (1.2 + h(i, 2)) + h(i, 3) * 9));
         ctx.fillStyle = `rgba(200,255,120,${a})`;
-        ctx.beginPath(); ctx.arc(x, y, 1.2 + 1.4 * h(i, 3), 0, 7); ctx.fill();
+        dot(x,y,1.2 + 1.4 * h(i, 3));
       } else if (type === 'spark') {
         // 火花: 一点から放射状に飛ぶ短い光条(火縄・スパーク演出)
-        const ox = W * (.2 + h(i, 0) * .6), oy = H * (.25 + h(i, 1) * .5); const life = (h(i, 2) + t * (1.5 + h(i, 3))) % 1; const ang = h(i, 4) * 6.283 + i * .7; const dist = life * (14 + 26 * h(i, 1)); const sx = ox + Math.cos(ang) * dist, sy = oy + Math.sin(ang) * dist + life * life * 10; // 0→1 の短い生涯
-        ctx.strokeStyle = `rgba(255,${200 - Math.round(life * 120)},90,${(1 - life) * .9})`;
-        ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx - Math.cos(ang) * 5, sy - Math.sin(ang) * 5); ctx.stroke();
+        const ox = W * (.2 + h(i, 0) * .6), oy = H * (.25 + h(i, 1) * .5); const life = (h(i, 2) + t * (1.5 + h(i, 3))) % 1; const ang = h(i, 4) * 6.283 + i * .7; const dist = life * (14 + 26 * h(i, 1)); const sx = ox + CO(ang) * dist, sy = oy + SI(ang) * dist + life * life * 10; // 0→1 の短い生涯
+        ctx.strokeStyle = `rgba(255,${200 - RD(life * 120)},90,${(1 - life) * .9})`;
+        ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx - CO(ang) * 5, sy - SI(ang) * 5); ctx.stroke();
       } else if (type === 'wind') {
         // 風: 右へ流れる長い弧の流線(途切れて再出現)
-        const life = (h(i, 0) + t * (.12 + .1 * h(i, 1))) % 1; const x = (life * 1.3 - .15) * W; const y = h(i, 2) * H + Math.sin(life * 6 + i) * H * .02; const len = W * (.06 + .08 * h(i, 3)); const a = Math.sin(life * PI) * (.25 + .3 * h(i, 4));
+        const life = (h(i, 0) + t * (.12 + .1 * h(i, 1))) % 1; const x = (life * 1.3 - .15) * W; const y = h(i, 2) * H + SI(life * 6 + i) * H * .02; const len = W * (.06 + .08 * h(i, 3)); const a = SI(life * PI) * (.25 + .3 * h(i, 4));
         ctx.strokeStyle = `rgba(255,255,255,${a})`;
         ctx.lineWidth = 1.2 + h(i, 3); ctx.beginPath(); ctx.moveTo(x - len, y); ctx.quadraticCurveTo(x - len * .5, y - len * .22, x, y); ctx.quadraticCurveTo(x + len * .18, y + len * .12, x + len * .3, y + len * .05); ctx.stroke();
       } else if (type === 'hearts') {
         // ハート: ♥マークがふわふわ昇る
-        const x = h(i, 0) * W + Math.sin(t * .7 + i * 2.1) * W * .045; const y = (1 - ((h(i, 1) + t * (.05 + .035 * h(i, 2))) % 1)) * H;
-        ctx.fillStyle = `hsla(${330 + Math.round(h(i, 3) * 30)},85%,${62 + Math.round(h(i, 4) * 12)}%,${.5 + .35 * h(i, 4)})`;
-        ctx.font = `${Math.round(12 + 14 * h(i, 3))}px sans-serif`;
+        const x = h(i, 0) * W + SI(t * .7 + i * 2.1) * W * .045; const y = (1 - ((h(i, 1) + t * (.05 + .035 * h(i, 2))) % 1)) * H;
+        ctx.fillStyle = `hsla(${330 + RD(h(i, 3) * 30)},85%,${62 + RD(h(i, 4) * 12)}%,${.5 + .35 * h(i, 4)})`;
+        ctx.font = `${RD(12 + 14 * h(i, 3))}px sans-serif`;
         ctx.textAlign = 'center'; ctx.fillText('♥', x, y);
       } else if (type === 'notes') {
         // 音符: ♪♫ がゆらゆら昇る(ダンス・おしゃべりと相性)
-        const x = h(i, 0) * W + Math.sin(t * .8 + i * 1.7) * W * .04; const y = (1 - ((h(i, 1) + t * (.06 + .04 * h(i, 2))) % 1)) * H;
-        ctx.fillStyle = `hsla(${Math.round(h(i, 3) * 360)},70%,68%,${.55 + .3 * h(i, 4)})`;
-        ctx.font = `${Math.round(14 + 12 * h(i, 3))}px sans-serif`;
+        const x = h(i, 0) * W + SI(t * .8 + i * 1.7) * W * .04; const y = (1 - ((h(i, 1) + t * (.06 + .04 * h(i, 2))) % 1)) * H;
+        ctx.fillStyle = `hsla(${RD(h(i, 3) * 360)},70%,68%,${.55 + .3 * h(i, 4)})`;
+        ctx.font = `${RD(14 + 12 * h(i, 3))}px sans-serif`;
         ctx.textAlign = 'center'; ctx.fillText(h(i, 2) < .5 ? '♪' : '♫', x, y);
       } else if (type === 'bokeh') {
         // 光ボケ: 大きな柔らかい光玉がゆっくり昇る(写真のボケ表現)
-        const x = h(i, 0) * W + Math.sin(t * .3 + i) * W * .03; const y = (1 - ((h(i, 1) + t * (.02 + .02 * h(i, 2))) % 1)) * H;
-        ctx.fillStyle = `hsla(${Math.round(h(i, 3) * 360)},80%,75%,${.1 + .12 * h(i, 4)})`;
-        ctx.beginPath(); ctx.arc(x, y, 8 + 22 * h(i, 3), 0, 7); ctx.fill();
+        const x = h(i, 0) * W + SI(t * .3 + i) * W * .03; const y = (1 - ((h(i, 1) + t * (.02 + .02 * h(i, 2))) % 1)) * H;
+        ctx.fillStyle = `hsla(${RD(h(i, 3) * 360)},80%,75%,${.1 + .12 * h(i, 4)})`;
+        dot(x,y,8 + 22 * h(i, 3));
       } else { // petal
-        const x = h(i, 0) * W + Math.sin(t * .6 + h(i, 1) * 9) * W * .05; const y = ((h(i, 1) + t * (.03 + .03 * h(i, 2))) % 1) * H;
+        const x = h(i, 0) * W + SI(t * .6 + h(i, 1) * 9) * W * .05; const y = ((h(i, 1) + t * (.03 + .03 * h(i, 2))) % 1) * H;
         ctx.fillStyle = `rgba(255,170,190,${.55 + .3 * h(i, 4)})`;
-        ctx.beginPath(); ctx.ellipse(x, y, 3 + 3 * h(i, 3), 1.5 + 1.5 * h(i, 3), Math.sin(t * 2 + i) * 1.2, 0, 7); ctx.fill();
+        ell(x,y,3 + 3 * h(i, 3),1.5 + 1.5 * h(i, 3),SI(t * 2 + i) * 1.2);
       }
     }
     ctx.restore();
@@ -1480,7 +1487,7 @@ const ShiroLib = (() => {
 
   // アクセサリ: キャラクリ定番の頭部装飾を手続き描画。accHue でアクセント色を着色
   function drawAccessory(ctx, acc, hx, hy, hr, hue) {
-    const dk = 'rgba(52,56,68,0.95)', acc2 = `hsla(${Math.round((hue == null ? .58 : hue) * 360)},80%,64%,0.92)`;
+    const dk = 'rgba(52,56,68,0.95)', acc2 = `hsla(${RD((hue == null ? .58 : hue) * 360)},80%,64%,0.92)`;
     // ペイント語彙: 塗りの最小プリミティブ(背景側と同名だがctx座標版)
       const ell = (x, y, rx, ry, rot) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, 7); ctx.fill(); };
       const ells = (x, y, rx, ry, rot) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, 7); ctx.stroke(); };
@@ -1500,7 +1507,7 @@ const ShiroLib = (() => {
     switch (acc) {
       case 'halo': {
         // 天使の輪: 頭上に浮く発光リング(accHueで着色、わずかに傾ける)
-        SS(`hsla(${Math.round((hue == null ? .13 : hue) * 360)},85%,65%,0.95)`);
+        SS(`hsla(${RD((hue == null ? .13 : hue) * 360)},85%,65%,0.95)`);
         lnW(LW(.13, 2)); ells(hx, hy - hr * 1.5, hr * .62, hr * .17, -.06);
         break;
       }
@@ -1575,7 +1582,7 @@ const ShiroLib = (() => {
       }
       case 'monocle': {
         // モノクル: 右眼の円レンズ + 顎下へ下がるチェーン
-        ctx.strokeStyle = `hsla(${Math.round((hue == null ? .12 : hue) * 360)},75%,60%,0.95)`;
+        ctx.strokeStyle = `hsla(${RD((hue == null ? .12 : hue) * 360)},75%,60%,0.95)`;
         lnW(LW(.05, 1.2)); ctx.beginPath(); ctx.beginPath(); ctx.arc(hx + hr * .38, hy - hr * .12, hr * .26, 0, 7); dots(hx + hr * .38, hy - hr * .12, hr * .26); mv(hx + hr * .38, hy + hr * .14); ctx.quadraticCurveTo(hx + hr * .75, hy + hr * .6, hx + hr * .5, hy + hr * 1.05); ctx.stroke();
         break;
       }
@@ -1777,7 +1784,7 @@ const ShiroLib = (() => {
         // 毛皮の質感(縦の短い筋)
         SS(dk); lnW(LW(.022));
         for (let i = -5; i <= 5; i++) {
-          const fx = hx + i * hr * .1; mv(fx, hy - hr * .75); ctx.lineTo(fx + Math.sin(i) * hr * .02, hy - hr * 1.45); ctx.stroke();
+          const fx = hx + i * hr * .1; mv(fx, hy - hr * .75); ctx.lineTo(fx + SI(i) * hr * .02, hy - hr * 1.45); ctx.stroke();
         }
         // 縁の起毛(下端の濃い帯)
         FS(dk); poly([hx - hr * .53,hy - hr * .62],[hx,hy - hr * .52,hx + hr * .53,hy - hr * .62],[hx + hr * .52,hy - hr * .72],[hx,hy - hr * .62,hx - hr * .52,hy - hr * .72]);
@@ -1983,11 +1990,11 @@ const ShiroLib = (() => {
         // 帯のビーズ(白と青の交互珠)
         FS('#f0e8d8');
         for (let i = -3; i <= 3; i++) {
-          ell(hx + i * hr * .13, hy - hr * (.6 + .03 * Math.abs(i)), hr * .03, hr * .03);
+          ell(hx + i * hr * .13, hy - hr * (.6 + .03 * AB(i)), hr * .03, hr * .03);
         }
         FS('#2858a0');
         for (let i = -2; i <= 2; i += 2) {
-          ell(hx + i * hr * .13, hy - hr * (.58 + .03 * Math.abs(i)), hr * .02, hr * .02);
+          ell(hx + i * hr * .13, hy - hr * (.58 + .03 * AB(i)), hr * .02, hr * .02);
         }
         // 額の垂れ珠(3本の飾り)
         FS('#f0e8d8');
@@ -2189,7 +2196,7 @@ const ShiroLib = (() => {
         // 長羽(放射状5本: 緑のケツァール羽)
         const fe = ['#28a058', '#30b868', '#28a058', '#38c878', '#28a058']; const fa = [-0.6, -0.3, 0, 0.3, 0.6]; SS(dk);
         times(5, i => {
-          const ax = hx + fa[i] * hr * .9; const topX = hx + fa[i] * hr * 2.1; const topY = hy - hr * (1.7 - Math.abs(fa[i]) * .4); FS(fe[i]); poly([ax,hy - hr * .4],[topX + hr * .08,topY + hr * .3,topX,topY],[topX - hr * .08,topY + hr * .3,ax,hy - hr * .4]);
+          const ax = hx + fa[i] * hr * .9; const topX = hx + fa[i] * hr * 2.1; const topY = hy - hr * (1.7 - AB(fa[i]) * .4); FS(fe[i]); poly([ax,hy - hr * .4],[topX + hr * .08,topY + hr * .3,topX,topY],[topX - hr * .08,topY + hr * .3,ax,hy - hr * .4]);
           // 羽軸(中央線)
           lnW(LW(.015)); mv(ax, hy - hr * .4); ctx.quadraticCurveTo((ax + topX) / 2, (hy + topY) / 2, topX, topY); ctx.stroke();
         });
@@ -2212,7 +2219,7 @@ const ShiroLib = (() => {
         // 星の飾り(冠の中央)
         FS('#d8b828'); ctx.beginPath();
         times(5, i => {
-          const a = -PI / 2 + i * PI * 2 / 5; const bx = hx + Math.cos(a) * hr * .1; const by = hy - hr * .66 + Math.sin(a) * hr * .1; i === 0 ? ctx.moveTo(bx, by) : ctx.lineTo(bx, by); const a2 = a + PI / 5; ctx.lineTo(hx + Math.cos(a2) * hr * .045, hy - hr * .66 + Math.sin(a2) * hr * .045);
+          const a = -PI / 2 + i * PI * 2 / 5; const bx = hx + CO(a) * hr * .1; const by = hy - hr * .66 + SI(a) * hr * .1; i === 0 ? ctx.moveTo(bx, by) : ctx.lineTo(bx, by); const a2 = a + PI / 5; ctx.lineTo(hx + CO(a2) * hr * .045, hy - hr * .66 + SI(a2) * hr * .045);
         });
         ctx.closePath(); ctx.fill();
         // 革の縫い目(つばの縁線)
@@ -2226,14 +2233,14 @@ const ShiroLib = (() => {
         // 骨組み(放射状の木の柱: 扇状5本)
         SS('#8a6a48'); lnW(LW(.025, 1.5));
         ([-.7, -.35, 0, .35, .7]).forEach(ta => {
-          mv(hx + ta * hr * .3, hy - hr * .55); ctx.lineTo(hx + ta * hr * .9, hy - hr * (1.4 - Math.abs(ta) * .35)); ctx.stroke();
+          mv(hx + ta * hr * .3, hy - hr * .55); ctx.lineTo(hx + ta * hr * .9, hy - hr * (1.4 - AB(ta) * .35)); ctx.stroke();
         });
         // 骨組みの横繋ぎ(扇の骨の弧)
         lnW(LW(.018)); mv(hx - hr * .55, hy - hr * .95); ctx.quadraticCurveTo(hx, hy - hr * 1.25, hx + hr * .55, hy - hr * .95); ctx.stroke();
         // 赤い羽房(頂の房飾り)
         FS('#c03028');
         ([-.5, -.25, 0, .25, .5]).forEach(tx => {
-          ell(hx + tx * hr, hy - hr * (1.1 - Math.abs(tx) * .15), hr * .07, hr * .16);
+          ell(hx + tx * hr, hy - hr * (1.1 - AB(tx) * .15), hr * .07, hr * .16);
         });
         // 帯の点飾り(装飾珠)
         FS(dk);
@@ -2314,7 +2321,7 @@ const ShiroLib = (() => {
         // ハイビスカス(結び目の花)
         FS('#e85878');
         ([0, 1.26, 2.52, 3.77, 5.03]).forEach(pa => {
-          const px2 = hx + hr * .48 + Math.cos(pa) * hr * .07; const py2 = hy - hr * .52 + Math.sin(pa) * hr * .07; ell(px2, py2, hr * .05, hr * .035, pa);
+          const px2 = hx + hr * .48 + CO(pa) * hr * .07; const py2 = hy - hr * .52 + SI(pa) * hr * .07; ell(px2, py2, hr * .05, hr * .035, pa);
         });
         FS('#f8d858'); dot(hx + hr * .48, hy - hr * .52, hr * .03);
         break;
@@ -2330,7 +2337,7 @@ const ShiroLib = (() => {
         for (const [fx, fy] of [[-.4, -.55], [-.2, -.68], [0, -.72], [.2, -.68], [.4, -.55]]) {
           const cx2 = hx + fx * hr, cy2 = hy + fy * hr; FS('#f8f4e8');
           ([0, 1.26, 2.52, 3.77, 5.03]).forEach(pa => {
-            ell(cx2 + Math.cos(pa) * hr * .055, cy2 + Math.sin(pa) * hr * .055, hr * .045, hr * .03, pa);
+            ell(cx2 + CO(pa) * hr * .055, cy2 + SI(pa) * hr * .055, hr * .045, hr * .03, pa);
           });
           FS('#f0c030'); dot(cx2, cy2, hr * .028);
         }
@@ -2569,7 +2576,7 @@ const ShiroLib = (() => {
         // 羊毛の質感(上部の不規則な房)
         FS(dk);
         for (let i = -3; i <= 3; i++) {
-          dot(hx + i * hr * .16, hy - hr * (1.32 - Math.abs(i) * .03), hr * .09);
+          dot(hx + i * hr * .16, hy - hr * (1.32 - AB(i) * .03), hr * .09);
         }
         // 縁の帯(段)
         FS(dk); rect(hx - hr * .52, hy - hr * .55, hr * 1.04, hr * .12);
@@ -2584,13 +2591,10 @@ const ShiroLib = (() => {
         // ヴェーノク: スラヴの花冠 — 大花の輪+後ろに垂れる長いリボン
         const cols = [acc2, '#d04838', '#e8c838', '#4898d0'];
         times(7, i => {
-          const a = PI + PI * (i / 6) - .05; const fxp = hx + Math.cos(a) * hr * .95; const fyp = hy - hr * .15 + Math.sin(a) * hr * .9; FS(cols[i % 4]);
+          const a = PI + PI * (i / 6) - .05; const fxp = hx + CO(a) * hr * .95; const fyp = hy - hr * .15 + SI(a) * hr * .9; FS(cols[i % 4]);
           // 花弁(5枚)
           times(5, p2 => {
-            const pa = p2 * PI * 2 / 5; ctx.beginPath();
-            ctx.ellipse(fxp + Math.cos(pa) * hr * .07, fyp + Math.sin(pa) * hr * .07,
-              hr * .06, hr * .04, pa, 0, 7);
-            ctx.fill();
+            const pa = p2 * PI * 2 / 5; ell(fxp + CO(pa) * hr * .07,fyp + SI(pa) * hr * .07,hr * .06,hr * .04,pa);
           });
           FS('#e8c848'); dot(fxp,fyp,hr * .04);
         });
@@ -2613,7 +2617,7 @@ const ShiroLib = (() => {
         // 球の輪郭の筋(南瓜状の畝)
         SS(dk); lnW(LW(.035));
         ([-.08, 0, .08]).forEach(off => {
-          ells(tx + off * hr, ty, hr * (.1 - Math.abs(off) * .5), hr * .15);
+          ells(tx + off * hr, ty, hr * (.1 - AB(off) * .5), hr * .15);
         });
         // 頂と底の環
         ctx.fillStyle = dk; dot(tx,ty - hr * .17,hr * .04); dot(tx,ty + hr * .17,hr * .04);
@@ -2687,7 +2691,7 @@ const ShiroLib = (() => {
         // 開く羽根(3本)
         const pcols = ['#286848', '#386858', '#286848'];
         for (let i = -1; i <= 1; i++) {
-          const ang = i * .5; const px2 = hx + Math.sin(ang) * hr * 1.1; const py2 = hy - hr * .75 - Math.cos(ang) * hr * .9; SS('#3a5040'); lnW(LW(.06, 1.5)); mv(hx, hy - hr * .75); ctx.quadraticCurveTo(hx + Math.sin(ang) * hr * .5, hy - hr * 1.2, px2, py2); ctx.stroke();
+          const ang = i * .5; const px2 = hx + SI(ang) * hr * 1.1; const py2 = hy - hr * .75 - CO(ang) * hr * .9; SS('#3a5040'); lnW(LW(.06, 1.5)); mv(hx, hy - hr * .75); ctx.quadraticCurveTo(hx + SI(ang) * hr * .5, hy - hr * 1.2, px2, py2); ctx.stroke();
           // 目玉紋(外→内)
           FS(pcols[i + 1]); ell(px2, py2, hr * .16, hr * .2, ang); FS('#205890'); ell(px2, py2 - hr * .03, hr * .09, hr * .12, ang); FS(dk); ell(px2, py2 - hr * .03, hr * .045, hr * .06, ang);
         }
@@ -2771,7 +2775,7 @@ const ShiroLib = (() => {
         // 起毛の縁(短い筋)
         SS(dk); lnW(LW(.035)); ctx.beginPath();
         times(10, i => {
-          const fx = hx - hr * .5 + i * hr * .11; const fy = hy - hr * (.5 + .04 * Math.sin(i * 3)); ctx.moveTo(fx, fy); ctx.lineTo(fx + hr * .04, fy - hr * .07);
+          const fx = hx - hr * .5 + i * hr * .11; const fy = hy - hr * (.5 + .04 * SI(i * 3)); ctx.moveTo(fx, fy); ctx.lineTo(fx + hr * .04, fy - hr * .07);
         });
         ctx.stroke();
         // 前の縫い目
@@ -2853,8 +2857,8 @@ const ShiroLib = (() => {
         for (let i = 0; i <= 8; i++) {
           const px = hx - hr * 1.3 + i * hr * .325;
           ctx.quadraticCurveTo(
-            px - hr * .16, hy - hr * (.45 + .1 * Math.sin(i * 2.4)),
-            px, hy - hr * (.45 + .1 * Math.sin((i + 1) * 2.4)));
+            px - hr * .16, hy - hr * (.45 + .1 * SI(i * 2.4)),
+            px, hy - hr * (.45 + .1 * SI((i + 1) * 2.4)));
         }
         ctx.quadraticCurveTo(hx, hy - hr * .2, hx - hr * 1.3, hy - hr * .45); ctx.closePath(); ctx.closePath(); ctx.fill();
         // 丸いクラウン
@@ -3073,7 +3077,7 @@ const ShiroLib = (() => {
         // 珠の列
         ctx.fillStyle = '#e8d8a0';
         for (let i = -3; i <= 3; i++) {
-          const bx = hx + i * hr * .2; const by = hy - hr * (1.55 - Math.abs(i) * .18); dot(bx,by,hr * .045);
+          const bx = hx + i * hr * .2; const by = hy - hr * (1.55 - AB(i) * .18); dot(bx,by,hr * .045);
         }
         break;
       }
@@ -3286,7 +3290,7 @@ const ShiroLib = (() => {
         // 中央の房
         ctx.fillStyle = dk; dot(hx,hy - hr * 1.25,hr * .12); SS(dk); lnW(LW(.04)); ctx.lineCap = 'round';
         times(5, i => {
-          const a = i * 1.256; mv(hx, hy - hr * 1.25); ctx.lineTo(hx + Math.cos(a) * hr * .18, hy - hr * 1.25 + Math.sin(a) * hr * .18); ctx.stroke();
+          const a = i * 1.256; mv(hx, hy - hr * 1.25); ctx.lineTo(hx + CO(a) * hr * .18, hy - hr * 1.25 + SI(a) * hr * .18); ctx.stroke();
         });
         break;
       }
@@ -3329,7 +3333,7 @@ const ShiroLib = (() => {
         ctx.beginPath(); ctx.ellipse(hx, hy - hr * .68, hr * .62, hr * .4, 0, PI, 0); ctx.closePath(); ctx.closePath(); ctx.fill();
         // フリル縁(連なる半円)
         times(9, i => {
-          const fa = PI + (i / 8) * PI; const fx = hx + Math.cos(fa) * hr * .68; const fy = hy - hr * .68 + Math.sin(fa) * hr * .42; dot(fx,fy,hr * .11);
+          const fa = PI + (i / 8) * PI; const fx = hx + CO(fa) * hr * .68; const fy = hy - hr * .68 + SI(fa) * hr * .42; dot(fx,fy,hr * .11);
         });
         // 後ろのリボン
         ctx.strokeStyle = acc2; lnW(LW(.06, 2)); mv(hx - hr * .5, hy - hr * .5); ctx.quadraticCurveTo(hx - hr * .8, hy - hr * .2, hx - hr * .7, hy + hr * .2); ctx.stroke();
@@ -3484,13 +3488,13 @@ const ShiroLib = (() => {
       case 'flowercrown': {
         // 花冠: 頭を取り巻く小さな花の輪+緑の葉
         times(9, i => {
-          const a = PI * (1.08 + i * .105); const fx = hx + Math.cos(a) * hr * .82; const fy = hy - hr * .5 + Math.sin(a) * hr * .42;
+          const a = PI * (1.08 + i * .105); const fx = hx + CO(a) * hr * .82; const fy = hy - hr * .5 + SI(a) * hr * .42;
           // 葉
           ctx.fillStyle = '#5a8a4a'; ell(fx + hr * .06, fy + hr * .05, hr * .07, hr * .03, .5);
           // 花(5弁+中心)
           FS(['#f090a8', '#f5c8d5', '#e8e0a0'][i % 3]);
           times(5, p => {
-            const pa = p / 5 * PI * 2; ell(fx + Math.cos(pa) * hr * .05, fy + Math.sin(pa) * hr * .05, hr * .045, hr * .028, pa);
+            const pa = p / 5 * PI * 2; ell(fx + CO(pa) * hr * .05, fy + SI(pa) * hr * .05, hr * .045, hr * .028, pa);
           });
           FS('#e8c840'); dot(fx,fy,hr * .03);
         });
@@ -3536,7 +3540,7 @@ const ShiroLib = (() => {
         ctx.fillStyle = '#4a7a3a';
         ([-1, 1]).forEach(s => {
           times(6, i => {
-            const a = PI * (1.15 + i * .14); const lx = hx + Math.cos(a) * hr * .95 * s; const ly = hy - Math.abs(Math.sin(a)) * hr * 1.05 + hr * .1; ctx.save(); ctx.translate(lx, ly); ctx.rotate(s * (.5 - i * .15)); ell(0,0,hr * .14,hr * .05); ctx.restore();
+            const a = PI * (1.15 + i * .14); const lx = hx + CO(a) * hr * .95 * s; const ly = hy - AB(SI(a)) * hr * 1.05 + hr * .1; ctx.save(); ctx.translate(lx, ly); ctx.rotate(s * (.5 - i * .15)); ell(0,0,hr * .14,hr * .05); ctx.restore();
           });
         });
         break;
@@ -3683,7 +3687,7 @@ const ShiroLib = (() => {
         // 花飾り: 頭の側面に5弁の花(accHueで花弁着色)
         const fx2 = hx + hr * .62, fy2 = hy - hr * .55, pr3 = hr * .16; FS(acc2);
         times(5, k => {
-          const a2 = k * PI * 2 / 5; ell(fx2 + Math.cos(a2) * pr3 * 1.15, fy2 + Math.sin(a2) * pr3 * 1.15, pr3, pr3 * .58, a2);
+          const a2 = k * PI * 2 / 5; ell(fx2 + CO(a2) * pr3 * 1.15, fy2 + SI(a2) * pr3 * 1.15, pr3, pr3 * .58, a2);
         });
         FS('hsla(50,90%,60%,0.95)'); dot(fx2,fy2,pr3 * .45); // しべ
         break;
@@ -3704,7 +3708,7 @@ if (typeof globalThis !== 'undefined') globalThis.ShiroLib = ShiroLib;
 
 // ============================== UI ==============================
 if (typeof document !== 'undefined') (() => {
-    const PI = Math.PI, MX = Math.max, MN = Math.min;
+    const PI = Math.PI, MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, FL = Math.floor;
   const L = ShiroLib;
   const $ = id => document.getElementById(id);
   const stage = $('stage'), ctx = stage.getContext('2d'); let W = stage.width, H = stage.height;
@@ -3750,7 +3754,7 @@ if (typeof document !== 'undefined') (() => {
       for (const [o, col] of stops) gr.addColorStop(o, col);
       FS(gr); rect(0, 0, W, H);
     };
-      const ell = (x, y, rx, ry, rot) => { c.beginPath(); c.ellipse(W * x, H * y, rx, ry, rot || 0, 0, 7); c.fill(); };
+      const ell = (x, y, rx, ry, rot) => { ellP(W * x,H * y,rx,ry,rot || 0); };
       const ellP = (x, y, rx, ry, rot) => { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, 7); c.fill(); };
       const ellPS = (x, y, rx, ry, rot) => { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, 7); c.stroke(); };
       const dotPS = (x, y, r) => { c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke(); };
@@ -3764,8 +3768,8 @@ if (typeof document !== 'undefined') (() => {
       const lnW = v => c.lineWidth = v;
       const poly = (...p) => { c.beginPath(); c.moveTo(p[0][0], p[0][1]); for (let i = 1; i < p.length; i++) { const a = p[i]; if (a.length === 2) c.lineTo(a[0], a[1]); else if (a.length === 4) c.quadraticCurveTo(a[0], a[1], a[2], a[3]); else c.bezierCurveTo(a[0], a[1], a[2], a[3], a[4], a[5]); } c.closePath(); c.fill(); };
       const polyS = (...p) => { c.beginPath(); c.moveTo(p[0][0], p[0][1]); for (let i = 1; i < p.length; i++) { const a = p[i]; if (a.length === 2) c.lineTo(a[0], a[1]); else if (a.length === 4) c.quadraticCurveTo(a[0], a[1], a[2], a[3]); else c.bezierCurveTo(a[0], a[1], a[2], a[3], a[4], a[5]); } c.closePath(); c.stroke(); };
-      const S = f => Math.sin(t * f), C = f => Math.cos(t * f), A = f => Math.abs(S(f));
-    const dot = (x, y, r) => { c.beginPath(); c.arc(W * x, H * y, r, 0, 7); c.fill(); };
+      const S = f => SI(t * f), C = f => CO(t * f), A = f => AB(S(f));
+    const dot = (x, y, r) => { dotP(W * x,H * y,r); };
     if (pr === 'transparent') return; // アルファを残す(ディムもかけない)
     if (p.bgBlur > 0) c.filter = `blur(${p.bgBlur * 10}px)`;
     if (pr === 'green') { FS('#00b140'); rect(0, 0, W, H); }
@@ -3774,7 +3778,7 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#2b2f6e'],[.55,'#c9526a'],[1,'#ffb56b']]); FS('rgba(255,190,90,0.92)'); dot(.5,.6,H * .15); // 夕日
     } else if (pr === 'night') {
       sky([[0,'#0a0d24'],[1,'#1c2347']]); scat(999, 90, (rng, i) => {
-        const sx = rng() * W, sy = rng() * H * .85, sr = rng() * 1.4 + .4; const tw = .3 + .65 * Math.abs(Math.sin(t * (.4 + rng() * 1.6) + rng() * 9));
+        const sx = rng() * W, sy = rng() * H * .85, sr = rng() * 1.4 + .4; const tw = .3 + .65 * AB(SI(t * (.4 + rng() * 1.6) + rng() * 9));
         FS(`rgba(255,255,255,${tw})`);
         dotP(sx, sy, sr);
       });
@@ -3830,7 +3834,7 @@ if (typeof document !== 'undefined') (() => {
       // 飛ぶカモメ
       c.strokeStyle = '#f0f0e8'; lnW(1.5);
       times(3, i => {
-        const bx = W * (.6 + i * .12 + Math.sin(t * .5 + i) * .02); const by = H * (.15 + (i % 2) * .07); mv(bx - 6, by); c.moveTo(bx - 6, by); c.quadraticCurveTo(bx, by - 5, bx + 6, by); c.stroke();
+        const bx = W * (.6 + i * .12 + SI(t * .5 + i) * .02); const by = H * (.15 + (i % 2) * .07); mv(bx - 6, by); c.moveTo(bx - 6, by); c.quadraticCurveTo(bx, by - 5, bx + 6, by); c.stroke();
       });
     } else if (pr === 'cappadocia') {
       // カッパドキア: 奇岩の妖精の煙突+朝焼け+気球の群れ
@@ -3844,7 +3848,7 @@ if (typeof document !== 'undefined') (() => {
         [.15, .18, .045, '#d84848'], [.32, .3, .03, '#4878c8'], [.55, .12, .038, '#e8a038'],
         [.7, .28, .025, '#68a848'], [.88, .15, .05, '#a848a8']];
       times(balloons.length, i => {
-        const [bx, by, br, col] = balloons[i]; const yy = H * (by + Math.sin(t * .3 + i * 1.7) * .012); FS(col); dotP(W * bx, yy, W * br); SS('#704828'); lnW(1); mv(W * bx - W * br * .4, yy + W * br * .8); c.lineTo(W * bx - W * br * .25, yy + W * br * 1.35); c.moveTo(W * bx + W * br * .4, yy + W * br * .8); c.lineTo(W * bx + W * br * .25, yy + W * br * 1.35); c.stroke(); FS('#704828'); rect(W * bx - W * br * .3, yy + W * br * 1.35, W * br * .6, W * br * .35);
+        const [bx, by, br, col] = balloons[i]; const yy = H * (by + SI(t * .3 + i * 1.7) * .012); FS(col); dotP(W * bx, yy, W * br); SS('#704828'); lnW(1); mv(W * bx - W * br * .4, yy + W * br * .8); c.lineTo(W * bx - W * br * .25, yy + W * br * 1.35); c.moveTo(W * bx + W * br * .4, yy + W * br * .8); c.lineTo(W * bx + W * br * .25, yy + W * br * 1.35); c.stroke(); FS('#704828'); rect(W * bx - W * br * .3, yy + W * br * 1.35, W * br * .6, W * br * .35);
       });
       // 妖精の煙突(先細りの岩柱+濃い笠石) — 高さを変えて並べる
       const chim = [
@@ -3857,7 +3861,7 @@ if (typeof document !== 'undefined') (() => {
         // 笠石(濃い三角錐)
         FS('#785038'); poly([W * (cx - cw * .55),H * (1 - ch)],[W * cx,H * (1 - ch) - H * ch * .28],[W * (cx + cw * .55),H * (1 - ch)]);
         // 側面の陰影(縦筋)
-        SS('rgba(80,50,30,0.35)'); lnW(1.5); scat(Math.floor(cx * 1000), 3, (rng2, k) => {
+        SS('rgba(80,50,30,0.35)'); lnW(1.5); scat(FL(cx * 1000), 3, (rng2, k) => {
           const ox = cx - cw * .4 + rng2() * cw * .8; mv(W * ox, H * (1 - ch)); c.lineTo(W * (ox - cw * .25), H); c.stroke();
         });
       }
@@ -3879,7 +3883,7 @@ if (typeof document !== 'undefined') (() => {
       });
       // 手前の巨木(左右の大きな幹+縦筋樹皮)
       for (const [tx, tw] of [[0, .13], [.9, .14], [.42, .07]]) {
-        FS('#5a3a26'); rect(W * tx, 0, W * tw, H); SS('#3a2418'); lnW(2); scat(Math.floor(tx * 100), 4, (rng5, k) => {
+        FS('#5a3a26'); rect(W * tx, 0, W * tw, H); SS('#3a2418'); lnW(2); scat(FL(tx * 100), 4, (rng5, k) => {
           const gx = W * (tx + rng5() * tw * .9); mv(gx, H * .05); c.quadraticCurveTo(gx + W * .006, H * .5, gx - W * .004, H); c.stroke();
         });
       }
@@ -3895,7 +3899,7 @@ if (typeof document !== 'undefined') (() => {
       // 舞う胞子(光る点)
       FS('rgba(255,240,190,0.5)');
       times(10, i => {
-        const px = W * ((i * .1 + t * .004) % 1); const py = H * (.3 + .35 * Math.sin(t * .4 + i * 2.1)); rect(px, py, 2, 2);
+        const px = W * ((i * .1 + t * .004) % 1); const py = H * (.3 + .35 * SI(t * .4 + i * 2.1)); rect(px, py, 2, 2);
       });
     } else if (pr === 'slotcanyon') {
       // スロットキャニオン: 波打つ赤岩の壁+頭上の隙間+差し込む光柱+砂の床
@@ -3919,7 +3923,7 @@ if (typeof document !== 'undefined') (() => {
       const lg = c.createLinearGradient(0, 0, 0, H * .85); lg.addColorStop(0, 'rgba(255,230,170,0.55)'); lg.addColorStop(1, 'rgba(255,230,170,0)'); FS(lg); mv(W * .46, 0); c.moveTo(W * .46, 0); c.lineTo(W * .55, 0); c.lineTo(W * .62, H * .85); c.lineTo(W * .62, H * .85); c.lineTo(W * .4, H * .85); c.closePath(); c.closePath(); c.fill();
       // 光の中の塵(ゆらめく点)
       FS('rgba(255,240,200,0.6)'); scat(909, 12, (rng7, i) => {
-        const px = W * (.44 + rng7() * .14) + Math.sin(t * .7 + i) * 3; const py = H * (.1 + rng7() * .6); rect(px, py, 1.5, 1.5);
+        const px = W * (.44 + rng7() * .14) + SI(t * .7 + i) * 3; const py = H * (.1 + rng7() * .6); rect(px, py, 1.5, 1.5);
       });
       // 砂の床(照らされた細砂)
       const sg = c.createLinearGradient(0, H * .82, 0, H); sg.addColorStop(0, '#d8a060'); sg.addColorStop(1, '#a06030'); FS(sg); poly([0,H],[W * .5,H * .82,W,H]);
@@ -3958,7 +3962,7 @@ if (typeof document !== 'undefined') (() => {
       // 水面の光の揺らぎ
       c.fillStyle = 'rgba(255,220,170,0.3)';
       times(10, i => {
-        const py = H * (.66 + i * .03); const pw = W * (.15 + .05 * Math.sin(t + i)); rect(W * .5 - pw / 2 + Math.sin(t * .5 + i * 2) * 8, py, pw, 1.5);
+        const py = H * (.66 + i * .03); const pw = W * (.15 + .05 * SI(t + i)); rect(W * .5 - pw / 2 + SI(t * .5 + i * 2) * 8, py, pw, 1.5);
       });
       // 水面の睡蓮
       c.fillStyle = '#48704a'; scat(42, 8, (rng9, i) => {
@@ -3984,7 +3988,7 @@ if (typeof document !== 'undefined') (() => {
       // 夕日の映り込み(水面の光筋)
       FS('rgba(240,150,80,0.35)');
       times(8, i => {
-        const py = H * (.62 + i * .04); const pw = W * (.1 + .03 * Math.sin(t + i * 2)); rect(W * .62 - pw / 2 + Math.sin(t * .6 + i) * 6, py, pw, 1.5);
+        const py = H * (.62 + i * .04); const pw = W * (.1 + .03 * SI(t + i * 2)); rect(W * .62 - pw / 2 + SI(t * .6 + i) * 6, py, pw, 1.5);
       });
       // ジャビル(首の長いコウノトリ — 水中に佇む3羽)
       const storks = [[.18, .68, .09], [.3, .74, .07], [.82, .66, .1]];
@@ -4025,7 +4029,7 @@ if (typeof document !== 'undefined') (() => {
         // 幹(太めの黒線 — 途中で分岐)
         SS('#181410'); lnW(MX(1.5, sc * .05)); mv(bx, by); const topX = bx + (rngT() - .5) * sc * .3; const topY = by - sc; c.lineTo(topX, topY); c.stroke();
         // 枝(3〜4本の分岐)
-        const nb = 3 + Math.floor(rngT() * 2);
+        const nb = 3 + FL(rngT() * 2);
         times(nb, b => {
           const byf = .35 + b * .18; const sx = bx + (topX - bx) * byf; const sy = by + (topY - by) * byf; const dir = b % 2 ? 1 : -1; lnW(MX(1, sc * .03)); mv(sx, sy); c.lineTo(sx + dir * sc * (.3 + rngT() * .25), sy - sc * (.15 + rngT() * .2)); c.stroke();
           // 小枝
@@ -4070,7 +4074,7 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 1; i <= 6; i++) {
         const ry = H * (.5 + i * .075); c.beginPath();
         for (let x = 0; x <= W; x += 12) {
-          const yy = ry + Math.sin(x * .02 + t + i) * 1.5; x ? c.lineTo(x, yy) : c.moveTo(x, yy);
+          const yy = ry + SI(x * .02 + t + i) * 1.5; x ? c.lineTo(x, yy) : c.moveTo(x, yy);
         }
         c.stroke();
       }
@@ -4082,7 +4086,7 @@ if (typeof document !== 'undefined') (() => {
       // 気球3機(流れ漂う)
       const rngG = L.mulberry32(90); const balloons = [[.15, .18, .05, 0], [.4, .12, .04, 2.1], [.78, .22, .06, 4.2]];
       for (const [bx, by, bs, ph] of balloons) {
-        const gx = W * (bx + .02 * Math.sin(t * .1 + ph)); const gy = H * (by + .02 * Math.sin(t * .25 + ph)); const gs = H * bs; FS('#a04038'); c.beginPath(); c.beginPath(); c.arc(gx, gy, gs, PI * .15, PI * .85); c.beginPath(); c.arc(gx, gy, gs, PI * .15, PI * .85); c.fill(); poly([gx - gs * .75,gy + gs * .1],[gx,gy + gs * 1.5,gx + gs * .75,gy + gs * .1]);
+        const gx = W * (bx + .02 * SI(t * .1 + ph)); const gy = H * (by + .02 * SI(t * .25 + ph)); const gs = H * bs; FS('#a04038'); c.beginPath(); c.beginPath(); c.arc(gx, gy, gs, PI * .15, PI * .85); c.beginPath(); c.arc(gx, gy, gs, PI * .15, PI * .85); c.fill(); poly([gx - gs * .75,gy + gs * .1],[gx,gy + gs * 1.5,gx + gs * .75,gy + gs * .1]);
         // 吊り籠
         c.fillStyle = '#4a3020'; rect(gx - gs * .12, gy + gs * 1.1, gs * .24, gs * .16);
       }
@@ -4104,7 +4108,7 @@ if (typeof document !== 'undefined') (() => {
       // 霧の帯2枚(塔の間を漂う)
       FS('rgba(230,180,140,0.15)');
       times(2, i => {
-        ell((.3 + i * .4 + .02 * Math.sin(t * .3 + i)), (.58 + i * .05), W * .25, H * .03);
+        ell((.3 + i * .4 + .02 * SI(t * .3 + i)), (.58 + i * .05), W * .25, H * .03);
       });
     } else if (pr === 'torres') {
       // トーレス・デル・パイネ: 花崗岩の3塔+ターコイズ湖+グアナコ
@@ -4467,7 +4471,7 @@ if (typeof document !== 'undefined') (() => {
       ([.12, .88]).forEach(px => {
         const bx = W * px; mv(bx, H * .82); c.moveTo(bx, H * .82); c.lineTo(bx + W * .01, H * .68); c.moveTo(bx, H * .82); c.lineTo(bx + W * .01, H * .68); c.stroke(); FS('#3a5c38');
         ([-1.9, -1.3, -.8]).forEach(a => {
-          poly([bx + W * .01,H * .68],[bx + W * .01 + Math.cos(a) * W * .05,H * .68 + Math.sin(a) * H * .06,bx + W * .01 + Math.cos(a) * W * .09,H * .68 + Math.sin(a) * H * .08 + H * .01],[bx + W * .01 + Math.cos(a) * W * .05,H * .68 + Math.sin(a) * H * .05,bx + W * .01,H * .68]);
+          poly([bx + W * .01,H * .68],[bx + W * .01 + CO(a) * W * .05,H * .68 + SI(a) * H * .06,bx + W * .01 + CO(a) * W * .09,H * .68 + SI(a) * H * .08 + H * .01],[bx + W * .01 + CO(a) * W * .05,H * .68 + SI(a) * H * .05,bx + W * .01,H * .68]);
         });
       });
     } else if (pr === 'socotra') {
@@ -4486,7 +4490,7 @@ if (typeof document !== 'undefined') (() => {
         // 幹(下からY字に分かれる)
         SS('#7a6a55'); lnW(MX(1.5, tsz * .06)); mv(bx, by); c.moveTo(bx, by); c.lineTo(bx, by - tsz * .5); c.moveTo(bx, by); c.lineTo(bx, by - tsz * .5); c.stroke();
         ([-2.1, -1.6, -1.05]).forEach(a => {
-          mv(bx, by - tsz * .5); c.lineTo(bx + Math.cos(a) * tsz * .3, by - tsz * .5 + Math.sin(a) * tsz * .3); c.stroke();
+          mv(bx, by - tsz * .5); c.lineTo(bx + CO(a) * tsz * .3, by - tsz * .5 + SI(a) * tsz * .3); c.stroke();
         });
         // 傘冠(平天のドーム)
         FS('#4a7c40'); c.beginPath(); c.ellipse(bx, by - tsz * .75, tsz * .45, tsz * .18, 0, PI, 0); c.quadraticCurveTo(bx, by - tsz * .6, bx - tsz * .45, by - tsz * .75); c.closePath(); c.closePath(); c.fill();
@@ -4507,7 +4511,7 @@ if (typeof document !== 'undefined') (() => {
       // 遠景の浸水林(水面から出る樹冠の帯)
       FS('#4a6858'); mv(0, H * .52);
       for (let i = 0; i <= 10; i++) {
-        c.quadraticCurveTo(W * (i + .5) / 10, H * (.5 - .02 * Math.sin(i * 2)), W * (i + 1) / 10, H * .52);
+        c.quadraticCurveTo(W * (i + .5) / 10, H * (.5 - .02 * SI(i * 2)), W * (i + 1) / 10, H * .52);
       }
       c.lineTo(W, H * .58); c.lineTo(W, H * .58); c.lineTo(0, H * .58); c.closePath(); c.closePath(); c.fill();
       // 湖面(広い水)
@@ -4585,7 +4589,7 @@ if (typeof document !== 'undefined') (() => {
       // ヌーの群れ(遠景の小さなシルエット)
       FS('#3a3028');
       times(7, i => {
-        const wx = .35 + i * .07, wy = .63 + .01 * Math.sin(i * 2), ws = H * .012; c.beginPath(); c.ellipse(W * wx, H * wy, ws * 1.6, ws, 0, 0, 7); c.ellipse(W * wx, H * wy, ws * 1.6, ws, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(W * wx + ws * 1.8, H * wy - ws * .8, ws * .5, ws * .5, 0, 0, 7); c.ellipse(W * wx + ws * 1.8, H * wy - ws * .8, ws * .5, ws * .5, 0, 0, 7); c.fill(); // 体 // 頭
+        const wx = .35 + i * .07, wy = .63 + .01 * SI(i * 2), ws = H * .012; c.beginPath(); c.ellipse(W * wx, H * wy, ws * 1.6, ws, 0, 0, 7); c.ellipse(W * wx, H * wy, ws * 1.6, ws, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(W * wx + ws * 1.8, H * wy - ws * .8, ws * .5, ws * .5, 0, 0, 7); c.ellipse(W * wx + ws * 1.8, H * wy - ws * .8, ws * .5, ws * .5, 0, 0, 7); c.fill(); // 体 // 頭
       });
       // 空の鳥(2羽の影)
       SS('#4a3828'); lnW(MX(1, H * .004));
@@ -4598,7 +4602,7 @@ if (typeof document !== 'undefined') (() => {
       // 遠景の霞む連峰(薄いシルエット2層)
       FS('rgba(120,140,150,0.5)'); mv(0, H * .5);
       for (let i = 0; i <= 6; i++) {
-        c.lineTo(W * (i + .5) / 6, H * (.4 - .05 * Math.sin(i * 2.3))); c.lineTo(W * (i + 1) / 6, H * .5);
+        c.lineTo(W * (i + .5) / 6, H * (.4 - .05 * SI(i * 2.3))); c.lineTo(W * (i + 1) / 6, H * .5);
       }
       c.lineTo(W, H * .6); c.lineTo(W, H * .6); c.lineTo(0, H * .6); c.closePath(); c.closePath(); c.fill();
       // 主景の鋸歯断崖(大きな尖った岩壁)
@@ -4684,8 +4688,8 @@ if (typeof document !== 'undefined') (() => {
       const px2 = W * .88, py2 = H * .78; SS('#6a5038'); lnW(MX(2, W * .006)); mv(px2, py2); c.moveTo(px2, py2); c.lineTo(px2 + W * .01, py2 - H * .15); c.moveTo(px2, py2); c.lineTo(px2 + W * .01, py2 - H * .15); c.stroke(); SS('#4a7838'); lnW(MX(1.5, W * .004));
       times(5, i => {
         const ang = -2.2 + i * .5; mv(px2 + W * .01, py2 - H * .15);
-        c.quadraticCurveTo(px2 + W * .01 + Math.cos(ang) * W * .05, py2 - H * .15 + Math.sin(ang) * H * .03 - H * .02,
-          px2 + W * .01 + Math.cos(ang) * W * .08, py2 - H * .15 + Math.sin(ang) * H * .05);
+        c.quadraticCurveTo(px2 + W * .01 + CO(ang) * W * .05, py2 - H * .15 + SI(ang) * H * .03 - H * .02,
+          px2 + W * .01 + CO(ang) * W * .08, py2 - H * .15 + SI(ang) * H * .05);
         c.stroke();
       });
     } else if (pr === 'chocohills') {
@@ -4714,8 +4718,8 @@ if (typeof document !== 'undefined') (() => {
         const tx2 = W * px, ty2 = H * py, ts2 = H * ps; SS('#7a5a40'); lnW(MX(1.5, ts2 * .06)); mv(tx2, ty2); c.moveTo(tx2, ty2); c.lineTo(tx2 + ts2 * .08, ty2 - ts2 * .8); c.moveTo(tx2, ty2); c.lineTo(tx2 + ts2 * .08, ty2 - ts2 * .8); c.stroke(); SS('#4a7838'); lnW(MX(1, ts2 * .04));
         times(5, i => {
           const ang = -2.4 + i * .55; mv(tx2 + ts2 * .08, ty2 - ts2 * .8);
-          c.quadraticCurveTo(tx2 + ts2 * .08 + Math.cos(ang) * ts2 * .45, ty2 - ts2 * .8 + Math.sin(ang) * ts2 * .25,
-            tx2 + ts2 * .08 + Math.cos(ang) * ts2 * .7, ty2 - ts2 * .8 + Math.sin(ang) * ts2 * .45);
+          c.quadraticCurveTo(tx2 + ts2 * .08 + CO(ang) * ts2 * .45, ty2 - ts2 * .8 + SI(ang) * ts2 * .25,
+            tx2 + ts2 * .08 + CO(ang) * ts2 * .7, ty2 - ts2 * .8 + SI(ang) * ts2 * .45);
           c.stroke();
         });
       }
@@ -5085,7 +5089,7 @@ if (typeof document !== 'undefined') (() => {
         // 枝(上の短い広がり)
         SS('#7a5a40'); lnW(MX(2, tw * .08));
         ([-.7, -.35, 0, .35, .7]).forEach(a => {
-          mv(W * bx, H * (by - th * .4)); c.lineTo(W * bx + Math.sin(a) * tw * .8, H * (by - th * .4) - Math.cos(a) * th * .35); c.stroke();
+          mv(W * bx, H * (by - th * .4)); c.lineTo(W * bx + SI(a) * tw * .8, H * (by - th * .4) - CO(a) * th * .35); c.stroke();
         });
         // 小さな冠(枝先の葉)
         FS('#5a7848'); ell(bx, (by - th * .4) - th * .3, tw * .85, th * .18);
@@ -5124,7 +5128,7 @@ if (typeof document !== 'undefined') (() => {
       ([.78, .9]).forEach(px => {
         SS('#6a4a30'); lnW(MX(1, W * .006)); mv(W * px, H); c.quadraticCurveTo(W * (px + .02), H * .88, W * (px + .01), H * .8); c.stroke(); SS('#3a7848'); lnW(MX(1, W * .007)); const tipX = W * (px + .01), tipY = H * .8;
         ([-.8, -.4, 0, .4, .8]).forEach(a => {
-          mv(tipX, tipY); c.lineTo(tipX + Math.sin(a) * W * .035, tipY - Math.cos(a) * W * .02); c.stroke();
+          mv(tipX, tipY); c.lineTo(tipX + SI(a) * W * .035, tipY - CO(a) * W * .02); c.stroke();
         });
       });
       // 雲2つ
@@ -5160,7 +5164,7 @@ if (typeof document !== 'undefined') (() => {
       ([.72, .88]).forEach(px => {
         SS('#6a4a30'); lnW(MX(1, W * .006)); mv(W * px, H * .95); c.quadraticCurveTo(W * (px + .015), H * .85, W * px, H * .78); c.stroke(); SS('#3a7848'); lnW(MX(1, W * .007));
         ([-.8, -.4, 0, .4, .8]).forEach(a => {
-          mv(W * px, H * .78); c.lineTo(W * px + Math.sin(a) * W * .035, H * .78 - Math.cos(a) * W * .022); c.stroke();
+          mv(W * px, H * .78); c.lineTo(W * px + SI(a) * W * .035, H * .78 - CO(a) * W * .022); c.stroke();
         });
       });
       // 雲2つ
@@ -5218,7 +5222,7 @@ if (typeof document !== 'undefined') (() => {
       ([.15, .85]).forEach(px => {
         SS('#6a4a30'); lnW(MX(1, W * .005)); mv(W * px, H * .8); c.quadraticCurveTo(W * (px + .015), H * .7, W * px, H * .62); c.stroke(); SS('#3a7848'); lnW(MX(1, W * .006));
         ([-.8, -.4, 0, .4, .8]).forEach(a => {
-          mv(W * px, H * .62); c.lineTo(W * px + Math.sin(a) * W * .03, H * .62 - Math.cos(a) * W * .018); c.stroke();
+          mv(W * px, H * .62); c.lineTo(W * px + SI(a) * W * .03, H * .62 - CO(a) * W * .018); c.stroke();
         });
       });
       // 雲2つ
@@ -5427,7 +5431,7 @@ if (typeof document !== 'undefined') (() => {
         const qy = H * .8, qh = H * .12 * qs; mv(W * qx, qy); c.lineTo(W * qx, qy - qh * .6); c.stroke();
         // 枝(上の分岐)
         ([-.5, -.2, .2, .5]).forEach(ba => {
-          mv(W * qx, qy - qh * .6); c.lineTo(W * qx + Math.sin(ba) * W * .02, qy - qh); c.stroke();
+          mv(W * qx, qy - qh * .6); c.lineTo(W * qx + SI(ba) * W * .02, qy - qh); c.stroke();
         });
         // 葉の先の丸(小さな円)
         FS('#3a5a38'); c.beginPath(); c.arc(W * qx, qy - qh, W * .006, 0, 7); c.arc(W * qx, qy - qh, W * .006, 0, 7); c.fill();
@@ -5475,7 +5479,7 @@ if (typeof document !== 'undefined') (() => {
         // 椰子の葉(放射の葉脈)
         SS('#4a8838');
         ([-.9, -.5, 0, .5, .9]).forEach(pa => {
-          mv(W * px + W * .015, H * .5); c.quadraticCurveTo(W * px + W * .015 + Math.sin(pa) * W * .05, H * (.5 - Math.cos(pa) * .06), W * px + W * .015 + Math.sin(pa) * W * .07, H * (.52 - Math.cos(pa) * .04)); c.stroke();
+          mv(W * px + W * .015, H * .5); c.quadraticCurveTo(W * px + W * .015 + SI(pa) * W * .05, H * (.5 - CO(pa) * .06), W * px + W * .015 + SI(pa) * W * .07, H * (.52 - CO(pa) * .04)); c.stroke();
         });
         SS('#6a5030');
       });
@@ -5492,7 +5496,7 @@ if (typeof document !== 'undefined') (() => {
       for (const [col, ly, jag] of layers) {
         FS(col); mv(0, H * ly);
         for (let i = 0; i <= 10; i++) {
-          const px = i * W / 10; c.lineTo(px, H * (ly - jag * (i % 2 ? .5 + .5 * Math.sin(i * 2.3) : .3)));
+          const px = i * W / 10; c.lineTo(px, H * (ly - jag * (i % 2 ? .5 + .5 * SI(i * 2.3) : .3)));
         }
         c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       }
@@ -5504,10 +5508,7 @@ if (typeof document !== 'undefined') (() => {
       // 霧の帯(谷の霧)
       FS('rgba(220,230,235,0.35)');
       times(3, i => {
-        c.beginPath();
-        c.ellipse(W * (.2 + i * .3) + Math.sin(t * .3 + i) * W * .03,
-          H * (.55 + i * .08), W * .2, H * .03, 0, 0, 7);
-        c.fill();
+        ellP(W * (.2 + i * .3) + SI(t * .3 + i) * W * .03,H * (.55 + i * .08),W * .2,H * .03,0);
       });
       // 前面の針葉樹(左と右に高大木)
       ([.08, .9]).forEach(tx2 => {
@@ -5542,7 +5543,7 @@ if (typeof document !== 'undefined') (() => {
       // 草の穂(風に揺れる)
       SS('#989058'); lnW(1.2);
       times(15, i => {
-        const gx = rng() * W, gy = H * (.8 + rng() * .18); const sw = Math.sin(t * 1.5 + i) * W * .008; mv(gx, gy); c.moveTo(gx, gy); c.quadraticCurveTo(gx + sw, gy - H * .04, gx + sw * 1.5, gy - H * .07); c.stroke();
+        const gx = rng() * W, gy = H * (.8 + rng() * .18); const sw = SI(t * 1.5 + i) * W * .008; mv(gx, gy); c.moveTo(gx, gy); c.quadraticCurveTo(gx + sw, gy - H * .04, gx + sw * 1.5, gy - H * .07); c.stroke();
       });
     } else if (pr === 'tatras') {
       // タトラ山脈: 鋸歯の岩峰+青い氷河湖+山小屋+高山の花
@@ -5569,10 +5570,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#6a9858'; rect(0, H * .73, W, H * .27); scat(934, 12, (rng, i) => {
         const fx = rng() * W, fy = H * (.78 + rng() * .18); FS('#f0f0d8');
         times(5, p2 => {
-          const pa = p2 * PI * 2 / 5; c.beginPath();
-          c.ellipse(fx + Math.cos(pa) * H * .008, fy + Math.sin(pa) * H * .008,
-            H * .006, H * .003, pa, 0, 7);
-          c.fill();
+          const pa = p2 * PI * 2 / 5; ellP(fx + CO(pa) * H * .008,fy + SI(pa) * H * .008,H * .006,H * .003,pa);
         });
         FS('#e8c848'); dotP(fx, fy, H * .003);
       });
@@ -5593,7 +5591,7 @@ if (typeof document !== 'undefined') (() => {
       // 谷の小川(蛇行)
       SS('#98c8e8'); lnW(H * .018); mv(W * .5, H * .7); c.quadraticCurveTo(W * .42, H * .8, W * .55, H * .88); c.quadraticCurveTo(W * .6, H * .94, W * .48, H); c.stroke();
       // 旋回する鷲
-      c.strokeStyle = 'rgba(60,50,40,0.8)'; lnW(2); const eagleA = t * .5; const ex = W * (.6 + Math.cos(eagleA) * .12); const ey = H * (.3 + Math.sin(eagleA) * .06); mv(ex - 8, ey); c.moveTo(ex - 8, ey); c.quadraticCurveTo(ex - 3, ey - 5, ex, ey); c.quadraticCurveTo(ex + 3, ey - 5, ex + 8, ey); c.stroke();
+      c.strokeStyle = 'rgba(60,50,40,0.8)'; lnW(2); const eagleA = t * .5; const ex = W * (.6 + CO(eagleA) * .12); const ey = H * (.3 + SI(eagleA) * .06); mv(ex - 8, ey); c.moveTo(ex - 8, ey); c.quadraticCurveTo(ex - 3, ey - 5, ex, ey); c.quadraticCurveTo(ex + 3, ey - 5, ex + 8, ey); c.stroke();
     } else if (pr === 'izba') {
       // イズバ(ロシアの村): 丸太小屋+タマネギ堂+白樺+煙
       sky([[0,'#a8c8e8'],[.5,'#d8e8f0'],[1,'#b0c8a0']]);
@@ -5605,7 +5603,7 @@ if (typeof document !== 'undefined') (() => {
         times(5, k => {
           mv(bx - W * .008, H * (.2 + k * .08)); c.lineTo(bx + W * .006, H * (.2 + k * .08)); c.stroke();
         });
-        FS('rgba(140,170,90,0.7)'); ellP(bx + Math.sin(t * 1.5 + i) * W * .005, H * .16, W * .05, H * .06);
+        FS('rgba(140,170,90,0.7)'); ellP(bx + SI(t * 1.5 + i) * W * .005, H * .16, W * .05, H * .06);
       });
       // イズバ(丸太小屋): 丸太の筋+切妻屋根+窓+煙突の煙
       const ix = W * .28, iy = H * .55; FS('#8a6848'); rect(ix, iy, W * .22, H * .2);
@@ -5621,10 +5619,7 @@ if (typeof document !== 'undefined') (() => {
       // 煙突+ゆれる煙
       c.fillStyle = '#4a3830'; rect(ix + W * .17, iy - H * .08, W * .02, H * .08); FS('rgba(230,230,230,0.5)');
       times(3, k => {
-        c.beginPath();
-        c.ellipse(ix + W * .18 + Math.sin(t * 2 + k) * W * .015,
-          iy - H * (.1 + k * .05), W * (.018 + k * .008), H * (.02 + k * .01), 0, 0, 7);
-        c.fill();
+        ellP(ix + W * .18 + SI(t * 2 + k) * W * .015,iy - H * (.1 + k * .05),W * (.018 + k * .008),H * (.02 + k * .01),0);
       });
       // 地面の草と小花
       c.fillStyle = '#6a9858'; rect(0, H * .72, W, H * .28); scat(832, 10, (rng, i) => {
@@ -5660,12 +5655,12 @@ if (typeof document !== 'undefined') (() => {
       // 洗濯物(両脇の紐)
       SS('rgba(80,60,40,0.6)'); lnW(1); mv(W * .05, H * .4); c.moveTo(W * .05, H * .4); c.quadraticCurveTo(W * .12, H * .43, W * .15, H * .38); c.moveTo(W * .85, H * .38); c.moveTo(W * .85, H * .38); c.quadraticCurveTo(W * .9, H * .42, W * .95, H * .39); c.stroke(); const clothCols = ['#d04838', '#e8c838', '#3868a8', '#48a868'];
       times(4, i => {
-        FS(clothCols[i]); rect(W * (.06 + i * .024), H * .395 + Math.sin(t + i) * H * .003, W * .02, H * .045);
+        FS(clothCols[i]); rect(W * (.06 + i * .024), H * .395 + SI(t + i) * H * .003, W * .02, H * .045);
       });
       // 飛ぶ鳥
       c.strokeStyle = 'rgba(70,50,35,0.7)'; lnW(1.3);
       times(3, i => {
-        const bx = W * (.3 + i * .25 + Math.sin(t * .4 + i) * .02); const by = H * (.12 + (i % 2) * .06); mv(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
+        const bx = W * (.3 + i * .25 + SI(t * .4 + i) * .02); const by = H * (.12 + (i % 2) * .06); mv(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
       });
     } else if (pr === 'rann') {
       // ラン塩原(カッチ): 月に輝く白い塩の大地+亀裂+遠くの丘+流れ星
@@ -5705,7 +5700,7 @@ if (typeof document !== 'undefined') (() => {
         }
         c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
         // 尾根の霧帯
-        c.fillStyle = 'rgba(220,230,215,0.3)'; ell((.3 + r * .15) + Math.sin(t * .2 + r) * W * .03, (.4 + r * .14), W * .3, H * .03);
+        c.fillStyle = 'rgba(220,230,215,0.3)'; ell((.3 + r * .15) + SI(t * .2 + r) * W * .03, (.4 + r * .14), W * .3, H * .03);
       });
       // 滝筋(複数)
       ([.3, .55, .8]).forEach(wx => {
@@ -5716,13 +5711,13 @@ if (typeof document !== 'undefined') (() => {
       // 前景の密林の影
       c.fillStyle = '#1e3528'; mv(0, H * .82);
       for (let i = 0; i <= 10; i++) {
-        c.lineTo(W * i / 10, H * .82 - H * .03 * Math.abs(Math.sin(i * 2.7)));
+        c.lineTo(W * i / 10, H * .82 - H * .03 * AB(SI(i * 2.7)));
       }
       c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // 飛ぶ鳥
       c.strokeStyle = 'rgba(40,50,45,0.7)'; lnW(1.3);
       times(4, i => {
-        const bx = W * (.2 + i * .18 + Math.sin(t * .35 + i) * .02); const by = H * (.15 + (i % 2) * .07); mv(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
+        const bx = W * (.2 + i * .18 + SI(t * .35 + i) * .02); const by = H * (.15 + (i % 2) * .07); mv(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
       });
     } else if (pr === 'kaziranga') {
       // カジランガ: アッサムの湿地保護区 — イッサイ+一角サイ+沼地+飛ぶガン
@@ -5749,7 +5744,7 @@ if (typeof document !== 'undefined') (() => {
       // 飛ぶガン(編隊)
       SS('rgba(50,55,45,0.8)'); lnW(1.4);
       times(5, i => {
-        const bx = W * (.55 + i * .07 + S(.3) * .02); const by = H * (.28 + Math.abs(i - 2) * .04); mv(bx - 6, by); c.moveTo(bx - 6, by); c.quadraticCurveTo(bx, by - 5, bx + 6, by); c.stroke();
+        const bx = W * (.55 + i * .07 + S(.3) * .02); const by = H * (.28 + AB(i - 2) * .04); mv(bx - 6, by); c.moveTo(bx - 6, by); c.quadraticCurveTo(bx, by - 5, bx + 6, by); c.stroke();
       });
     } else if (pr === 'kerala') {
       // ケーララのバックウォーター: 椰子並木の水路+ハウスボート+蓮+白鷺
@@ -5814,7 +5809,7 @@ if (typeof document !== 'undefined') (() => {
       // 灯籠の点々
       c.fillStyle = '#f0c040';
       times(5, i => {
-        dot((.15 + i * .18), .75 + Math.sin(t * 2 + i) * H * .003, 2);
+        dot((.15 + i * .18), .75 + SI(t * 2 + i) * H * .003, 2);
       });
     } else if (pr === 'thar') {
       // タール砂漠(ラジャスタン): 金色の砂丘+キャラバン+遠くの城塞+照る太陽
@@ -5894,7 +5889,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = 'rgba(248,200,140,0.35)'; rect(W * .05, H * .8, W * .3, H * .2);
       // 小舟
       times(3, i => {
-        const bx = W * (.2 + i * .3) + Math.sin(t * .5 + i * 2) * W * .01; const by = H * (.85 + (i % 2) * .07); FS('#4a3028'); poly([bx - W * .05,by],[bx,by + H * .035,bx + W * .05,by]);
+        const bx = W * (.2 + i * .3) + SI(t * .5 + i * 2) * W * .01; const by = H * (.85 + (i % 2) * .07); FS('#4a3028'); poly([bx - W * .05,by],[bx,by + H * .035,bx + W * .05,by]);
         // 漕ぎ手の影
         dotP(bx, by - H * .02, H * .015);
       });
@@ -5939,7 +5934,7 @@ if (typeof document !== 'undefined') (() => {
       // 遠くのジャングルの影
       c.fillStyle = '#4a5a45'; mv(0, H * .5);
       for (let i = 0; i <= 10; i++) {
-        c.lineTo(W * i / 10, H * .5 - H * .04 * Math.abs(Math.sin(i * 2.3)));
+        c.lineTo(W * i / 10, H * .5 - H * .04 * AB(SI(i * 2.3)));
       }
       c.lineTo(W, H); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.closePath(); c.fill();
       // 段々の基壇(3段)
@@ -5960,7 +5955,7 @@ if (typeof document !== 'undefined') (() => {
       // 飛ぶ鳥
       c.strokeStyle = 'rgba(60,50,40,0.7)'; lnW(1.3);
       times(4, i => {
-        const bx = W * (.15 + i * .2 + Math.sin(t * .4 + i) * .03); const by = H * (.15 + (i % 2) * .08); mv(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
+        const bx = W * (.15 + i * .2 + SI(t * .4 + i) * .03); const by = H * (.15 + (i % 2) * .08); mv(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
       });
     } else if (pr === 'dojo') {
       // 道場: 板張りの床+障子の窓+掛け軸+木刀
@@ -6018,7 +6013,7 @@ if (typeof document !== 'undefined') (() => {
       // 小さな岩柱+僧院(左)
       FS('#5a463e'); poly([W * .15,H],[W * .17,H * .6],[W * .21,H * .58],[W * .23,H]); FS('#e8dcc8'); rect(W * .175, H * .555, W * .035, H * .03); FS('#a04030'); mv(W * .172, H * .558); c.moveTo(W * .172, H * .558); c.lineTo(W * .192, H * .54); c.moveTo(W * .172, H * .558); c.lineTo(W * .192, H * .54); c.lineTo(W * .212, H * .558); c.closePath(); c.closePath(); c.fill();
       // 鳶(8の字に回る)
-      SS('rgba(50,40,35,0.8)'); lnW(1.5); const bx = W * (.4 + .15 * S(.5)); const by = H * (.25 + .08 * Math.sin(t)); mv(bx - 8, by); c.quadraticCurveTo(bx - 3, by - 5 - 2 * S(6), bx, by); c.quadraticCurveTo(bx + 3, by - 5 - 2 * S(6), bx + 8, by); c.stroke();
+      SS('rgba(50,40,35,0.8)'); lnW(1.5); const bx = W * (.4 + .15 * S(.5)); const by = H * (.25 + .08 * SI(t)); mv(bx - 8, by); c.quadraticCurveTo(bx - 3, by - 5 - 2 * S(6), bx, by); c.quadraticCurveTo(bx + 3, by - 5 - 2 * S(6), bx + 8, by); c.stroke();
     } else if (pr === 'rapids') {
       // 急流: 白く弾ける水+転がる岩+両岸の断崖
       sky([[0,'#7a9a90'],[.45,'#4a6a60'],[1,'#2a4a5a']]);
@@ -6035,7 +6030,7 @@ if (typeof document !== 'undefined') (() => {
         // 岩
         c.fillStyle = '#5a5a55'; ellP(rx, ry, rr, rr * .7);
         // 水しぶき(ゆらぐ)
-        SS('rgba(230,245,250,0.75)'); lnW(1.5); const fl = Math.sin(t * 5 + i * 2); mv(rx - rr * 1.4, ry); c.quadraticCurveTo(rx - rr * .5, ry - rr * (0.8 + fl * .3), rx, ry - rr * .2); c.moveTo(rx + rr * .3, ry - rr * .15); c.quadraticCurveTo(rx + rr, ry - rr * (0.6 - fl * .3), rx + rr * 1.5, ry + 2); c.stroke();
+        SS('rgba(230,245,250,0.75)'); lnW(1.5); const fl = SI(t * 5 + i * 2); mv(rx - rr * 1.4, ry); c.quadraticCurveTo(rx - rr * .5, ry - rr * (0.8 + fl * .3), rx, ry - rr * .2); c.moveTo(rx + rr * .3, ry - rr * .15); c.quadraticCurveTo(rx + rr, ry - rr * (0.6 - fl * .3), rx + rr * 1.5, ry + 2); c.stroke();
       });
       // 流れの筋(速い)
       SS('rgba(200,235,240,0.5)'); lnW(1.5);
@@ -6045,7 +6040,7 @@ if (typeof document !== 'undefined') (() => {
       // 飛沫の点
       c.fillStyle = 'rgba(240,250,255,0.6)';
       times(15, i => {
-        const px = W * (.3 + rng() * .4); const py = H * (.6 + rng() * .3); const tw = .5 + .5 * Math.sin(t * 4 + i); dotP(px, py, 1.5 * tw);
+        const px = W * (.3 + rng() * .4); const py = H * (.6 + rng() * .3); const tw = .5 + .5 * SI(t * 4 + i); dotP(px, py, 1.5 * tw);
       });
     } else if (pr === 'iceberg') {
       // 氷山: 輝く巨大な氷山+冷たい海+流氷+アザラシ
@@ -6062,7 +6057,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = 'rgba(190,220,235,0.25)'; poly([W * .35,H * .58],[W * .5,H * .72],[W * .68,H * .58]);
       // 流氷の欠片
       c.fillStyle = 'rgba(220,235,245,0.8)'; scat(761, 10, (rng, i) => {
-        const fx = rng() * W; const fy = H * (.62 + rng() * .32); const fw = W * (.02 + rng() * .05); const dy = Math.sin(t * .8 + i) * 2; poly([fx,fy + dy],[fx + fw * .4,fy - H * .012 + dy],[fx + fw,fy + dy],[fx + fw * .8,fy + H * .008 + dy],[fx + fw * .15,fy + H * .01 + dy]);
+        const fx = rng() * W; const fy = H * (.62 + rng() * .32); const fw = W * (.02 + rng() * .05); const dy = SI(t * .8 + i) * 2; poly([fx,fy + dy],[fx + fw * .4,fy - H * .012 + dy],[fx + fw,fy + dy],[fx + fw * .8,fy + H * .008 + dy],[fx + fw * .15,fy + H * .01 + dy]);
       });
       // アザラシ(丸い頭だけ出す)
       const sx = W * (.15 + .1 * S(.2)); const sy = H * (.78 + .01 * S(1.5)); FS('#4a5a64'); ellP(sx, sy, W * .018, H * .018); FS('#222'); c.beginPath(); c.arc(sx - W * .005, sy - 2, 1.5, 0, 7); c.arc(sx + W * .005, sy - 2, 1.5, 0, 7); c.fill();
@@ -6071,7 +6066,7 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 6; i++) {
         const wy = H * (.6 + i * .07); mv(0, wy);
         for (let x = 0; x <= 8; x++) {
-          c.lineTo(W * x / 8, wy + Math.sin(x * 1.8 + i * 2.5 + t * .9) * H * .008);
+          c.lineTo(W * x / 8, wy + SI(x * 1.8 + i * 2.5 + t * .9) * H * .008);
         }
         c.stroke();
       }
@@ -6085,7 +6080,7 @@ if (typeof document !== 'undefined') (() => {
       });
       // 流れる霧の帯(2層)
       times(2, i => {
-        const my = H * (.3 + i * .25); const mx = Math.sin(t * .3 + i * 2) * W * .08;
+        const my = H * (.3 + i * .25); const mx = SI(t * .3 + i * 2) * W * .08;
         FS(`rgba(200,220,210,${.25 - i * .08})`);
         ellP(W * .5 + mx, my, W * .55, H * .07);
       });
@@ -6096,15 +6091,15 @@ if (typeof document !== 'undefined') (() => {
       // 垂れ下がる苔(ゆれる)
       SS('rgba(120,160,110,0.8)'); lnW(2); const rng = L.mulberry32(433);
       times(14, i => {
-        const bx = W * (.14 + rng() * .2); const by = H * (.13 + rng() * .08); const bl = H * (.06 + rng() * .12); const sw = Math.sin(t + i) * 3; mv(bx, by); c.quadraticCurveTo(bx + sw, by + bl * .6, bx + sw * .6, by + bl); c.stroke();
+        const bx = W * (.14 + rng() * .2); const by = H * (.13 + rng() * .08); const bl = H * (.06 + rng() * .12); const sw = SI(t + i) * 3; mv(bx, by); c.quadraticCurveTo(bx + sw, by + bl * .6, bx + sw * .6, by + bl); c.stroke();
       });
       times(10, i => {
-        const bx = W * (.66 + rng() * .18); const by = H * (.21 + rng() * .08); const bl = H * (.05 + rng() * .1); const sw = Math.sin(t * 1.2 + i) * 3; mv(bx, by); c.quadraticCurveTo(bx + sw, by + bl * .6, bx + sw * .6, by + bl); c.stroke();
+        const bx = W * (.66 + rng() * .18); const by = H * (.21 + rng() * .08); const bl = H * (.05 + rng() * .1); const sw = SI(t * 1.2 + i) * 3; mv(bx, by); c.quadraticCurveTo(bx + sw, by + bl * .6, bx + sw * .6, by + bl); c.stroke();
       });
       // 下草
       c.fillStyle = '#24392e'; rect(0, H * .82, W, H * .18); SS('#3a5a48'); lnW(2);
       times(20, i => {
-        const gx = rng() * W; mv(gx, H); c.quadraticCurveTo(gx + 4, H * .9, gx + Math.sin(t + i) * 5, H * .84); c.stroke();
+        const gx = rng() * W; mv(gx, H); c.quadraticCurveTo(gx + 4, H * .9, gx + SI(t + i) * 5, H * .84); c.stroke();
       });
       // 鳥(ケツァール風: 緑の影)
       FS('rgba(60,140,100,0.85)'); const bx2 = W * (.3 + .2 * S(.4)); const by2 = H * (.45 + .06 * S(1.3)); const flap = S(8); c.beginPath(); c.beginPath(); c.ellipse(bx2, by2, 8, 5, 0, 0, 7); ellP(bx2, by2, 8, 5); mv(bx2 - 4, by2); c.quadraticCurveTo(bx2 - 14, by2 - 8 * flap, bx2 - 18, by2 - 2); c.stroke();
@@ -6124,14 +6119,14 @@ if (typeof document !== 'undefined') (() => {
       // 水面の光の反射(ゆらぐ)
       FS('rgba(150,220,255,0.3)');
       times(10, i => {
-        const rx = W * (.3 + i * .045); const ry = H * (.64 + i * .03); const rw = W * (.02 + .012 * Math.sin(t * 1.5 + i)); rect(rx - rw / 2, ry, rw, 2);
+        const rx = W * (.3 + i * .045); const ry = H * (.64 + i * .03); const rw = W * (.02 + .012 * SI(t * 1.5 + i)); rect(rx - rw / 2, ry, rw, 2);
       });
       // 光の筋(入口から水へ)
       FS('rgba(170,210,255,0.1)'); mv(W * .44, H * .35); c.moveTo(W * .44, H * .35); c.lineTo(W * .36, H); c.lineTo(W * .52, H); c.lineTo(W * .52, H); c.lineTo(W * .52, H * .35); c.closePath(); c.closePath(); c.fill();
       // 水滴のきらめき
       c.fillStyle = 'rgba(200,240,255,0.7)';
       times(8, i => {
-        const sx = rng() * W; const sy = H * (.3 + rng() * .3); const tw = .5 + .5 * Math.sin(t * 3 + i * 2); dotP(sx, sy, 1.5 * tw);
+        const sx = rng() * W; const sy = H * (.3 + rng() * .3); const tw = .5 + .5 * SI(t * 3 + i * 2); dotP(sx, sy, 1.5 * tw);
       });
     } else if (pr === 'canal') {
       // 運河の街: 両岸の彩色建物+アーチ橋+水面に揺れるゴンドラ
@@ -6162,7 +6157,7 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 9; i++) {
         const wy = H * (.6 + i * .045); mv(0, wy);
         for (let x = 0; x <= 8; x++) {
-          c.lineTo(W * x / 8, wy + Math.sin(x * 2 + i * 3 + t * .8) * H * .006);
+          c.lineTo(W * x / 8, wy + SI(x * 2 + i * 3 + t * .8) * H * .006);
         }
         c.stroke();
       }
@@ -6181,7 +6176,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#a8b87a'; poly([0,H * .58],[W * .3,H * .52,W * .65,H * .56],[W * .85,H * .6,W,H * .55],[W,H],[W,H],[0,H]);
       // パンパスグラスの穂(白銀の揺れる房)
       scat(509, 40, (rng, i) => {
-        const px = rng() * W; const py = H * (.6 + rng() * .38); const ph = H * (.08 + rng() * .1); const sw = Math.sin(t * 1.2 + px * .05) * ph * .12;
+        const px = rng() * W; const py = H * (.6 + rng() * .38); const ph = H * (.08 + rng() * .1); const sw = SI(t * 1.2 + px * .05) * ph * .12;
         // 茎
         c.strokeStyle = 'rgba(120,130,80,0.7)'; lnW(1.2); mv(px, py); c.quadraticCurveTo(px + sw * .5, py - ph * .6, px + sw, py - ph); c.stroke();
         // 銀色の穂
@@ -6192,7 +6187,7 @@ if (typeof document !== 'undefined') (() => {
       // 鳥の群れ
       c.strokeStyle = 'rgba(60,60,60,0.7)'; lnW(1.3);
       times(5, i => {
-        const bx = W * (.15 + i * .13 + Math.sin(t * .3 + i) * .02); const by = H * (.12 + (i % 3) * .05); mv(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
+        const bx = W * (.15 + i * .13 + SI(t * .3 + i) * .02); const by = H * (.12 + (i % 3) * .05); mv(bx - 5, by); c.moveTo(bx - 5, by); c.quadraticCurveTo(bx, by - 4, bx + 5, by); c.stroke();
       });
     } else if (pr === 'tea') {
       // 茶畑: 等高線に沿って曲がる茶の列+霧の山+摘み手の笠
@@ -6207,7 +6202,7 @@ if (typeof document !== 'undefined') (() => {
         c.strokeStyle = `rgba(45,${90 + i * 8},50,${.85 - i * .06})`;
         lnW(H * .028); mv(0, ry);
         for (let x = 0; x <= 8; x++) {
-          c.lineTo(W * x / 8, ry + Math.sin(x * 1.5 + i * 2 + t * .15) * H * amp);
+          c.lineTo(W * x / 8, ry + SI(x * 1.5 + i * 2 + t * .15) * H * amp);
         }
         c.stroke();
       }
@@ -6233,7 +6228,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#5a8a48'; rect(0, H * .55, W, H * .45);
       // 木漏れ日の光柱
       times(3, i => {
-        const gx = W * (.35 + i * .12) + Math.sin(t * .3 + i) * W * .01; FS('rgba(255,240,180,0.12)'); mv(gx, H * .1); c.moveTo(gx, H * .1); c.lineTo(gx + W * .05, H * .1); c.lineTo(gx + W * .09, H * .7); c.lineTo(gx + W * .09, H * .7); c.lineTo(gx + W * .04, H * .7); c.closePath(); c.closePath(); c.fill();
+        const gx = W * (.35 + i * .12) + SI(t * .3 + i) * W * .01; FS('rgba(255,240,180,0.12)'); mv(gx, H * .1); c.moveTo(gx, H * .1); c.lineTo(gx + W * .05, H * .1); c.lineTo(gx + W * .09, H * .7); c.lineTo(gx + W * .09, H * .7); c.lineTo(gx + W * .04, H * .7); c.closePath(); c.closePath(); c.fill();
       });
       // 草の筋
       c.strokeStyle = 'rgba(40,80,35,0.5)'; lnW(1.5);
@@ -6242,16 +6237,16 @@ if (typeof document !== 'undefined') (() => {
       });
       // 咲く花
       times(12, i => {
-        const px = W * (.26 + rng() * .48); const py = H * (.6 + rng() * .32); FS(['#e8e0f0', '#f0d8e8', '#f8e8a8', '#e8f0d8'][Math.floor(rng() * 4)]); dotP(px, py, W * .005);
+        const px = W * (.26 + rng() * .48); const py = H * (.6 + rng() * .32); FS(['#e8e0f0', '#f0d8e8', '#f8e8a8', '#e8f0d8'][FL(rng() * 4)]); dotP(px, py, W * .005);
       });
       // 舞う蝶
       times(3, i => {
-        const bx = W * .5 + Math.sin(t * .5 + i * 2.2) * W * (.1 + i * .06); const by = H * .55 + Math.sin(t * .9 + i * 1.3) * H * .08; const flap = Math.sin(t * 12 + i) * .6; FS(['#f0c8e0', '#f0e0b0', '#c8e0f0'][i]); c.beginPath(); c.ellipse(bx - W * .006, by, W * .007, H * .004 * Math.abs(flap) + H * .002, -.3, 0, 7); c.ellipse(bx + W * .006, by, W * .007, H * .004 * Math.abs(flap) + H * .002, .3, 0, 7); c.fill();
+        const bx = W * .5 + SI(t * .5 + i * 2.2) * W * (.1 + i * .06); const by = H * .55 + SI(t * .9 + i * 1.3) * H * .08; const flap = SI(t * 12 + i) * .6; FS(['#f0c8e0', '#f0e0b0', '#c8e0f0'][i]); c.beginPath(); c.ellipse(bx - W * .006, by, W * .007, H * .004 * AB(flap) + H * .002, -.3, 0, 7); c.ellipse(bx + W * .006, by, W * .007, H * .004 * AB(flap) + H * .002, .3, 0, 7); c.fill();
       });
       // 浮かぶ花粉
       c.fillStyle = 'rgba(255,250,210,0.5)';
       times(6, i => {
-        const px = W * (.3 + rng() * .4) + Math.sin(t * .6 + i) * W * .015; const py = H * (.3 + rng() * .3) + Math.cos(t * .5 + i) * H * .015; dotP(px, py, 1.5);
+        const px = W * (.3 + rng() * .4) + SI(t * .6 + i) * W * .015; const py = H * (.3 + rng() * .3) + CO(t * .5 + i) * H * .015; dotP(px, py, 1.5);
       });
     } else if (pr === 'billabong') {
       // ビラボン: 乾いた大地の静かな水溜り+ガムの木+映り込み+水鳥
@@ -6279,7 +6274,7 @@ if (typeof document !== 'undefined') (() => {
       // 水面の輝き+さざ波
       c.strokeStyle = 'rgba(200,235,245,0.4)'; lnW(1.5);
       times(5, i => {
-        const py = H * (.66 + i * .03); mv(W * .35 + Math.sin(t * .7 + i) * W * .02, py); c.lineTo(W * .7 + Math.sin(t * .7 + i) * W * .02, py); c.stroke();
+        const py = H * (.66 + i * .03); mv(W * .35 + SI(t * .7 + i) * W * .02, py); c.lineTo(W * .7 + SI(t * .7 + i) * W * .02, py); c.stroke();
       });
       // 水鳥(佇むシギ)
       SS('#3a3028'); lnW(1.5); const bx = W * .32, by = H * .66; mv(bx, by); c.lineTo(bx, by + H * .025); c.stroke(); FS('#3a3028'); c.beginPath(); c.beginPath(); c.ellipse(bx + W * .004, by - H * .004, W * .008, H * .006, 0, 0, 7); ellP(bx + W * .004, by - H * .004, W * .008, H * .006); c.beginPath(); c.beginPath(); c.arc(bx + W * .012, by - H * .012, W * .004, 0, 7); dotP(bx + W * .012, by - H * .012, W * .004); // 脚 // 頭
@@ -6308,17 +6303,17 @@ if (typeof document !== 'undefined') (() => {
       // 岩柱の根元に砕ける白波
       c.fillStyle = 'rgba(240,250,255,0.6)';
       for (const [sx] of stacks) {
-        const wob = Math.sin(t * 2 + sx * 10) * W * .008; ell(sx + wob, .705, W * .035, H * .008);
+        const wob = SI(t * 2 + sx * 10) * W * .008; ell(sx + wob, .705, W * .035, H * .008);
       }
       // 波の輝き
       c.fillStyle = 'rgba(200,230,245,0.35)';
       times(8, i => {
-        const px = W * rng(), py = H * (.73 + rng() * .22); ellP(px + Math.sin(t + i) * W * .006, py, W * .012, H * .002);
+        const px = W * rng(), py = H * (.73 + rng() * .22); ellP(px + SI(t + i) * W * .006, py, W * .012, H * .002);
       });
       // 海鳥
       c.strokeStyle = '#202830'; lnW(1.5);
       times(3, i => {
-        const bx = W * (.15 + i * .3) + Math.sin(t * .5 + i) * W * .03; const by = H * (.25 + i * .08) + Math.sin(t * .9 + i * 2) * H * .02; c.beginPath(); c.arc(bx - W * .005, by, W * .005, PI * 1.1, PI * 1.9); c.arc(bx + W * .005, by, W * .005, PI * 1.1, PI * 1.9); c.stroke();
+        const bx = W * (.15 + i * .3) + SI(t * .5 + i) * W * .03; const by = H * (.25 + i * .08) + SI(t * .9 + i * 2) * H * .02; c.beginPath(); c.arc(bx - W * .005, by, W * .005, PI * 1.1, PI * 1.9); c.arc(bx + W * .005, by, W * .005, PI * 1.1, PI * 1.9); c.stroke();
       });
     } else if (pr === 'bazaar') {
       // バザール: 市場の屋台+色とりどりの天幕+吊るす提灯+石畳
@@ -6341,7 +6336,7 @@ if (typeof document !== 'undefined') (() => {
       });
       // 吊るす提灯
       times(5, i => {
-        const lx = W * (.12 + i * .19); const ly = H * .18 + Math.sin(t * .8 + i) * H * .008; SS('rgba(60,40,30,0.6)'); lnW(1); mv(lx, H * .08); c.lineTo(lx, ly); c.stroke(); FS('rgba(255,190,90,0.9)'); ellP(lx, ly + H * .015, W * .011, H * .018);
+        const lx = W * (.12 + i * .19); const ly = H * .18 + SI(t * .8 + i) * H * .008; SS('rgba(60,40,30,0.6)'); lnW(1); mv(lx, H * .08); c.lineTo(lx, ly); c.stroke(); FS('rgba(255,190,90,0.9)'); ellP(lx, ly + H * .015, W * .011, H * .018);
       });
       // 石畳
       c.fillStyle = '#6a5040'; rect(0, H * .86, W, H * .14); SS('rgba(40,30,22,0.4)'); lnW(1);
@@ -6361,7 +6356,7 @@ if (typeof document !== 'undefined') (() => {
       // 回る翼
       c.strokeStyle = '#5a4a3a'; lnW(2);
       times(4, i => {
-        const a = t * .8 + i * PI / 2; mv(wx, wy + H * .01); c.lineTo(wx + Math.cos(a) * W * .045, wy + H * .01 + Math.sin(a) * W * .045); c.stroke();
+        const a = t * .8 + i * PI / 2; mv(wx, wy + H * .01); c.lineTo(wx + CO(a) * W * .045, wy + H * .01 + SI(a) * W * .045); c.stroke();
       });
       // 運河(地平に向かって収束)
       FS('#4a7a95'); mv(W * .42, H); c.moveTo(W * .42, H); c.lineTo(W * .47, H * .5); c.lineTo(W * .53, H * .5); c.lineTo(W * .53, H * .5); c.lineTo(W * .62, H); c.closePath(); c.closePath(); c.fill();
@@ -6384,7 +6379,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#8a9a80'; poly([0,H * .45],[W * .25,H * .34,W * .5,H * .42],[W * .75,H * .5,W,H * .44],[W,H * .55],[W,H * .55],[0,H * .55]); const rng = L.mulberry32(263);
       // 石灰岩の柱林(鍾乳石の塔)
       times(9, i => {
-        const px = W * (.05 + i * .11) + rng() * W * .03; const ph = H * (.18 + rng() * .25); const pw = W * (.02 + rng() * .018); FS(['#b8ac8e', '#a89a7c', '#c4b89e'][Math.floor(rng() * 3)]); poly([px - pw,H * .85],[px - pw * .7,H * .85 - ph],[px,H * .85 - ph - H * .02,px + pw * .7,H * .85 - ph],[px + pw,H * .85]);
+        const px = W * (.05 + i * .11) + rng() * W * .03; const ph = H * (.18 + rng() * .25); const pw = W * (.02 + rng() * .018); FS(['#b8ac8e', '#a89a7c', '#c4b89e'][FL(rng() * 3)]); poly([px - pw,H * .85],[px - pw * .7,H * .85 - ph],[px,H * .85 - ph - H * .02,px + pw * .7,H * .85 - ph],[px + pw,H * .85]);
         // 縦筋
         c.strokeStyle = 'rgba(90,80,60,0.4)'; lnW(1); mv(px - pw * .3, H * .82); c.lineTo(px - pw * .3, H * .85 - ph * .8); c.stroke();
       });
@@ -6411,18 +6406,18 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = 'rgba(50,70,80,0.35)'; poly([W * .3,H * .58],[W * .45,H * .7,W * .55,H * .58]);
       // 漂う霧の帯
       times(3, i => {
-        const my = H * (.5 + i * .07) + Math.sin(t * .3 + i) * H * .01;
+        const my = H * (.5 + i * .07) + SI(t * .3 + i) * H * .01;
         FS(`rgba(200,215,220,${.1 + i * .05})`);
-        ellP(W * .5 + Math.sin(t * .15 + i) * W * .05, my, W * (.3 + i * .1), H * .02);
+        ellP(W * .5 + SI(t * .15 + i) * W * .05, my, W * (.3 + i * .1), H * .02);
       });
       // 水面の輝き
       c.fillStyle = 'rgba(160,200,220,0.3)'; scat(251, 10, (rng, i) => {
-        const px = W * rng(), py = H * (.62 + rng() * .32); ellP(px + Math.sin(t + i) * W * .008, py, W * .015, H * .002);
+        const px = W * rng(), py = H * (.62 + rng() * .32); ellP(px + SI(t + i) * W * .008, py, W * .015, H * .002);
       });
       // 飛び交う水鳥
       c.strokeStyle = '#202830'; lnW(1.5);
       times(2, i => {
-        const bx = W * (.3 + i * .35) + Math.sin(t * .4 + i) * W * .04; const by = H * .3 + Math.sin(t * .8 + i * 2) * H * .02; c.beginPath(); c.arc(bx - W * .006, by, W * .006, PI * 1.1, PI * 1.9); c.arc(bx + W * .006, by, W * .006, PI * 1.1, PI * 1.9); c.stroke();
+        const bx = W * (.3 + i * .35) + SI(t * .4 + i) * W * .04; const by = H * .3 + SI(t * .8 + i * 2) * H * .02; c.beginPath(); c.arc(bx - W * .006, by, W * .006, PI * 1.1, PI * 1.9); c.arc(bx + W * .006, by, W * .006, PI * 1.1, PI * 1.9); c.stroke();
       });
     } else if (pr === 'cenote') {
       // セノーテ: 石灰岩の窪み+差し込む光柱+青い湧水+垂れ下がる根
@@ -6436,36 +6431,36 @@ if (typeof document !== 'undefined') (() => {
       // 垂れる根
       const rng = L.mulberry32(237); SS('#4a5a40'); lnW(1.5);
       times(8, i => {
-        const px = W * (.3 + rng() * .4); const len = H * (.08 + rng() * .15); mv(px, H * .04); c.quadraticCurveTo(px + Math.sin(i) * W * .01, H * .04 + len * .5, px + Math.sin(i * 1.7) * W * .015, H * .04 + len); c.stroke();
+        const px = W * (.3 + rng() * .4); const len = H * (.08 + rng() * .15); mv(px, H * .04); c.quadraticCurveTo(px + SI(i) * W * .01, H * .04 + len * .5, px + SI(i * 1.7) * W * .015, H * .04 + len); c.stroke();
       });
       // 湧水面
       c.fillStyle = '#2a8a9a'; rect(0, H * .72, W, H * .28); FS('rgba(180,240,250,0.25)');
       times(4, i => {
-        const wx = (W * (.1 + i * .25) + Math.sin(t * .6 + i) * W * .04); ellP(wx, H * .74, W * .05, H * .006);
+        const wx = (W * (.1 + i * .25) + SI(t * .6 + i) * W * .04); ellP(wx, H * .74, W * .05, H * .006);
       });
       // 揺れる小魚
       c.fillStyle = 'rgba(200,230,220,0.6)';
       times(3, i => {
-        const fx = W * .5 + Math.sin(t * .5 + i * 2.1) * W * (.08 + i * .04); const fy = H * (.8 + i * .05) + Math.cos(t * .8 + i) * H * .015; ellP(fx, fy, W * .011, H * .0045);
+        const fx = W * .5 + SI(t * .5 + i * 2.1) * W * (.08 + i * .04); const fy = H * (.8 + i * .05) + CO(t * .8 + i) * H * .015; ellP(fx, fy, W * .011, H * .0045);
       });
     } else if (pr === 'kelp') {
       // 昆布の森: 水中の光筋+ゆらめく昆布の列+魚群+岩礁の底
       sky([[0,'#2a5a70'],[.5,'#1a4a58'],[1,'#0e3540']]);
       // 差し込む光筋
       times(4, i => {
-        const gx = W * (.15 + i * .22) + Math.sin(t * .2 + i) * W * .02; FS('rgba(150,220,230,0.07)'); mv(gx, 0); c.moveTo(gx, 0); c.lineTo(gx + W * .1, 0); c.lineTo(gx + W * .16, H); c.lineTo(gx + W * .16, H); c.lineTo(gx + W * .06, H); c.closePath(); c.closePath(); c.fill();
+        const gx = W * (.15 + i * .22) + SI(t * .2 + i) * W * .02; FS('rgba(150,220,230,0.07)'); mv(gx, 0); c.moveTo(gx, 0); c.lineTo(gx + W * .1, 0); c.lineTo(gx + W * .16, H); c.lineTo(gx + W * .16, H); c.lineTo(gx + W * .06, H); c.closePath(); c.closePath(); c.fill();
       });
       const rng = L.mulberry32(223);
       // 揺れる昆布(根元から伸びる縦の葉体)
       times(14, i => {
-        const px = W * (.04 + rng() * .92); const kh = H * (.3 + rng() * .45); const sway = Math.sin(t * .8 + i) * W * .012; SS(['#2a6a3a', '#3a7a45', '#1f5a35'][Math.floor(rng() * 3)]); lnW(2 + rng() * 3); mv(px, H); c.quadraticCurveTo(px + sway * .4, H - kh * .6, px + sway, H - kh); c.stroke(); // 高さ
+        const px = W * (.04 + rng() * .92); const kh = H * (.3 + rng() * .45); const sway = SI(t * .8 + i) * W * .012; SS(['#2a6a3a', '#3a7a45', '#1f5a35'][FL(rng() * 3)]); lnW(2 + rng() * 3); mv(px, H); c.quadraticCurveTo(px + sway * .4, H - kh * .6, px + sway, H - kh); c.stroke(); // 高さ
         // 先端の葉
         c.fillStyle = '#3a8a50'; ellP(px + sway, H - kh, W * .008, H * .02, sway * 2);
       });
       // 魚群
       c.fillStyle = 'rgba(180,220,230,0.7)';
       times(8, i => {
-        const fx = (W * (.1 + i * .11) + t * W * .03) % (W * 1.1); const fy = H * (.2 + (i % 3) * .12) + Math.sin(t * 1.5 + i) * H * .02; ellP(fx, fy, W * .012, H * .005); mv(fx - W * .012, fy); c.moveTo(fx - W * .012, fy); c.lineTo(fx - W * .018, fy - H * .006); c.moveTo(fx - W * .012, fy); c.lineTo(fx - W * .018, fy - H * .006); c.lineTo(fx - W * .018, fy + H * .006); c.closePath(); c.closePath(); c.fill();
+        const fx = (W * (.1 + i * .11) + t * W * .03) % (W * 1.1); const fy = H * (.2 + (i % 3) * .12) + SI(t * 1.5 + i) * H * .02; ellP(fx, fy, W * .012, H * .005); mv(fx - W * .012, fy); c.moveTo(fx - W * .012, fy); c.lineTo(fx - W * .018, fy - H * .006); c.moveTo(fx - W * .012, fy); c.lineTo(fx - W * .018, fy - H * .006); c.lineTo(fx - W * .018, fy + H * .006); c.closePath(); c.closePath(); c.fill();
       });
       // 底の岩礁
       c.fillStyle = '#153038';
@@ -6480,7 +6475,7 @@ if (typeof document !== 'undefined') (() => {
       // 遠い低い山並み
       c.fillStyle = '#a07850'; mv(0, H * .42);
       for (let x = 0; x <= 10; x++) {
-        c.lineTo(W * x / 10, H * (.42 - (x % 3 === 0 ? .04 : .01) - Math.sin(x * 1.3) * .015));
+        c.lineTo(W * x / 10, H * (.42 - (x % 3 === 0 ? .04 : .01) - SI(x * 1.3) * .015));
       }
       c.lineTo(W, H * .42); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
       // 岩盤の平坦な地表+ひび筋
@@ -6490,17 +6485,17 @@ if (typeof document !== 'undefined') (() => {
       });
       // 疎らな礫
       times(30, i => {
-        const px = W * rng(), py = H * (.45 + rng() * .52); const s = rng(); FS(['#7a5a3a', '#8a6a48', '#6a4a30'][Math.floor(rng() * 3)]); ellP(px, py, W * (.004 + s * .01), H * (.002 + s * .005), rng() * .5);
+        const px = W * rng(), py = H * (.45 + rng() * .52); const s = rng(); FS(['#7a5a3a', '#8a6a48', '#6a4a30'][FL(rng() * 3)]); ellP(px, py, W * (.004 + s * .01), H * (.002 + s * .005), rng() * .5);
       });
       // 漂う砂塵
       c.fillStyle = 'rgba(230,200,160,0.2)';
       times(4, i => {
-        const y = H * (.55 + i * .12) + Math.sin(t * .5 + i * 2) * H * .01; ellP(W * .5, y, W * .45, H * .025);
+        const y = H * (.55 + i * .12) + SI(t * .5 + i * 2) * H * .01; ellP(W * .5, y, W * .45, H * .025);
       });
       // 蜃気楼の揺らぎ筋
       c.strokeStyle = 'rgba(255,240,210,0.3)'; lnW(1.5);
       times(3, i => {
-        const y = H * (.44 + i * .015); mv(W * .2, y); c.quadraticCurveTo(W * .5, y + Math.sin(t * .8 + i) * H * .006, W * .8, y); c.stroke();
+        const y = H * (.44 + i * .015); mv(W * .2, y); c.quadraticCurveTo(W * .5, y + SI(t * .8 + i) * H * .006, W * .8, y); c.stroke();
       });
     } else if (pr === 'meseta') {
       // メセタ高原: 乾いた黄土の高原+孤立した樫の木+回る猛禽+遠い丘陵
@@ -6510,12 +6505,12 @@ if (typeof document !== 'undefined') (() => {
       // 遠い丘陵(平たい連なり)
       FS('#b08a5f'); mv(0, H * .42);
       for (let x = 0; x <= 8; x++) {
-        c.lineTo(W * x / 8, H * (.42 - Math.sin(x * .9) * .025));
+        c.lineTo(W * x / 8, H * (.42 - SI(x * .9) * .025));
       }
       c.lineTo(W, H * .42); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
       // 乾いた草の点描
       times(80, i => {
-        const px = W * rng(), py = H * (.45 + rng() * .52); FS(['#8a7040', '#9a8050', '#7a6038'][Math.floor(rng() * 3)]); c.globalAlpha = .4 + rng() * .4; ellP(px, py, W * .006, H * .003, rng() * .6);
+        const px = W * rng(), py = H * (.45 + rng() * .52); FS(['#8a7040', '#9a8050', '#7a6038'][FL(rng() * 3)]); c.globalAlpha = .4 + rng() * .4; ellP(px, py, W * .006, H * .003, rng() * .6);
       });
       c.globalAlpha = 1;
       // 孤立した樫の木(丸い樹冠)
@@ -6523,7 +6518,7 @@ if (typeof document !== 'undefined') (() => {
       // 空を回る猛禽
       c.strokeStyle = '#4a4038'; lnW(1.5);
       times(2, i => {
-        const ang = t * .4 + i * PI; const bx = W * (.55 + Math.cos(ang) * .12); const by = H * (.2 + Math.sin(ang) * .04); mv(bx - W * .015, by); c.quadraticCurveTo(bx, by - H * .012, bx + W * .015, by); c.stroke();
+        const ang = t * .4 + i * PI; const bx = W * (.55 + CO(ang) * .12); const by = H * (.2 + SI(ang) * .04); mv(bx - W * .015, by); c.quadraticCurveTo(bx, by - H * .012, bx + W * .015, by); c.stroke();
       });
       // 石の散在
       times(12, i => {
@@ -6541,7 +6536,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#98905f'; rect(0, H * .42, W, H * .58);
       // 羽毛草(スティパ)の穂の波 — 風で揺れる
       times(70, i => {
-        const px = W * rng(), py = H * (.45 + rng() * .52); const dep = (py / H - .45) / .55; const sway = Math.sin(t * 1.2 + px * .01) * W * .004 * (0.5 + dep); SS(['#b8a870', '#c8b880', '#a89860'][Math.floor(rng() * 3)]); lnW(1); mv(px, py); c.quadraticCurveTo(px + sway * .5, py - H * .03, px + sway, py - H * (.035 + dep * .02)); c.stroke(); // 遠近: 小さいほど遠く
+        const px = W * rng(), py = H * (.45 + rng() * .52); const dep = (py / H - .45) / .55; const sway = SI(t * 1.2 + px * .01) * W * .004 * (0.5 + dep); SS(['#b8a870', '#c8b880', '#a89860'][FL(rng() * 3)]); lnW(1); mv(px, py); c.quadraticCurveTo(px + sway * .5, py - H * .03, px + sway, py - H * (.035 + dep * .02)); c.stroke(); // 遠近: 小さいほど遠く
       });
       // 遠くの騎馬シルエット
       c.fillStyle = '#5a5040';
@@ -6563,7 +6558,7 @@ if (typeof document !== 'undefined') (() => {
       // 霧の帯
       c.fillStyle = 'rgba(220,228,235,0.25)';
       times(3, i => {
-        const y = H * (.3 + i * .18) + Math.sin(t * .3 + i) * H * .01; ellP(W * .5, y, W * .35, H * .04);
+        const y = H * (.3 + i * .18) + SI(t * .3 + i) * H * .01; ellP(W * .5, y, W * .35, H * .04);
       });
       // 谷底の渓流
       c.strokeStyle = '#a8c8d8'; lnW(5); mv(W * .48, H); c.quadraticCurveTo(W * (.52 + S(.4) * .01), H * .75, W * .5, H * .55); c.quadraticCurveTo(W * .48, H * .4, W * .5, H * .3); c.stroke(); SS('rgba(230,245,255,0.6)'); lnW(1.5); mv(W * .48, H); c.quadraticCurveTo(W * (.52 + S(.4) * .01), H * .75, W * .5, H * .55); c.stroke();
@@ -6592,7 +6587,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#d8c098'; mv(0, H); c.moveTo(0, H); c.lineTo(0, H * .92); c.quadraticCurveTo(W * .3, H * .85, W * .6, H * .95); c.lineTo(W, H * .98); c.lineTo(W, H * .98); c.lineTo(W, H); c.lineTo(W, H * .98); c.lineTo(W, H); c.closePath(); c.lineTo(W, H * .98); c.lineTo(W, H); c.closePath(); c.fill();
       // 砂の貝殻点
       times(14, i => {
-        FS(['#b09070', '#c8a880', '#a88868'][Math.floor(rng() * 3)]); dot(rng(), (.9 + rng() * .09), W * .003);
+        FS(['#b09070', '#c8a880', '#a88868'][FL(rng() * 3)]); dot(rng(), (.9 + rng() * .09), W * .003);
       });
     } else if (pr === 'fen') {
       // フェン: 平坦な水湿地+葦の茂み+開いた水路+低い空
@@ -6608,7 +6603,7 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 40; i++) {
         const px = W * rng();
         if (px > W * .33 && px < W * .58) continue; // 水路の上は避ける
-        const py = H * (.42 + rng() * .55); const hgt = H * (.04 + rng() * .06); SS(['#5a7048', '#6a8058', '#7a8858'][Math.floor(rng() * 3)]); lnW(1.2); mv(px, py); c.quadraticCurveTo(px + W * .002, py - hgt * .6, px + (rng() - .5) * W * .008, py - hgt); c.stroke();
+        const py = H * (.42 + rng() * .55); const hgt = H * (.04 + rng() * .06); SS(['#5a7048', '#6a8058', '#7a8858'][FL(rng() * 3)]); lnW(1.2); mv(px, py); c.quadraticCurveTo(px + W * .002, py - hgt * .6, px + (rng() - .5) * W * .008, py - hgt); c.stroke();
         // 穂先
         c.fillStyle = '#8a7a50'; ellP(px + (rng() - .5) * W * .008, py - hgt, W * .003, H * .012);
       }
@@ -6652,7 +6647,7 @@ if (typeof document !== 'undefined') (() => {
       // 風紋の筋
       c.strokeStyle = 'rgba(160,120,70,0.4)'; lnW(1.2);
       times(22, i => {
-        const y = H * (.55 + i * .02); mv(W * .05, y); c.quadraticCurveTo(W * (.3 + Math.sin(i * .8) * .1), y - H * .01, W * .7, y); c.stroke();
+        const y = H * (.55 + i * .02); mv(W * .05, y); c.quadraticCurveTo(W * (.3 + SI(i * .8) * .1), y - H * .01, W * .7, y); c.stroke();
       });
       // 丘稜のハイライト
       c.strokeStyle = 'rgba(255,230,180,0.6)'; lnW(2); mv(0, H * .55); c.quadraticCurveTo(W * .25, H * .42, W * .5, H * .58); c.stroke();
@@ -6691,12 +6686,12 @@ if (typeof document !== 'undefined') (() => {
       // 平坦な大地(微妙な起伏)
       FS('#94866a'); mv(0, H); c.moveTo(0, H); c.lineTo(0, H * .48);
       for (let x = 0; x <= 12; x++) {
-        c.lineTo(W * x / 12, H * (.48 + Math.sin(x * .7) * .015));
+        c.lineTo(W * x / 12, H * (.48 + SI(x * .7) * .015));
       }
       c.lineTo(W, H); c.closePath(); c.fill();
       // 地衣・苔の斑点
       times(60, i => {
-        const px = W * rng(), py = H * (.5 + rng() * .47); const cols = ['#7a8a58', '#8a7a50', '#a08858', '#6a7a50']; FS(cols[Math.floor(rng() * 4)]); c.globalAlpha = .3 + rng() * .4; ellP(px, py, W * .015 * (1 + rng()), H * .006 * (1 + rng()));
+        const px = W * rng(), py = H * (.5 + rng() * .47); const cols = ['#7a8a58', '#8a7a50', '#a08858', '#6a7a50']; FS(cols[FL(rng() * 4)]); c.globalAlpha = .3 + rng() * .4; ellP(px, py, W * .015 * (1 + rng()), H * .006 * (1 + rng()));
       });
       c.globalAlpha = 1;
       // 疎らな岩
@@ -6715,17 +6710,17 @@ if (typeof document !== 'undefined') (() => {
       // 遠い台地の影
       c.fillStyle = '#b08858'; mv(0, H * .38);
       for (let x = 0; x <= 10; x++) {
-        c.lineTo(W * x / 10, H * (.38 - Math.sin(x * 1.2) * .05));
+        c.lineTo(W * x / 10, H * (.38 - SI(x * 1.2) * .05));
       }
       c.lineTo(W, H * .38); c.lineTo(W, H * .38); c.lineTo(W, H * .44); c.lineTo(W, H * .38); c.lineTo(W, H * .44); c.lineTo(0, H * .44); c.closePath(); c.closePath(); c.fill();
       // 両岸の崖(左右からせり出す)
       FS('#986c44'); mv(0, H); c.moveTo(0, H); c.lineTo(0, H * .5); // 左岸
       for (let x = 0; x <= 4; x++) {
-        c.lineTo(W * x * .06, H * (.5 + x * .02) + Math.sin(x * 2) * H * .02);
+        c.lineTo(W * x * .06, H * (.5 + x * .02) + SI(x * 2) * H * .02);
       }
       c.lineTo(0, H); c.lineTo(0, H); c.closePath(); c.lineTo(0, H); c.closePath(); c.fill(); mv(W, H); c.moveTo(W, H); c.lineTo(W, H * .45); // 右岸
       for (let x = 0; x <= 4; x++) {
-        c.lineTo(W - W * x * .07, H * (.45 + x * .03) + Math.sin(x * 1.8) * H * .02);
+        c.lineTo(W - W * x * .07, H * (.45 + x * .03) + SI(x * 1.8) * H * .02);
       }
       c.lineTo(W, H); c.closePath(); c.fill();
       // 河床(中央の窪み)
@@ -6733,7 +6728,7 @@ if (typeof document !== 'undefined') (() => {
       // 丸石(大小の楕円)
       times(26, i => {
         const px = W * (.1 + rng() * .8); const py = H * (.58 + rng() * .38); const s = (.5 + rng()) * (py - H * .5) / (H * .5) + .3;
-        FS(`rgba(${140 + Math.floor(rng() * 60)},${110 + Math.floor(rng() * 40)},${80 + Math.floor(rng() * 30)},0.85)`);
+        FS(`rgba(${140 + FL(rng() * 60)},${110 + FL(rng() * 40)},${80 + FL(rng() * 30)},0.85)`);
         ellP(px, py, W * .02 * s, H * .01 * s, rng());
       });
       // 流木
@@ -6744,7 +6739,7 @@ if (typeof document !== 'undefined') (() => {
       // 遠い山脈
       c.fillStyle = '#b8c0c8'; mv(0, H * .42);
       for (let x = 0; x <= 10; x++) {
-        c.lineTo(W * x / 10, H * (.42 - Math.sin(x * 1.4 + 1) * .08));
+        c.lineTo(W * x / 10, H * (.42 - SI(x * 1.4 + 1) * .08));
       }
       c.lineTo(W, H * .42); c.lineTo(W, H * .42); c.lineTo(W, H * .45); c.lineTo(W, H * .42); c.lineTo(W, H * .45); c.lineTo(0, H * .45); c.closePath(); c.closePath(); c.fill();
       // 白い大地
@@ -6755,7 +6750,7 @@ if (typeof document !== 'undefined') (() => {
         times(6, col => {
           const cx = W * (col / 6 + (row % 2 ? .08 : 0)) + W * .02; const cy = H * (.5 + row * .1); const s = W * .045 * (1 - row * .08); c.beginPath();
           times(6, v => {
-            const va = v * PI / 3 + .5; const px = cx + Math.cos(va) * s, py = cy + Math.sin(va) * s * .4; v ? c.lineTo(px, py) : c.moveTo(px, py);
+            const va = v * PI / 3 + .5; const px = cx + CO(va) * s, py = cy + SI(va) * s * .4; v ? c.lineTo(px, py) : c.moveTo(px, py);
           });
           c.closePath(); c.stroke();
         });
@@ -6777,20 +6772,20 @@ if (typeof document !== 'undefined') (() => {
       for (let h = 0; h < 3; h++) {
         FS(hills[h]); mv(0, H); c.lineTo(0, H * (.48 + h * .12));
         for (let x = 0; x <= 12; x++) {
-          c.lineTo(W * x / 12, H * (.48 + h * .12) + Math.sin(x * .9 + h * 2.1) * H * .05);
+          c.lineTo(W * x / 12, H * (.48 + h * .12) + SI(x * .9 + h * 2.1) * H * .05);
         }
         c.lineTo(W, H); c.closePath(); c.fill();
       }
       // 石積みの垣根(丘を越えて蛇行)
       SS('#8a8a80'); lnW(4); mv(0, H * .6);
       for (let x = 0; x <= 14; x++) {
-        c.lineTo(W * x / 14, H * (.6 + x * .012) + Math.sin(x * .7) * H * .02);
+        c.lineTo(W * x / 14, H * (.6 + x * .012) + SI(x * .7) * H * .02);
       }
       c.stroke();
       // 石の継ぎ目
       c.strokeStyle = 'rgba(60,60,55,0.4)'; lnW(1);
       for (let x = 0; x <= 14; x++) {
-        const sx = W * x / 14; const sy = H * (.6 + x * .012) + Math.sin(x * .7) * H * .02; mv(sx, sy - 4); c.lineTo(sx, sy + 4); c.stroke();
+        const sx = W * x / 14; const sy = H * (.6 + x * .012) + SI(x * .7) * H * .02; mv(sx, sy - 4); c.lineTo(sx, sy + 4); c.stroke();
       }
       // 羊(白い点と頭)
       times(8, i => {
@@ -6832,7 +6827,7 @@ if (typeof document !== 'undefined') (() => {
       // 飛ぶ鳥
       c.strokeStyle = '#3a4a44'; lnW(1.5);
       times(3, b => {
-        const bx = W * (.15 + b * .3 + Math.sin(t * .3 + b) * .05); const by = H * (.15 + b * .07); mv(bx - W * .012, by); c.quadraticCurveTo(bx, by - H * .008 - Math.sin(t * 6 + b) * 3, bx + W * .012, by); c.stroke();
+        const bx = W * (.15 + b * .3 + SI(t * .3 + b) * .05); const by = H * (.15 + b * .07); mv(bx - W * .012, by); c.quadraticCurveTo(bx, by - H * .008 - SI(t * 6 + b) * 3, bx + W * .012, by); c.stroke();
       });
     } else if (pr === 'mangrove') {
       // マングローブ: 高根(支柱根)+濁った水+葉の天蓋+水鳥
@@ -6845,7 +6840,7 @@ if (typeof document !== 'undefined') (() => {
       // 濁った水面
       c.fillStyle = '#5a7a68'; mv(0, H); c.moveTo(0, H); c.lineTo(0, H * .62);
       for (let x = 0; x <= 12; x++) {
-        c.lineTo(W * x / 12, H * (.62 + Math.sin(x * 1.1 + t * .5) * .008));
+        c.lineTo(W * x / 12, H * (.62 + SI(x * 1.1 + t * .5) * .008));
       }
       c.lineTo(W, H); c.closePath(); c.fill();
       // 水面の反射筋
@@ -6887,7 +6882,7 @@ if (typeof document !== 'undefined') (() => {
       // 残雪の地面
       c.fillStyle = '#e4ecea'; mv(0, H); c.moveTo(0, H); c.lineTo(0, H * .55);
       for (let x = 0; x <= 12; x++) {
-        c.lineTo(W * x / 12, H * (.55 + Math.sin(x * 1.3) * .02));
+        c.lineTo(W * x / 12, H * (.55 + SI(x * 1.3) * .02));
       }
       c.lineTo(W, H); c.closePath(); c.fill();
       // 雪の斑点
@@ -6920,7 +6915,7 @@ if (typeof document !== 'undefined') (() => {
       // 手前の大きな台地
       c.fillStyle = '#b06844'; mv(0, H); c.moveTo(0, H); c.lineTo(0, H * .62);
       for (let x = 0; x <= 12; x++) {
-        c.lineTo(W * x / 12, H * (.62 + Math.sin(x * .8) * .025));
+        c.lineTo(W * x / 12, H * (.62 + SI(x * .8) * .025));
       }
       c.lineTo(W, H); c.closePath(); c.fill();
       // 縞筋
@@ -6928,7 +6923,7 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 6; i++) {
         const sy = H * (.68 + i * .045); c.beginPath();
         for (let x = 0; x <= 12; x++) {
-          const px = W * x / 12; const py = sy + Math.sin(x * .8 + i) * H * .012; x ? c.lineTo(px, py) : c.moveTo(px, py);
+          const px = W * x / 12; const py = sy + SI(x * .8 + i) * H * .012; x ? c.lineTo(px, py) : c.moveTo(px, py);
         }
         c.stroke();
       }
@@ -6945,7 +6940,7 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 3; i++) {
         const hy = H * (.35 + i * .08); c.beginPath();
         for (let x = 0; x <= 8; x++) {
-          const px = W * x / 8; const py = hy + Math.sin(x * 2 + t * 3 + i) * 2; x ? c.lineTo(px, py) : c.moveTo(px, py);
+          const px = W * x / 8; const py = hy + SI(x * 2 + t * 3 + i) * 2; x ? c.lineTo(px, py) : c.moveTo(px, py);
         }
         c.stroke();
       }
@@ -6955,7 +6950,7 @@ if (typeof document !== 'undefined') (() => {
       // 岸(上部の草地)
       FS('#7aa870'); mv(0, 0); c.moveTo(0, 0); c.lineTo(W, 0); c.moveTo(0, 0); c.lineTo(W, 0); c.lineTo(W, H * .12);
       for (let x = 12; x >= 0; x--) {
-        c.lineTo(W * x / 12, H * (.12 + Math.sin(x * .9) * .02));
+        c.lineTo(W * x / 12, H * (.12 + SI(x * .9) * .02));
       }
       c.closePath(); c.fill();
       // 広がる波紋
@@ -6972,7 +6967,7 @@ if (typeof document !== 'undefined') (() => {
         if (i % 2 === 0) {
           FS('#f0b8c8');
           times(5, p => {
-            const pa = p * 1.257; ellP(lx + Math.cos(pa) * W * .008, ly - H * .012 + Math.sin(pa) * H * .004, W * .006, H * .004, pa);
+            const pa = p * 1.257; ellP(lx + CO(pa) * W * .008, ly - H * .012 + SI(pa) * H * .004, W * .006, H * .004, pa);
           });
         }
       });
@@ -6988,7 +6983,7 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 10; i++) {
         const wy = H * (.46 + i * .05); c.beginPath();
         for (let x = 0; x <= 12; x++) {
-          const px = W * x / 12; const py = wy + Math.sin(x * 1.1 + i * 2) * H * .006; x ? c.lineTo(px, py) : c.moveTo(px, py);
+          const px = W * x / 12; const py = wy + SI(x * 1.1 + i * 2) * H * .006; x ? c.lineTo(px, py) : c.moveTo(px, py);
         }
         c.stroke();
       }
@@ -6996,13 +6991,13 @@ if (typeof document !== 'undefined') (() => {
       times(4, i => {
         const px = W * (.15 + i * .22); const py = H * (.52 + rng() * .3); FS('rgba(190,215,230,0.7)'); ellP(px, py, W * (.05 + rng() * .04), H * (.012 + rng() * .01));
         // きらめき
-        c.fillStyle = `rgba(255,255,255,${.3 + Math.sin(t * 2 + i) * .2})`;
+        c.fillStyle = `rgba(255,255,255,${.3 + SI(t * 2 + i) * .2})`;
         ellP(px - W * .01, py - H * .004, W * .012, H * .003);
       });
       // 干潟の鳥(くちばしを突くシギ)
       FS('#4a4a44');
       for (const [bx, by] of [[.3, .58], [.68, .65]]) {
-        const peck = MX(0, Math.sin(t * 2.5 + bx * 9)) * .3; ell(bx,by,W * .012,H * .008); SS('#4a4a44'); lnW(1.5); c.beginPath(); mv(W * bx, H * by + H * .008); mv(W * bx, H * by + H * .008); c.lineTo(W * bx, H * by + H * .025); mv(W * bx, H * by + H * .008); c.lineTo(W * bx, H * by + H * .025); c.stroke(); c.beginPath(); mv(W * bx + W * .01, H * by - H * .004); c.lineTo(W * (bx + .018), H * (by - .01) + peck * H * .03); c.stroke(); // 体 // 脚 // 首+嘴
+        const peck = MX(0, SI(t * 2.5 + bx * 9)) * .3; ell(bx,by,W * .012,H * .008); SS('#4a4a44'); lnW(1.5); c.beginPath(); mv(W * bx, H * by + H * .008); mv(W * bx, H * by + H * .008); c.lineTo(W * bx, H * by + H * .025); mv(W * bx, H * by + H * .008); c.lineTo(W * bx, H * by + H * .025); c.stroke(); c.beginPath(); mv(W * bx + W * .01, H * by - H * .004); c.lineTo(W * (bx + .018), H * (by - .01) + peck * H * .03); c.stroke(); // 体 // 脚 // 首+嘴
       }
     } else if (pr === 'grove') {
       // 木立ちの小径: 幹の列+枝葉の天蓋+木漏れ日の光筋
@@ -7024,7 +7019,7 @@ if (typeof document !== 'undefined') (() => {
       // 木漏れ日の光筋(斜めの半透明帯)
       FS('rgba(255,245,200,0.22)');
       times(4, i => {
-        const lx = W * (.2 + i * .2) + Math.sin(t * .3 + i) * W * .01; mv(lx, H * .1); c.moveTo(lx, H * .1); c.lineTo(lx + W * .05, H * .1); c.lineTo(lx + W * .14, H); c.lineTo(lx + W * .14, H); c.lineTo(lx + W * .09, H); c.closePath(); c.closePath(); c.fill();
+        const lx = W * (.2 + i * .2) + SI(t * .3 + i) * W * .01; mv(lx, H * .1); c.moveTo(lx, H * .1); c.lineTo(lx + W * .05, H * .1); c.lineTo(lx + W * .14, H); c.lineTo(lx + W * .14, H); c.lineTo(lx + W * .09, H); c.closePath(); c.closePath(); c.fill();
       });
       // 舞う葉
       times(6, i => {
@@ -7045,14 +7040,14 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 8; i++) {
         const wy = H * (.33 + i * .06); c.beginPath();
         for (let x = 0; x <= 12; x++) {
-          const px = W * x / 12; const py = wy + Math.sin(x * 1.2 + t * 2.5 + i) * H * .008; x ? c.lineTo(px, py) : c.moveTo(px, py);
+          const px = W * x / 12; const py = wy + SI(x * 1.2 + t * 2.5 + i) * H * .008; x ? c.lineTo(px, py) : c.moveTo(px, py);
         }
         c.stroke();
       }
       // 飛び石
       c.fillStyle = '#7a7268';
       times(5, i => {
-        const sx = W * (.15 + i * .18); const sy = H * (.5 + Math.sin(i * 1.9) * .12); ellP(sx, sy, W * .045, H * .02, .1 * i);
+        const sx = W * (.15 + i * .18); const sy = H * (.5 + SI(i * 1.9) * .12); ellP(sx, sy, W * .045, H * .02, .1 * i);
         // 石周りの白いしぶき
         c.strokeStyle = 'rgba(240,250,255,0.6)'; lnW(1.5); c.beginPath(); c.arc(sx, sy, W * .05, PI * .2, PI * .8); c.stroke();
       });
@@ -7062,7 +7057,7 @@ if (typeof document !== 'undefined') (() => {
       // うねる荒れ地(暗い起伏)
       FS('#5a6250'); mv(0, H * .62);
       for (let i = 0; i <= 8; i++)
-        c.lineTo(W * i / 8, H * (.58 + Math.sin(i * 1.7) * .06));
+        c.lineTo(W * i / 8, H * (.58 + SI(i * 1.7) * .06));
       c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
       // ヒース(紫の点群)
       times(50, i => {
@@ -7085,7 +7080,7 @@ if (typeof document !== 'undefined') (() => {
       // 遠景の山(霧の稜線)
       FS('rgba(120,140,130,0.5)'); mv(0, H * .45);
       for (let i = 0; i <= 6; i++)
-        c.lineTo(W * i / 6, H * (.32 + (i % 2) * .08 - Math.sin(i * 2.1) * .03));
+        c.lineTo(W * i / 6, H * (.32 + (i % 2) * .08 - SI(i * 2.1) * .03));
       c.lineTo(W, H * .45); c.closePath(); c.fill();
       // 湯面(乳白色の青)
       FS('#b8d0d8'); ell(.5, .78, W * .42, H * .16);
@@ -7093,15 +7088,12 @@ if (typeof document !== 'undefined') (() => {
       times(5, i => {
         const sx = W * (.25 + i * .13); const rise = (t * .1 + i * .2) % 1;
         FS(`rgba(255,255,255,${.35 * (1 - rise)})`);
-        c.beginPath();
-        c.ellipse(sx + Math.sin(t * 1.2 + i) * W * .02, H * (.75 - rise * .35),
-          W * (.02 + rise * .03), H * .03, 0, 0, 7);
-        c.fill();
+        ellP(sx + SI(t * 1.2 + i) * W * .02,H * (.75 - rise * .35),W * (.02 + rise * .03),H * .03,0);
       });
       // 岩の縁取り
       c.fillStyle = '#7a7268';
       times(12, i => {
-        const a = i / 12 * PI * 2; const rx = W * .5 + Math.cos(a) * W * .44; const ry = H * .78 + Math.sin(a) * H * .17;
+        const a = i / 12 * PI * 2; const rx = W * .5 + CO(a) * W * .44; const ry = H * .78 + SI(a) * H * .17;
         if (ry > H * .7) {
           ellP(rx, ry, W * (.03 + rng() * .02), H * (.02 + rng() * .015), rng());
         }
@@ -7113,11 +7105,11 @@ if (typeof document !== 'undefined') (() => {
       times(2, row => {
         const ty = H * (.45 + row * .2); const n = 4 + row * 2; const ts = W * (.05 + row * .025);
         times(n, i => {
-          const tx = W * (.08 + i * .84 / n) + (row % 2) * W * .09; const sway = Math.sin(t * .9 + i * 1.3 + row) * W * .003;
+          const tx = W * (.08 + i * .84 / n) + (row % 2) * W * .09; const sway = SI(t * .9 + i * 1.3 + row) * W * .003;
           // 幹
           c.fillStyle = '#6a4a30'; rect(tx - ts * .08, ty, ts * .16, ts * 1.4);
           // 樹冠(重なる円)
-          FS('#4a7a38'); c.beginPath(); c.beginPath(); c.arc(tx + sway, ty - ts * .3, ts * .7, 0, 7); c.beginPath(); c.arc(tx + sway, ty - ts * .3, ts * .7, 0, 7); c.fill(); c.beginPath(); c.beginPath(); c.arc(tx - ts * .45 + sway, ty - ts * .05, ts * .45, 0, 7); c.beginPath(); c.arc(tx - ts * .45 + sway, ty - ts * .05, ts * .45, 0, 7); c.fill(); c.beginPath(); c.beginPath(); c.arc(tx + ts * .45 + sway, ty - ts * .05, ts * .45, 0, 7); c.beginPath(); c.arc(tx + ts * .45 + sway, ty - ts * .05, ts * .45, 0, 7); c.fill();
+          FS('#4a7a38'); c.beginPath(); c.beginPath(); c.arc(tx + sway, ty - ts * .3, ts * .7, 0, 7); dotP(tx + sway,ty - ts * .3,ts * .7); c.beginPath(); c.beginPath(); c.arc(tx - ts * .45 + sway, ty - ts * .05, ts * .45, 0, 7); dotP(tx - ts * .45 + sway,ty - ts * .05,ts * .45); c.beginPath(); c.beginPath(); c.arc(tx + ts * .45 + sway, ty - ts * .05, ts * .45, 0, 7); dotP(tx + ts * .45 + sway,ty - ts * .05,ts * .45);
           // 実(赤い丸)
           FS('#d84038');
           times(5, a => {
@@ -7144,20 +7136,20 @@ if (typeof document !== 'undefined') (() => {
       times(2, row => {
         const ry = H * (.62 + row * .18); const n = 7 + row * 3; const fs = W * (.014 + row * .01);
         times(n, i => {
-          const fx = W * (.05 + i * .9 / n) + (row % 2) * W * .05; const sway = Math.sin(t * 1.5 + i * .7 + row) * W * .006;
+          const fx = W * (.05 + i * .9 / n) + (row % 2) * W * .05; const sway = SI(t * 1.5 + i * .7 + row) * W * .006;
           // 細い茎と葉
           c.strokeStyle = '#5a7a42'; lnW(MX(1, fs * .1)); mv(fx, ry + fs * 3); c.lineTo(fx + sway, ry); c.stroke();
           // 8弁の花(白・ピンク・濃紅)
-          const cx = fx + sway, cy = ry; const col = ['#f4e8f0', '#e8a0c0', '#d06090'][Math.floor(rng() * 3)]; FS(col);
+          const cx = fx + sway, cy = ry; const col = ['#f4e8f0', '#e8a0c0', '#d06090'][FL(rng() * 3)]; FS(col);
           times(8, p => {
-            const a = p * .785; ellP(cx + Math.cos(a) * fs, cy + Math.sin(a) * fs, fs * .55, fs * .28, a);
+            const a = p * .785; ellP(cx + CO(a) * fs, cy + SI(a) * fs, fs * .55, fs * .28, a);
           });
           FS('#e8c040'); dotP(cx, cy, fs * .35);
         });
       });
       // 舞うチョウ
       times(2, i => {
-        const bx = W * ((i * .4 + t * .05) % 1.1) - W * .05; const by = H * (.4 + Math.sin(t * 2.2 + i * 3) * .12 + i * .15); const flap = .5 + Math.abs(Math.sin(t * 8 + i)) * .5; FS('rgba(240,240,255,0.85)'); c.beginPath(); c.beginPath(); c.ellipse(bx - W * .006, by, W * .008, H * .007 * flap, -.4, 0, 7); ellP(bx - W * .006, by, W * .008, H * .007 * flap, -.4); c.beginPath(); c.beginPath(); c.ellipse(bx + W * .006, by, W * .008, H * .007 * flap, .4, 0, 7); ellP(bx + W * .006, by, W * .008, H * .007 * flap, .4);
+        const bx = W * ((i * .4 + t * .05) % 1.1) - W * .05; const by = H * (.4 + SI(t * 2.2 + i * 3) * .12 + i * .15); const flap = .5 + AB(SI(t * 8 + i)) * .5; FS('rgba(240,240,255,0.85)'); c.beginPath(); c.beginPath(); c.ellipse(bx - W * .006, by, W * .008, H * .007 * flap, -.4, 0, 7); ellP(bx - W * .006, by, W * .008, H * .007 * flap, -.4); c.beginPath(); c.beginPath(); c.ellipse(bx + W * .006, by, W * .008, H * .007 * flap, .4, 0, 7); ellP(bx + W * .006, by, W * .008, H * .007 * flap, .4);
       });
     } else if (pr === 'sunflowers') {
       // ひまわり畑: 青空+太陽+整列するひまわり+蜂
@@ -7168,13 +7160,13 @@ if (typeof document !== 'undefined') (() => {
       times(3, row => {
         const ry = H * (.55 + row * .15); const n = 6 + row * 2; const fs = W * (.02 + row * .012); // 花サイズ
         times(n, i => {
-          const fx = W * (.06 + i * .88 / n) + (row % 2) * W * .04; const sway = Math.sin(t * 1.2 + i + row) * W * .004;
+          const fx = W * (.06 + i * .88 / n) + (row % 2) * W * .04; const sway = SI(t * 1.2 + i + row) * W * .004;
           // 茎
           c.strokeStyle = '#4a7038'; lnW(MX(1.5, fs * .12)); mv(fx, ry + fs * 2.2); c.lineTo(fx + sway, ry); c.stroke();
           // 花弁(円周上の楕円)
           const cx = fx + sway, cy = ry; FS('#f0b428');
           times(10, p => {
-            const a = p * .628; ellP(cx + Math.cos(a) * fs, cy + Math.sin(a) * fs, fs * .45, fs * .2, a);
+            const a = p * .628; ellP(cx + CO(a) * fs, cy + SI(a) * fs, fs * .45, fs * .2, a);
           });
           // 中心
           c.fillStyle = '#6a4520'; dotP(cx, cy, fs * .55);
@@ -7182,7 +7174,7 @@ if (typeof document !== 'undefined') (() => {
       });
       // 飛ぶ蜂
       times(3, i => {
-        const bx = W * ((i * .3 + t * .04) % 1); const by = H * (.35 + Math.sin(t * 2 + i * 2) * .1 + i * .1); FS('#e0c040'); ellP(bx, by, W * .008, H * .006); FS('#38302a'); ellP(bx - W * .004, by, W * .002, H * .005);
+        const bx = W * ((i * .3 + t * .04) % 1); const by = H * (.35 + SI(t * 2 + i * 2) * .1 + i * .1); FS('#e0c040'); ellP(bx, by, W * .008, H * .006); FS('#38302a'); ellP(bx - W * .004, by, W * .002, H * .005);
       });
     } else if (pr === 'wisteria') {
       // 藤棚: 上から垂れる花房+棚の梁+淡い空
@@ -7193,7 +7185,7 @@ if (typeof document !== 'undefined') (() => {
         rect(W * i / 6 - W * .008, H * .08, W * .016, H * .12);
       // 垂れる花房(小さい楕円の積み重ね)
       times(14, i => {
-        const fx = W * (.05 + rng() * .9); const sway = Math.sin(t * .8 + i) * W * .008; const len = H * (.18 + rng() * .25); const petals = 5 + Math.floor(rng() * 4); const hue = rng() > .3 ? 265 : 290; // 紫系/ピンク系
+        const fx = W * (.05 + rng() * .9); const sway = SI(t * .8 + i) * W * .008; const len = H * (.18 + rng() * .25); const petals = 5 + FL(rng() * 4); const hue = rng() > .3 ? 265 : 290; // 紫系/ピンク系
         times(petals, k => {
           const py = H * .14 + len * k / petals; const pw = W * .028 * (1 - k / petals * .55);
           FS(`hsla(${hue + rng() * 20},45%,${72 - k * 2}%,0.85)`);
@@ -7215,16 +7207,16 @@ if (typeof document !== 'undefined') (() => {
       const rng = L.mulberry32(41); const rocks = [[.3, .68, .07], [.68, .55, .055], [.52, .82, .045]]; SS('rgba(140,125,95,0.55)'); lnW(1.5);
       for (const [rx, ry, rr] of rocks) {
         for (let k = 1; k <= 6; k++) {
-          const rad = rr * (1 + k * .45); const wob = Math.sin(t * .4 + k) * .01; ellPS(W * rx, H * ry, W * rad, H * rad * .35, wob); // 微かな揺らぎ
+          const rad = rr * (1 + k * .45); const wob = SI(t * .4 + k) * .01; ellPS(W * rx, H * ry, W * rad, H * rad * .35, wob); // 微かな揺らぎ
         }
       }
       // 直線の梳き目(上段)
       times(8, i => {
-        const yy = H * (.22 + i * .045); mv(W * .08, yy); c.quadraticCurveTo(W * .5, yy + Math.sin(t * .3 + i) * H * .004, W * .92, yy); c.stroke();
+        const yy = H * (.22 + i * .045); mv(W * .08, yy); c.quadraticCurveTo(W * .5, yy + SI(t * .3 + i) * H * .004, W * .92, yy); c.stroke();
       });
       // 石(苔むした岩)
       for (const [rx, ry, rr] of rocks) {
-        const g = Math.round(90 + rng() * 25);
+        const g = RD(90 + rng() * 25);
         FS(`rgb(${g - 15},${g + 5},${g - 30})`);
         ell(rx, ry - H * rr * .5, W * rr * .9, H * rr * .8); FS('rgba(80,110,60,0.5)'); ell(rx - W * rr * .25, ry - H * rr * .7, W * rr * .45, H * rr * .35); // 苔
       }
@@ -7239,12 +7231,12 @@ if (typeof document !== 'undefined') (() => {
       // 暗雲(大きな楕円の塊)
       FS('#343c46');
       times(6, i => {
-        const cx = W * (i / 5) + Math.sin(t * .2 + i) * W * .02; ellP(cx, H * (.12 + (i % 2) * .06), W * .14, H * .05);
+        const cx = W * (i / 5) + SI(t * .2 + i) * W * .02; ellP(cx, H * (.12 + (i % 2) * .06), W * .14, H * .05);
       });
       // 稲妻(フラッシュ時にジグザグ)
       if (flash > .05) {
         SS(`rgba(255,250,200,${flash})`);
-        lnW(3); const lx = W * (.3 + (Math.floor(t * .9 / PI) % 3) * .2); mv(lx, H * .15); let ly = H * .15; scat(7, 5, (rng2, i) => {
+        lnW(3); const lx = W * (.3 + (FL(t * .9 / PI) % 3) * .2); mv(lx, H * .15); let ly = H * .15; scat(7, 5, (rng2, i) => {
           ly += H * .09; c.lineTo(lx + (rng2() - .5) * W * .08, ly);
         });
         c.stroke();
@@ -7260,7 +7252,7 @@ if (typeof document !== 'undefined') (() => {
       // 海面のうねり
       c.fillStyle = '#16202a'; rect(0, H * .85, W, H * .15); SS('rgba(180,200,220,0.3)'); lnW(2); c.beginPath();
       for (let x = 0; x <= 10; x++) {
-        const px = W * x / 10, py = H * .85 + Math.sin(x * 1.4 + t * 2) * H * .015; x ? c.lineTo(px, py) : c.moveTo(px, py);
+        const px = W * x / 10, py = H * .85 + SI(x * 1.4 + t * 2) * H * .015; x ? c.lineTo(px, py) : c.moveTo(px, py);
       }
       c.stroke();
     } else if (pr === 'observatory') {
@@ -7268,7 +7260,7 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#0a0e24'],[.6,'#1a2040'],[1,'#2a2a3a']]); const rng = L.mulberry32(89);
       // 星
       times(120, i => {
-        const sx = rng() * W, sy = rng() * H * .65; const tw2 = .3 + .7 * Math.abs(Math.sin(t * 1.5 + i * 1.7));
+        const sx = rng() * W, sy = rng() * H * .65; const tw2 = .3 + .7 * AB(SI(t * 1.5 + i * 1.7));
         FS(`rgba(235,240,255,${tw2})`);
         rect(sx, sy, 1.5, 1.5);
       });
@@ -7291,16 +7283,16 @@ if (typeof document !== 'undefined') (() => {
       for (const [py, pc] of [[.62, '#7a9a52'], [.74, '#6a8a44']]) {
         FS(pc); mv(0, H * py);
         for (let x = 0; x <= 10; x++) {
-          c.lineTo(W * x / 10, H * py - Math.sin(x * .9 + py * 10) * H * .05);
+          c.lineTo(W * x / 10, H * py - SI(x * .9 + py * 10) * H * .05);
         }
         c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
       }
       // 風車(回転する羽根)
       const wx = W * .72, wy = H * .55; SS('#5a4a38'); lnW(3); mv(wx - W * .015, wy + H * .18); c.lineTo(wx, wy); c.lineTo(wx + W * .015, wy + H * .18); c.stroke(); const wa = t * 1.2;
       times(4, i => {
-        const a = wa + i * PI / 2; mv(wx, wy); c.lineTo(wx + Math.cos(a) * W * .05, wy + Math.sin(a) * W * .05); c.stroke();
+        const a = wa + i * PI / 2; mv(wx, wy); c.lineTo(wx + CO(a) * W * .05, wy + SI(a) * W * .05); c.stroke();
         // 羽根の板
-        c.fillStyle = '#8a7a62'; c.save(); c.translate(wx + Math.cos(a) * W * .04, wy + Math.sin(a) * W * .04); c.rotate(a); rect(0, -3, W * .02, 6); c.restore();
+        c.fillStyle = '#8a7a62'; c.save(); c.translate(wx + CO(a) * W * .04, wy + SI(a) * W * .04); c.rotate(a); rect(0, -3, W * .02, 6); c.restore();
       });
       // 干し草ロール
       times(4, i => {
@@ -7309,7 +7301,7 @@ if (typeof document !== 'undefined') (() => {
       // 揺れる草穂
       c.strokeStyle = '#9ab858'; lnW(2);
       times(30, i => {
-        const gx = rng() * W, gy = H * (.8 + rng() * .18); const sway = Math.sin(t * 1.5 + i) * 4; mv(gx, gy); c.lineTo(gx + sway, gy - H * .03); c.stroke();
+        const gx = rng() * W, gy = H * (.8 + rng() * .18); const sway = SI(t * 1.5 + i) * 4; mv(gx, gy); c.lineTo(gx + sway, gy - H * .03); c.stroke();
       });
     } else if (pr === 'lagoon') {
       // ラグーン: 青空+浅瀬の縞+椰子の小島+飛ぶ海鳥
@@ -7321,7 +7313,7 @@ if (typeof document !== 'undefined') (() => {
         FS(`rgba(120,210,220,${.15 + i * .05})`);
         const wy = H * (.58 + i * .08); mv(0, wy);
         for (let x = 0; x <= 10; x++) {
-          c.lineTo(W * x / 10, wy + Math.sin(x * 1.2 + i * 2 + t) * H * .012);
+          c.lineTo(W * x / 10, wy + SI(x * 1.2 + i * 2 + t) * H * .012);
         }
         c.lineTo(W, wy + H * .1); c.lineTo(W, wy + H * .1); c.lineTo(0, wy + H * .1); c.closePath(); c.closePath(); c.fill();
       }
@@ -7333,14 +7325,14 @@ if (typeof document !== 'undefined') (() => {
       c.strokeStyle = '#3a7a40'; lnW(3);
       times(6, i => {
         const fa = i * 1.05 + S(.5) * .05; mv(ix - W * .03, iy - H * .14);
-        c.quadraticCurveTo(ix - W * .03 + Math.cos(fa) * W * .04, iy - H * .14 + Math.sin(fa) * W * .015,
-          ix - W * .03 + Math.cos(fa) * W * .07, iy - H * .14 + Math.sin(fa) * W * .05 + H * .02);
+        c.quadraticCurveTo(ix - W * .03 + CO(fa) * W * .04, iy - H * .14 + SI(fa) * W * .015,
+          ix - W * .03 + CO(fa) * W * .07, iy - H * .14 + SI(fa) * W * .05 + H * .02);
         c.stroke();
       });
       // 海鳥
       c.strokeStyle = '#f0f4f8'; lnW(2);
       times(3, i => {
-        const bx = ((rng() + t * .04) % 1) * W; const by = H * (.15 + (i % 2) * .08) + Math.sin(t * 2 + i) * H * .02; mv(bx - 8, by); c.moveTo(bx - 8, by); c.quadraticCurveTo(bx - 3, by - 5, bx, by); c.quadraticCurveTo(bx + 3, by - 5, bx + 8, by); c.stroke();
+        const bx = ((rng() + t * .04) % 1) * W; const by = H * (.15 + (i % 2) * .08) + SI(t * 2 + i) * H * .02; mv(bx - 8, by); c.moveTo(bx - 8, by); c.quadraticCurveTo(bx - 3, by - 5, bx, by); c.quadraticCurveTo(bx + 3, by - 5, bx + 8, by); c.stroke();
       });
     } else if (pr === 'cliff') {
       // 断崖海岸: 空+海+切り立つ崖+飛ぶカモメ
@@ -7350,7 +7342,7 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 7; i++) {
         const wy = H * (.63 + i * .05); c.beginPath();
         for (let x = 0; x <= 12; x++) {
-          const px = W * x / 12; const py = wy + Math.sin(x * 1.3 + i + t * 2) * H * .008; x ? c.lineTo(px, py) : c.moveTo(px, py);
+          const px = W * x / 12; const py = wy + SI(x * 1.3 + i + t * 2) * H * .008; x ? c.lineTo(px, py) : c.moveTo(px, py);
         }
         c.stroke();
       }
@@ -7370,7 +7362,7 @@ if (typeof document !== 'undefined') (() => {
       // カモメ
       c.strokeStyle = '#f0f4f8'; lnW(2);
       times(5, i => {
-        const bx = ((rng() + t * .05) % 1) * W; const by = H * (.2 + (i % 3) * .1) + Math.sin(t * 2 + i) * H * .025; mv(bx - 9, by); c.moveTo(bx - 9, by); c.quadraticCurveTo(bx - 4, by - 6, bx, by); c.quadraticCurveTo(bx + 4, by - 6, bx + 9, by); c.stroke();
+        const bx = ((rng() + t * .05) % 1) * W; const by = H * (.2 + (i % 3) * .1) + SI(t * 2 + i) * H * .025; mv(bx - 9, by); c.moveTo(bx - 9, by); c.quadraticCurveTo(bx - 4, by - 6, bx, by); c.quadraticCurveTo(bx + 4, by - 6, bx + 9, by); c.stroke();
       });
     } else if (pr === 'bayou') {
       // 湿地: 昏い空+水面+糸杉+垂れ下がる苔+ホタル
@@ -7380,7 +7372,7 @@ if (typeof document !== 'undefined') (() => {
       // 水面の光の揺らぎ
       c.strokeStyle = 'rgba(160,200,170,0.3)'; lnW(2);
       times(8, i => {
-        const wy = H * (.65 + i * .04); const off = Math.sin(t * 1.5 + i) * W * .03; const wx = W * rng() + off; mv(wx - W * .1, wy); c.lineTo(wx + W * .1, wy); c.stroke();
+        const wy = H * (.65 + i * .04); const off = SI(t * 1.5 + i) * W * .03; const wx = W * rng() + off; mv(wx - W * .1, wy); c.lineTo(wx + W * .1, wy); c.stroke();
       });
       // 糸杉の幹と膝根
       times(4, i => {
@@ -7390,12 +7382,12 @@ if (typeof document !== 'undefined') (() => {
         // 垂れ下がる苔
         c.strokeStyle = '#5a7a52'; lnW(3);
         times(4, m => {
-          const mx = tx - tw + m * tw * .7; const ml = H * (.08 + rng() * .12); mv(mx, H * .25); c.quadraticCurveTo(mx + 4, H * .25 + ml * .6, mx + Math.sin(t + m) * 6, H * .25 + ml); c.stroke();
+          const mx = tx - tw + m * tw * .7; const ml = H * (.08 + rng() * .12); mv(mx, H * .25); c.quadraticCurveTo(mx + 4, H * .25 + ml * .6, mx + SI(t + m) * 6, H * .25 + ml); c.stroke();
         });
       });
       // ホタル
       times(12, i => {
-        const fx = ((rng() + Math.sin(t * .4 + i * 2) * .05) % 1 + 1) % 1 * W; const fy = H * (.3 + (i % 5) * .12) + Math.sin(t * 1.2 + i) * H * .05; const fl = .4 + .6 * Math.abs(Math.sin(t * 2 + i * 1.3));
+        const fx = ((rng() + SI(t * .4 + i * 2) * .05) % 1 + 1) % 1 * W; const fy = H * (.3 + (i % 5) * .12) + SI(t * 1.2 + i) * H * .05; const fl = .4 + .6 * AB(SI(t * 2 + i * 1.3));
         FS(`rgba(220,240,140,${fl})`);
         dotP(fx, fy, 2.5);
       });
@@ -7446,7 +7438,7 @@ if (typeof document !== 'undefined') (() => {
       // 飛ぶ鳥
       c.strokeStyle = '#3a2620'; lnW(2);
       times(4, i => {
-        const bx = ((rng() + t * .04) % 1) * W; const by = H * (.2 + (i % 2) * .1) + Math.sin(t * 2 + i) * H * .02; mv(bx - 8, by); c.moveTo(bx - 8, by); c.quadraticCurveTo(bx - 3, by - 5, bx, by); c.quadraticCurveTo(bx + 3, by - 5, bx + 8, by); c.stroke();
+        const bx = ((rng() + t * .04) % 1) * W; const by = H * (.2 + (i % 2) * .1) + SI(t * 2 + i) * H * .02; mv(bx - 8, by); c.moveTo(bx - 8, by); c.quadraticCurveTo(bx - 3, by - 5, bx, by); c.quadraticCurveTo(bx + 3, by - 5, bx + 8, by); c.stroke();
       });
     } else if (pr === 'rainforest') {
       // 熱帯雨林: 霧+巨大な葉+木の幹+木漏れ日
@@ -7454,7 +7446,7 @@ if (typeof document !== 'undefined') (() => {
       // 木漏れ日(斜めの光筋)
       c.save(); c.globalAlpha = .15; FS('#e8f8c0');
       times(4, i => {
-        const lx = W * (.1 + i * .25) + Math.sin(t * .3 + i) * W * .02; mv(lx, 0); c.moveTo(lx, 0); c.lineTo(lx + W * .06, 0); c.lineTo(lx + W * .18, H); c.lineTo(lx + W * .18, H); c.lineTo(lx + W * .1, H); c.closePath(); c.closePath(); c.fill();
+        const lx = W * (.1 + i * .25) + SI(t * .3 + i) * W * .02; mv(lx, 0); c.moveTo(lx, 0); c.lineTo(lx + W * .06, 0); c.lineTo(lx + W * .18, H); c.lineTo(lx + W * .18, H); c.lineTo(lx + W * .1, H); c.closePath(); c.closePath(); c.fill();
       });
       c.restore();
       // 木の幹
@@ -7463,9 +7455,9 @@ if (typeof document !== 'undefined') (() => {
       });
       // 巨大な葉(前景と中景)
       times(10, i => {
-        const lx = rng() * W, ly = H * (.3 + rng() * .5); const ls = W * (.05 + rng() * .1), la = rng() * PI * 2; const dark = rng() > .5; FS(dark ? '#2a6a40' : '#4a9a58'); ellP(lx, ly + Math.sin(t * .8 + i) * 3, ls, ls * .35, la);
+        const lx = rng() * W, ly = H * (.3 + rng() * .5); const ls = W * (.05 + rng() * .1), la = rng() * PI * 2; const dark = rng() > .5; FS(dark ? '#2a6a40' : '#4a9a58'); ellP(lx, ly + SI(t * .8 + i) * 3, ls, ls * .35, la);
         // 葉脈
-        c.strokeStyle = 'rgba(20,50,30,0.5)'; lnW(1.5); mv(lx - Math.cos(la) * ls, ly - Math.sin(la) * ls); c.lineTo(lx + Math.cos(la) * ls, ly + Math.sin(la) * ls); c.stroke();
+        c.strokeStyle = 'rgba(20,50,30,0.5)'; lnW(1.5); mv(lx - CO(la) * ls, ly - SI(la) * ls); c.lineTo(lx + CO(la) * ls, ly + SI(la) * ls); c.stroke();
       });
       // 霧
       c.fillStyle = 'rgba(180,220,190,0.12)'; rect(0, H * .55, W, H * .45);
@@ -7480,7 +7472,7 @@ if (typeof document !== 'undefined') (() => {
       // ラベンダーの列(紫の帯+穂の点)
       for (let row = 0; row < 5; row++) {
         const ry = H * (.58 + row * .085); FS(['#8a5aa8', '#7a4a98', '#9a6ab8'][row % 3]); mv(0, ry + H * .03);
-        for (let x = 0; x <= 16; x++) c.lineTo(W * x / 16, ry + Math.sin(x * .7 + row) * 4);
+        for (let x = 0; x <= 16; x++) c.lineTo(W * x / 16, ry + SI(x * .7 + row) * 4);
         c.lineTo(W, ry + H * .09); c.lineTo(W, ry + H * .09); c.lineTo(0, ry + H * .09); c.closePath(); c.closePath(); c.fill();
         // 穂
         times(40 - row * 5, i => {
@@ -7490,14 +7482,14 @@ if (typeof document !== 'undefined') (() => {
       // 飛ぶ蜂
       c.fillStyle = '#e8c830';
       times(5, i => {
-        const bx = ((rng() + t * .05 * (i % 2 ? 1 : -1)) % 1 + 1) % 1 * W; const by = H * (.55 + (i % 3) * .12) + Math.sin(t * 3 + i * 2) * H * .03; ellP(bx, by, W * .006, H * .004);
+        const bx = ((rng() + t * .05 * (i % 2 ? 1 : -1)) % 1 + 1) % 1 * W; const by = H * (.55 + (i % 3) * .12) + SI(t * 3 + i * 2) * H * .03; ellP(bx, by, W * .006, H * .004);
       });
     } else if (pr === 'vineyard') {
       // 葡萄畑: 秋空+ぶどう棚の列+房+遠山
       sky([[0,'#e8d8b0'],[.5,'#c8b080'],[1,'#8a7048']]); FS('rgba(255,225,160,0.85)'); dot(.25,.28,H * .08);
       // 遠山
       c.fillStyle = 'rgba(110,95,70,0.5)'; mv(0, H * .5);
-      for (let i = 0; i <= 10; i++) c.lineTo(W * i / 10, H * .5 - Math.sin(i * 1.9) * H * .04);
+      for (let i = 0; i <= 10; i++) c.lineTo(W * i / 10, H * .5 - SI(i * 1.9) * H * .04);
       c.lineTo(W, H * .6); c.lineTo(0, H * .6); c.closePath(); c.fill(); const rng = L.mulberry32(43);
       // 地面
       c.fillStyle = '#9a8054'; rect(0, H * .62, W, H * .38);
@@ -7535,8 +7527,8 @@ if (typeof document !== 'undefined') (() => {
         const cx = W * (.1 + rng() * .8), cy = H * (.86 + rng() * .1); const cc = ['#e07070', '#e8a050', '#c860a0', '#60a8b0'][i % 4]; SS(cc); lnW(W * .008);
         times(4, b => {
           const ba = -PI / 2 + (b - 1.5) * .5; mv(cx, cy);
-          c.quadraticCurveTo(cx + Math.cos(ba) * W * .04, cy + Math.sin(ba) * H * .1,
-            cx + Math.cos(ba) * W * .06, cy + Math.sin(ba) * H * .14);
+          c.quadraticCurveTo(cx + CO(ba) * W * .04, cy + SI(ba) * H * .1,
+            cx + CO(ba) * W * .06, cy + SI(ba) * H * .14);
           c.stroke();
         });
         FS(cc); dotP(cx + W * .05, cy - H * .02, W * .02);
@@ -7544,7 +7536,7 @@ if (typeof document !== 'undefined') (() => {
       // 魚群(同じ方向へゆらぎながら泳ぐ)
       FS('rgba(255,200,120,0.8)');
       times(10, i => {
-        const fx = ((rng() + t * .04) % 1.2 - .1) * W; const fy = H * (.25 + (i % 3) * .15) + Math.sin(t * 2 + i) * H * .02; c.beginPath(); c.ellipse(fx, fy, W * .012, H * .008, 0, 0, 7); c.ellipse(fx, fy, W * .012, H * .008, 0, 0, 7); c.fill(); mv(fx - W * .014, fy); c.moveTo(fx - W * .014, fy); c.lineTo(fx - W * .022, fy - H * .008); c.moveTo(fx - W * .014, fy); c.lineTo(fx - W * .022, fy - H * .008); c.lineTo(fx - W * .022, fy + H * .008); c.closePath(); c.closePath(); c.fill();
+        const fx = ((rng() + t * .04) % 1.2 - .1) * W; const fy = H * (.25 + (i % 3) * .15) + SI(t * 2 + i) * H * .02; c.beginPath(); c.ellipse(fx, fy, W * .012, H * .008, 0, 0, 7); c.ellipse(fx, fy, W * .012, H * .008, 0, 0, 7); c.fill(); mv(fx - W * .014, fy); c.moveTo(fx - W * .014, fy); c.lineTo(fx - W * .022, fy - H * .008); c.moveTo(fx - W * .014, fy); c.lineTo(fx - W * .022, fy - H * .008); c.lineTo(fx - W * .022, fy + H * .008); c.closePath(); c.closePath(); c.fill();
       });
     } else if (pr === 'geyser') {
       // 間欠泉: 曇り空+岩場+噴き上がる水柱+湯気
@@ -7564,13 +7556,13 @@ if (typeof document !== 'undefined') (() => {
         FS('rgba(220,235,245,0.85)'); const colH = H * .5 * erupt; poly([gx - W * .02,gy],[gx - W * .04 * erupt,gy - colH * .7,gx - W * .015,gy - colH],[gx,gy - colH * 1.1,gx + W * .015,gy - colH],[gx + W * .04 * erupt,gy - colH * .7,gx + W * .02,gy]);
         // 頂の飛沫
         times(8, i => {
-          const a = rng() * PI; FS('rgba(230,242,250,0.8)'); dotP(gx + Math.cos(a) * W * .05 * erupt * (rng() + .3), gy - colH - rng() * H * .06, W * .008);
+          const a = rng() * PI; FS('rgba(230,242,250,0.8)'); dotP(gx + CO(a) * W * .05 * erupt * (rng() + .3), gy - colH - rng() * H * .06, W * .008);
         });
       }
       // 湯気(ゆらぐ)
       FS('rgba(230,235,240,0.35)');
       times(5, i => {
-        const sx = gx + Math.sin(t * .6 + i * 2) * W * .05 + (rng() - .5) * W * .1; ellP(sx, gy - H * (.05 + i * .07), W * (.04 + i * .015), H * (.02 + i * .008));
+        const sx = gx + SI(t * .6 + i * 2) * W * .05 + (rng() - .5) * W * .1; ellP(sx, gy - H * (.05 + i * .07), W * (.04 + i * .015), H * (.02 + i * .008));
       });
     } else if (pr === 'pagoda') {
       // 五重塔: 夕暮れ+5層の屋根の塔+月+遠山
@@ -7579,7 +7571,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = 'rgba(255,240,210,0.85)'; dot(.2,.2,H * .07);
       // 遠山
       c.fillStyle = 'rgba(50,40,60,0.6)'; mv(0, H * .6);
-      for (let i = 0; i <= 10; i++) c.lineTo(W * i / 10, H * .6 - Math.sin(i * 1.3 + 2) * H * .05);
+      for (let i = 0; i <= 10; i++) c.lineTo(W * i / 10, H * .6 - SI(i * 1.3 + 2) * H * .05);
       c.lineTo(W, H * .7); c.lineTo(0, H * .7); c.closePath(); c.fill();
       // 五重塔(中央右寄り)
       const px = W * .62, pbase = H * .85;
@@ -7611,7 +7603,7 @@ if (typeof document !== 'undefined') (() => {
         // 穂(風で揺れる短い線)
         SS(['#e0c070', '#d0b060', '#c0a050'][ly]); lnW(2); const n = 60 - ly * 15;
         times(n, i => {
-          const hx2 = (i / n + (rng() * .01)) * W; const hy2 = baseY + rng() * H * .1; const sw = Math.sin(t * 1.5 + hx2 * .01 + ly) * W * .006; mv(hx2, hy2 + H * .02); c.quadraticCurveTo(hx2 + sw * .5, hy2 + H * .01, hx2 + sw, hy2); c.stroke();
+          const hx2 = (i / n + (rng() * .01)) * W; const hy2 = baseY + rng() * H * .1; const sw = SI(t * 1.5 + hx2 * .01 + ly) * W * .006; mv(hx2, hy2 + H * .02); c.quadraticCurveTo(hx2 + sw * .5, hy2 + H * .01, hx2 + sw, hy2); c.stroke();
         });
       });
     } else if (pr === 'bridge') {
@@ -7623,7 +7615,7 @@ if (typeof document !== 'undefined') (() => {
       c.fillStyle = '#50384a'; rect(0, H * .68, W, H * .32); SS('rgba(255,180,120,0.35)'); lnW(2);
       for (let i = 0; i < 8; i++) {
         const wy = H * (.72 + i * .03); mv(0, wy);
-        for (let x = 1; x <= 8; x++) c.lineTo(W * x / 8, wy + Math.sin(x * 2 + t + i) * 2);
+        for (let x = 1; x <= 8; x++) c.lineTo(W * x / 8, wy + SI(x * 2 + t + i) * 2);
         c.stroke();
       }
       // 主塔2基
@@ -7638,8 +7630,8 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 1; i < 16; i++) {
         const fx = W * i / 16;
         const cy = i < 8
-          ? H * .55 - (1 - Math.abs(i - 4) / 4) * H * .24
-          : H * .55 - (1 - Math.abs(i - 12) / 4) * H * .24;
+          ? H * .55 - (1 - AB(i - 4) / 4) * H * .24
+          : H * .55 - (1 - AB(i - 12) / 4) * H * .24;
         mv(fx, cy); c.lineTo(fx, H * .6); c.stroke();
       }
       // 床版
@@ -7654,24 +7646,24 @@ if (typeof document !== 'undefined') (() => {
       sky([[0,'#dfe8e0'],[.55,'#a8c0a8'],[1,'#5a7a58']]);
       // 遠山
       c.fillStyle = 'rgba(90,110,95,0.5)'; mv(0, H * .45);
-      for (let i = 0; i <= 10; i++) c.lineTo(W * i / 10, H * .45 - Math.sin(i * 1.7) * H * .06);
+      for (let i = 0; i <= 10; i++) c.lineTo(W * i / 10, H * .45 - SI(i * 1.7) * H * .06);
       c.lineTo(W, H * .5); c.lineTo(W, H * .6); c.lineTo(0, H * .6); c.closePath(); c.fill(); const rng = L.mulberry32(59);
       // 段々の水田(緑と交互の水面帯)
       for (let i = 0; i < 7; i++) {
-        const ty = H * (.5 + i * .07), th = H * .055; const water = i % 3 === 0; FS(water ? '#9ec8d8' : ['#6a9a58', '#7aaa62', '#5a8a50'][i % 3]); mv(0, ty + Math.sin(i * 2) * 4);
-        for (let x = 0; x <= 16; x++) c.lineTo(W * x / 16, ty + Math.sin(x * .8 + i * 1.3) * 5);
+        const ty = H * (.5 + i * .07), th = H * .055; const water = i % 3 === 0; FS(water ? '#9ec8d8' : ['#6a9a58', '#7aaa62', '#5a8a50'][i % 3]); mv(0, ty + SI(i * 2) * 4);
+        for (let x = 0; x <= 16; x++) c.lineTo(W * x / 16, ty + SI(x * .8 + i * 1.3) * 5);
         c.lineTo(W, ty + th); c.lineTo(0, ty + th); c.closePath(); c.fill();
         // 畦の線
         c.strokeStyle = 'rgba(60,80,50,0.5)'; lnW(2); c.beginPath();
         for (let x = 0; x <= 16; x++) {
-          const px = W * x / 16, py = ty + th + Math.sin(x * .8 + i * 1.3) * 5; x ? c.lineTo(px, py) : c.moveTo(px, py);
+          const px = W * x / 16, py = ty + th + SI(x * .8 + i * 1.3) * 5; x ? c.lineTo(px, py) : c.moveTo(px, py);
         }
         c.stroke();
       }
       // 苗の点
       c.fillStyle = 'rgba(220,240,200,0.7)';
       times(40, i => {
-        const ty = H * (.55 + Math.floor(rng() * 6) * .07); rect(rng() * W, ty + rng() * H * .04, 2, 3);
+        const ty = H * (.55 + FL(rng() * 6) * .07); rect(rng() * W, ty + rng() * H * .04, 2, 3);
       });
     } else if (pr === 'harbor') {
       // 港: 朝焼け+灯台+帆船+波立つ海
@@ -7685,7 +7677,7 @@ if (typeof document !== 'undefined') (() => {
       for (let i = 0; i < 12; i++) {
         const wy = H * (.64 + i * .028); c.beginPath();
         for (let x = 0; x <= 12; x++) {
-          const px = ((x / 12 + t * .02 * (i % 2 ? 1 : -1)) % 1 + 1) % 1 * W; x ? c.lineTo(px, wy + Math.sin(x + t + i) * 3) : c.moveTo(px, wy);
+          const px = ((x / 12 + t * .02 * (i % 2 ? 1 : -1)) % 1 + 1) % 1 * W; x ? c.lineTo(px, wy + SI(x + t + i) * 3) : c.moveTo(px, wy);
         }
         c.stroke();
       }
@@ -7713,7 +7705,7 @@ if (typeof document !== 'undefined') (() => {
       // 起伏線
       c.strokeStyle = '#6a6a72'; lnW(3); c.beginPath();
       for (let i = 0; i <= 20; i++) {
-        const px = W * i / 20, py = H * .76 + Math.sin(i * 2.1) * H * .015; i ? c.lineTo(px, py) : c.moveTo(px, py);
+        const px = W * i / 20, py = H * .76 + SI(i * 2.1) * H * .015; i ? c.lineTo(px, py) : c.moveTo(px, py);
       }
       c.stroke();
       // クレーター
@@ -7732,13 +7724,13 @@ if (typeof document !== 'undefined') (() => {
       for (const [tx, th] of [[W * .15, .45], [W * .5, .52], [W * .85, .42]]) {
         const ty = H * .82; FS('#5a4030'); rect(tx - W * .007, ty - H * th * .55, W * .014, H * th * .55);
         times(10, b => {
-          FS(['#f0b8cc', '#e8a0bc', '#f5ccd8'][Math.floor(rng() * 3)]); dotP(tx + (rng() - .5) * W * .12, ty - H * th * (.5 + rng() * .45), W * (.025 + rng() * .03));
+          FS(['#f0b8cc', '#e8a0bc', '#f5ccd8'][FL(rng() * 3)]); dotP(tx + (rng() - .5) * W * .12, ty - H * th * (.5 + rng() * .45), W * (.025 + rng() * .03));
         });
       }
       // 舞う花びら
       c.fillStyle = 'rgba(255,210,225,0.9)';
       times(16, i => {
-        const px = ((rng() + t * .06 * (0.4 + rng() * .6)) % 1) * W; const py = (rng() + .1 * Math.sin(t * 1.5 + i)) * H; c.save(); c.translate(px, py); c.rotate(t * 1.5 + i); ellP(0, 0, W * .004, W * .0025); c.restore();
+        const px = ((rng() + t * .06 * (0.4 + rng() * .6)) % 1) * W; const py = (rng() + .1 * SI(t * 1.5 + i)) * H; c.save(); c.translate(px, py); c.rotate(t * 1.5 + i); ellP(0, 0, W * .004, W * .0025); c.restore();
       });
     } else if (pr === 'ruins') {
       // 遺跡: 黄昏 + 崩れた石柱 + アーチ + 蔦
@@ -7778,7 +7770,7 @@ if (typeof document !== 'undefined') (() => {
       // きらめく水面の光
       c.strokeStyle = 'rgba(220,240,255,0.4)'; lnW(1.5);
       times(12, i => {
-        const wx = rng() * W, wy = H * (.74 + rng() * .24); const tw = .5 + .5 * Math.sin(t * 2 + i); c.globalAlpha = .2 + .4 * tw; mv(wx, wy); c.lineTo(wx + W * .02, wy); c.stroke();
+        const wx = rng() * W, wy = H * (.74 + rng() * .24); const tw = .5 + .5 * SI(t * 2 + i); c.globalAlpha = .2 + .4 * tw; mv(wx, wy); c.lineTo(wx + W * .02, wy); c.stroke();
       });
       c.globalAlpha = 1;
     } else if (pr === 'fjord') {
@@ -7797,7 +7789,7 @@ if (typeof document !== 'undefined') (() => {
       // 水面(下3割、穏やかな横線)
       FS('#4a7a8e'); rect(0, H * .7, W, H * .3); SS('rgba(200,230,240,0.35)'); lnW(1.5);
       times(10, i => {
-        const wy = H * (.72 + rng() * .25); const wx = rng() * W * .7, wl = W * (.05 + rng() * .12); mv(wx + Math.sin(t + i) * 5, wy); c.moveTo(wx + Math.sin(t + i) * 5, wy); c.lineTo(wx + wl, wy); c.stroke();
+        const wy = H * (.72 + rng() * .25); const wx = rng() * W * .7, wl = W * (.05 + rng() * .12); mv(wx + SI(t + i) * 5, wy); c.moveTo(wx + SI(t + i) * 5, wy); c.lineTo(wx + wl, wy); c.stroke();
       });
     } else if (pr === 'autumn') {
       // 紅葉: 淡い秋空 + 紅葉の木々 + 舞う紅葉 + 落ち葉の地面
@@ -7811,13 +7803,13 @@ if (typeof document !== 'undefined') (() => {
       for (const [tx, th] of [[W * .18, .42], [W * .52, .5], [W * .85, .38]]) {
         const ty = H * .8; FS('#4a3020'); rect(tx - W * .008, ty - H * th * .6, W * .016, H * th * .6); const cols = ['#c8402a', '#e07020', '#d8a020'];
         times(9, b => {
-          FS(cols[Math.floor(rng() * 3)]); dotP(tx + (rng() - .5) * W * .1, ty - H * th * (.55 + rng() * .4), W * (.02 + rng() * .025));
+          FS(cols[FL(rng() * 3)]); dotP(tx + (rng() - .5) * W * .1, ty - H * th * (.55 + rng() * .4), W * (.02 + rng() * .025));
         });
       }
       // 舞う紅葉
       c.fillStyle = 'rgba(210,80,40,0.8)';
       times(14, i => {
-        const lx = ((rng() + t * .05 * (0.4 + rng() * .6)) % 1) * W; const ly = (rng() + .08 * Math.sin(t * 2 + i)) * H; c.save(); c.translate(lx, ly); c.rotate(t * 2 + i); ellP(0, 0, W * .005, W * .003); c.restore();
+        const lx = ((rng() + t * .05 * (0.4 + rng() * .6)) % 1) * W; const ly = (rng() + .08 * SI(t * 2 + i)) * H; c.save(); c.translate(lx, ly); c.rotate(t * 2 + i); ellP(0, 0, W * .005, W * .003); c.restore();
       });
     } else if (pr === 'falls') {
       // 滝: 山の緑 + 絶壁 + 落ちる水流 + 水しぶき
@@ -7834,7 +7826,7 @@ if (typeof document !== 'undefined') (() => {
       // 水しぶき+池
       c.fillStyle = 'rgba(230,248,255,0.6)';
       times(16, i => {
-        const mx = W * (.4 + rng() * .2), my = H * (.78 + rng() * .06); const mr = W * (.004 + rng() * .008) * (0.7 + .3 * Math.sin(t * 3 + i)); dotP(mx, my, mr);
+        const mx = W * (.4 + rng() * .2), my = H * (.78 + rng() * .06); const mr = W * (.004 + rng() * .008) * (0.7 + .3 * SI(t * 3 + i)); dotP(mx, my, mr);
       });
       FS('rgba(70,140,160,0.8)'); rect(0, H * .82, W, H * .18);
     } else if (pr === 'oasis') {
@@ -7886,7 +7878,7 @@ if (typeof document !== 'undefined') (() => {
       // 舞う葉
       c.fillStyle = 'rgba(180,230,140,0.8)';
       times(12, i => {
-        const lx = ((rng() + t * .03 * (0.5 + rng() * .5)) % 1) * W; const ly = (rng() + .1 * Math.sin(t + i)) * H; const sz = W * .006; c.save(); c.translate(lx, ly); c.rotate(t + i); ellP(0, 0, sz * 2, sz); c.restore();
+        const lx = ((rng() + t * .03 * (0.5 + rng() * .5)) % 1) * W; const ly = (rng() + .1 * SI(t + i)) * H; const sz = W * .006; c.save(); c.translate(lx, ly); c.rotate(t + i); ellP(0, 0, sz * 2, sz); c.restore();
       });
     } else if (pr === 'canyon') {
       // 渓谷: 夕焼け + 層状の赤岩岸壁(遠近3層)
@@ -7919,7 +7911,7 @@ if (typeof document !== 'undefined') (() => {
         // 尖り屋根
         poly([tx - W * .085,wallY - towerH],[tx + W * .085,wallY - towerH],[tx,wallY - towerH - H * .14]);
         // 旗(なびく)
-        SS('#3a2b42'); lnW(2); mv(tx, wallY - towerH - H * .14); c.lineTo(tx, wallY - towerH - H * .2); c.stroke(); FS('#c0303f'); const fw = Math.sin(t * 3 + tx) * W * .008; poly([tx,wallY - towerH - H * .2],[tx + W * .045 + fw,wallY - towerH - H * .185],[tx,wallY - towerH - H * .17]); FS('#3a2b42');
+        SS('#3a2b42'); lnW(2); mv(tx, wallY - towerH - H * .14); c.lineTo(tx, wallY - towerH - H * .2); c.stroke(); FS('#c0303f'); const fw = SI(t * 3 + tx) * W * .008; poly([tx,wallY - towerH - H * .2],[tx + W * .045 + fw,wallY - towerH - H * .185],[tx,wallY - towerH - H * .17]); FS('#3a2b42');
       });
       // 窓の灯り
       c.fillStyle = 'rgba(255,210,120,0.85)';
@@ -7946,7 +7938,7 @@ if (typeof document !== 'undefined') (() => {
       // 底の水面の輝き
       c.fillStyle = 'rgba(120,170,220,0.15)'; ell(.5,.97,W * .45,H * .05); SS('rgba(160,200,240,0.3)'); lnW(1);
       times(8, i => {
-        const wy = H * (.9 + rng() * .08); const wx = rng() * W * .8, wl = W * (.05 + rng() * .1); mv(wx + Math.sin(t + i) * 6, wy); c.moveTo(wx + Math.sin(t + i) * 6, wy); c.lineTo(wx + wl + Math.sin(t + i) * 6, wy); c.stroke();
+        const wy = H * (.9 + rng() * .08); const wx = rng() * W * .8, wl = W * (.05 + rng() * .1); mv(wx + SI(t + i) * 6, wy); c.moveTo(wx + SI(t + i) * 6, wy); c.lineTo(wx + wl + SI(t + i) * 6, wy); c.stroke();
       });
     } else if (pr === 'fireworks') {
       // 花火: 夜空 + 時間で打ち上がる放射状の花火 + 都市の明かり
@@ -7958,17 +7950,17 @@ if (typeof document !== 'undefined') (() => {
       });
       // 花火: 3発を時間オフセットでループ(上昇→放射→減衰)
       times(3, j => {
-        const cyc = ((t * .3 + j * .37) % 1); const fx = W * (.2 + .3 * j) + Math.sin(j * 7) * W * .06; const fyy = H * (.22 + .12 * j); const hue = [330, 45, 200][j];
+        const cyc = ((t * .3 + j * .37) % 1); const fx = W * (.2 + .3 * j) + SI(j * 7) * W * .06; const fyy = H * (.22 + .12 * j); const hue = [330, 45, 200][j];
         if (cyc < .3) {
           // 上昇中の弾
           const ry = H * .9 - cyc / .3 * (H * .9 - fyy);
           FS(`hsla(${hue},90%,70%,.9)`);
-          c.beginPath(); c.arc(fx, ry, 2.5, 0, 7); c.fill();
+          dotP(fx,ry,2.5);
         } else {
           const boom = (cyc - .3) / .7; const rr = boom * H * .16; const a = MX(0, (1 - boom) * .9); const rng2 = L.mulberry32(100 + j); // 0→1 膨張&減衰
           c.fillStyle = `hsla(${hue},90%,${65 + boom * 15}%,${a})`;
           times(26, k => {
-            const ang = k * .2418 + rng2() * .15; const d = rr * (.6 + .4 * rng2()); dotP(fx + Math.cos(ang) * d, fyy + Math.sin(ang) * d + boom * boom * H * .05, 1.6 + (1 - boom) * 1.4);
+            const ang = k * .2418 + rng2() * .15; const d = rr * (.6 + .4 * rng2()); dotP(fx + CO(ang) * d, fyy + SI(ang) * d + boom * boom * H * .05, 1.6 + (1 - boom) * 1.4);
           });
         }
       });
@@ -8001,7 +7993,7 @@ if (typeof document !== 'undefined') (() => {
       }
       // さざ波(ゆれる水平線)
       SS('rgba(255,255,255,0.35)'); lnW(1.2); scat(55, 12, (rng3, i) => {
-        const wy = hr2 + H * (.05 + rng3() * .4); const wx = rng3() * W * .8; const wl = W * (.06 + rng3() * .14); mv(wx + Math.sin(t * 1.2 + i) * 8, wy); c.lineTo(wx + wl + Math.sin(t * 1.2 + i) * 8, wy); c.stroke();
+        const wy = hr2 + H * (.05 + rng3() * .4); const wx = rng3() * W * .8; const wl = W * (.06 + rng3() * .14); mv(wx + SI(t * 1.2 + i) * 8, wy); c.lineTo(wx + wl + SI(t * 1.2 + i) * 8, wy); c.stroke();
       });
     } else if (pr === 'shrine') {
       // 神社: 夕暮れ空 + 大きな鳥居シルエット + 灯籠の灯り + 遠山
@@ -8047,17 +8039,17 @@ if (typeof document !== 'undefined') (() => {
       // 花
       const rng = L.mulberry32(75); const fcols = ['#ff8fb3', '#fff3b0', '#ffffff', '#ffd166'];
       times(26, i => {
-        const fx = rng() * W, fy = H * (.62 + rng() * .34); FS(fcols[Math.floor(rng() * fcols.length)]);
+        const fx = rng() * W, fy = H * (.62 + rng() * .34); FS(fcols[FL(rng() * fcols.length)]);
         times(4, k => {
-          dotP(fx + Math.cos(k * 1.57) * 4, fy + Math.sin(k * 1.57) * 4, 3.5);
+          dotP(fx + CO(k * 1.57) * 4, fy + SI(k * 1.57) * 4, 3.5);
         });
       });
       // 蝶
       const bt = t * 2;
       for (const [bx0, by0, ph] of [[.25, .35, 0], [.7, .42, 2]]) {
-        const bx = W * (bx0 + .06 * Math.sin(bt + ph)), by = H * (by0 + .04 * Math.sin(bt * 1.7 + ph)); FS('rgba(255,255,255,0.85)');
+        const bx = W * (bx0 + .06 * SI(bt + ph)), by = H * (by0 + .04 * SI(bt * 1.7 + ph)); FS('rgba(255,255,255,0.85)');
         ([-1, 1]).forEach(s => {
-          ellP(bx + s * 6, by, 5 * (0.6 + .4 * Math.abs(Math.sin(bt * 3 + ph))), 8, s * .3);
+          ellP(bx + s * 6, by, 5 * (0.6 + .4 * AB(SI(bt * 3 + ph))), 8, s * .3);
         });
       }
     } else if (pr === 'volcano') {
@@ -8078,7 +8070,7 @@ if (typeof document !== 'undefined') (() => {
       // 噴煙
       c.fillStyle = 'rgba(60,45,50,0.5)';
       times(6, i => {
-        const sx = mx + Math.sin(t * .6 + i) * W * .05 + (i - 3) * W * .02; const sy = mtop - H * (.08 + i * .07); dotP(sx, sy, H * (.05 + i * .015));
+        const sx = mx + SI(t * .6 + i) * W * .05 + (i - 3) * W * .02; const sy = mtop - H * (.08 + i * .07); dotP(sx, sy, H * (.05 + i * .015));
       });
     } else if (pr === 'rainbow') {
       // 虹: 淡い空 + 同心円弧の7色虹 + 両端の雲
@@ -8108,7 +8100,7 @@ if (typeof document !== 'undefined') (() => {
     } else if (pr === 'space') {
       // 宇宙: 漆黒 + 星々 + リング付き惑星(土星風)
       sky([[0,'#03040c'],[1,'#0d1230']]); scat(414, 130, (rng, i) => {
-        const tw = .4 + .6 * Math.abs(Math.sin(t * .8 + i * 2.3));
+        const tw = .4 + .6 * AB(SI(t * .8 + i * 2.3));
         FS(`rgba(255,255,255,${.2 + .6 * tw * rng()})`);
         rect(rng() * W, rng() * H, 1.4, 1.4);
       });
@@ -8123,7 +8115,7 @@ if (typeof document !== 'undefined') (() => {
       });
       // 昇る泡
       scat(202, 22, (rng, i) => {
-        const bx = rng() * W, r2 = 1.5 + rng() * 4; const by = (1 - ((rng() + t * (.03 + .03 * rng())) % 1)) * H; SS('rgba(200,235,255,0.5)'); lnW(1); dotPS(bx + Math.sin(t + i) * 4, by, r2);
+        const bx = rng() * W, r2 = 1.5 + rng() * 4; const by = (1 - ((rng() + t * (.03 + .03 * rng())) % 1)) * H; SS('rgba(200,235,255,0.5)'); lnW(1); dotPS(bx + SI(t + i) * 4, by, r2);
       });
     } else if (pr === 'desert') {
       // 砂漠: 空+大きな太陽+うねる砂丘(決定論的)
@@ -8132,14 +8124,14 @@ if (typeof document !== 'undefined') (() => {
       for (const [base, amp, col] of [[.6, .07, '#d9a44f'], [.75, .09, '#b57f30']]) {
         FS(col); mv(0, H);
         for (let x = 0; x <= W; x += W / 40) {
-          c.lineTo(x, H * (base + amp * Math.sin(x / W * 4.4 + base * 9)));
+          c.lineTo(x, H * (base + amp * SI(x / W * 4.4 + base * 9)));
         }
         c.lineTo(W, H); c.closePath(); c.fill();
       }
     } else if (pr === 'aurora') {
       // オーロラ: 夜空 + ゆらめく光のカーテン + 星
       sky([[0,'#050a18'],[1,'#101c30']]); scat(777, 60, (rng, i) => {
-        const tw = .3 + .7 * Math.abs(Math.sin(t * .7 + i * 1.9));
+        const tw = .3 + .7 * AB(SI(t * .7 + i * 1.9));
         FS(`rgba(255,255,255,${.2 + .55 * tw * rng()})`);
         rect(rng() * W, rng() * H * .7, 1.3, 1.3);
       });
@@ -8148,7 +8140,7 @@ if (typeof document !== 'undefined') (() => {
         FS(`hsla(${hue},85%,60%,${amp * .4})`);
         mv(0, H);
         for (let x = 0; x <= W; x += W / 32) {
-          const y = H * (.28 + .12 * Math.sin(x / W * 5 + ph0 + t * .6) + .06 * Math.sin(x / W * 11 - t * .9 + ph0)); c.lineTo(x, y);
+          const y = H * (.28 + .12 * SI(x / W * 5 + ph0 + t * .6) + .06 * SI(x / W * 11 - t * .9 + ph0)); c.lineTo(x, y);
         }
         c.lineTo(W, H); c.closePath(); c.fill();
       }
@@ -8233,7 +8225,7 @@ if (typeof document !== 'undefined') (() => {
     if (!iw || !ih || el.readyState < 2) return null;
     const cacheKey = `${iw}x${ih}|${state.params.keyThresh}|${state.params.keySoft}|${state.params.despill}`;
     if (state.media.kind === 'image' && state.keyParams === cacheKey) return keyCv;
-    const scale = MN(1, 960 / iw); const kw = Math.round(iw * scale), kh = Math.round(ih * scale);
+    const scale = MN(1, 960 / iw); const kw = RD(iw * scale), kh = RD(ih * scale);
     if (keyCv.width !== kw || keyCv.height !== kh) { keyCv.width = kw; keyCv.height = kh; }
     kctx.drawImage(el, 0, 0, kw, kh);
     if (state.params.keyThresh > 0) {
@@ -8253,20 +8245,20 @@ if (typeof document !== 'undefined') (() => {
     const src = state.params.keyThresh > 0 ? keyedMediaCanvas() : el;
     if (!src) return;
     const sw = src.width || iw, sh = src.height || ih; const hPix = H * (0.25 + 0.7 * state.params.scale); const wPix = hPix * (sw / sh); const cx = state.params.x * W, baseY = state.params.y * H;
-    L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5, `hsla(${Math.round(state.params.shadowHue * 360)},45%,12%,${state.params.shadow * .5})`);
+    L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5, `hsla(${RD(state.params.shadowHue * 360)},45%,12%,${state.params.shadow * .5})`);
     const silCache = state.media.kind === 'image';
-    const glowCol = `hsla(${Math.round(state.params.glowHue * 360)},90%,70%,1)`;
+    const glowCol = `hsla(${RD(state.params.glowHue * 360)},90%,70%,1)`;
     L.drawGlow(c, silhouetteOf(src, sw, sh, glowCol, glowCv, glowCtx, silCache), wPix, hPix, cx, baseY, state.params.glow);
-    L.drawCastShadow(c, silhouetteOf(src, sw, sh, `hsla(${Math.round(state.params.shadowHue * 360)},45%,12%,1)`, null, null, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4, state.params.shadowSoft);
-    L.drawRimLight(c, silhouetteOf(src, sw, sh, `hsla(${Math.round(state.params.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
-    L.drawStickerOutline(c, silhouetteOf(src, sw, sh, `hsla(${Math.round(state.params.outlineHue * 360)},70%,80%,1)`, outCv, outCtx, silCache), wPix, hPix, cx, baseY, state.params.outline);
+    L.drawCastShadow(c, silhouetteOf(src, sw, sh, `hsla(${RD(state.params.shadowHue * 360)},45%,12%,1)`, null, null, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4, state.params.shadowSoft);
+    L.drawRimLight(c, silhouetteOf(src, sw, sh, `hsla(${RD(state.params.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
+    L.drawStickerOutline(c, silhouetteOf(src, sw, sh, `hsla(${RD(state.params.outlineHue * 360)},70%,80%,1)`, outCv, outCtx, silCache), wPix, hPix, cx, baseY, state.params.outline);
     L.drawReflection(c, src, cx, baseY, wPix, hPix, state.params.reflect);
     if (state.media.kind === 'video') el.playbackRate = .25 + state.params.vidSpeed * 1.5;
     c.save(); c.globalAlpha = state.params.opacity; const fParts = [];
-    if (state.params.subjHue !== .5) fParts.push(`hue-rotate(${Math.round((state.params.subjHue - .5) * 360)}deg)`);
+    if (state.params.subjHue !== .5) fParts.push(`hue-rotate(${RD((state.params.subjHue - .5) * 360)}deg)`);
     if (state.params.subjSat !== .5) fParts.push(`saturate(${(state.params.subjSat * 2).toFixed(2)})`);
     if (state.params.subjBright !== .5) fParts.push(`brightness(${(0.7 + state.params.subjBright * .6).toFixed(2)})`);
-    if (state.params.temp !== .5) fParts.push(`sepia(${Math.abs(state.params.temp - .5) * .8}) hue-rotate(${(state.params.temp - .5) * -40}deg)`);
+    if (state.params.temp !== .5) fParts.push(`sepia(${AB(state.params.temp - .5) * .8}) hue-rotate(${(state.params.temp - .5) * -40}deg)`);
     if (state.params.subjFx !== 'none') fParts.push(SUBJFX_FILTERS[state.params.subjFx]);
     if (fParts.length) c.filter = fParts.join(' ');
     if (state.params.blend !== 'none') c.globalCompositeOperation = state.params.blend;
@@ -8274,7 +8266,7 @@ if (typeof document !== 'undefined') (() => {
     // ピクセル化: 小さく引き延ばしてからスムージングなしで拡大
     let drawSrc = src;
     if (state.params.pixel > .05) {
-      const cell = 1 + state.params.pixel * 24; const pw = MX(2, Math.round(wPix / cell)), ph2 = MX(2, Math.round(hPix / cell)); pixCv.width = pw; pixCv.height = ph2; pctx.imageSmoothingEnabled = true; pctx.clearRect(0, 0, pw, ph2); pctx.drawImage(src, 0, 0, pw, ph2); c.imageSmoothingEnabled = false; drawSrc = pixCv;
+      const cell = 1 + state.params.pixel * 24; const pw = MX(2, RD(wPix / cell)), ph2 = MX(2, RD(hPix / cell)); pixCv.width = pw; pixCv.height = ph2; pctx.imageSmoothingEnabled = true; pctx.clearRect(0, 0, pw, ph2); pctx.drawImage(src, 0, 0, pw, ph2); c.imageSmoothingEnabled = false; drawSrc = pixCv;
     }
     c.drawImage(state.params.shine > .02 ? L.shined(drawSrc, snc, shnCv, t, state.params.shine) : drawSrc, cx - wPix / 2, baseY - hPix, wPix, hPix); c.restore();
   }
@@ -8301,11 +8293,11 @@ if (typeof document !== 'undefined') (() => {
     const shaking = p.shake > 0 || p.camZoom > .02;
     if (shaking) {
       // シーンズーム: ゆっくり呼吸するような拡縮(動画映え演出)
-      const os = 1 + p.shake * .04 + Math.sin(t * .6) * p.camZoom * .22; ctx.save(); ctx.translate(W / 2 + (Math.random() - .5) * p.shake * 16, H / 2 + (Math.random() - .5) * p.shake * 16); ctx.scale(os, os); ctx.translate(-W / 2, -H / 2);
+      const os = 1 + p.shake * .04 + SI(t * .6) * p.camZoom * .22; ctx.save(); ctx.translate(W / 2 + (Math.random() - .5) * p.shake * 16, H / 2 + (Math.random() - .5) * p.shake * 16); ctx.scale(os, os); ctx.translate(-W / 2, -H / 2);
     }
     drawBackdrop(ctx, p, t);
     // モデルの傾き + 回転(spin) + つぶし・伸び(squash): 被写体を足元支点に変形(影等も一体)
-    const rotA = (p.rot - .5) * .6; const spinX = p.anim === 'spin' ? Math.cos(t * 2.5) : 1; const flipY = p.anim === 'flip' ? Math.cos(t * 2.5) : 1; const sq = p.squash > .02 ? Math.sin(t * 3) * p.squash : 0; const sxx = (1 + sq * .18) * spinX, syy = (1 - sq * .22) * flipY; const xformed = Math.abs(rotA) > .001 || Math.abs(sxx - 1) > .001 || Math.abs(syy - 1) > .001; // 宙返り: 負になると上下反転=バク転
+    const rotA = (p.rot - .5) * .6; const spinX = p.anim === 'spin' ? CO(t * 2.5) : 1; const flipY = p.anim === 'flip' ? CO(t * 2.5) : 1; const sq = p.squash > .02 ? SI(t * 3) * p.squash : 0; const sxx = (1 + sq * .18) * spinX, syy = (1 - sq * .22) * flipY; const xformed = AB(rotA) > .001 || AB(sxx - 1) > .001 || AB(syy - 1) > .001; // 宙返り: 負になると上下反転=バク転
     if (state.media && xformed) {
       ctx.save(); ctx.translate(p.x * W, p.y * H); ctx.rotate(rotA); ctx.scale(sxx, syy); ctx.translate(-p.x * W, -p.y * H);
     }
@@ -8329,23 +8321,23 @@ if (typeof document !== 'undefined') (() => {
         ctx.save(); L.drawMannequin(ctx, p2, t * .9 + 2.3, cx + wPix * .55 * (p.flip ? -1 : 1), baseY, hPix * (.55 + p.duo * .35)); ctx.restore();
       }
       // マネキンをオフスクリーンに描き、シルエット化して影/リムに利用
-      if ((Math.abs(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0 || p.glow > 0 || p.shine > .02) {
+      if ((AB(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0 || p.glow > 0 || p.shine > .02) {
         modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix); mctx.clearRect(0, 0, modCv.width, modCv.height); L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, modCv.height);
-        L.drawGlow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.glowHue * 360)},90%,70%,1)`, glowCv, glowCtx), wPix, hPix, cx, baseY, p.glow);
-        L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.shadowHue * 360)},45%,12%,1)`), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4, p.shadowSoft);
-        L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hPix, cx, baseY, p.castDir, p.rim);
-        L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${Math.round(p.outlineHue * 360)},70%,80%,1)`, outCv, outCtx), wPix, hPix, cx, baseY, p.outline);
+        L.drawGlow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.glowHue * 360)},90%,70%,1)`, glowCv, glowCtx), wPix, hPix, cx, baseY, p.glow);
+        L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.shadowHue * 360)},45%,12%,1)`), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4, p.shadowSoft);
+        L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hPix, cx, baseY, p.castDir, p.rim);
+        L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.outlineHue * 360)},70%,80%,1)`, outCv, outCtx), wPix, hPix, cx, baseY, p.outline);
         L.drawReflection(ctx, modCv, cx, baseY, wPix, hPix, p.reflect);
       }
       if (p.pixel > .05) {
         // ピクセル化: 手続きモデルを小さく描いてスムージングなしで拡大
-        const cell = 1 + p.pixel * 24; const pw = MX(2, Math.round(wPix / cell)), ph2 = MX(2, Math.round(hPix / cell)); pixCv.width = pw; pixCv.height = ph2; pctx.clearRect(0, 0, pw, ph2); L.drawMannequin(pctx, p, t, pw / 2, ph2, ph2); ctx.save(); ctx.globalAlpha = p.opacity; ctx.imageSmoothingEnabled = false; ctx.drawImage(pixCv, cx - wPix / 2, baseY - hPix, wPix, hPix); ctx.restore();
+        const cell = 1 + p.pixel * 24; const pw = MX(2, RD(wPix / cell)), ph2 = MX(2, RD(hPix / cell)); pixCv.width = pw; pixCv.height = ph2; pctx.clearRect(0, 0, pw, ph2); L.drawMannequin(pctx, p, t, pw / 2, ph2, ph2); ctx.save(); ctx.globalAlpha = p.opacity; ctx.imageSmoothingEnabled = false; ctx.drawImage(pixCv, cx - wPix / 2, baseY - hPix, wPix, hPix); ctx.restore();
       } else {
         // 残像トレイル: 過去フレームのポーズを薄く残す(マネキンのみ・手続き描画なので安い)
         const fxParts = [];
         if (p.subjSat !== .5) fxParts.push(`saturate(${(p.subjSat * 2).toFixed(2)})`);
         if (p.subjBright !== .5) fxParts.push(`brightness(${(0.7 + p.subjBright * .6).toFixed(2)})`);
-        if (p.temp !== .5) fxParts.push(`sepia(${Math.abs(p.temp - .5) * .8}) hue-rotate(${(p.temp - .5) * -40}deg)`);
+        if (p.temp !== .5) fxParts.push(`sepia(${AB(p.temp - .5) * .8}) hue-rotate(${(p.temp - .5) * -40}deg)`);
         if (p.subjFx !== 'none') fxParts.push(SUBJFX_FILTERS[p.subjFx]);
         const fx = fxParts.join(' ');
         if (fx) ctx.filter = fx;
@@ -8385,15 +8377,15 @@ if (typeof document !== 'undefined') (() => {
     }
     if (p.title) { // サムネイル向け大見出し(上部中央・白抜き太字)
       const fs = 18 + p.titleSize * 66; ctx.save();
-      ctx.font = `700 ${Math.round(fs)}px 'Hiragino Sans', system-ui, sans-serif`;
+      ctx.font = `700 ${RD(fs)}px 'Hiragino Sans', system-ui, sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = MX(2, fs * .14); ctx.strokeStyle = 'rgba(0,0,0,.78)'; ctx.lineJoin = 'round'; ctx.strokeText(p.title, W / 2, H * .12);
-      ctx.fillStyle = `hsl(${Math.round(p.titleHue * 360)},75%,85%)`;
+      ctx.fillStyle = `hsl(${RD(p.titleHue * 360)},75%,85%)`;
       ctx.fillText(p.title, W / 2, H * .12); ctx.restore();
     }
     L.drawVignette(ctx, W, H, p.vignette);
     if (p.frame > .02) { // 額縁: ポラロイド/ポストカード風の枠線を最前面に
       const b = 4 + p.frame * 44;
-      ctx.fillStyle = `hsla(${Math.round(p.frameHue * 360)},45%,${p.frameHue < .08 ? 14 : 90}%,0.96)`;
+      ctx.fillStyle = `hsla(${RD(p.frameHue * 360)},45%,${p.frameHue < .08 ? 14 : 90}%,0.96)`;
       ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.rect(0, 0, W, H); ctx.rect(b, b, W - 2 * b, H - 2 * b); ctx.fill('evenodd');
     }
     L.drawWatermark(ctx, p.watermark, W, H, p.wmOpacity, p.wmPos); requestAnimationFrame(frame);

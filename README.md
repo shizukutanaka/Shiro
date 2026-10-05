@@ -621,4 +621,5 @@ node test.mjs   # 5445 assertions
 - 代入列・ポリゴン・矩形も語彙化: 連続する `q.` 代入は `Object.assign(q, {...})` に集約(連鎖代入は保持)、`beginPath→moveTo→lineTo*→closePath→fill/stroke` は `poly`/`polyS` ヘルパー、`fillRect` は `rect` に機械変換 — 描画結果は同一
 - `poly`/`polyS` は点タプルの長さで lineTo(2)/quadraticCurveTo(4)/bezierCurveTo(6) を判別する可変引数で曲線パスも収容。スタイル代入は `FS`(fillStyle)/`SS`(strokeStyle)/`lnW`(lineWidth) に集約 — if/for/コメント後の文脈も含め1,500+箇所を変換。`drawBackdrop` 内で外側 `ctx` を直接参照していた箇所は引数 `c` に修正(潜在バグ除去)
 - パス開始語彙 `mv`(beginPath+moveTo、551箇所)と算術短縮 `PI`/`MX`/`MN`(Math.PI/Math.max/Math.min、各IIFE冒頭で束縛、779箇所)を追加 — 描画結果は同一
+- 残存の単一形状トリプル(beginPath+arc/ellipse+fill/stroke)も既存語彙に吸収し、算術関数 `SI`/`CO`/`AB`/`RD`/`FL`(Math.sin/cos/abs/round/floor)も各IIFE冒頭で束縛 — drawMannequin/drawParticlesにもdot/ell語彙を導入
 - 外部キー/ネットワーク/トラッキングなし。画像・動画・お気に入りは全てローカルに留まる
