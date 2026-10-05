@@ -663,3 +663,4 @@ node test.mjs   # 5445 assertions
 - **r254**: モーション配慮の深化 — reduced-motion時にアニメ静止だけでなく前庭刺激系（カメラシェイク・背景ドリフト・残像トレイル・パーティクル）もゼロ化。復元セッション優先の規約は維持。
 - **r255**: タッチ操作の修復 — `#stage`に`touch-action:none`（ブラウザがタッチポインタをスクロール解釈に奪うのを防止→ドラッグ成立）＋`user-select:none`。
 - **r256**: お気に入りのキーボードa11y — fav項目を`tabindex`/`role="button"`化し Enter/Space=適用、Delete/Backspace=削除、Shift+矢印=並替に対応（これまでマウス/ドラッグのみだった）
+- **r257**: フォーカス可視性 — `:focus-visible`にアクセント色outline、fav項目のfocusはborderハイライト（キーボードフォーカス位置が視認可能に）
