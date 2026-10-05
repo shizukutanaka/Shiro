@@ -625,4 +625,5 @@ node test.mjs   # 5445 assertions
 - グラデーションも語彙化: `lg`/`rg` ヘルパー(createLinear/RadialGradient+addColorStop列、ストップは平坦配列)をdrawBackdropに導入し36箇所を変換 — 描画結果は同一
 - ctxメソッドも短縮呼び出し語彙化: `bP`/`cP`/`mT`/`lT`/`qT`/`bZ`/`aR`/`eC`/`fR`/`sR`/`fL`/`sK`/`sV`/`rS`/`tR`/`rO`/`sC`/`gA`(beginPath〜globalAlpha)を4関数スコープに導入し3,100+箇所を変換 — 描画結果は同一
 - caseラベル直後に残っていたスタイル代入も語彙化(72箇所、`lC`/`tA`/`fT`追加)、鏡像描画 `mir`([-1,1].forEach、32箇所)、地平バンド `bnd`(rect(0,H*y,W,H*(1-y))、85箇所)、線幅 `lw`(lnW(MX(m,H*f))、68箇所)を導入 — 描画結果は同一
+- オープンパス(閉じない `mv`+lT/qT/bZ列+`fL`/`sK`)も `plF`/`plS` 語彙に畳込(348箇所) — 描画結果は同一
 - 外部キー/ネットワーク/トラッキングなし。画像・動画・お気に入りは全てローカルに留まる
