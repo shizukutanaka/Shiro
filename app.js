@@ -8382,12 +8382,18 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     if (!f) return;
     Object.assign(state.params, f); syncUI()
   });
+  const mediaV = () => state.media && state.media.kind === 'video' ? state.media.el : null;
+  const bgV = () => state.bg && state.bg.tagName === 'VIDEO' ? state.bg : null;
   $('chk-freeze').addEventListener('change', e => {
 
-    state.frozenT = e.target.checked ? (performance.now() - t0) / 1000 : null; const v = state.media && state.media.kind === 'video' ? state.media.el : null;
+    state.frozenT = e.target.checked ? (performance.now() - t0) / 1000 : null; const v = mediaV();
     if (v) e.target.checked ? v.pause() : v.play().catch(() => {});
-    const bv = state.bg && state.bg.tagName === 'VIDEO' ? state.bg : null;
+    const bv = bgV();
     if (bv) e.target.checked ? bv.pause() : bv.play().catch(() => {})
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { const v = mediaV(); if (v) { v._wasPlaying = !v.paused; v.pause() } const bv = bgV(); if (bv) { bv._wasPlaying = !bv.paused; bv.pause() } }
+    else if (!$('chk-freeze').checked) { const v = mediaV(); if (v && v._wasPlaying) v.play().catch(() => {}); const bv = bgV(); if (bv && bv._wasPlaying) bv.play().catch(() => {}) }
   });
 
   clk('btn-random', () => {

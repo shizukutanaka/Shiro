@@ -480,14 +480,14 @@ const mkUI = (seed, opts = {}) => {
       toBlob(cb) { cb({ size: 1 }) }, toDataURL: () => 'data:,', captureStream: () => ({}),
       width: 640, height: 360, naturalWidth: 400, naturalHeight: 300, videoWidth: 400, videoHeight: 300,
       muted: false, loop: false, playsInline: false, paused: true, currentTime: 0,
-      play: () => Promise.resolve(), pause() {}, focus() {}, blur() {},
+      play() { this.paused = false; return Promise.resolve() }, pause() { this.paused = true }, focus() {}, blur() {},
       setAttribute() {}, getAttribute: () => null, setPointerCapture() {},
     };
     return el;
   };
   h.getEl = id => { if (!h.els.has(id)) h.els.set(id, mkEl()); return h.els.get(id) };
   const documentStub = {
-    getElementById: h.getEl, createElement: t2 => mkEl(t2),
+    getElementById: h.getEl, createElement: t2 => { const e = mkEl(t2); (h.createdEls ||= []).push(e); return e },
     addEventListener(ev, f) { (h.docListeners[ev] ||= []).push(f) },
     body: mkEl('body'), documentElement: mkEl('html'), hidden: false,
   };
@@ -640,6 +640,14 @@ const mkUI = (seed, opts = {}) => {
   ok(!favJson2 || Array.isArray(JSON.parse(favJson2)), 'fav store stays valid JSON');
   h.getEl('btn-model-reset').click(); h.getEl('btn-bg-reset').click(); h.tick();
   ok(h.revokedUrls > 0, `file-load object URLs revoked on reset (n=${h.revokedUrls})`);
+  const bgV2 = getEl('bg-file'); bgV2.files = [{ type: 'video/mp4' }]; bgV2.fire('change');
+  await Promise.resolve();
+  const vEl = (h.createdEls || []).filter(e => e.tagName === 'VIDEO').pop();
+  ok(vEl && vEl.paused === false, 'bg video playing after load');
+  documentStub.hidden = true; (docListeners.visibilitychange || []).forEach(f => f());
+  ok(vEl.paused === true, 'visibilitychange pauses bg video when hidden');
+  documentStub.hidden = false; (docListeners.visibilitychange || []).forEach(f => f());
+  ok(vEl.paused === false, 'visibilitychange resumes bg video when visible');
   const ls2 = sandbox2.localStorage; const origSet = ls2.setItem;
   ls2.setItem = () => { throw new Error('QuotaExceededError') };
   let qErr = null;
