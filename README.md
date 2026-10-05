@@ -619,5 +619,5 @@ node test.mjs   # 5445 assertions
 - ペイント語彙をピクセル空間にも拡張(`ellP`/`dotP` + stroke版 `ells`/`dots`/`ellPS`/`dotPS`、回転引数対応) — 正規化座標に乗らなかった400+箇所の生楕円/円パスも語彙化し実バイトも削減
 - 繰り返し構造も語彙化: `times`(固定回数ループ)/`scat`(乱数散布ループ)/`S`・`C`・`A`(三角オシレータ)/`LW`(最小線幅)を導入し700+箇所を機械変換 — 描画結果は同一、実バイトも削減
 - 代入列・ポリゴン・矩形も語彙化: 連続する `q.` 代入は `Object.assign(q, {...})` に集約(連鎖代入は保持)、`beginPath→moveTo→lineTo*→closePath→fill/stroke` は `poly`/`polyS` ヘルパー、`fillRect` は `rect` に機械変換 — 描画結果は同一
-- `poly`/`polyS` は点タプルの長さで lineTo(2)/quadraticCurveTo(4)/bezierCurveTo(6) を判別する可変引数で曲線パスも収容。スタイル代入は `FS`(fillStyle)/`SS`(strokeStyle)/`lnW`(lineWidth) に集約し900+箇所を変換
+- `poly`/`polyS` は点タプルの長さで lineTo(2)/quadraticCurveTo(4)/bezierCurveTo(6) を判別する可変引数で曲線パスも収容。スタイル代入は `FS`(fillStyle)/`SS`(strokeStyle)/`lnW`(lineWidth) に集約 — if/for/コメント後の文脈も含め1,500+箇所を変換。`drawBackdrop` 内で外側 `ctx` を直接参照していた箇所は引数 `c` に修正(潜在バグ除去)
 - 外部キー/ネットワーク/トラッキングなし。画像・動画・お気に入りは全てローカルに留まる
