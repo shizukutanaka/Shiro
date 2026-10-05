@@ -666,3 +666,4 @@ node test.mjs   # 5445 assertions
 - **r257**: フォーカス可視性 — `:focus-visible`にアクセント色outline、fav項目のfocusはborderハイライト（キーボードフォーカス位置が視認可能に）
 - **r258**: BlobURLリーク修復 — ファイル読込（モデル/背景）のcreateObjectURLを追跡し、差替え・リセット・読込失敗時に`takeURL()`/`revokeObjectURL`で解放（これまでロードごとに蓄積リーク）
 - **r259**: saveFavsのquota超過クラッシュ修復 — setItemをtry/catch化し容量超過時はerr表示（お気に入り増加でlocalStorage上限を超えると操作ごとに例外で死んでいた）
+- **r260**: フレームループの耐障害化 — 描画例外でrAFチェーンが死ぬ黙殺凍結を防止（rAFを先に再登録＋本体try/catch、エラーは一度だけ#errへ表示。r226級の「描画全体が1コマで凍結」バグの生存面を根本対策）
