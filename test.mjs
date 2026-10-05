@@ -442,7 +442,7 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
   throws(() => L.parseFavList('42'), 'non-array fav list rejected');
 }
 
-const mkUI = seed => {
+const mkUI = (seed, opts = {}) => {
   const h = { els: new Map(), calls: [], docListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null };
   const calls = h.calls;
   const fakeCtx = new Proxy({}, {
@@ -482,7 +482,7 @@ const mkUI = seed => {
   const sandbox2 = {
     console, document: documentStub,
     localStorage: { getItem: k => h.store.has(k) ? h.store.get(k) : null, setItem: (k, v) => h.store.set(k, String(v)), removeItem: k => h.store.delete(k) },
-    matchMedia: () => ({ matches: false, addEventListener() {} }),
+    matchMedia: q => ({ matches: !!(opts.rm && /reduced-motion/.test(q)), addEventListener() {} }),
     requestAnimationFrame: cb => { h.raf = cb; return 1 }, cancelAnimationFrame() {},
     performance, setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask,
     prompt: (m, d) => d || 'fav1', alert() {}, confirm: () => true,
@@ -568,11 +568,15 @@ const mkUI = seed => {
     const wm = getEl('inp-watermark'); wm.value = '@x'; wm.fire('input');
     const bb = getEl('inp-bubble'); bb.value = 'hi'; bb.fire('input');
     const ti = getEl('inp-title'); ti.value = 'T'; ti.fire('input');
+    for (const v of keysOf('PLACES')) { const e2 = getEl('sel-place'); e2.value = v; e2.fire('change') }
+    for (const v of keysOf('FACES')) { const e2 = getEl('sel-face'); e2.value = v; e2.fire('change') }
+    const wp = getEl('sel-wmpos'); wp.value = 'tl'; wp.fire('change');
+    const pf = getEl('sel-particles'); pf.value = 'snow'; pf.fire('change');
   } catch (e) { evErr2 = e }
   ok(!evErr2, `extended UI events fire without crash${evErr2 ? ': ' + evErr2.message : ''}`);
   ok(getEl('guides').classList.contains('on'), 'guides toggle applies class');
   ok(getEl('sel-place').value === '', 'place preset resets selector');
-  ok(getEl('sel-eyes').value === 'closed', 'face preset sets eyeStyle');
+  ok(getEl('sel-eyes').value === 'sharp', 'face preset sets eyeStyle (cool→sharp after full loop)');
   const errTxt = getEl('err').textContent;
   ok(errTxt === '' || typeof errTxt === 'string', 'err element text writable');
   ok(copyErr.includes('未対応'), 'png-copy reports unsupported');
@@ -629,6 +633,12 @@ const mkUI = seed => {
   const initErr = h.boot();
   ok(!initErr, `corrupt-storage boot still completes${initErr ? ': ' + initErr.message : ''}`);
   ok(h.getEl('sel-anim').value !== '', 'corrupt boot falls back to defaults');
+}
+{
+  const h = mkUI({}, { rm: true });
+  const initErr = h.boot();
+  ok(!initErr, `reduced-motion boot completes${initErr ? ': ' + initErr.message : ''}`);
+  ok(h.getEl('sel-anim').value === 'still', 'prefers-reduced-motion boots to still anim');
 }
 
 console.log(`${pass} pass / ${fail} fail`);
