@@ -8392,37 +8392,46 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   });
   clk('btn-reset', () => { state.params = L.defaultParams(); syncUI() });
 
+  const objURLs = { bg: null, media: null };
   function readURL(file) { return URL.createObjectURL(file) }
+  function takeURL(slot, url) {
+    const old = objURLs[slot]; objURLs[slot] = url;
+    if (old) setTimeout(() => URL.revokeObjectURL(old), 0)
+  }
   $('bg-file').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
     if (f.type.startsWith('video/')) {
-      const v = mk('video'); v.muted = true; v.loop = true; v.playsInline = true; v.src = readURL(f);
-      v.onloadeddata = () => { v.play().catch(() => {}); state.bg = v; err('') };
-      v.onerror = () => err('背景動画を読み込めませんでした(mp4/webm/mov 等を確認)')
+      const v = mk('video'); v.muted = true; v.loop = true; v.playsInline = true;
+      const u = readURL(f); v.src = u;
+      v.onloadeddata = () => { v.play().catch(() => {}); takeURL('bg', u); state.bg = v; err('') };
+      v.onerror = () => { URL.revokeObjectURL(u); err('背景動画を読み込めませんでした(mp4/webm/mov 等を確認)') }
     } else {
       const img = new Image();
-      img.onload = () => { state.bg = img; err('') };
-      img.onerror = () => err('背景画像を読み込めませんでした');
-      img.src = readURL(f)
+      const u = readURL(f);
+      img.onload = () => { takeURL('bg', u); state.bg = img; err('') };
+      img.onerror = () => { URL.revokeObjectURL(u); err('背景画像を読み込めませんでした') };
+      img.src = u
     }
     e.target.value = ''
   });
   $('model-file').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
     if (f.type.startsWith('video/')) {
-      const v = mk('video'); v.muted = true; v.loop = true; v.playsInline = true; v.src = readURL(f);
-      v.onloadeddata = () => { v.play().catch(() => {}); state.media = { kind: 'video', el: v }; state.keyParams = ''; err('') };
-      v.onerror = () => err('動画を読み込めませんでした(mp4/webm/mov 等を確認)')
+      const v = mk('video'); v.muted = true; v.loop = true; v.playsInline = true;
+      const u = readURL(f); v.src = u;
+      v.onloadeddata = () => { v.play().catch(() => {}); takeURL('media', u); state.media = { kind: 'video', el: v }; state.keyParams = ''; err('') };
+      v.onerror = () => { URL.revokeObjectURL(u); err('動画を読み込めませんでした(mp4/webm/mov 等を確認)') }
     } else if (f.type.startsWith('image/')) {
       const img = new Image();
-      img.onload = () => { state.media = { kind: 'image', el: img }; state.keyParams = ''; err('') };
-      img.onerror = () => err('画像を読み込めませんでした');
-      img.src = readURL(f)
+      const u = readURL(f);
+      img.onload = () => { takeURL('media', u); state.media = { kind: 'image', el: img }; state.keyParams = ''; err('') };
+      img.onerror = () => { URL.revokeObjectURL(u); err('画像を読み込めませんでした') };
+      img.src = u
     } else err('対応形式: 画像 / 動画ファイル');
     e.target.value = ''
   });
-  clk('btn-model-reset', () => { state.media = null });
-  clk('btn-bg-reset', () => { state.bg = null });
+  clk('btn-model-reset', () => { takeURL('media', null); state.media = null });
+  clk('btn-bg-reset', () => { takeURL('bg', null); state.bg = null });
 
   function download(blob, name) {
     const a = mk('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();

@@ -455,7 +455,7 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
 }
 
 const mkUI = (seed, opts = {}) => {
-  const h = { els: new Map(), calls: [], docListeners: {}, winListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null, timers: [], tt: 0, rs: 42 };
+  const h = { els: new Map(), calls: [], docListeners: {}, winListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null, timers: [], tt: 0, rs: 42, revokedUrls: 0 };
   const calls = h.calls;
   const fakeCtx = new Proxy({}, {
     get: (t2, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : k === 'getImageData' ? (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) :
@@ -503,7 +503,7 @@ const mkUI = (seed, opts = {}) => {
     clearInterval: x => { const i = h.timers.indexOf(x); if (i >= 0) h.timers.splice(i, 1) },
     queueMicrotask,
     prompt: (m, d) => d || 'fav1', alert() {}, confirm: () => true,
-    URL: { createObjectURL: () => { h.createdUrls++; return 'blob:x' }, revokeObjectURL() {} },
+    URL: { createObjectURL: () => { h.createdUrls++; return 'blob:x' }, revokeObjectURL: () => { h.revokedUrls++ } },
     navigator: {}, window: { addEventListener: (ev, f) => { (h.winListeners[ev] ||= []).push(f) } }, location: { href: '', hash: '' }, history: { replaceState() {} },
     Image: class { set src(v) { this._src = v; if (this.onload) setTimeout(() => this.onload(), 0) } },
     ImageData: class { constructor(w, h) { this.width = w; this.height = h; this.data = new Uint8ClampedArray(w * h * 4) } },
@@ -629,6 +629,8 @@ const mkUI = (seed, opts = {}) => {
   await new Promise(r => setTimeout(r, 0));
   const favJson2 = [...store.keys()].map(k => [k, store.get(k)]).filter(([k]) => /fav/i.test(k))[0]?.[1];
   ok(!favJson2 || Array.isArray(JSON.parse(favJson2)), 'fav store stays valid JSON');
+  h.getEl('btn-model-reset').click(); h.getEl('btn-bg-reset').click(); h.tick();
+  ok(h.revokedUrls > 0, `file-load object URLs revoked on reset (n=${h.revokedUrls})`);
   const fr2 = h.frames(3);
   ok(!fr2.e, `frames still clean after all events${fr2.e ? ': ' + fr2.e.message : ''}`);
   ok(calls.every(Number.isFinite), 'coords finite after extended events');
