@@ -3755,6 +3755,8 @@ if (typeof document !== 'undefined') (() => {
       FS(gr); rect(0, 0, W, H);
     };
       const ell = (x, y, rx, ry, rot) => { ellP(W * x,H * y,rx,ry,rot || 0); };
+      const lg = (a, b, cc, d, s) => { const g = c.createLinearGradient(a, b, cc, d); for (let k = 0; k < s.length; k += 2) g.addColorStop(s[k], s[k + 1]); return g; };
+      const rg = (a, b, r0, cc, d, r1, s) => { const g = c.createRadialGradient(a, b, r0, cc, d, r1); for (let k = 0; k < s.length; k += 2) g.addColorStop(s[k], s[k + 1]); return g; };
       const ellP = (x, y, rx, ry, rot) => { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, 7); c.fill(); };
       const ellPS = (x, y, rx, ry, rot) => { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, 7); c.stroke(); };
       const dotPS = (x, y, r) => { c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke(); };
@@ -3784,7 +3786,7 @@ if (typeof document !== 'undefined') (() => {
       });
       FS('rgba(240,240,220,0.95)'); dot(.8,.18,H * .07); // 月
     } else if (pr === 'spot') {
-      FS('#0b0c10'); rect(0, 0, W, H); const g = c.createRadialGradient(W * .5, H * .86, 10, W * .5, H * .86, W * .5); g.addColorStop(0, 'rgba(255,240,200,0.55)'); g.addColorStop(1, 'rgba(255,240,200,0)'); FS(g); mv(W * .44, 0); c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.lineTo(W * .9, H * .95); c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.lineTo(W * .9, H * .95); c.lineTo(W * .1, H * .95); c.closePath(); c.closePath(); c.fill(); ell(.5,.88,W * .28,H * .07); // 床の光り輪
+      FS('#0b0c10'); rect(0, 0, W, H); FS(rg(W * .5, H * .86, 10, W * .5, H * .86, W * .5,[0, 'rgba(255,240,200,0.55)',1, 'rgba(255,240,200,0)'])); mv(W * .44, 0); c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.lineTo(W * .9, H * .95); c.moveTo(W * .44, 0); c.lineTo(W * .56, 0); c.lineTo(W * .9, H * .95); c.lineTo(W * .1, H * .95); c.closePath(); c.closePath(); c.fill(); ell(.5,.88,W * .28,H * .07); // 床の光り輪
     } else if (pr === 'sky') {
       // 青空: 晴れの空 + ゆっくり流れる雲(手続き描画)
       sky([[0,'#2e7bd6'],[1,'#a8d4f0']]); scat(77, 5, (rng, i) => {
@@ -3795,7 +3797,7 @@ if (typeof document !== 'undefined') (() => {
       });
     } else if (pr === 'pastel') {
       // パステル虹: ふんわりした虹色グラデーション + 白い光斑
-      const gr = c.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#ffd9e8'); gr.addColorStop(.35, '#ffe9c9'); gr.addColorStop(.65, '#d9f2e3'); gr.addColorStop(1, '#c9e3ff'); FS(gr); rect(0, 0, W, H); const rng = L.mulberry32(4242); FS('rgba(255,255,255,0.5)');
+      FS(lg(0, 0, W, H,[0, '#ffd9e8',.35, '#ffe9c9',.65, '#d9f2e3',1, '#c9e3ff'])); rect(0, 0, W, H); const rng = L.mulberry32(4242); FS('rgba(255,255,255,0.5)');
       times(24, i => {
         dotP(rng() * W, rng() * H, 3 + rng() * 9);
       });
@@ -3805,7 +3807,7 @@ if (typeof document !== 'undefined') (() => {
       // 対岸のカルデラの崖(遠くの暗い輪郭)
       FS('#4a6078'); poly([0,H * .45],[W * .3,H * .38,W * .6,H * .43],[W * .85,H * .46,W,H * .42],[W,H * .52],[W,H * .52],[0,H * .52]);
       // エーゲ海(深い青)
-      const sg = c.createLinearGradient(0, H * .5, 0, H); sg.addColorStop(0, '#2a5a98'); sg.addColorStop(1, '#183a68'); FS(sg); rect(0, H * .5, W, H * .5);
+      FS(lg(0, H * .5, 0, H,[0, '#2a5a98',1, '#183a68'])); rect(0, H * .5, W, H * .5);
       // 海の光の揺らぎ
       c.fillStyle = 'rgba(255,255,255,0.25)'; scat(518, 14, (rng, i) => {
         rect(rng() * W, H * (.55 + rng() * .4), W * .04, H * .004);
@@ -3920,13 +3922,13 @@ if (typeof document !== 'undefined') (() => {
       // 頭上の隙間(天井の細い開口)
       FS('#f8e0a8'); mv(W * .45, 0); c.moveTo(W * .45, 0); c.lineTo(W * .56, 0); c.lineTo(W * .5, H * .07); c.lineTo(W * .5, H * .07); c.closePath(); c.lineTo(W * .5, H * .07); c.closePath(); c.fill();
       // 差し込む光柱(中央の柔らかい柱)
-      const lg = c.createLinearGradient(0, 0, 0, H * .85); lg.addColorStop(0, 'rgba(255,230,170,0.55)'); lg.addColorStop(1, 'rgba(255,230,170,0)'); FS(lg); mv(W * .46, 0); c.moveTo(W * .46, 0); c.lineTo(W * .55, 0); c.lineTo(W * .62, H * .85); c.lineTo(W * .62, H * .85); c.lineTo(W * .4, H * .85); c.closePath(); c.closePath(); c.fill();
+      FS(lg(0, 0, 0, H * .85,[0, 'rgba(255,230,170,0.55)',1, 'rgba(255,230,170,0)'])); mv(W * .46, 0); c.moveTo(W * .46, 0); c.lineTo(W * .55, 0); c.lineTo(W * .62, H * .85); c.lineTo(W * .62, H * .85); c.lineTo(W * .4, H * .85); c.closePath(); c.closePath(); c.fill();
       // 光の中の塵(ゆらめく点)
       FS('rgba(255,240,200,0.6)'); scat(909, 12, (rng7, i) => {
         const px = W * (.44 + rng7() * .14) + SI(t * .7 + i) * 3; const py = H * (.1 + rng7() * .6); rect(px, py, 1.5, 1.5);
       });
       // 砂の床(照らされた細砂)
-      const sg = c.createLinearGradient(0, H * .82, 0, H); sg.addColorStop(0, '#d8a060'); sg.addColorStop(1, '#a06030'); FS(sg); poly([0,H],[W * .5,H * .82,W,H]);
+      FS(lg(0, H * .82, 0, H,[0, '#d8a060',1, '#a06030'])); poly([0,H],[W * .5,H * .82,W,H]);
     } else if (pr === 'angkor') {
       // アンコール: 蓮の蕾の塔群+薄明の空+池の映り込み+ジャングルの樹線
       sky([[0,'#e8a060'],[.4,'#f0c890'],[1,'#986848']]);
@@ -3953,7 +3955,7 @@ if (typeof document !== 'undefined') (() => {
       // 基壇(塔の土台)
       FS('#4a3626'); rect(0, H * .58, W, H * .05);
       // 静かな池(映り込み — 塔を反転した淡像)
-      const pg = c.createLinearGradient(0, H * .63, 0, H); pg.addColorStop(0, '#b89068'); pg.addColorStop(1, '#7a5838'); FS(pg); rect(0, H * .63, W, H * .37);
+      FS(lg(0, H * .63, 0, H,[0, '#b89068',1, '#7a5838'])); rect(0, H * .63, W, H * .37);
       // 映り込み(薄い塔の逆さ影)
       FS('rgba(90,66,48,0.45)');
       for (const [tx, tw] of towers) {
@@ -3980,7 +3982,7 @@ if (typeof document !== 'undefined') (() => {
       }
       c.lineTo(W, H * .58); c.lineTo(W, H * .58); c.lineTo(0, H * .58); c.closePath(); c.closePath(); c.fill();
       // 湿原の水面
-      const wg = c.createLinearGradient(0, H * .58, 0, H); wg.addColorStop(0, '#7a8a58'); wg.addColorStop(1, '#4a5c40'); FS(wg); rect(0, H * .58, W, H * .42);
+      FS(lg(0, H * .58, 0, H,[0, '#7a8a58',1, '#4a5c40'])); rect(0, H * .58, W, H * .42);
       // 浮草のパッチ(明るい円形の葉群)
       FS('#6a8a48'); scat(471, 14, (rngB, i) => {
         ell(rngB(), (.62 + rngB() * .32), W * (.02 + rngB() * .04), H * (.006 + rngB() * .01));
@@ -4011,7 +4013,7 @@ if (typeof document !== 'undefined') (() => {
     } else if (pr === 'deadvlei') {
       // デッドフレイ: 白い粘土盤+枯れ木の黒い骨格+赤い砂丘の壁
       // 空(深い青)
-      const gr = c.createLinearGradient(0, 0, 0, H * .55); gr.addColorStop(0, '#3050a0'); gr.addColorStop(1, '#7898c8'); FS(gr); rect(0, 0, W, H * .55);
+      FS(lg(0, 0, 0, H * .55,[0, '#3050a0',1, '#7898c8'])); rect(0, 0, W, H * .55);
       // 灼熱の太陽
       c.fillStyle = '#f8e8c0'; dot(.75,.12,W * .045);
       // 赤い砂丘の壁(ナミブの大砂丘 — 稜線が光る)
@@ -4021,7 +4023,7 @@ if (typeof document !== 'undefined') (() => {
       // 稜線のハイライト
       c.strokeStyle = '#e88848'; lnW(2); mv(0, H * .55); c.quadraticCurveTo(W * .15, H * .18, W * .45, H * .3); c.quadraticCurveTo(W * .6, H * .36, W * .78, H * .22); c.quadraticCurveTo(W * .9, H * .16, W, H * .28); c.stroke();
       // 白い粘土盤(明るい台地)
-      const pg = c.createLinearGradient(0, H * .55, 0, H); pg.addColorStop(0, '#e8e0d0'); pg.addColorStop(1, '#c8bcA8'); FS(pg); rect(0, H * .55, W, H * .45);
+      FS(lg(0, H * .55, 0, H,[0, '#e8e0d0',1, '#c8bcA8'])); rect(0, H * .55, W, H * .45);
       // 枯れ木の骨格(黒い枝々 — 幹から分岐する反復)
       const rngT = L.mulberry32(666); const trees = [[.15, .78, .16], [.4, .7, .2], [.62, .82, .13], [.85, .68, .18]];
       for (const [tx, ty, ts] of trees) {
@@ -4044,7 +4046,7 @@ if (typeof document !== 'undefined') (() => {
       });
     } else if (pr === 'uyuni') {
       // ウユニ鏡張り: 星空と天の川を完全に写す薄水の塩原
-      const gr = c.createLinearGradient(0, 0, 0, H * .5); gr.addColorStop(0, '#12082e'); gr.addColorStop(1, '#3a2058'); FS(gr); rect(0, 0, W, H * .5);
+      FS(lg(0, 0, 0, H * .5,[0, '#12082e',1, '#3a2058'])); rect(0, 0, W, H * .5);
       // 天の川(斜めの淡い帯+密集星)
       FS('rgba(200,180,230,0.08)'); c.save(); c.translate(W * .5, H * .22); c.rotate(-.3); rect(-W, -H * .06, W * 2, H * .12); c.restore();
       // 星(上部の密集帯+散りばめ)
@@ -4060,7 +4062,7 @@ if (typeof document !== 'undefined') (() => {
       // 遠くの山影(薄いシルエット)
       FS('#241040'); poly([0,H * .5],[W * .12,H * .46],[W * .25,H * .5],[W * .7,H * .5],[W * .82,H * .47],[W * .95,H * .5]);
       // 鏡の水面(下半 — 空の反転グラデ)
-      const mg = c.createLinearGradient(0, H * .5, 0, H); mg.addColorStop(0, '#3a2058'); mg.addColorStop(1, '#150a30'); FS(mg); rect(0, H * .5, W, H * .5);
+      FS(lg(0, H * .5, 0, H,[0, '#3a2058',1, '#150a30'])); rect(0, H * .5, W, H * .5);
       // 星の映り込み(下部)
       scat(777, 90, (rngV, i) => {
         const sx = W * rngV(); const sy = H - H * .48 * Math.pow(rngV(), 1.4);
@@ -4104,7 +4106,7 @@ if (typeof document !== 'undefined') (() => {
         c.fillStyle = '#3a2418'; rect(bx - bs * .5, base - bs * .35, bs, bs * .35); ellP(bx, base - bs * .45, bs * .38, bs * .25); poly([bx - bs * .3,base - bs * .6],[bx,base - bs * 1.15],[bx + bs * .3,base - bs * .6]); // 台座 // 円身 // 尖塔
       }
       // 地面(暗い平野)
-      const gg = c.createLinearGradient(0, H * .62, 0, H); gg.addColorStop(0, '#4a3228'); gg.addColorStop(1, '#241410'); FS(gg); rect(0, H * .62, W, H * .38);
+      FS(lg(0, H * .62, 0, H,[0, '#4a3228',1, '#241410'])); rect(0, H * .62, W, H * .38);
       // 霧の帯2枚(塔の間を漂う)
       FS('rgba(230,180,140,0.15)');
       times(2, i => {
@@ -4127,7 +4129,7 @@ if (typeof document !== 'undefined') (() => {
       // 麓の丘(草の緑)
       FS('#4a6a48'); poly([0,H * .58],[W * .2,H * .55,W * .5,H * .58],[W * .8,H * .61,W,H * .57],[W,H * .7],[W,H * .7],[0,H * .7]);
       // ターコイズ湖(パタゴニアの碧い水)
-      const lg = c.createLinearGradient(0, H * .62, 0, H); lg.addColorStop(0, '#58b8c0'); lg.addColorStop(1, '#2a7080'); FS(lg); rect(0, H * .62, W, H * .38);
+      FS(lg(0, H * .62, 0, H,[0, '#58b8c0',1, '#2a7080'])); rect(0, H * .62, W, H * .38);
       // 湖畔の砂州(手前の浜線)
       FS('#8a7a60'); poly([0,H * .68],[W * .5,H * .66,W,H * .7],[W,H * .72],[W,H * .72],[0,H * .72]);
       // 塔の映り込み(薄い反転影)
@@ -4164,7 +4166,7 @@ if (typeof document !== 'undefined') (() => {
       // 第2の滝(右側の細筋)
       SS('rgba(240,245,250,0.7)'); lnW(W * .005); mv(W * .82, H * .3); c.quadraticCurveTo(W * .84, H * .45, W * .83, H * .58); c.stroke();
       // 谷床の牧草地
-      const gg = c.createLinearGradient(0, H * .5, 0, H); gg.addColorStop(0, '#6a9a58'); gg.addColorStop(1, '#3a6a38'); FS(gg); poly([0,H * .7],[W * .5,H * .55,W,H * .72],[W,H],[W,H],[0,H]);
+      FS(lg(0, H * .5, 0, H,[0, '#6a9a58',1, '#3a6a38'])); poly([0,H * .7],[W * .5,H * .55,W,H * .72],[W,H],[W,H],[0,H]);
       // 谷の小川(蛇行する白い筋)
       SS('rgba(220,235,240,0.7)'); lnW(W * .006); mv(W * .5, H * .56); c.quadraticCurveTo(W * .42, H * .7, W * .55, H * .82); c.quadraticCurveTo(W * .6, H * .9, W * .5, H); c.stroke();
       // 教会(尖塔の小さな村)
@@ -4195,7 +4197,7 @@ if (typeof document !== 'undefined') (() => {
       // 教会の尖塔(村の奥に高く立つ)
       const chx = W * .45, chy = H * .5; FS('#e8e4da'); poly([chx - W * .018,chy],[chx - W * .015,chy - H * .12],[chx + W * .015,chy - H * .12],[chx + W * .018,chy]); FS('#4a3828'); poly([chx - W * .022,chy - H * .12],[chx,chy - H * .18],[chx + W * .022,chy - H * .12]);
       // 湖(鏡の水面)
-      const lg = c.createLinearGradient(0, H * .52, 0, H); lg.addColorStop(0, '#7aa0b0'); lg.addColorStop(1, '#3a5c6a'); FS(lg); rect(0, H * .52, W, H * .48);
+      FS(lg(0, H * .52, 0, H,[0, '#7aa0b0',1, '#3a5c6a'])); rect(0, H * .52, W, H * .48);
       // 家と山の映り込み(薄い反転)
       FS('rgba(120,140,150,0.2)');
       for (const [hx2, col, hs] of houses) {
@@ -4290,7 +4292,7 @@ if (typeof document !== 'undefined') (() => {
       // 峰の夕照(左端の薄いオレンジ)
       FS('rgba(230,180,140,0.3)'); poly([W * .2 - W * .12,H * .62],[W * .2 - W * .036,H * .42],[W * .2,H * .38],[W * .2 + W * .12,H * .62]);
       // 高山草地(緑の大地)
-      const mg = c.createLinearGradient(0, H * .62, 0, H); mg.addColorStop(0, '#6a9860'); mg.addColorStop(1, '#3a5c38'); FS(mg); rect(0, H * .62, W, H * .38);
+      FS(lg(0, H * .62, 0, H,[0, '#6a9860',1, '#3a5c38'])); rect(0, H * .62, W, H * .38);
       // 針葉樹(山小屋の背後の黒い三角列)
       FS('#2a4a30');
       times(6, i => {
@@ -4349,7 +4351,7 @@ if (typeof document !== 'undefined') (() => {
         c.fillStyle = '#3a5848'; c.beginPath(); c.ellipse(bx, H * (py - .04), W * pw * .12, H * .015, 0, 0, 7); c.ellipse(bx, H * (py - .04), W * pw * .12, H * .015, 0, 0, 7); c.fill(); FS('#5a7868');
       }
       // 海(翡翠の水面)
-      const sg = c.createLinearGradient(0, H * .55, 0, H); sg.addColorStop(0, '#6a9888'); sg.addColorStop(1, '#2a4a44'); FS(sg); rect(0, H * .55, W, H * .45);
+      FS(lg(0, H * .55, 0, H,[0, '#6a9888',1, '#2a4a44'])); rect(0, H * .55, W, H * .45);
       // 岩の映り込み
       c.fillStyle = 'rgba(90,120,104,0.25)';
       for (const [px, py, pw] of near) {
@@ -4407,7 +4409,7 @@ if (typeof document !== 'undefined') (() => {
         const [rx, ry] = ridge[i]; poly([W * rx - W * .02,H * (ry + .06)],[W * rx,H * ry],[W * rx + W * .02,H * (ry + .06)]);
       }
       // フィヨルド(ターコイズの水面)
-      const fg = c.createLinearGradient(0, H * .55, 0, H); fg.addColorStop(0, '#5a9890'); fg.addColorStop(1, '#2a4a50'); FS(fg); rect(0, H * .55, W, H * .45);
+      FS(lg(0, H * .55, 0, H,[0, '#5a9890',1, '#2a4a50'])); rect(0, H * .55, W, H * .45);
       // 岸辺(手前の草地)
       FS('#4a7048'); poly([0,H * .82],[W * .4,H * .78,W,H * .84],[W,H],[W,H],[0,H]);
       // 赤いロルブー小屋2棟(杭の上の白壁の家)
@@ -4480,7 +4482,7 @@ if (typeof document !== 'undefined') (() => {
       // 遠景の石灰岩台地(平らな断崖)
       FS('#b0a088'); poly([0,H * .5],[W * .2,H * .38],[W * .2,H * .38],[W * .55,H * .36],[W * .58,H * .42],[W * .58,H * .42],[W * .85,H * .44],[W,H * .5],[W,H * .5],[W,H * .6],[W,H * .5],[W,H * .6],[0,H * .6]);
       // 海(台地の手前)
-      const sg = c.createLinearGradient(0, H * .55, 0, H * .78); sg.addColorStop(0, '#50b8b0'); sg.addColorStop(1, '#2a8880'); FS(sg); rect(0, H * .55, W, H * .23);
+      FS(lg(0, H * .55, 0, H * .78,[0, '#50b8b0',1, '#2a8880'])); rect(0, H * .55, W, H * .23);
       // 白い砂浜(手前)
       FS('#f0e8d0'); poly([0,H * .78],[W * .5,H * .74,W,H * .8],[W,H],[W,H],[0,H]);
       // 竜血樹3本(傘状の緑冠+枝分かれの幹)
@@ -4515,7 +4517,7 @@ if (typeof document !== 'undefined') (() => {
       }
       c.lineTo(W, H * .58); c.lineTo(W, H * .58); c.lineTo(0, H * .58); c.closePath(); c.closePath(); c.fill();
       // 湖面(広い水)
-      const wg = c.createLinearGradient(0, H * .55, 0, H); wg.addColorStop(0, '#6a9a90'); wg.addColorStop(1, '#3a5850'); FS(wg); rect(0, H * .55, W, H * .45);
+      FS(lg(0, H * .55, 0, H,[0, '#6a9a90',1, '#3a5850'])); rect(0, H * .55, W, H * .45);
       // 高床家屋2棟(高い杭の上の小屋)
       const stilts = [[.2, .68], [.48, .65]];
       for (const [sx, sy] of stilts) {
@@ -4576,7 +4578,7 @@ if (typeof document !== 'undefined') (() => {
       // 遠景のコピエ(岩の小丘)
       FS('#7a5c40'); c.beginPath(); c.ellipse(W * .15, H * .6, W * .1, H * .04, 0, PI, 0); c.ellipse(W * .15, H * .6, W * .1, H * .04, 0, PI, 0); c.fill();
       // サバンナ(地平線から手前)
-      const sg = c.createLinearGradient(0, H * .6, 0, H); sg.addColorStop(0, '#c8a858'); sg.addColorStop(1, '#8a7040'); FS(sg); poly([0,H * .62],[W * .5,H * .58,W,H * .62],[W,H],[W,H],[0,H]);
+      FS(lg(0, H * .6, 0, H,[0, '#c8a858',1, '#8a7040'])); poly([0,H * .62],[W * .5,H * .58,W,H * .62],[W,H],[W,H],[0,H]);
       // 平らな傘のアカシア2本(幹+平たい樹冠)
       const acacia = [[.18, .7, .14], [.78, .66, .18]];
       for (const [ax, ay, as_] of acacia) {
@@ -5235,7 +5237,7 @@ if (typeof document !== 'undefined') (() => {
       // 火山の円錐(中央の大きな山)
       const vx = W * .5, vy = H * .62, vw = W * .55; FS('#4a3838'); poly([vx - vw / 2,H * .85],[vx - vw * .18,vy],[vx + vw * .18,vy],[vx + vw / 2,H * .85]);
       // 噴火口の赤い輝き(山頂の丸い光)
-      const glow = c.createRadialGradient(vx, vy, 0, vx, vy, W * .12); glow.addColorStop(0, 'rgba(255,120,40,0.9)'); glow.addColorStop(.5, 'rgba(220,60,30,0.5)'); glow.addColorStop(1, 'rgba(220,60,30,0)'); FS(glow); dotP(vx, vy, W * .12);
+      FS(rg(vx, vy, 0, vx, vy, W * .12,[0, 'rgba(255,120,40,0.9)',.5, 'rgba(220,60,30,0.5)',1, 'rgba(220,60,30,0)'])); dotP(vx, vy, W * .12);
       // 噴火口(暗い切れ込み)
       FS('#2a2020'); ellP(vx, vy, W * .09, H * .018);
       // 溶岩弾(放物線の火玉)
@@ -5675,7 +5677,7 @@ if (typeof document !== 'undefined') (() => {
       // 遠くの小さな丘
       c.fillStyle = '#2a3048'; poly([0,H * .48],[W * .15,H * .42,W * .3,H * .48],[W * .5,H * .44,W * .65,H * .48],[W,H * .48],[W,H * .48],[W,H * .6],[W,H * .48],[W,H * .6],[0,H * .6]);
       // 白い塩の大地(月の光を反射)
-      const sg = c.createLinearGradient(0, H * .5, 0, H); sg.addColorStop(0, '#d0d4e0'); sg.addColorStop(1, '#9098b0'); FS(sg); rect(0, H * .5, W, H * .5);
+      FS(lg(0, H * .5, 0, H,[0, '#d0d4e0',1, '#9098b0'])); rect(0, H * .5, W, H * .5);
       // 月の光の道
       c.fillStyle = 'rgba(240,240,250,0.35)'; poly([W * .62,H],[W * .67,H * .5],[W * .73,H * .5],[W * .78,H]);
       // 塩の亀裂模様(不規則な網目)
@@ -6022,7 +6024,7 @@ if (typeof document !== 'undefined') (() => {
       // 崖の緑
       c.fillStyle = '#4a6a52'; mv(0, 0); c.moveTo(0, 0); c.lineTo(W * .3, 0); c.moveTo(0, 0); c.lineTo(W * .3, 0); c.lineTo(W * .28, H * .1); c.moveTo(0, 0); c.lineTo(W * .3, 0); c.lineTo(W * .28, H * .1); c.lineTo(0, H * .15); c.closePath(); c.closePath(); c.fill(); mv(W, 0); c.moveTo(W, 0); c.lineTo(W * .72, 0); c.moveTo(W, 0); c.lineTo(W * .72, 0); c.lineTo(W * .74, H * .1); c.moveTo(W, 0); c.lineTo(W * .72, 0); c.lineTo(W * .74, H * .1); c.lineTo(W, H * .15); c.closePath(); c.closePath(); c.fill();
       // 川の水(深い緑青)
-      const wat = c.createLinearGradient(0, H * .4, 0, H); wat.addColorStop(0, '#3a7a80'); wat.addColorStop(1, '#1a4a58'); FS(wat); mv(W * .28, H * .55); c.moveTo(W * .28, H * .55); c.lineTo(W * .18, H); c.lineTo(W * .84, H); c.lineTo(W * .84, H); c.lineTo(W * .74, H * .55); c.closePath(); c.closePath(); c.fill();
+      FS(lg(0, H * .4, 0, H,[0, '#3a7a80',1, '#1a4a58'])); mv(W * .28, H * .55); c.moveTo(W * .28, H * .55); c.lineTo(W * .18, H); c.lineTo(W * .84, H); c.lineTo(W * .84, H); c.lineTo(W * .74, H * .55); c.closePath(); c.closePath(); c.fill();
       // 転がる岩+白い水しぶき
       const rng = L.mulberry32(941);
       times(7, i => {
@@ -6052,7 +6054,7 @@ if (typeof document !== 'undefined') (() => {
       // 氷山の影面
       c.fillStyle = '#a8c8dc'; poly([W * .55,H * .22],[W * .63,H * .4],[W * .72,H * .58],[W * .55,H * .58]); FS('#c0dcea'); poly([W * .46,H * .42],[W * .55,H * .22],[W * .55,H * .58],[W * .4,H * .58]);
       // 海
-      const sea = c.createLinearGradient(0, H * .58, 0, H); sea.addColorStop(0, '#2a4a62'); sea.addColorStop(1, '#16283a'); FS(sea); rect(0, H * .58, W, H * .42);
+      FS(lg(0, H * .58, 0, H,[0, '#2a4a62',1, '#16283a'])); rect(0, H * .58, W, H * .42);
       // 氷山の映り込み
       c.fillStyle = 'rgba(190,220,235,0.25)'; poly([W * .35,H * .58],[W * .5,H * .72],[W * .68,H * .58]);
       // 流氷の欠片
@@ -6107,7 +6109,7 @@ if (typeof document !== 'undefined') (() => {
       // 青の洞窟: 輝く青い水+鍾乳石+水面の反射+入口の光
       sky([[0,'#0a1520'],[.55,'#10283a'],[1,'#0a3a50']]);
       // 入口の白光(奥)
-      const glow = c.createRadialGradient(W * .5, H * .38, 0, W * .5, H * .38, W * .25); glow.addColorStop(0, 'rgba(180,220,255,0.7)'); glow.addColorStop(1, 'rgba(180,220,255,0)'); FS(glow); rect(0, 0, W, H * .7);
+      FS(rg(W * .5, H * .38, 0, W * .5, H * .38, W * .25,[0, 'rgba(180,220,255,0.7)',1, 'rgba(180,220,255,0)'])); rect(0, 0, W, H * .7);
       // 鍾乳石
       c.fillStyle = '#1a2a35'; scat(887, 12, (rng, i) => {
         const sx = rng() * W; const sh = H * (.08 + rng() * .22); const sw = W * (.01 + rng() * .03); poly([sx - sw,0],[sx,sh],[sx + sw,0]);
@@ -6115,7 +6117,7 @@ if (typeof document !== 'undefined') (() => {
       // 側壁の岩
       c.fillStyle = '#16242e'; mv(0, 0); c.moveTo(0, 0); c.lineTo(W * .12, 0); c.quadraticCurveTo(W * .16, H * .4, W * .1, H * .6); c.lineTo(0, H * .75); c.lineTo(0, H * .75); c.closePath(); c.lineTo(0, H * .75); c.closePath(); c.fill(); mv(W, 0); c.moveTo(W, 0); c.lineTo(W * .88, 0); c.quadraticCurveTo(W * .84, H * .4, W * .9, H * .6); c.lineTo(W, H * .75); c.lineTo(W, H * .75); c.closePath(); c.lineTo(W, H * .75); c.closePath(); c.fill();
       // 輝く青い水面
-      const water = c.createLinearGradient(0, H * .62, 0, H); water.addColorStop(0, '#1a6a8a'); water.addColorStop(1, '#0a4a6a'); FS(water); rect(0, H * .62, W, H * .38);
+      FS(lg(0, H * .62, 0, H,[0, '#1a6a8a',1, '#0a4a6a'])); rect(0, H * .62, W, H * .38);
       // 水面の光の反射(ゆらぐ)
       FS('rgba(150,220,255,0.3)');
       times(10, i => {
@@ -6265,7 +6267,7 @@ if (typeof document !== 'undefined') (() => {
         });
       });
       // 水溜り(三日月状の水域)
-      const wg = c.createLinearGradient(0, H * .62, 0, H * .85); wg.addColorStop(0, '#5a8a9a'); wg.addColorStop(1, '#3a6a7a'); FS(wg); ell(.55, .72, W * .32, H * .11);
+      FS(lg(0, H * .62, 0, H * .85,[0, '#5a8a9a',1, '#3a6a7a'])); ell(.55, .72, W * .32, H * .11);
       // 木の映り込み
       c.fillStyle = 'rgba(90,120,90,0.3)';
       times(3, i => {
@@ -6299,7 +6301,7 @@ if (typeof document !== 'undefined') (() => {
         c.fillStyle = '#4a6a4a'; ell(sx, (.7 - sh) - H * .008, W * sw * .8, H * .012); FS('#3a4a52');
       }
       // 海面
-      const wg = c.createLinearGradient(0, H * .7, 0, H); wg.addColorStop(0, '#3a6a85'); wg.addColorStop(1, '#1e4a60'); FS(wg); rect(0, H * .7, W, H * .3);
+      FS(lg(0, H * .7, 0, H,[0, '#3a6a85',1, '#1e4a60'])); rect(0, H * .7, W, H * .3);
       // 岩柱の根元に砕ける白波
       c.fillStyle = 'rgba(240,250,255,0.6)';
       for (const [sx] of stacks) {
@@ -6401,7 +6403,7 @@ if (typeof document !== 'undefined') (() => {
       // 丘の上の小さな城跡
       c.fillStyle = '#2a3a40'; const cx = W * .52, cy = H * .34; rect(cx, cy, W * .015, H * .06); rect(cx + W * .02, cy - H * .01, W * .012, H * .07);
       // 湖面
-      const wg = c.createLinearGradient(0, H * .58, 0, H); wg.addColorStop(0, '#1a3a50'); wg.addColorStop(1, '#0e2a3a'); FS(wg); rect(0, H * .58, W, H * .42);
+      FS(lg(0, H * .58, 0, H,[0, '#1a3a50',1, '#0e2a3a'])); rect(0, H * .58, W, H * .42);
       // 反射の丘影
       c.fillStyle = 'rgba(50,70,80,0.35)'; poly([W * .3,H * .58],[W * .45,H * .7,W * .55,H * .58]);
       // 漂う霧の帯
@@ -7265,7 +7267,7 @@ if (typeof document !== 'undefined') (() => {
         rect(sx, sy, 1.5, 1.5);
       });
       // 天の川(斜めの淡い帯)
-      c.save(); c.translate(W * .5, H * .3); c.rotate(-.4); const mg = c.createLinearGradient(0, -H * .08, 0, H * .08); mg.addColorStop(0, 'rgba(180,190,230,0)'); mg.addColorStop(.5, 'rgba(180,190,230,0.22)'); mg.addColorStop(1, 'rgba(180,190,230,0)'); FS(mg); rect(-W, -H * .08, W * 2, H * .16); c.restore();
+      c.save(); c.translate(W * .5, H * .3); c.rotate(-.4); FS(lg(0, -H * .08, 0, H * .08,[0, 'rgba(180,190,230,0)',.5, 'rgba(180,190,230,0.22)',1, 'rgba(180,190,230,0)'])); rect(-W, -H * .08, W * 2, H * .16); c.restore();
       // 山稜
       c.fillStyle = '#141826'; mv(0, H * .7);
       for (let i = 0; i <= 8; i++) c.lineTo(W * i / 8, H * .7 - (i % 2) * H * .06 - rng() * H * .03);
@@ -7865,7 +7867,7 @@ if (typeof document !== 'undefined') (() => {
       // 竹林: 緑の光 + 竹の幹(節つき) + 舞う葉
       sky([[0,'#8fbf7a'],[.5,'#5e9e5a'],[1,'#2e5e40']]);
       // 木漏れ日
-      const lg = c.createLinearGradient(0, 0, W * .4, H); lg.addColorStop(0, 'rgba(255,250,200,0.25)'); lg.addColorStop(1, 'rgba(255,250,200,0)'); FS(lg); rect(0, 0, W, H); const rng = L.mulberry32(91);
+      FS(lg(0, 0, W * .4, H,[0, 'rgba(255,250,200,0.25)',1, 'rgba(255,250,200,0)'])); rect(0, 0, W, H); const rng = L.mulberry32(91);
       // 竹の幹(奥:薄い 手前:濃い)
       for (let i = 0; i < 14; i++) {
         const bx = rng() * W, bw = W * (.008 + rng() * .012); const deep = rng() < .5; FS(deep ? 'rgba(40,90,50,0.5)' : 'rgba(25,70,38,0.9)'); rect(bx - bw / 2, 0, bw, H);
@@ -7924,7 +7926,7 @@ if (typeof document !== 'undefined') (() => {
       // 洞窟: 暗い岩壁 + 天井の鍾乳石 + 差し込む光 + 水面の輝き
       sky([[0,'#0c0f16'],[.7,'#1a2030'],[1,'#0a0d14']]);
       // 光の柱(斜めに差し込む)
-      const lg = c.createLinearGradient(W * .3, 0, W * .55, H); lg.addColorStop(0, 'rgba(200,225,255,0.22)'); lg.addColorStop(1, 'rgba(200,225,255,0)'); FS(lg); mv(W * .32, 0); c.moveTo(W * .32, 0); c.lineTo(W * .48, 0); c.moveTo(W * .32, 0); c.lineTo(W * .48, 0); c.lineTo(W * .68, H); c.moveTo(W * .32, 0); c.lineTo(W * .48, 0); c.lineTo(W * .68, H); c.lineTo(W * .4, H); c.closePath(); c.closePath(); c.fill();
+      FS(lg(W * .3, 0, W * .55, H,[0, 'rgba(200,225,255,0.22)',1, 'rgba(200,225,255,0)'])); mv(W * .32, 0); c.moveTo(W * .32, 0); c.lineTo(W * .48, 0); c.moveTo(W * .32, 0); c.lineTo(W * .48, 0); c.lineTo(W * .68, H); c.moveTo(W * .32, 0); c.lineTo(W * .48, 0); c.lineTo(W * .68, H); c.lineTo(W * .4, H); c.closePath(); c.closePath(); c.fill();
       // 鍾乳石(天井から下がる三角)
       const rng = L.mulberry32(77); FS('#2a3242');
       times(12, i => {
@@ -8105,13 +8107,13 @@ if (typeof document !== 'undefined') (() => {
         rect(rng() * W, rng() * H, 1.4, 1.4);
       });
       // 惑星: 帯グラデーションの球体 + 傾いたリング
-      const px2 = W * .72, py2 = H * .4, pr2 = H * .2; const pg = c.createLinearGradient(px2 - pr2, py2 - pr2, px2 + pr2, py2 + pr2); pg.addColorStop(0, '#e8c98a'); pg.addColorStop(.5, '#b98d4f'); pg.addColorStop(1, '#6e4f2a'); FS(pg); dotP(px2, py2, pr2); SS('rgba(230,210,170,0.55)'); lnW(H * .02); ellPS(px2, py2 + pr2 * .1, pr2 * 1.8, pr2 * .45, -.18);
+      const px2 = W * .72, py2 = H * .4, pr2 = H * .2; FS(lg(px2 - pr2, py2 - pr2, px2 + pr2, py2 + pr2,[0, '#e8c98a',.5, '#b98d4f',1, '#6e4f2a'])); dotP(px2, py2, pr2); SS('rgba(230,210,170,0.55)'); lnW(H * .02); ellPS(px2, py2 + pr2 * .1, pr2 * 1.8, pr2 * .45, -.18);
     } else if (pr === 'sea') {
       // 海中: 深い青 + 差し込む光の柱 + 昇る泡(決定論的)
       sky([[0,'#0a4d7a'],[.6,'#0b3a63'],[1,'#061f38']]);
       // 光の柱(斜めの柔らかい帯)
       times(5, i => {
-        const lx = W * (.15 + i * .18); const g2 = c.createLinearGradient(lx, 0, lx + W * .12, H); g2.addColorStop(0, 'rgba(180,230,255,0.18)'); g2.addColorStop(1, 'rgba(180,230,255,0)'); FS(g2); mv(lx, 0); c.moveTo(lx, 0); c.lineTo(lx + W * .05, 0); c.lineTo(lx + W * .05 + W * .14, H); c.lineTo(lx + W * .05 + W * .14, H); c.lineTo(lx + W * .14, H); c.closePath(); c.closePath(); c.fill();
+        const lx = W * (.15 + i * .18); FS(lg(lx, 0, lx + W * .12, H,[0, 'rgba(180,230,255,0.18)',1, 'rgba(180,230,255,0)'])); mv(lx, 0); c.moveTo(lx, 0); c.lineTo(lx + W * .05, 0); c.lineTo(lx + W * .05 + W * .14, H); c.lineTo(lx + W * .05 + W * .14, H); c.lineTo(lx + W * .14, H); c.closePath(); c.closePath(); c.fill();
       });
       // 昇る泡
       scat(202, 22, (rng, i) => {
@@ -8184,7 +8186,7 @@ if (typeof document !== 'undefined') (() => {
       });
       c.globalAlpha = 1;
       // 地平線の輝き
-      const hg = c.createLinearGradient(0, horizon - 14, 0, horizon + 14); hg.addColorStop(0, 'rgba(255,110,200,0)'); hg.addColorStop(.5, 'rgba(255,150,220,0.55)'); hg.addColorStop(1, 'rgba(255,110,200,0)'); FS(hg); rect(0, horizon - 14, W, 28);
+      FS(lg(0, horizon - 14, 0, horizon + 14,[0, 'rgba(255,110,200,0)',.5, 'rgba(255,150,220,0.55)',1, 'rgba(255,110,200,0)'])); rect(0, horizon - 14, W, 28);
     } else if (pr === 'city') {
       // 夜景ビル群: 薄明りの空 + ビルシルエット + 灯りのついた窓(決定論的)
       sky([[0,'#141a30'],[1,'#3a3050']]); const rng = L.mulberry32(555); const n = 8;
