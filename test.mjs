@@ -455,7 +455,7 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
 }
 
 const mkUI = (seed, opts = {}) => {
-  const h = { els: new Map(), calls: [], docListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null, timers: [], tt: 0, rs: 42 };
+  const h = { els: new Map(), calls: [], docListeners: {}, winListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null, timers: [], tt: 0, rs: 42 };
   const calls = h.calls;
   const fakeCtx = new Proxy({}, {
     get: (t2, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : k === 'getImageData' ? (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) :
@@ -504,7 +504,7 @@ const mkUI = (seed, opts = {}) => {
     queueMicrotask,
     prompt: (m, d) => d || 'fav1', alert() {}, confirm: () => true,
     URL: { createObjectURL: () => { h.createdUrls++; return 'blob:x' }, revokeObjectURL() {} },
-    navigator: {}, window: {}, location: { href: '', hash: '' }, history: { replaceState() {} },
+    navigator: {}, window: { addEventListener: (ev, f) => { (h.winListeners[ev] ||= []).push(f) } }, location: { href: '', hash: '' }, history: { replaceState() {} },
     Image: class { set src(v) { this._src = v; if (this.onload) setTimeout(() => this.onload(), 0) } },
     ImageData: class { constructor(w, h) { this.width = w; this.height = h; this.data = new Uint8ClampedArray(w * h * 4) } },
     Blob: class { constructor(parts, opts) { this.parts = parts; this.type = opts && opts.type } },
@@ -683,6 +683,14 @@ const mkUI = (seed, opts = {}) => {
   ok(h.getEl('btn-rec').textContent === '録画中… クリックで停止', 'recording started via btn-rec');
   h.tick();
   ok(h.getEl('btn-rec').textContent === '動画 録画開始', 'recTimer auto-stops recording at 15s');
+  const st = h.getEl('stage');
+  st.fire('pointerdown', { pointerId: 1, clientX: 320, clientY: 180 });
+  st.fire('pointercancel');
+  const xCancel = h.getEl('out-x').textContent;
+  st.fire('pointermove', { pointerId: 1, clientX: 100, clientY: 100 });
+  ok(h.getEl('out-x').textContent === xCancel, 'pointercancel clears dragging (sticky-drag bug fix)');
+  (h.winListeners.beforeunload || []).forEach(f => f());
+  ok(h.store.has('shiro.session.v1'), 'beforeunload flushes pending session save');
 }
 
 console.log(`${pass} pass / ${fail} fail`);
