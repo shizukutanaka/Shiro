@@ -10,7 +10,7 @@
 <div id="app">
   <div id="stage-wrap">
     <div id="canvas-holder">
-      <canvas id="stage" width="1280" height="720"></canvas>
+      <canvas id="stage" width="1280" height="720" role="img" aria-label="キャラクタープレビュー"></canvas>
       <div id="guides"></div>
     </div>
     <div id="fav-bar"></div>
@@ -18,7 +18,7 @@
   <div id="panel">
     <h1>Shiro</h1>
     <p class="sub">白モデルを好きな画像にスワップ。パラメーターでキャラクリエイト。</p>
-    <div id="err"></div>
+    <div id="err" role="status" aria-live="polite"></div>
     <div class="row">
       <label class="filebtn">背景画像/動画を選ぶ<input id="bg-file" type="file" accept="image/*,video/*"></label>
       <label class="filebtn">モデル画像/動画<input id="model-file" type="file" accept="image/*,video/*"></label>
