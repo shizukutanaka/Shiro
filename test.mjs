@@ -448,7 +448,7 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
 }
 
 const mkUI = (seed, opts = {}) => {
-  const h = { els: new Map(), calls: [], docListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null };
+  const h = { els: new Map(), calls: [], docListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null, timers: [] };
   const calls = h.calls;
   const fakeCtx = new Proxy({}, {
     get: (t2, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : k === 'getImageData' ? (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) :
@@ -489,7 +489,12 @@ const mkUI = (seed, opts = {}) => {
     localStorage: { getItem: k => h.store.has(k) ? h.store.get(k) : null, setItem: (k, v) => h.store.set(k, String(v)), removeItem: k => h.store.delete(k) },
     matchMedia: q => ({ matches: !!(opts.rm && /reduced-motion/.test(q)), addEventListener() {} }),
     requestAnimationFrame: cb => { h.raf = cb; return 1 }, cancelAnimationFrame() {},
-    performance, setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask,
+    performance,
+    setTimeout: (f, ms) => { const x = { f, ms, iv: false }; h.timers.push(x); return x },
+    clearTimeout: x => { const i = h.timers.indexOf(x); if (i >= 0) h.timers.splice(i, 1) },
+    setInterval: (f, ms) => { const x = { f, ms, iv: true }; h.timers.push(x); return x },
+    clearInterval: x => { const i = h.timers.indexOf(x); if (i >= 0) h.timers.splice(i, 1) },
+    queueMicrotask,
     prompt: (m, d) => d || 'fav1', alert() {}, confirm: () => true,
     URL: { createObjectURL: () => { h.createdUrls++; return 'blob:x' }, revokeObjectURL() {} },
     navigator: {}, window: {}, location: { href: '', hash: '' }, history: { replaceState() {} },
@@ -502,6 +507,7 @@ const mkUI = (seed, opts = {}) => {
     Uint8ClampedArray, Uint8Array, Promise,
   };
   vm.createContext(sandbox2);
+  h.tick = () => { const ts = h.timers.filter(x => !x.iv), ivs = h.timers.filter(x => x.iv); h.timers = h.timers.filter(x => x.iv); ts.forEach(x => x.f()); ivs.forEach(x => x.f()) };
   h.document = documentStub; h.sandbox = sandbox2;
   h.boot = () => { try { h.getEl('OPTS').textContent = optsJson; vm.runInContext(src, sandbox2); return null } catch (e) { return e } };
   h.frames = n => { let e = null, ran = 0; try { for (let i = 0; i < n; i++) { const cb = h.raf; h.raf = null; if (!cb) break; cb(performance.now()); ran++ } } catch (x) { e = x } return { e, ran } };
@@ -644,6 +650,24 @@ const mkUI = (seed, opts = {}) => {
   const initErr = h.boot();
   ok(!initErr, `reduced-motion boot completes${initErr ? ': ' + initErr.message : ''}`);
   ok(h.getEl('sel-anim').value === 'still', 'prefers-reduced-motion boots to still anim');
+}
+
+
+// タイマー駆動経路: 自動セーブ(interval) + 録画の15秒自動停止(timeout)
+{
+  const h = mkUI();
+  const initErr = h.boot();
+  ok(!initErr, `timer-path boot clean${initErr ? ': ' + initErr.message : ''}`);
+  h.tick();
+  ok(JSON.parse(h.store.get('shiro.session.v1') || 'null')?.params?.anim === 'idle', 'autosave writes boot snapshot on first tick');
+  const sel = h.getEl('sel-eyes'); sel.value = 'heart'; sel.fire('change', { target: sel });
+  h.tick();
+  const ses = JSON.parse(h.store.get('shiro.session.v1') || 'null');
+  ok(ses && ses.v === 1 && ses.params.eyeStyle === 'heart', 'autosave persists changed params on interval tick');
+  h.getEl('btn-rec').click();
+  ok(h.getEl('btn-rec').textContent === '録画中… クリックで停止', 'recording started via btn-rec');
+  h.tick();
+  ok(h.getEl('btn-rec').textContent === '動画 録画開始', 'recTimer auto-stops recording at 15s');
 }
 
 console.log(`${pass} pass / ${fail} fail`);
