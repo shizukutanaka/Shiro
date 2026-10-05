@@ -371,7 +371,8 @@ for (const fit of L.FITS) {
   const els = new Map();
   const calls = [];
   const fakeCtx = new Proxy({}, {
-    get: (t2, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : k === 'getImageData' ? (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) : k === 'createLinearGradient' || k === 'createRadialGradient' ? () => ({ addColorStop() {} }) : k === 'createPattern' ? () => ({}) : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return {} },
+    get: (t2, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : k === 'getImageData' ? (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) :
+          k === 'createImageData' ? (w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) : k === 'createLinearGradient' || k === 'createRadialGradient' ? () => ({ addColorStop() {} }) : k === 'createPattern' ? () => ({}) : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return {} },
     set: () => true,
   });
   const mkEl = (tag = 'div') => {
