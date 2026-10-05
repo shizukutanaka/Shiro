@@ -665,3 +665,4 @@ node test.mjs   # 5445 assertions
 - **r256**: お気に入りのキーボードa11y — fav項目を`tabindex`/`role="button"`化し Enter/Space=適用、Delete/Backspace=削除、Shift+矢印=並替に対応（これまでマウス/ドラッグのみだった）
 - **r257**: フォーカス可視性 — `:focus-visible`にアクセント色outline、fav項目のfocusはborderハイライト（キーボードフォーカス位置が視認可能に）
 - **r258**: BlobURLリーク修復 — ファイル読込（モデル/背景）のcreateObjectURLを追跡し、差替え・リセット・読込失敗時に`takeURL()`/`revokeObjectURL`で解放（これまでロードごとに蓄積リーク）
+- **r259**: saveFavsのquota超過クラッシュ修復 — setItemをtry/catch化し容量超過時はerr表示（お気に入り増加でlocalStorage上限を超えると操作ごとに例外で死んでいた）

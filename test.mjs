@@ -631,6 +631,12 @@ const mkUI = (seed, opts = {}) => {
   ok(!favJson2 || Array.isArray(JSON.parse(favJson2)), 'fav store stays valid JSON');
   h.getEl('btn-model-reset').click(); h.getEl('btn-bg-reset').click(); h.tick();
   ok(h.revokedUrls > 0, `file-load object URLs revoked on reset (n=${h.revokedUrls})`);
+  const ls2 = sandbox2.localStorage; const origSet = ls2.setItem;
+  ls2.setItem = () => { throw new Error('QuotaExceededError') };
+  let qErr = null;
+  try { getEl('btn-fav').click() } catch (e) { qErr = e }
+  ls2.setItem = origSet;
+  ok(!qErr && getEl('err').textContent.includes('容量'), 'saveFavs survives quota-exceeded with user-visible error');
   const fr2 = h.frames(3);
   ok(!fr2.e, `frames still clean after all events${fr2.e ? ': ' + fr2.e.message : ''}`);
   ok(calls.every(Number.isFinite), 'coords finite after extended events');
