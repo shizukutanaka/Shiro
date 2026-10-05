@@ -8408,6 +8408,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
     inp.addEventListener('dblclick', () => { state.params[key] = L.defaultParams()[key]; syncUI(false); });
     sDiv.appendChild(lab); sDiv.appendChild(inp);
   }
+  $('sel-acc2').innerHTML = $('sel-acc').innerHTML;
   function syncUI(fromParams = true) {
     touch();
     for (const [key] of L.SLIDERS) {
