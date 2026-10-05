@@ -384,12 +384,13 @@ for (const fit of L.FITS) {
 }
 
 
+const arrOf = n => { const m = src.match(new RegExp('const ' + n + " = \\[([^\\]]+)\\]")); return m ? [...m[1].matchAll(/'([^']+)'/g)].map(x => x[1]) : [] };
+const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = src.indexOf('};', i); return i < 0 ? [] : [...src.slice(i, j).matchAll(/(?:'([^']+)'|(\w+))\s*:\s*[[{]/g)].map(m => m[1] || m[2]) };
+
 // Guard: select option値がlib/UI真値源と双方向整合(値ズレ=ブラウザでサイレント誤動作)
 {
   const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
   const optVals = id => { const m = html.match(new RegExp('<select id="' + id + '"[^>]*>([\\s\\S]*?)</select>')); return m ? [...m[1].matchAll(/value="([^"]+)"/g)].map(x => x[1]) : [] };
-  const arrOf = n => { const m = src.match(new RegExp('const ' + n + " = \\[([^\\]]+)\\]")); return m ? [...m[1].matchAll(/'([^']+)'/g)].map(x => x[1]) : [] };
-  const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = src.indexOf('};', i); return i < 0 ? [] : [...src.slice(i, j).matchAll(/(?:'([^']+)'|(\w+))\s*:\s*[[{]/g)].map(m => m[1] || m[2]) };
   const checks = [
     ['sel-anim', L.ANIMS], ['sel-acc', L.ACCS], ['sel-eyes', L.EYES], ['sel-bgfit', L.FITS],
     ['sel-bgpreset', L.BGS], ['sel-particles', L.PARTICLES], ['sel-hair', L.HAIRS],
@@ -406,6 +407,39 @@ for (const fit of L.FITS) {
   ok(optBad.length === 0, `select options match value tables${optBad.length ? ': ' + optBad.join(', ') : ''}`);
   const acc2inner = (html.match(/<select id="sel-acc2"[^>]*>([\s\S]*?)<\/select>/) || [,''])[1];
   ok(!/<option/.test(acc2inner) && src.includes("$('sel-acc2').innerHTML = $('sel-acc').innerHTML"), 'sel-acc2 inherits options from sel-acc');
+}
+
+
+// Guard: NUM_KEYSがdefaultParamsの全数値キーを網羅(漏れはstate.paramsからフィールド消失→frame NaN化)
+{
+  const d = L.defaultParams(), clamped = L.clampParams({});
+  ok(Object.keys(d).every(k => k in clamped), 'clampParams output preserves all defaultParams keys');
+  const numD = Object.keys(d).filter(k => typeof d[k] === 'number');
+  ok(L.NUM_KEYS.every(k => numD.includes(k)), 'NUM_KEYS only references real params');
+}
+
+// ファズ: clampParams/parsePresetが破損入力を常に安全な形へ矯正
+{
+  const rand = () => [NaN, Infinity, -Infinity, 'x', 999, -5, {}, [], null, undefined, true, .5][Math.floor(Math.random() * 12) | 0] ?? 0;
+  const enums = { anim: L.ANIMS, acc: L.ACCS, acc2: L.ACCS, eyeStyle: L.EYES, bgFit: L.FITS, bgPreset: L.BGS, particles: L.PARTICLES, hair: L.HAIRS, blend: arrOf('BLENDS'), grade: arrOf('GRADES'), wmPos: arrOf('WMPOS'), vidQ: arrOf('VIDQS'), subjFx: [...Object.keys(L.SUBJFX_FILTERS), 'none'] };
+  const valid = p => p && L.NUM_KEYS.every(k => typeof p[k] === 'number' && p[k] >= 0 && p[k] <= 1)
+    && Object.entries(enums).every(([k, t]) => t.includes(p[k]))
+    && typeof p.watermark === 'string' && p.watermark.length <= 60 && p.bubble.length <= 24 && p.title.length <= 40
+    && typeof p.flip === 'boolean' && Number.isInteger(p.seed) && p.seed >= 0;
+  let bad = 0;
+  for (let i = 0; i < 300; i++) {
+    const garbage = {};
+    for (const k of Object.keys(L.defaultParams())) if (Math.random() < .4) garbage[k] = rand();
+    if (!valid(L.clampParams(garbage))) bad++;
+    const code = JSON.stringify({ v: 1, name: 'n', params: garbage });
+    try { if (!valid(L.parsePreset(code).params)) bad++ } catch { bad++; }
+  }
+  ok(bad === 0, `clampParams/parsePreset sanitize 600 fuzzed inputs (bad=${bad})`);
+  const r1 = L.randomParams(L.mulberry32(42)), r2 = L.randomParams(L.mulberry32(42));
+  ok(JSON.stringify(r1) === JSON.stringify(r2), 'randomParams deterministic per seed');
+  ok(valid(r1) && valid(r2), 'randomParams output always valid');
+  throws(() => L.parsePreset('{"v":1,"name":"x","params":null}'), 'null params rejected');
+  throws(() => L.parseFavList('42'), 'non-array fav list rejected');
 }
 
 const mkUI = seed => {
