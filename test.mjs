@@ -665,6 +665,7 @@ const mkUI = (seed, opts = {}) => {
   const initErr = h.boot();
   ok(!initErr, `reduced-motion boot completes${initErr ? ': ' + initErr.message : ''}`);
   ok(h.getEl('sel-anim').value === 'still', 'prefers-reduced-motion boots to still anim');
+  ok(h.getEl('out-shake').textContent === '0.00' && h.getEl('out-bgDrift').textContent === '0.00' && h.getEl('sel-particles').value === 'none', 'reduced-motion also zeroes shake/drift/trail/particles');
 }
 
 
