@@ -667,3 +667,4 @@ node test.mjs   # 5445 assertions
 - **r258**: BlobURLリーク修復 — ファイル読込（モデル/背景）のcreateObjectURLを追跡し、差替え・リセット・読込失敗時に`takeURL()`/`revokeObjectURL`で解放（これまでロードごとに蓄積リーク）
 - **r259**: saveFavsのquota超過クラッシュ修復 — setItemをtry/catch化し容量超過時はerr表示（お気に入り増加でlocalStorage上限を超えると操作ごとに例外で死んでいた）
 - **r260**: フレームループの耐障害化 — 描画例外でrAFチェーンが死ぬ黙殺凍結を防止（rAFを先に再登録＋本体try/catch、エラーは一度だけ#errへ表示。r226級の「描画全体が1コマで凍結」バグの生存面を根本対策）
+- **r261**: ゴールデン描画指紋を第2シナリオへ拡張 — walkアニメ+crown+twin髪+aurora背景+snow粒子+wink表情+noirグレード+screenブレンド+ふきだしの「フル装備」シーンを別ダイジェスト`1356307302`でピン留め（分岐描画パスの無自覚改変を捕捉）
