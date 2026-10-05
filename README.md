@@ -629,4 +629,5 @@ node test.mjs   # 5445 assertions
 - アクセサリ2のoption群はアクセサリ1と完全重複だったため、HTMLから削除し初期化時に `innerHTML` で複製(index.html -7.4KB) — 表示・挙動は同一
 - レンジループ語彙 `span`(包括)/`spt`(排他)を新設し `for (let i = a; i <= b; i++)` 形111箇所を機械変換 — break/return含む本体はスキップ、描画結果は同一
 - スタイル代入の残り621箇所(`c.`/`ctx.`のfillStyle/strokeStyle/lineWidth/globalAlpha/font/textAlign/lineCap/filter)を既存語彙+新 `flT` に変換、未注入スコープへ宣言を自動挿入(13関数) — 描画結果は同一
+- UI側も語彙化: `on(id,ev,key[,slice])` で定型リスナー17箇所、`mk` で `document.createElement` 16箇所、残りの `for (const s of [-1,1])` 8箇所を `mir` へ — 描画・挙動は同一
 - 外部キー/ネットワーク/トラッキングなし。画像・動画・お気に入りは全てローカルに留まる
