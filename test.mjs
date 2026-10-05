@@ -708,10 +708,15 @@ const mkUI = (seed, opts = {}) => {
   ok(h.getEl('btn-rec').textContent === '動画 録画開始', 'recTimer auto-stops recording at 15s');
   const st = h.getEl('stage');
   st.fire('pointerdown', { pointerId: 1, clientX: 320, clientY: 180 });
-  st.fire('pointercancel');
+  st.fire('pointercancel', { pointerId: 1 });
   const xCancel = h.getEl('out-x').textContent;
   st.fire('pointermove', { pointerId: 1, clientX: 100, clientY: 100 });
   ok(h.getEl('out-x').textContent === xCancel, 'pointercancel clears dragging (sticky-drag bug fix)');
+  st.fire('pointerdown', { pointerId: 1, clientX: 320, clientY: 180 });
+  const xDrag = h.getEl('out-x').textContent;
+  st.fire('pointermove', { pointerId: 2, clientX: 60, clientY: 60 });
+  ok(h.getEl('out-x').textContent === xDrag, 'second pointer ignored during drag (multi-touch guard)');
+  st.fire('pointerup', { pointerId: 1 });
   (h.winListeners.beforeunload || []).forEach(f => f());
   ok(h.store.has('shiro.session.v1'), 'beforeunload flushes pending session save');
   ok(indexHtml.includes('touch-action:none'), 'stage has touch-action:none (drag works on touch devices)');

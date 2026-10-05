@@ -8542,19 +8542,20 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     e.target.value = ''
   });
 
-  let dragging = false;
+  let dragging = false, dragId = null;
   const stageXY = e => {
     const r = stage.getBoundingClientRect();
     return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]
   };
   stage.addEventListener('pointerdown', e => {
-    dragging = true; stage.setPointerCapture(e.pointerId); const [nx, ny] = stageXY(e); state.params.x = L.clamp01(nx); state.params.y = L.clamp01(ny); syncUI()
+    if (dragging) return;
+    dragging = true; dragId = e.pointerId; stage.setPointerCapture(e.pointerId); const [nx, ny] = stageXY(e); state.params.x = L.clamp01(nx); state.params.y = L.clamp01(ny); syncUI()
   });
   stage.addEventListener('pointermove', e => {
-    if (!dragging) return;
+    if (!dragging || e.pointerId !== dragId) return;
     const [nx, ny] = stageXY(e); state.params.x = L.clamp01(nx); state.params.y = L.clamp01(ny); syncUI()
   });
-  stage.addEventListener('pointerup', () => dragging = false); stage.addEventListener('pointercancel', () => dragging = false);
+  stage.addEventListener('pointerup', e => { if (e.pointerId === dragId) { dragging = false; dragId = null } }); stage.addEventListener('pointercancel', e => { if (e.pointerId === dragId) { dragging = false; dragId = null } });
   stage.addEventListener('wheel', e => {
     if (e.ctrlKey) return;
     e.preventDefault(); state.params.scale = L.clamp01(state.params.scale - e.deltaY * .0008); syncUI()
