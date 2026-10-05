@@ -631,4 +631,5 @@ node test.mjs   # 5445 assertions
 - スタイル代入の残り621箇所(`c.`/`ctx.`のfillStyle/strokeStyle/lineWidth/globalAlpha/font/textAlign/lineCap/filter)を既存語彙+新 `flT` に変換、未注入スコープへ宣言を自動挿入(13関数) — 描画結果は同一
 - UI側も語彙化: `on(id,ev,key[,slice])` で定型リスナー17箇所、`mk` で `document.createElement` 16箇所、残りの `for (const s of [-1,1])` 8箇所を `mir` へ — 描画・挙動は同一
 - 行コメント全除去(2,459件・約60KB実バイト)+行末空白・`;}`・`0.`の微細削減 — 最大の容量削減、コメントはgit履歴に残存。挙動は完全に同一
+- `drawBackdrop`/`drawCover`/`defaultBackdrop` をlib IIFEへ移し `L.drawBackdrop` としてエクスポート（`state.bg`→引数化、W/H→引数化）＋ `PARTICLES`/`HAIRS`/`GRADE_STYLES` もエクスポート — テスト不能だった140背景シーンを全網羅スモーク化したところ、3系統の実バグを検出・修復: (a)ヘルパー宣言の引数名 `c` が描画コンテキスト `c` をシャドウ(qT/bZ→q,d改名、sea/space/mtn/rainbow等でクラッシュしていた潜伏バグ) (b)`scat` 変換が `const rng` 宣言を飲み込み後続の `rng()` が未宣言化(22背景ケース、bazaar/seastack/billabong等) (c)オリジナルからの `FS(gr)` 未宣言参照(ruins)＋ `GRADE_STYLES` のUI側未エクスポート参照(frame()毎フレーム例外でアニメーション全体が1コマ目で凍結していた) — node test.mjs 5,445→5,645アサーション
 - 外部キー/ネットワーク/トラッキングなし。画像・動画・お気に入りは全てローカルに留まる
