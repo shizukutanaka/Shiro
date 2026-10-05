@@ -623,4 +623,5 @@ node test.mjs   # 5445 assertions
 - パス開始語彙 `mv`(beginPath+moveTo、551箇所)と算術短縮 `PI`/`MX`/`MN`(Math.PI/Math.max/Math.min、各IIFE冒頭で束縛、779箇所)を追加 — 描画結果は同一
 - 残存の単一形状トリプル(beginPath+arc/ellipse+fill/stroke)も既存語彙に吸収し、算術関数 `SI`/`CO`/`AB`/`RD`/`FL`(Math.sin/cos/abs/round/floor)も各IIFE冒頭で束縛 — drawMannequin/drawParticlesにもdot/ell語彙を導入
 - グラデーションも語彙化: `lg`/`rg` ヘルパー(createLinear/RadialGradient+addColorStop列、ストップは平坦配列)をdrawBackdropに導入し36箇所を変換 — 描画結果は同一
+- ctxメソッドも短縮呼び出し語彙化: `bP`/`cP`/`mT`/`lT`/`qT`/`bZ`/`aR`/`eC`/`fR`/`sR`/`fL`/`sK`/`sV`/`rS`/`tR`/`rO`/`sC`/`gA`(beginPath〜globalAlpha)を4関数スコープに導入し3,100+箇所を変換 — 描画結果は同一
 - 外部キー/ネットワーク/トラッキングなし。画像・動画・お気に入りは全てローカルに留まる
