@@ -730,6 +730,7 @@ const mkUI = (seed, opts = {}) => {
   ok(indexHtml.includes('touch-action:none'), 'stage has touch-action:none (drag works on touch devices)');
   ok(indexHtml.includes(':focus-visible'), 'keyboard focus has visible indicator (focus-visible styles)');
   ok(indexHtml.includes('color-scheme') && indexHtml.includes('aria-hidden="true"'), 'color-scheme meta + decorative overlay hidden from AT');
+  ok(/Content-Security-Policy[^>]*connect-src 'none'/.test(indexHtml), 'CSP blocks all remote loads (app is fully local)');
 }
 
 console.log(`${pass} pass / ${fail} fail`);
