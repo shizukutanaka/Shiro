@@ -367,9 +367,9 @@ for (const fit of L.FITS) {
 }
 
 // UI IIFE網羅: DOMスタブでUI層全体を起動 — frame/syncUI/配線/お気に入り/セッション復元の実行面を網羅(frame内の参照クラッシュ全般を捕捉)
-{
-  const els = new Map();
-  const calls = [];
+const mkUI = seed => {
+  const h = { els: new Map(), calls: [], docListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null };
+  const calls = h.calls;
   const fakeCtx = new Proxy({}, {
     get: (t2, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : k === 'getImageData' ? (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) :
           k === 'createImageData' ? (w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) : k === 'createLinearGradient' || k === 'createRadialGradient' ? () => ({ addColorStop() {} }) : k === 'createPattern' ? () => ({}) : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return {} },
@@ -398,24 +398,20 @@ for (const fit of L.FITS) {
     };
     return el;
   };
-  const getEl = id => { if (!els.has(id)) els.set(id, mkEl()); return els.get(id) };
-  const docListeners = {};
-  let createdUrls = 0;
-  const store = new Map();
-  let raf = null;
+  h.getEl = id => { if (!h.els.has(id)) h.els.set(id, mkEl()); return h.els.get(id) };
   const documentStub = {
-    getElementById: getEl, createElement: t2 => mkEl(t2),
-    addEventListener(ev, f) { (docListeners[ev] ||= []).push(f) },
+    getElementById: h.getEl, createElement: t2 => mkEl(t2),
+    addEventListener(ev, f) { (h.docListeners[ev] ||= []).push(f) },
     body: mkEl('body'), documentElement: mkEl('html'), hidden: false,
   };
   const sandbox2 = {
     console, document: documentStub,
-    localStorage: { getItem: k => store.has(k) ? store.get(k) : null, setItem: (k, v) => store.set(k, String(v)), removeItem: k => store.delete(k) },
+    localStorage: { getItem: k => h.store.has(k) ? h.store.get(k) : null, setItem: (k, v) => h.store.set(k, String(v)), removeItem: k => h.store.delete(k) },
     matchMedia: () => ({ matches: false, addEventListener() {} }),
-    requestAnimationFrame: cb => { raf = cb; return 1 }, cancelAnimationFrame() {},
+    requestAnimationFrame: cb => { h.raf = cb; return 1 }, cancelAnimationFrame() {},
     performance, setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask,
     prompt: (m, d) => d || 'fav1', alert() {}, confirm: () => true,
-    URL: { createObjectURL: () => { createdUrls++; return 'blob:x' }, revokeObjectURL() {} },
+    URL: { createObjectURL: () => { h.createdUrls++; return 'blob:x' }, revokeObjectURL() {} },
     navigator: {}, window: {}, location: { href: '', hash: '' }, history: { replaceState() {} },
     Image: class { set src(v) { this._src = v; if (this.onload) setTimeout(() => this.onload(), 0) } },
     ImageData: class { constructor(w, h) { this.width = w; this.height = h; this.data = new Uint8ClampedArray(w * h * 4) } },
@@ -426,13 +422,19 @@ for (const fit of L.FITS) {
     Uint8ClampedArray, Uint8Array, Promise,
   };
   vm.createContext(sandbox2);
-  let initErr = null;
-  try { vm.runInContext(src, sandbox2) } catch (e) { initErr = e }
+  h.document = documentStub; h.sandbox = sandbox2;
+  h.boot = () => { try { vm.runInContext(src, sandbox2); return null } catch (e) { return e } };
+  h.frames = n => { let e = null, ran = 0; try { for (let i = 0; i < n; i++) { const cb = h.raf; h.raf = null; if (!cb) break; cb(performance.now()); ran++ } } catch (x) { e = x } return { e, ran } };
+  return h
+};
+
+{
+  const h = mkUI(), { calls, docListeners, store } = h, getEl = h.getEl, documentStub = h.document, sandbox2 = h.sandbox;
+  const initErr = h.boot();
   ok(!initErr, `UI init completes${initErr ? ': ' + initErr.message : ''}`);
-  ok(!!raf, 'frame scheduled via requestAnimationFrame');
-  let frameErr = null, frameRan = false;
-  try { for (let i = 0; i < 3; i++) { const cb = raf; raf = null; if (!cb) break; cb(performance.now()); frameRan = true } } catch (e) { frameErr = e }
-  ok(frameRan && !frameErr, `frame() runs 3x without crash${frameErr ? ': ' + frameErr.message : ''}`);
+  ok(!!h.raf, 'frame scheduled via requestAnimationFrame');
+  const fr = h.frames(3);
+  ok(fr.ran > 0 && !fr.e, `frame() runs 3x without crash${fr.e ? ': ' + fr.e.message : ''}`);
   ok(calls.length > 100, `frame emits canvas geometry (n=${calls.length})`);
   ok(calls.every(Number.isFinite), 'frame coords finite');
   const L2 = sandbox2.ShiroLib;
@@ -497,7 +499,7 @@ for (const fit of L.FITS) {
   ok(errTxt === '' || typeof errTxt === 'string', 'err element text writable');
   ok(copyErr.includes('未対応'), 'png-copy reports unsupported');
   ok(getEl('btn-rec').textContent.includes('録画'), 'rec toggles label');
-  ok(createdUrls >= 2, `downloads create object URLs (n=${createdUrls})`);
+  ok(h.createdUrls >= 2, `downloads create object URLs (n=${h.createdUrls})`);
   const bar = getEl('fav-bar');
   ok(bar.children.length >= 1, `fav rendered items (n=${bar.children.length})`);
   let favErr = null;
@@ -513,10 +515,41 @@ for (const fit of L.FITS) {
   await new Promise(r => setTimeout(r, 0));
   const favJson2 = [...store.keys()].map(k => [k, store.get(k)]).filter(([k]) => /fav/i.test(k))[0]?.[1];
   ok(!favJson2 || Array.isArray(JSON.parse(favJson2)), 'fav store stays valid JSON');
-  let frameErr2 = null;
-  try { for (let i = 0; i < 3; i++) { const cb = raf; raf = null; if (!cb) break; cb(performance.now()) } } catch (e) { frameErr2 = e }
-  ok(!frameErr2, `frames still clean after all events${frameErr2 ? ': ' + frameErr2.message : ''}`);
+  const fr2 = h.frames(3);
+  ok(!fr2.e, `frames still clean after all events${fr2.e ? ': ' + fr2.e.message : ''}`);
   ok(calls.every(Number.isFinite), 'coords finite after extended events');
+
+  // ランダムパラメータ反復: 'r'キー → frame() で確率的に描画分岐を総当たり
+  let randErr = null;
+  try {
+    for (let i = 0; i < 8; i++) {
+      (docListeners.keydown || []).forEach(f => f({ key: 'r', target: documentStub.body, preventDefault() {} }));
+      const r = h.frames(2); if (r.e) throw r.e;
+    }
+  } catch (e) { randErr = e }
+  ok(!randErr, `random-param frames stay clean across 8 rounds${randErr ? ': ' + randErr.message : ''}`);
+  ok(calls.every(Number.isFinite), 'coords finite after random-param frames');
+}
+
+// ブート復元経路: セッション+お気に入りを事前シードした2回目の評価
+{
+  const h = mkUI({
+    'shiro.session.v1': JSON.stringify({ v: 1, params: { anim: 'jump', x: .3 }, aspect: '1:1' }),
+    'shiro.favs.v1': '[{"id":"fx","name":"s1","params":{"anim":"walk"}}]',
+  });
+  const initErr = h.boot();
+  ok(!initErr, `restored boot completes${initErr ? ': ' + initErr.message : ''}`);
+  ok(h.getEl('sel-anim').value === 'jump', 'session params restored');
+  ok(h.getEl('stage').width === 960, 'session aspect restored (1:1)');
+  ok(h.getEl('fav-bar').children.length === 1, 'fav list rendered from storage');
+  const r = h.frames(2);
+  ok(r.ran > 0 && !r.e, `restored boot frames clean${r.e ? ': ' + r.e.message : ''}`);
+}
+{
+  const h = mkUI({ 'shiro.session.v1': '{bad json', 'shiro.favs.v1': 'not-json' });
+  const initErr = h.boot();
+  ok(!initErr, `corrupt-storage boot still completes${initErr ? ': ' + initErr.message : ''}`);
+  ok(h.getEl('sel-anim').value !== '', 'corrupt boot falls back to defaults');
 }
 
 console.log(`${pass} pass / ${fail} fail`);
