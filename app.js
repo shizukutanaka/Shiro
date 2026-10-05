@@ -8443,6 +8443,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
   clk('btn-rec', () => {
     if (state.recorder) { state.recorder.stop(); return }
+    if (!stage.captureStream || typeof MediaRecorder === 'undefined') return err('このブラウザは動画録画に未対応です');
     const pick = L.pickMime(m => MediaRecorder.isTypeSupported(m));
     if (!pick) return err('このブラウザは動画録画に未対応です');
     const bits = { low: 1500000, std: 4000000, high: 8000000 }[state.params.vidQ] || 4000000;

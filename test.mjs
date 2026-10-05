@@ -550,6 +550,9 @@ const mkUI = seed => {
     getEl('btn-model-reset').click(); getEl('btn-bg-reset').click();
     getEl('btn-png').click(); getEl('btn-png-copy').click(); var copyErr = getEl('err').textContent;
     getEl('btn-rec').click(); getEl('btn-rec').click();
+    const st = getEl('stage'); const cs = st.captureStream; delete st.captureStream;
+    getEl('btn-rec').click(); var recErr = getEl('err').textContent;
+    st.captureStream = cs;
     getEl('btn-share').click();
     const bgF = getEl('bg-file'); bgF.files = [{ type: 'video/mp4' }]; bgF.fire('change');
     bgF.files = [{ type: 'image/png' }]; bgF.fire('change');
@@ -574,6 +577,7 @@ const mkUI = seed => {
   ok(errTxt === '' || typeof errTxt === 'string', 'err element text writable');
   ok(copyErr.includes('未対応'), 'png-copy reports unsupported');
   ok(getEl('btn-rec').textContent.includes('録画'), 'rec toggles label');
+  ok(recErr.includes('未対応'), 'rec reports unsupported when captureStream missing');
   ok(h.createdUrls >= 2, `downloads create object URLs (n=${h.createdUrls})`);
   const bar = getEl('fav-bar');
   ok(bar.children.length >= 1, `fav rendered items (n=${bar.children.length})`);

@@ -647,3 +647,4 @@ node test.mjs   # 5445 assertions
 - **r238**: DOM id照合ガード — app.jsの`$()/on()/clk()`参照idとSELS/INPS表のidがindex.htmlに実在するか検査（DOMスタブの自動生成では検出不能なタイプミス型クラッシュを防止）。配線キーがdefaultParamsに存在するかも照合。
 - **r239**: select option値⇔真値源の双方向整合ガード — 15 select（ANIMS/ACCS/EYES/FITS/BGS/PARTICLES/HAIRS/SUBJFX/GRADES/BLENDS/WMPOS/VIDQS/PLACES/FACES/ASPECTS）の値が漏れ・ズレなく一致することを検証。sel-acc2のJS継承ルールも明示検査。
 - **r240**: ロバスト面の網羅 — clampParams/parsePresetに600件の破損入力ファズ（NaN/無限/非数/ゴミ型）を投げて常に安全な形へ矯正されるか検査、NUM_KEYS網羅性（clamp出力がdefaultParams全キーを保持＝追加し忘れでparams消失しない）、randomParamsの決定性契約。
+- **r241**: ブラウザ互換監査 — `captureStream`/`MediaRecorder`の機能検査を追加（未対応ブラウザでbtn-recがTypeErrorで死んでいた → 他ボタン同様に「未対応」表示）。使用Canvas APIは全てレガシー互換で他に検査要は0件。
