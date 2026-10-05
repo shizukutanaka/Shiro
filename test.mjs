@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 const src = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
+const indexHtml = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const optsJson = (indexHtml.match(/<script id="OPTS"[^>]*>([\s\S]*?)<\/script>/) || [,'{}'])[1];
 const sandbox = { console };
 vm.createContext(sandbox);
 vm.runInContext(src, sandbox);
@@ -370,7 +372,7 @@ for (const fit of L.FITS) {
 
 // Guard: app.js が参照するDOM idがindex.htmlに実在するか照合(スタブ自動生成では検出不能なタイプミス型) + 配線キーがparamsに存在
 {
-  const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+  const html = indexHtml;
   const htmlIds = new Set([...html.matchAll(/id="([^"]+)"/g)].map(m => m[1]));
   const domCalls = [...src.matchAll(/(?:\$|on|clk)\('([a-zA-Z0-9_-]+)'/g)].map(m => m[1]);
   const tableIds = [...src.matchAll(/\['((?:sel|inp|chk|btn|fav|bg|model)-[a-z0-9-]+)'/g)].map(m => m[1]);
@@ -389,8 +391,9 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
 
 // Guard: select option値がlib/UI真値源と双方向整合(値ズレ=ブラウザでサイレント誤動作)
 {
-  const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
-  const optVals = id => { const m = html.match(new RegExp('<select id="' + id + '"[^>]*>([\\s\\S]*?)</select>')); return m ? [...m[1].matchAll(/value="([^"]+)"/g)].map(x => x[1]) : [] };
+  const html = indexHtml;
+  const optsData = JSON.parse(optsJson);
+  const optVals = id => (optsData[id] || []).map(p => p[0]);
   const checks = [
     ['sel-anim', L.ANIMS], ['sel-acc', L.ACCS], ['sel-eyes', L.EYES], ['sel-bgfit', L.FITS],
     ['sel-bgpreset', L.BGS], ['sel-particles', L.PARTICLES], ['sel-hair', L.HAIRS],
@@ -401,12 +404,11 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
   const optBad = [];
   for (const [id, exp] of checks) {
     const o = optVals(id);
-    for (const v of o) if (!exp.includes(v)) optBad.push(`${id}:html-only ${v}`);
+    for (const v of o) if (v !== '' && !exp.includes(v)) optBad.push(`${id}:html-only ${v}`);
     for (const v of exp) if (!o.includes(v)) optBad.push(`${id}:lib-only ${v}`);
   }
   ok(optBad.length === 0, `select options match value tables${optBad.length ? ': ' + optBad.join(', ') : ''}`);
-  const acc2inner = (html.match(/<select id="sel-acc2"[^>]*>([\s\S]*?)<\/select>/) || [,''])[1];
-  ok(!/<option/.test(acc2inner) && src.includes("$('sel-acc2').innerHTML = $('sel-acc').innerHTML"), 'sel-acc2 inherits options from sel-acc');
+  ok(!('sel-acc2' in optsData) && src.includes("$('sel-acc2').innerHTML = $('sel-acc').innerHTML"), 'sel-acc2 inherits options from sel-acc');
 }
 
 
@@ -498,7 +500,7 @@ const mkUI = (seed, opts = {}) => {
   };
   vm.createContext(sandbox2);
   h.document = documentStub; h.sandbox = sandbox2;
-  h.boot = () => { try { vm.runInContext(src, sandbox2); return null } catch (e) { return e } };
+  h.boot = () => { try { h.getEl('OPTS').textContent = optsJson; vm.runInContext(src, sandbox2); return null } catch (e) { return e } };
   h.frames = n => { let e = null, ran = 0; try { for (let i = 0; i < n; i++) { const cb = h.raf; h.raf = null; if (!cb) break; cb(performance.now()); ran++ } } catch (x) { e = x } return { e, ran } };
   return h
 };
