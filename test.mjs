@@ -393,7 +393,7 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
 {
   const html = indexHtml;
   const optsData = JSON.parse(optsJson);
-  const optVals = id => (optsData[id] || []).map(p => p[0]);
+  const optVals = id => { const l = optsData[id] || [], o = []; for (let i = 0; i < l.length; i += 2) o.push(l[i]); return o };
   const checks = [
     ['sel-anim', L.ANIMS], ['sel-acc', L.ACCS], ['sel-eyes', L.EYES], ['sel-bgfit', L.FITS],
     ['sel-bgpreset', L.BGS], ['sel-particles', L.PARTICLES], ['sel-hair', L.HAIRS],
