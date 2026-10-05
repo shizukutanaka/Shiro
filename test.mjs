@@ -393,8 +393,13 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
 {
   const html = indexHtml;
   const optsData = JSON.parse(optsJson);
-  const zipKeys = { 'sel-fx': ['none', ...Object.keys(L.SUBJFX_FILTERS)], 'sel-grade': ['none', ...Object.keys(L.GRADE_STYLES)], 'sel-bgfit': L.FITS };
-  const optVals = id => { const l = optsData[id] || [], ks = zipKeys[id] || ({ 'sel-anim': L.ANIMS, 'sel-acc': L.ACCS, 'sel-eyes': L.EYES, 'sel-hair': L.HAIRS, 'sel-bgpreset': L.BGS, 'sel-particles': L.PARTICLES })[id]; if (ks) return ks; const o = []; for (let i = 0; i < l.length; i += 2) o.push(l[i]); return o };
+  const zipKeys = {
+    'sel-anim': L.ANIMS, 'sel-acc': L.ACCS, 'sel-eyes': L.EYES, 'sel-hair': L.HAIRS, 'sel-bgpreset': L.BGS, 'sel-particles': L.PARTICLES,
+    'sel-fx': ['none', ...Object.keys(L.SUBJFX_FILTERS)], 'sel-grade': ['none', ...Object.keys(L.GRADE_STYLES)], 'sel-bgfit': L.FITS,
+    'sel-blend': arrOf('BLENDS'), 'sel-wmpos': arrOf('WMPOS'), 'sel-vidq': arrOf('VIDQS'),
+    'sel-place': ['', ...keysOf('PLACES')], 'sel-face': ['', ...keysOf('FACES')], 'sel-aspect': keysOf('ASPECTS'),
+  };
+  const optVals = id => zipKeys[id] || [];
   const checks = [
     ['sel-anim', L.ANIMS], ['sel-acc', L.ACCS], ['sel-eyes', L.EYES], ['sel-bgfit', L.FITS],
     ['sel-bgpreset', L.BGS], ['sel-particles', L.PARTICLES], ['sel-hair', L.HAIRS],
@@ -407,8 +412,7 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
     const o = optVals(id), labels = optsData[id] || [];
     for (const v of o) if (v !== '' && !exp.includes(v)) optBad.push(`${id}:html-only ${v}`);
     for (const v of exp) if (!o.includes(v)) optBad.push(`${id}:lib-only ${v}`);
-    if (zipKeys[id] || ['sel-anim','sel-acc','sel-eyes','sel-hair','sel-bgpreset','sel-particles'].includes(id)) { if (labels.length !== o.length || labels.some(x => typeof x !== 'string' || x === '')) optBad.push(`${id}:labels`); }
-    else if (labels.length % 2) optBad.push(`${id}:pairs`);
+    if (labels.length !== o.length || labels.some(x => typeof x !== 'string' || x === '')) optBad.push(`${id}:labels`);
   }
   ok(optBad.length === 0, `select options match value tables${optBad.length ? ': ' + optBad.join(', ') : ''}`);
   ok(!('sel-acc2' in optsData) && src.includes("$('sel-acc2').innerHTML = $('sel-acc').innerHTML"), 'sel-acc2 inherits options from sel-acc');
