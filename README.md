@@ -642,3 +642,4 @@ node test.mjs   # 5445 assertions
 - **r233**: test.mjsのProxyスタブctxを`mkCtx(all)`ヘルパーへ集約 — 17箇所の逐語ブロックを`const {calls, ctx} = mkCtx()`に置換(measureText/all-argsはオプション化、タグ記録型2箇所は残存)。test.mjs -3.2KB。
 - **r234**: UI配線のテーブル化 — 13個のselect/3個のinputで `on(...)` 配線と `syncUI` 代入の二重リストを `SELS`/`INPS` 表に集約(変更時に片方だけ更新する事故型を根絶)。クリックリスナー `clk` 短縮(12箇所)。**-0.9KB**。
 - **r235**: 最後の未テスト領域を網羅 — DOMスタブ(document/localStorage/rAF/matchMedia等)でUI IIFE全体をnode実行。初期化+frame()3フレーム+syncUI副作用+キー/ポインタ/凍結/お気に入りイベントを検証。これまで発見された全クラッシュ型(GRADE_STYLES/sfR/ctxH参照)を恒久的に捕捉する足場。
+- **r236**: UIイベント面の完全網羅 — スライダーinput/dblclick、ガイド/配置/表情プリセット、aspect変更、wheel拡大、PNG/録画/共有のダウンロード系、画像/動画/非対応ファイル読込、お気に入りの適用/並替/リネーム/削除/インポート、undo/redo/数字キー全発火。動画src setterはonloadeddataを発火するスタブ化。

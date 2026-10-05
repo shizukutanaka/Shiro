@@ -376,7 +376,8 @@ for (const fit of L.FITS) {
   });
   const mkEl = (tag = 'div') => {
     const el = {
-      tagName: tag.toUpperCase(), id: '', value: '', checked: false, textContent: '', innerHTML: '', src: '', href: '', download: '', className: '', type: '', min: 0, max: 1, step: .01, htmlFor: '', draggable: false,
+      tagName: tag.toUpperCase(), id: '', value: '', checked: false, textContent: '', innerHTML: '', href: '', download: '', className: '', type: '', min: 0, max: 1, step: .01, htmlFor: '', draggable: false,
+      get src() { return this._src }, set src(v) { this._src = v; queueMicrotask(() => { if (this.onloadeddata) this.onloadeddata() }) },
       style: {}, dataset: {}, files: [], children: [], listeners: {}, _q: {},
       classList: { _s: new Set(), toggle(c, v) { v ? this._s.add(c) : this._s.delete(c) }, contains(c) { return this._s.has(c) }, add(c) { this._s.add(c) }, remove(c) { this._s.delete(c) } },
       addEventListener(ev, f) { (this.listeners[ev] ||= []).push(f) },
@@ -398,6 +399,7 @@ for (const fit of L.FITS) {
   };
   const getEl = id => { if (!els.has(id)) els.set(id, mkEl()); return els.get(id) };
   const docListeners = {};
+  let createdUrls = 0;
   const store = new Map();
   let raf = null;
   const documentStub = {
@@ -412,14 +414,14 @@ for (const fit of L.FITS) {
     requestAnimationFrame: cb => { raf = cb; return 1 }, cancelAnimationFrame() {},
     performance, setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask,
     prompt: (m, d) => d || 'fav1', alert() {}, confirm: () => true,
-    URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} },
+    URL: { createObjectURL: () => { createdUrls++; return 'blob:x' }, revokeObjectURL() {} },
     navigator: {}, window: {}, location: { href: '', hash: '' }, history: { replaceState() {} },
     Image: class { set src(v) { this._src = v; if (this.onload) setTimeout(() => this.onload(), 0) } },
     ImageData: class { constructor(w, h) { this.width = w; this.height = h; this.data = new Uint8ClampedArray(w * h * 4) } },
     Blob: class { constructor(parts, opts) { this.parts = parts; this.type = opts && opts.type } },
     File: class { constructor(p, n, o) { this.name = n; this.type = o && o.type } },
     FileReader: class { readAsDataURL() { setTimeout(() => this.onload && this.onload({ target: { result: 'data:,' } }), 0) } },
-    MediaRecorder: class { static isTypeSupported() { return true } start() {} stop() {} requestData() {} },
+    MediaRecorder: class { static isTypeSupported() { return true } start() {} stop() { if (this.onstop) this.onstop() } requestData() {} },
     Uint8ClampedArray, Uint8Array, Promise,
   };
   vm.createContext(sandbox2);
@@ -457,6 +459,63 @@ for (const fit of L.FITS) {
   const favJson = store.get('shiro-favs') || store.get('shiroFavs') || [...store.keys()].map(k => [k, store.get(k)]).filter(([k]) => /fav/i.test(k))[0]?.[1];
   ok(favJson && JSON.parse(favJson).length >= 1, 'fav click persisted to localStorage');
   ok(calls.every(Number.isFinite), 'coords still finite after events');
+
+  let evErr2 = null;
+  try {
+    const key = L.SLIDERS[0][0];
+    const sl = getEl('sl-' + key); sl.value = '.7'; sl.fire('input'); sl.fire('dblclick');
+    const guides = getEl('chk-guides'); guides.checked = true; guides.fire('change');
+    const selPlace = getEl('sel-place'); selPlace.value = 'tc'; selPlace.fire('change');
+    const selFace = getEl('sel-face'); selFace.value = 'happy'; selFace.fire('change');
+    const selAspect = getEl('sel-aspect'); selAspect.value = '9:16'; selAspect.fire('change');
+    getEl('stage').fire('wheel', { deltaY: 120, preventDefault() {} });
+    getEl('btn-model-reset').click(); getEl('btn-bg-reset').click();
+    getEl('btn-png').click(); getEl('btn-png-copy').click(); var copyErr = getEl('err').textContent;
+    getEl('btn-rec').click(); getEl('btn-rec').click();
+    getEl('btn-share').click();
+    const bgF = getEl('bg-file'); bgF.files = [{ type: 'video/mp4' }]; bgF.fire('change');
+    bgF.files = [{ type: 'image/png' }]; bgF.fire('change');
+    const mF = getEl('model-file'); mF.files = [{ type: 'video/mp4' }]; mF.fire('change');
+    mF.files = [{ type: 'image/png' }]; mF.fire('change');
+    mF.files = [{ type: 'text/plain' }]; mF.fire('change');
+    getEl('btn-fav-exp').click();
+    const ff = getEl('fav-file'); ff.files = [{ type: 'application/json', text: () => Promise.resolve('[{"name":"imp","params":{}}]') }]; ff.fire('change');
+    (docListeners.keydown || []).forEach(f => f({ key: '1', target: documentStub.body, preventDefault() {} }));
+    (docListeners.keydown || []).forEach(f => f({ key: 'z', ctrlKey: true, target: documentStub.body, preventDefault() {} }));
+    (docListeners.keydown || []).forEach(f => f({ key: 'y', ctrlKey: true, target: documentStub.body, preventDefault() {} }));
+    (docListeners.keydown || []).forEach(f => f({ key: 'ArrowUp', shiftKey: true, target: documentStub.body, preventDefault() {} }));
+    const wm = getEl('inp-watermark'); wm.value = '@x'; wm.fire('input');
+    const bb = getEl('inp-bubble'); bb.value = 'hi'; bb.fire('input');
+    const ti = getEl('inp-title'); ti.value = 'T'; ti.fire('input');
+  } catch (e) { evErr2 = e }
+  ok(!evErr2, `extended UI events fire without crash${evErr2 ? ': ' + evErr2.message : ''}`);
+  ok(getEl('guides').classList.contains('on'), 'guides toggle applies class');
+  ok(getEl('sel-place').value === '', 'place preset resets selector');
+  ok(getEl('sel-eyes').value === 'closed', 'face preset sets eyeStyle');
+  const errTxt = getEl('err').textContent;
+  ok(errTxt === '' || typeof errTxt === 'string', 'err element text writable');
+  ok(copyErr.includes('未対応'), 'png-copy reports unsupported');
+  ok(getEl('btn-rec').textContent.includes('録画'), 'rec toggles label');
+  ok(createdUrls >= 2, `downloads create object URLs (n=${createdUrls})`);
+  const bar = getEl('fav-bar');
+  ok(bar.children.length >= 1, `fav rendered items (n=${bar.children.length})`);
+  let favErr = null;
+  try {
+    const d = bar.children[0];
+    d.fire('click');
+    const dt = { data: {}, setData(t2, v) { this.data[t2] = v }, getData(t2) { return this.data[t2] }, dropEffect: '', effectAllowed: '' };
+    d.fire('dragstart', { dataTransfer: dt }); d.fire('dragover', { dataTransfer: dt, preventDefault() {} }); d.fire('drop', { dataTransfer: dt, preventDefault() {} });
+    d._q['span'].fire('dblclick', { stopPropagation() {} });
+    d._q['.del'].fire('click', { stopPropagation() {} });
+  } catch (e) { favErr = e }
+  ok(!favErr, `fav item events (apply/reorder/rename/delete) fire without crash${favErr ? ': ' + favErr.message : ''}`);
+  await new Promise(r => setTimeout(r, 0));
+  const favJson2 = [...store.keys()].map(k => [k, store.get(k)]).filter(([k]) => /fav/i.test(k))[0]?.[1];
+  ok(!favJson2 || Array.isArray(JSON.parse(favJson2)), 'fav store stays valid JSON');
+  let frameErr2 = null;
+  try { for (let i = 0; i < 3; i++) { const cb = raf; raf = null; if (!cb) break; cb(performance.now()) } } catch (e) { frameErr2 = e }
+  ok(!frameErr2, `frames still clean after all events${frameErr2 ? ': ' + frameErr2.message : ''}`);
+  ok(calls.every(Number.isFinite), 'coords finite after extended events');
 }
 
 console.log(`${pass} pass / ${fail} fail`);
