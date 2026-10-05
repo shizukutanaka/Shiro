@@ -339,5 +339,38 @@ for (const hair of L.HAIRS) {
   ok(calls.every(Number.isFinite), `hair ${hair} draws`);
 }
 
+// 静的ガード: UIスコープからlib内部constへの裸参照(未エクスポート)を検出 — GRADE_STYLES/SUBJFX_FILTERS型クラッシュの再発防止
+{
+  const uiSrc = src.slice(src.indexOf("if (typeof document !== 'undefined')"));
+  const libSrc = src.slice(0, src.indexOf("if (typeof document !== 'undefined'"));
+  const libNames = new Set([...libSrc.matchAll(/^  const ([A-Za-z_$][\w$]*) =/gm)].map(m => m[1]).filter(n => /^[A-Z]/.test(n)));
+  const uiDecls = new Set([...uiSrc.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)|\(([\w$,\s]*)\)\s*=>|function\s+\w+\(([\w$,\s]*)\)|for \(let (\w+)/g)].flatMap(m => [m[1], m[2], m[3], m[4]].filter(Boolean).flatMap(s => s.split(',').map(x => x.trim()))));
+  const bare = [...libNames].filter(n => !uiDecls.has(n) && new RegExp(`[^.\\w$]${n.replace(/\$/g, '\\$')}`).test(uiSrc.replace(new RegExp(`L\\.${n.replace(/\$/g, '\\$')}`, 'g'), '')));
+  ok(bare.length === 0, `no unexported lib refs in UI${bare.length ? ': ' + bare.join(',') : ''}`);
+}
+
+// 静的ガード: ヘルパー宣言の引数名がレシーバーをシャドウしていないか — qT=(a,b,c,d)=>c.型クラッシュの再発防止
+{
+  const bad = [...src.matchAll(/(\w+)=\(([^)]*)\)=>(\w+)\./g)].filter(m => m[3] !== m[1] && m[2].split(',').map(s => s.trim()).includes(m[3]));
+  ok(bad.length === 0, `no receiver-shadowing helper params${bad.length ? ': ' + bad.map(m => m[1]).join(',') : ''}`);
+}
+
+// 静的ガード: rng()を使う背景ケースで const rng 宣言が存在するか — scat変換が宣言を飲み込む型の再発防止
+{
+  const marks = [...src.matchAll(/pr === '(\w+)'/g)];
+  const bad = [];
+  for (let i = 0; i < marks.length; i++) {
+    const end = i + 1 < marks.length ? marks[i + 1].index : src.indexOf('function silhouetteOf', marks[i].index);
+    const blk = src.slice(marks[i].index, end);
+    const usesRng = [...blk.matchAll(/\brng\(\)/g)].length > 0;
+    const declRng = /(?:const|let)\s+rng\s*=/.test(blk) || /scat\(\d+, \d+, \(rng/.test(blk);
+    if (usesRng && !declRng) {
+      const usesOutsideScat = /(?<![(,\s])rng\(\)/.test(blk.replace(/scat\(\d+, \d+, \(rng, i\) => \{[^}]*\}/g, ''));
+      if (usesOutsideScat) bad.push(marks[i][1]);
+    }
+  }
+  ok(bad.length === 0, `all rng-using bg cases declare rng${bad.length ? ': ' + bad.join(',') : ''}`);
+}
+
 console.log(`${pass} pass / ${fail} fail`);
 process.exit(fail ? 1 : 0);
