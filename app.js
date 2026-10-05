@@ -8105,11 +8105,11 @@ const ShiroLib = (() => {
     if (p.bgDim > 0) { FS(`rgba(8,10,16,${p.bgDim * .55})`); fR(0, 0, W, H) }
   }
   return {
-    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS, PARTICLES, HAIRS, GRADE_STYLES, SUBJFX_FILTERS,
+    clamp01, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS, PARTICLES, HAIRS, GRADE_STYLES, SUBJFX_FILTERS,
     defaultParams, clampParams, randomParams, drawBubble,
     serializePreset, parsePreset, parseFavList,
     keyAlpha, erodeAlpha, despill, blinkOpen, drawParticles, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory, drawBackdrop, shined,
-    MIME_CANDIDATES, pickMime, ctxH,
+    pickMime, ctxH,
   }
 })();
 if (typeof globalThis !== 'undefined') globalThis.ShiroLib = ShiroLib;
