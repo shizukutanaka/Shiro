@@ -645,3 +645,4 @@ node test.mjs   # 5445 assertions
 - **r236**: UIイベント面の完全網羅 — スライダーinput/dblclick、ガイド/配置/表情プリセット、aspect変更、wheel拡大、PNG/録画/共有のダウンロード系、画像/動画/非対応ファイル読込、お気に入りの適用/並替/リネーム/削除/インポート、undo/redo/数字キー全発火。動画src setterはonloadeddataを発火するスタブ化。
 - **r237**: ハーネスをmkUIファクトリ化し複数ブート評価に対応。セッション/お気に入りの復元経路・破損フォールバック・ランダムパラメータ8回のframe反復を追加 → **FKEYのTDZ参照で起動時にお気に入りが一切復元されていなかった潜伏バグを発見・修復**（FKEYをstate宣言前へ巻き上げ）。
 - **r238**: DOM id照合ガード — app.jsの`$()/on()/clk()`参照idとSELS/INPS表のidがindex.htmlに実在するか検査（DOMスタブの自動生成では検出不能なタイプミス型クラッシュを防止）。配線キーがdefaultParamsに存在するかも照合。
+- **r239**: select option値⇔真値源の双方向整合ガード — 15 select（ANIMS/ACCS/EYES/FITS/BGS/PARTICLES/HAIRS/SUBJFX/GRADES/BLENDS/WMPOS/VIDQS/PLACES/FACES/ASPECTS）の値が漏れ・ズレなく一致することを検証。sel-acc2のJS継承ルールも明示検査。
