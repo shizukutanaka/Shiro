@@ -729,6 +729,7 @@ const mkUI = (seed, opts = {}) => {
   ok(h.store.has('shiro.session.v1'), 'beforeunload flushes pending session save');
   ok(indexHtml.includes('touch-action:none'), 'stage has touch-action:none (drag works on touch devices)');
   ok(indexHtml.includes(':focus-visible'), 'keyboard focus has visible indicator (focus-visible styles)');
+  ok(indexHtml.includes('color-scheme') && indexHtml.includes('aria-hidden="true"'), 'color-scheme meta + decorative overlay hidden from AT');
 }
 
 console.log(`${pass} pass / ${fail} fail`);
