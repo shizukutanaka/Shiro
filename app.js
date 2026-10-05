@@ -3657,12 +3657,6 @@ const ShiroLib = (() => {
       const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i) }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i) };
       const plS=(...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }); sK() };
       const bP=()=>c.beginPath(), cP=()=>c.closePath(), mT=(x,y)=>c.moveTo(x,y), lT=(x,y)=>c.lineTo(x,y), qT=(a,b,q,d)=>c.quadraticCurveTo(a,b,q,d), bZ=(a,b,q,d,e,f)=>c.bezierCurveTo(a,b,q,d,e,f), aR=(x,y,r,s,e)=>c.arc(x,y,r,s,e), eC=(x,y,rx,ry,o,s,e)=>c.ellipse(x,y,rx,ry,o,s,e), fR=(x,y,w,h)=>c.fillRect(x,y,w,h), sR=(x,y,w,h)=>c.strokeRect(x,y,w,h), fL=()=>c.fill(), sK=()=>c.stroke(), sV=()=>c.save(), rS=()=>c.restore(), tR=(x,y)=>c.translate(x,y), rO=a=>c.rotate(a), sC=(x,y)=>c.scale(x,y), gA=v=>c.globalAlpha = v;
-    if (bg) {
-
-      const z = p.bgDrift * .15 * (.5 + .5 * S(.12)); drawCover(c, bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast, p.bgX, p.bgY, z, W, H);
-      if (p.bgDim > 0) { FS(`rgba(8,10,16,${p.bgDim * .55})`); rect(0, 0, W, H) }
-      return
-    }
     const pr = p.bgPreset || 'gradient';
 
     const sky = (stops) => {
@@ -3690,6 +3684,11 @@ const ShiroLib = (() => {
       const polyS = (...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }) ;cP(); sK() };
       const S = f => SI(t * f), C = f => CO(t * f), A = f => AB(S(f));
     const dot = (x, y, r) => { dotP(W * x,H * y,r) };
+    if (bg) {
+      const z = p.bgDrift * .15 * (.5 + .5 * S(.12)); drawCover(c, bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast, p.bgX, p.bgY, z, W, H);
+      if (p.bgDim > 0) { FS(`rgba(8,10,16,${p.bgDim * .55})`); rect(0, 0, W, H) }
+      return
+    }
     if (pr === 'transparent') return;
     if (p.bgBlur > 0) flT(`blur(${p.bgBlur * 10}px)`);
     if (pr === 'green') { FS('#00b140'); rect(0, 0, W, H) }

@@ -339,6 +339,52 @@ for (const hair of L.HAIRS) {
   ok(calls.every(Number.isFinite), `hair ${hair} draws`);
 }
 
+for (const acc of L.ACCS) {
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+    set: () => true,
+  });
+  if (acc === 'cape') { const p = L.defaultParams(); p.acc = acc; L.drawMannequin(ctx, p, 1.0, 640, 600, 500) } else L.drawAccessory(ctx, acc, 320, 200, 60, .58);
+  ok((acc === 'none' || calls.length > 0) && calls.every(Number.isFinite), `acc ${acc} draws finite args`);
+}
+
+for (const anim of L.ANIMS) {
+  const p = L.defaultParams(); p.anim = anim;
+  for (const t of [0, 1.37, 4.2]) L.mannequinPose(p, t);
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+    set: () => true,
+  });
+  L.drawMannequin(ctx, p, 1.37, 640, 600, 500);
+  ok(calls.length > 0 && calls.every(Number.isFinite), `anim ${anim} draws finite args`);
+}
+
+for (const es of L.EYES) {
+  const p = L.defaultParams(); p.eyeStyle = es;
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+    set: () => true,
+  });
+  L.drawMannequin(ctx, p, 1.0, 640, 600, 500);
+  ok(calls.length > 0 && calls.every(Number.isFinite), `eyes ${es} draws finite args`);
+}
+
+for (const fit of L.FITS) {
+  const p = L.defaultParams(); p.bgFit = fit; p.bgBlur = .3; p.bgSat = .7; p.bgContrast = .6; p.bgDrift = .5;
+  for (const bg of [{ naturalWidth: 400, naturalHeight: 300 }, { videoWidth: 400, videoHeight: 300 }]) {
+    const calls = [];
+    const ctx = new Proxy({}, {
+      get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+      set: () => true,
+    });
+    L.drawBackdrop(ctx, p, 1.7, bg, 640, 360);
+    ok(calls.length > 0 && calls.every(Number.isFinite), `bgFit ${fit} ${bg.naturalWidth ? 'image' : 'video'} draws finite args`);
+  }
+}
+
 // 静的ガード: UIスコープからlib内部constへの裸参照(未エクスポート)を検出 — GRADE_STYLES/SUBJFX_FILTERS型クラッシュの再発防止
 {
   const uiSrc = src.slice(src.indexOf("if (typeof document !== 'undefined')"));

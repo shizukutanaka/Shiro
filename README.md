@@ -634,3 +634,4 @@ node test.mjs   # 5445 assertions
 - `drawBackdrop`/`drawCover`/`defaultBackdrop` をlib IIFEへ移し `L.drawBackdrop` としてエクスポート（`state.bg`→引数化、W/H→引数化）＋ `PARTICLES`/`HAIRS`/`GRADE_STYLES` もエクスポート — テスト不能だった140背景シーンを全網羅スモーク化したところ、3系統の実バグを検出・修復: (a)ヘルパー宣言の引数名 `c` が描画コンテキスト `c` をシャドウ(qT/bZ→q,d改名、sea/space/mtn/rainbow等でクラッシュしていた潜伏バグ) (b)`scat` 変換が `const rng` 宣言を飲み込み後続の `rng()` が未宣言化(22背景ケース、bazaar/seastack/billabong等) (c)オリジナルからの `FS(gr)` 未宣言参照(ruins)＋ `GRADE_STYLES` のUI側未エクスポート参照(frame()毎フレーム例外でアニメーション全体が1コマ目で凍結していた) — node test.mjs 5,445→5,645アサーション
 - 外部キー/ネットワーク/トラッキングなし。画像・動画・お気に入りは全てローカルに留まる
 - **r227**: `SUBJFX_FILTERS`の未エクスポート修復（モデル加工=セピア等で即クラッシュする潜伏バグ）。加えてテストに3つの静的ガードを追加 — ①UI→lib裸参照スキャン ②ヘルパー引数のレシーバーシャドウ ③背景ケースのrng宣言存在 — 今回・前回発見した全クラッシュ型を再発防止。
+- **r228**: 描画面の残り網羅 — 全アクセサリ×全アニメ×全目スタイル×画像/動画背景のスモーク追加（5,445→6,008アサーション）。**TDZ実バグ検出・修復**: 画像/動画背景を設定すると `S`/`FS`/`rect` が宣言前アクセスで即クラッシュしていた — `if (bg)` 分岐を全ヘルパー宣言の後へ移動。capeはdrawAccessory外の別描画パスと判明（drawMannequin経由で検査）。
