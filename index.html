@@ -29,50 +29,34 @@
     </div>
     <hr>
     <details open><summary>キャラ</summary>
-    <label class="ctl">アニメーション</label>
-    <select id="sel-anim"></select>
-    <label class="ctl">アクセサリ</label>
-    <select id="sel-acc"></select>
-    <label class="ctl">アクセサリ2（組み合わせ）</label>
-    <select id="sel-acc2"></select>
-    <label class="ctl">表情プリセット</label>
-    <select id="sel-face"></select>
-    <label class="ctl">髪型</label>
-    <select id="sel-hair"></select>
-    <label class="ctl">目のスタイル</label>
-    <select id="sel-eyes"></select>
+    <label class="ctl" for="sel-anim">アニメーション</label><select id="sel-anim"></select>
+    <label class="ctl" for="sel-acc">アクセサリ</label><select id="sel-acc"></select>
+    <label class="ctl" for="sel-acc2">アクセサリ2（組み合わせ）</label><select id="sel-acc2"></select>
+    <label class="ctl" for="sel-face">表情プリセット</label><select id="sel-face"></select>
+    <label class="ctl" for="sel-hair">髪型</label><select id="sel-hair"></select>
+    <label class="ctl" for="sel-eyes">目のスタイル</label><select id="sel-eyes"></select>
     </details>
     <details open><summary>シーン</summary>
-    <label class="ctl">モデル加工</label>
-    <select id="sel-fx"></select>
-    <label class="ctl">モデル合成</label>
-    <select id="sel-blend"></select>
-    <label class="ctl">シーン色調</label>
-    <select id="sel-grade"></select>
-    <label class="ctl">パーティクル</label>
-    <select id="sel-particles"></select>
-    <label class="ctl">アスペクト比</label>
-    <select id="sel-aspect"></select>
-    <label class="ctl">背景の合わせ方</label>
-    <select id="sel-bgfit"></select>
-    <label class="ctl">背景プリセット（画像なし時）</label>
-    <select id="sel-bgpreset"></select>
+    <label class="ctl" for="sel-fx">モデル加工</label><select id="sel-fx"></select>
+    <label class="ctl" for="sel-blend">モデル合成</label><select id="sel-blend"></select>
+    <label class="ctl" for="sel-grade">シーン色調</label><select id="sel-grade"></select>
+    <label class="ctl" for="sel-particles">パーティクル</label><select id="sel-particles"></select>
+    <label class="ctl" for="sel-aspect">アスペクト比</label><select id="sel-aspect"></select>
+    <label class="ctl" for="sel-bgfit">背景の合わせ方</label><select id="sel-bgfit"></select>
+    <label class="ctl" for="sel-bgpreset">背景プリセット（画像なし時）</label><select id="sel-bgpreset"></select>
     <div class="chk"><input type="checkbox" id="chk-flip"><label for="chk-flip">左右反転</label></div>
     <div class="chk"><input type="checkbox" id="chk-guides"><label for="chk-guides">三分割ガイド（書き出しには含まれません）</label></div>
     <div class="chk"><input type="checkbox" id="chk-freeze"><label for="chk-freeze">アニメを一時停止（ポーズ固定）</label></div>
     </details>
     <details open><summary>テキスト・出力</summary>
-    <label class="ctl">配置プリセット</label>
-    <select id="sel-place"></select>
-    <label class="ctl">透かしテキスト</label>
+    <label class="ctl" for="sel-place">配置プリセット</label><select id="sel-place"></select>
+    <label class="ctl" for="inp-watermark">透かしテキスト</label>
     <input type="text" id="inp-watermark" maxlength="60" placeholder="例: @yourname" style="width:100%;background:#2a2e3a;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px;">
-    <label class="ctl">透かしの位置</label>
-    <select id="sel-wmpos"></select>
-    <label class="ctl">録画画質</label>
-    <select id="sel-vidq"></select>
-    <label class="ctl">セリフ（ふきだし）</label>
+    <label class="ctl" for="sel-wmpos">透かしの位置</label><select id="sel-wmpos"></select>
+    <label class="ctl" for="sel-vidq">録画画質</label><select id="sel-vidq"></select>
+    <label class="ctl" for="inp-bubble">セリフ（ふきだし）</label>
     <input type="text" id="inp-bubble" maxlength="24" placeholder="例: やっほー！" style="width:100%;background:#2a2e3a;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px;">
-    <label class="ctl">タイトル（大見出し）</label>
+    <label class="ctl" for="inp-title">タイトル（大見出し）</label>
     <input type="text" id="inp-title" maxlength="40" placeholder="例: 今日のキャラ" style="width:100%;background:#2a2e3a;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px;">
     </details>
     <div id="sliders"></div>

@@ -656,3 +656,4 @@ node test.mjs   # 5445 assertions
 - **r247**: エクスポート面監査 — UI/test双方から未参照の `lerp`/`MIME_CANDIDATES` をexportから除去（内部宣言は残存・動作同一）。ガード8新設: 全export名の外部参照を静的監査＋フレーム描画呼出予算(~165/frame、上限700)の性能リグレッションガード。
 - **r248**: レンダーフィンガープリント（ゴールデンガード）— Math.randomをシード化＋performance.nowを決定時刻化し、boot+3フレームのctx呼出列ダイジェスト(2420624414)をピン留め。描画への意図しない変更を構造的に捕捉（新描画変更時はダイジェスト更新）。
 - **r249**: 全selectのZIP統一 — 残り6 select(blend/wmpos/vidq/place/face/aspect)もキーを真値源から派生（BLENDS/WMPOS/VIDQSをexport、PLACES/FACES/ASPECTSはUI内const）。OPTSは全select「ラベルのみ」の均一形式へ、生成ループも単一経路に簡素化。index.html 18.0→17.8KB（累計-63%）。
+- **r250**: フォームのアクセシビリティ — 全19個の`.ctl`ラベルに`for`関連付けを追加（ラベルクリックでコントロールへフォーカス、スクリーンリーダーが名前を読み上げ可能に）。ガード: 全for属性が実在idを指す＋関連付けなしctlラベル0件を静的検証。
