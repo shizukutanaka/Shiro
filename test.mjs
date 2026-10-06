@@ -383,6 +383,31 @@ for (const fit of L.FITS) {
   ok(badKeys.length === 0, `wiring tables only reference real params${badKeys.length ? ': ' + badKeys.join(',') : ''}`);
 }
 
+
+// Guard: select option値がlib/UI真値源と双方向整合(値ズレ=ブラウザでサイレント誤動作)
+{
+  const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+  const optVals = id => { const m = html.match(new RegExp('<select id="' + id + '"[^>]*>([\\s\\S]*?)</select>')); return m ? [...m[1].matchAll(/value="([^"]+)"/g)].map(x => x[1]) : [] };
+  const arrOf = n => { const m = src.match(new RegExp('const ' + n + " = \\[([^\\]]+)\\]")); return m ? [...m[1].matchAll(/'([^']+)'/g)].map(x => x[1]) : [] };
+  const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = src.indexOf('};', i); return i < 0 ? [] : [...src.slice(i, j).matchAll(/(?:'([^']+)'|(\w+))\s*:\s*[[{]/g)].map(m => m[1] || m[2]) };
+  const checks = [
+    ['sel-anim', L.ANIMS], ['sel-acc', L.ACCS], ['sel-eyes', L.EYES], ['sel-bgfit', L.FITS],
+    ['sel-bgpreset', L.BGS], ['sel-particles', L.PARTICLES], ['sel-hair', L.HAIRS],
+    ['sel-fx', [...Object.keys(L.SUBJFX_FILTERS), 'none']], ['sel-grade', arrOf('GRADES')],
+    ['sel-blend', arrOf('BLENDS')], ['sel-wmpos', arrOf('WMPOS')], ['sel-vidq', arrOf('VIDQS')],
+    ['sel-place', keysOf('PLACES')], ['sel-face', keysOf('FACES')], ['sel-aspect', keysOf('ASPECTS')],
+  ];
+  const optBad = [];
+  for (const [id, exp] of checks) {
+    const o = optVals(id);
+    for (const v of o) if (!exp.includes(v)) optBad.push(`${id}:html-only ${v}`);
+    for (const v of exp) if (!o.includes(v)) optBad.push(`${id}:lib-only ${v}`);
+  }
+  ok(optBad.length === 0, `select options match value tables${optBad.length ? ': ' + optBad.join(', ') : ''}`);
+  const acc2inner = (html.match(/<select id="sel-acc2"[^>]*>([\s\S]*?)<\/select>/) || [,''])[1];
+  ok(!/<option/.test(acc2inner) && src.includes("$('sel-acc2').innerHTML = $('sel-acc').innerHTML"), 'sel-acc2 inherits options from sel-acc');
+}
+
 const mkUI = seed => {
   const h = { els: new Map(), calls: [], docListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null };
   const calls = h.calls;
