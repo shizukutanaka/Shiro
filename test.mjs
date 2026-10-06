@@ -1,4 +1,4 @@
-// node test.mjs — ShiroLib 純粋ロジックの検証ゲート
+
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
@@ -12,7 +12,6 @@ let pass = 0, fail = 0;
 const ok = (cond, name) => { cond ? pass++ : (fail++, console.error('FAIL:', name)); };
 const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name); } catch { pass++; } };
 
-// rng
 {
   const r1 = L.mulberry32(42), r2 = L.mulberry32(42);
   ok(r1() === r2() && r1() === r2(), 'mulberry32 deterministic');
@@ -20,7 +19,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(L.strSeed('shiro') === L.strSeed('shiro') && L.strSeed('a') !== L.strSeed('b'), 'strSeed');
 }
 
-// clampParams
 {
   const p = L.clampParams({ height: 5, x: -1, anim: 'bogus', flip: 1, seed: 3.7 });
   ok(p.height === 1 && p.x === 0, 'clamp numeric range');
@@ -31,7 +29,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   for (const k of L.NUM_KEYS) ok(d[k] === L.defaultParams()[k], `default ${k} matches`);
 }
 
-// randomParams
 {
   for (let i = 0; i < 30; i++) {
     const p = L.randomParams(L.mulberry32(i));
@@ -40,7 +37,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   }
 }
 
-// presets round-trip
 {
   const p = L.randomParams(L.mulberry32(7));
   const back = L.parsePreset(L.serializePreset('テスト', p));
@@ -52,7 +48,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   throws(() => L.parseFavList('{}'), 'non-array fav list rejected');
 }
 
-// chroma key
 {
   ok(L.keyAlpha(255, 255, 255, 0, .5) === 255, 'thresh=0 keeps pure white');
   ok(L.keyAlpha(255, 255, 255, .8, 0) === 0, 'pure white keyed out');
@@ -61,7 +56,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(a > 0 && a < 255, 'soft edge partial alpha');
 }
 
-// pose determinism
 {
   const p = L.defaultParams();
   for (const anim of L.ANIMS) {
@@ -72,7 +66,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   }
 }
 
-// skeleton sane
 {
   const p = L.defaultParams();
   const K = L.skeleton(p, L.mannequinPose(p, 0));
@@ -84,7 +77,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(K.lAnk[1] > 0 && K.headC[1] > K.lAnk[1], 'head above ankles');
 }
 
-// drawMannequin with mock ctx: all coords finite, no throw
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -102,7 +94,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.every(Number.isFinite), 'draw coords finite');
 }
 
-// bgPreset enum clamp + random validity
 {
   ok(L.clampParams({ bgPreset: 'bogus' }).bgPreset === 'gradient', 'bad bgPreset falls back');
   ok(L.BGS.includes(L.clampParams({ bgPreset: 'transparent' }).bgPreset), 'bgPreset survives clamp');
@@ -110,11 +101,10 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     ok(L.BGS.includes(L.randomParams(L.mulberry32(i)).bgPreset), 'random bgPreset valid');
 }
 
-// jump anim: mid-flight bob positive, arms raised, knees tucked
 {
   const p = L.defaultParams(); p.anim = 'jump'; p.animSpeed = .5;
   const s = .4 + .5 * 2.2;
-  const q = L.mannequinPose(p, 0.5 / s); // tt=0.5 → apex
+  const q = L.mannequinPose(p, 0.5 / s);
   ok(q.bob > .1, 'jump apex lifts model');
   ok(q.lKnee > .5 && q.rKnee > .5, 'jump tucks knees');
   ok(q.lArm < -.5 && q.rArm > .5, 'jump raises both arms');
@@ -122,7 +112,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(q0.bob === 0, 'jump lands at t=0');
 }
 
-// sticker outline: emits offset draws, no-op at 0
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -137,7 +126,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.every(Number.isFinite), 'outline coords finite');
 }
 
-// vignette: no-op at 0, draws rect when active
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -150,7 +138,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.length > 0 && calls.every(Number.isFinite), 'vignette coords finite');
 }
 
-// watermark: string clamp + draw behavior
 {
   ok(L.clampParams({ watermark: 'x'.repeat(100) }).watermark.length === 60, 'watermark capped at 60');
   ok(L.clampParams({ watermark: 12345 }).watermark === '12345', 'watermark coerced to string');
@@ -166,7 +153,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.some(v => v === '@ume'), 'watermark text drawn');
 }
 
-// eyeStyle enum clamp + draw across all styles
 {
   ok(L.clampParams({ eyeStyle: 'bogus' }).eyeStyle === 'dot', 'bad eyeStyle falls back');
   for (const es of L.EYES || ['dot','wink','closed','heart']) {
@@ -186,7 +172,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(L.clampParams({ subjFx: 'x', grade: 'y' }).subjFx === 'none' && L.clampParams({ subjFx: 'x', grade: 'y' }).grade === 'none', 'bad fx/grade fall back');
   ok(L.clampParams({ acc: 'crown' }).acc === 'crown' && L.clampParams({ acc: 'phones' }).acc === 'phones', 'new accessories valid');
   ok(L.clampParams({ blend: 'bogus' }).blend === 'none' && L.clampParams({ blend: 'screen' }).blend === 'screen', 'blend clamp');
-  // glow
+
   {
     const calls = [];
     const gctx = new Proxy({}, {
@@ -198,7 +184,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     L.drawGlow(gctx, {}, 300, 500, 640, 600, .8);
     ok(calls.length === 4 && calls.every(Number.isFinite), 'glow draws blurred silhouette');
   }
-  // accessories draw without error
+
   for (const acc of L.ACCS) {
     const p = L.defaultParams(); p.acc = acc;
     const calls = [];
@@ -211,7 +197,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   }
 }
 
-// drawParticles: 各タイプ描画できて座標は有限・画面内
 for (const type of ['snow', 'sparkle', 'petal']) {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -226,7 +211,7 @@ ok(L.clampParams({ particles: 'snow' }).particles === 'snow', 'particles snow ke
 ok(L.clampParams({ acc: 'cape' }).acc === 'cape', 'cape accessory kept');
 ok(L.clampParams({ brow: 2 }).brow === 1 && L.clampParams({ brow: -1 }).brow === 0, 'brow clamped');
 ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' }).wmPos === 'tl', 'wmPos enum');
-// bowアニメはポーズが頭を深く垂れる(headTilt>0の瞬間がある)
+
 {
   const p = { ...L.defaultParams(), anim: 'bow' };
   let maxTilt = 0;
@@ -234,7 +219,6 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   ok(maxTilt > .3, 'bow pose tilts head deeply');
 }
 
-// despill: 半透明画素の彩度を落とす / 不透明・完全透過は無変更
 {
   const d = new Uint8Array([255, 200, 200, 128,  100, 50, 200, 255,  10, 20, 30, 0]);
   L.despill(d, 1);
@@ -246,7 +230,6 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   ok(d2[0] === 255, 'despill 0 no-op');
 }
 
-// drawReflection
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -259,19 +242,17 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   ok(calls.length === 8 && calls.every(Number.isFinite), 'reflection draws flipped image');
 }
 
-// blink cycle
 {
   ok(L.blinkOpen(1.0) === 1 && L.blinkOpen(1.0) === L.blinkOpen(1.0), 'blink deterministic/open by default');
   ok(L.blinkOpen(.09) < .5, 'blink closes mid-cycle');
   for (let i = 0; i < 200; i++) { const v = L.blinkOpen(i * .07); ok(v >= 0 && v <= 1, 'blink range'); }
-  // seed-personalized periods: deterministic per seed, differs across seeds somewhere in 0..8s
+
   ok(L.blinkOpen(2.5, 42) === L.blinkOpen(2.5, 42), 'blink seed deterministic');
   let differ = false;
   for (let i = 0; i < 200; i++) if (L.blinkOpen(i * .04, 0) !== L.blinkOpen(i * .04, 96)) { differ = true; break; }
   ok(differ, 'blink period varies by seed');
 }
 
-// erodeAlpha: opaque island loses its 1px border
 {
   const w = 5, h = 5, d = new Uint8Array(w * h * 4);
   for (let y = 1; y <= 3; y++) for (let x = 1; x <= 3; x++) d[(y * w + x) * 4 + 3] = 255;
@@ -281,7 +262,6 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   ok(d[(0 * w + 0) * 4 + 3] === 0, 'transparent stays transparent');
 }
 
-// contactShadow: no draw when alpha/radius zero, finite args otherwise
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -295,7 +275,6 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   ok(calls.length === before, 'zero alpha shadow skipped');
 }
 
-// accessories: all variants draw finite geometry
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -309,7 +288,6 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   ok(L.ACCS.includes(p.acc) && L.clampParams({ acc: 'x' }).acc === 'none', 'acc clamped/valid');
 }
 
-// cast shadow: directional only, finite args
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -323,11 +301,42 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   ok(calls.length === before, 'cast shadow skipped at center dir');
 }
 
-// mime picker
 {
   ok(L.pickMime(() => true).ext === 'mp4', 'mp4 preferred');
   ok(L.pickMime(m => m.includes('webm')).ext === 'webm', 'webm fallback');
   ok(L.pickMime(() => false) === null, 'no support -> null');
+}
+
+for (const bg of L.BGS) {
+  const p = L.defaultParams(); p.bgPreset = bg;
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+    set: () => true,
+  });
+  L.drawBackdrop(ctx, p, 1.7, null, 640, 360);
+  ok((bg === 'transparent' || calls.length > 0) && calls.every(Number.isFinite), `bg ${bg} draws finite args`);
+}
+
+for (const type of L.PARTICLES) {
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+    set: () => true,
+  });
+  L.drawParticles(ctx, 640, 360, type, 1.7, 42);
+  ok(calls.every(Number.isFinite), `particles ${type} finite args`);
+}
+
+for (const hair of L.HAIRS) {
+  const p = L.defaultParams(); p.hair = hair;
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
+    set: () => true,
+  });
+  L.drawMannequin(ctx, p, 1.0, 640, 600, 500);
+  ok(calls.every(Number.isFinite), `hair ${hair} draws`);
 }
 
 console.log(`${pass} pass / ${fail} fail`);

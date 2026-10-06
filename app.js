@@ -3635,41 +3635,12 @@ const ShiroLib = (() => {
     rS()
   }
 
-  return {
-    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS,
-    defaultParams, clampParams, randomParams, drawBubble,
-    serializePreset, parsePreset, parseFavList,
-    keyAlpha, erodeAlpha, despill, blinkOpen, drawParticles, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory, shined,
-    MIME_CANDIDATES, pickMime,
-  }
-})();
-if (typeof globalThis !== 'undefined') globalThis.ShiroLib = ShiroLib;
-
-if (typeof document !== 'undefined') (() => {
-    const PI = Math.PI, MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, FL = Math.floor;
-const K0='#4a3828', K1='rgba(250,252,255,.8)';
-  const L = ShiroLib;
-  const $ = id => document.getElementById(id);
-  const on = (id, ev, k, n) => $(id).addEventListener(ev, e => { let v = n ? e.target.value.slice(0, n) : k === 'flip' ? e.target.checked : e.target.value; state.params[k] = v; touch() });
-  const mk = t => document.createElement(t);
-  const stage = $('stage'), ctx = stage.getContext('2d'); let W = stage.width, H = stage.height;
-  const err = m => { $('err').textContent = m || '' };
-
-  const state = {
-    params: L.defaultParams(),
-    bg: null,
-    media: null,
-    favs: loadFavs(),
-    keySrc: null, keyParams: '',
-    recorder: null, recTimer: 0,
-    frozenT: null,
-  };
-
-  function defaultBackdrop(c) {
+  function defaultBackdrop(c, W, H) {
       const FS=v=>c.fillStyle = v;
     const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2a3550'); g.addColorStop(.6, '#3b4a6b'); g.addColorStop(1, '#1d2230'); FS(g); c.fillRect(0, 0, W, H)
   }
-  function drawCover(c, img, fit, blurPx, sat, con, offX, offY, zoom = 0) {
+
+  function drawCover(c, img, fit, blurPx, sat, con, offX, offY, zoom = 0, W, H) {
       const flT=v=>c.filter = v;
     const iw = img.naturalWidth || img.videoWidth, ih = img.naturalHeight || img.videoHeight;
     if (!iw || !ih) return;
@@ -3679,16 +3650,16 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
     c.drawImage(img, (W - dw) / 2 + (offX - .5) * W, (H - dh) / 2 + (offY - .5) * H, dw, dh); flT('none')
   }
-
-  function drawBackdrop(c, p, t) {
+  function drawBackdrop(c, p, t, bg, W, H) {
+      const K0='#4a3828', K1='rgba(250,252,255,.8)';
       const mir=f=>[-1,1].forEach(f);
       const flT=v=>c.filter = v, lC=v=>c.lineCap = v;
       const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i) }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i) };
       const plS=(...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }); sK() };
-      const bP=()=>c.beginPath(), cP=()=>c.closePath(), mT=(x,y)=>c.moveTo(x,y), lT=(x,y)=>c.lineTo(x,y), qT=(a,b,c,d)=>c.quadraticCurveTo(a,b,c,d), bZ=(a,b,c,d,e,f)=>c.bezierCurveTo(a,b,c,d,e,f), aR=(x,y,r,s,e)=>c.arc(x,y,r,s,e), eC=(x,y,rx,ry,o,s,e)=>c.ellipse(x,y,rx,ry,o,s,e), fR=(x,y,w,h)=>c.fillRect(x,y,w,h), sR=(x,y,w,h)=>c.strokeRect(x,y,w,h), fL=()=>c.fill(), sK=()=>c.stroke(), sV=()=>c.save(), rS=()=>c.restore(), tR=(x,y)=>c.translate(x,y), rO=a=>c.rotate(a), sC=(x,y)=>c.scale(x,y), gA=v=>c.globalAlpha = v;
-    if (state.bg) {
+      const bP=()=>c.beginPath(), cP=()=>c.closePath(), mT=(x,y)=>c.moveTo(x,y), lT=(x,y)=>c.lineTo(x,y), qT=(a,b,q,d)=>c.quadraticCurveTo(a,b,q,d), bZ=(a,b,q,d,e,f)=>c.bezierCurveTo(a,b,q,d,e,f), aR=(x,y,r,s,e)=>c.arc(x,y,r,s,e), eC=(x,y,rx,ry,o,s,e)=>c.ellipse(x,y,rx,ry,o,s,e), fR=(x,y,w,h)=>c.fillRect(x,y,w,h), sR=(x,y,w,h)=>c.strokeRect(x,y,w,h), fL=()=>c.fill(), sK=()=>c.stroke(), sV=()=>c.save(), rS=()=>c.restore(), tR=(x,y)=>c.translate(x,y), rO=a=>c.rotate(a), sC=(x,y)=>c.scale(x,y), gA=v=>c.globalAlpha = v;
+    if (bg) {
 
-      const z = p.bgDrift * .15 * (.5 + .5 * S(.12)); drawCover(c, state.bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast, p.bgX, p.bgY, z);
+      const z = p.bgDrift * .15 * (.5 + .5 * S(.12)); drawCover(c, bg, p.bgFit, p.bgBlur * 10, p.bgSat * 2, .5 + p.bgContrast, p.bgX, p.bgY, z, W, H);
       if (p.bgDim > 0) { FS(`rgba(8,10,16,${p.bgDim * .55})`); rect(0, 0, W, H) }
       return
     }
@@ -3707,7 +3678,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       const dotPS = (x, y, r) => { bP(); aR(x, y, r, 0, 7); sK() };
       const dotP = (x, y, r) => { bP(); aR(x, y, r, 0, 7); fL() };
       const times = (n, f) => { for (let i = 0; i < n; i++) f(i) };
-      const scat = (seed, n, f) => { const r = L.mulberry32(seed); times(n, i => f(r, i)) };
+      const scat = (seed, n, f) => { const r = mulberry32(seed); times(n, i => f(r, i)) };
       const bnd = y => rect(0, H * y, W, H * (1 - y));
       const rect = (x, y, w, h) => fR(x, y, w, h);
       const mv = (x, y) => { bP(); mT(x, y) };
@@ -3726,6 +3697,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     else if (pr === 'sunset') {
       sky([[0,'#2b2f6e'],[.55,'#c9526a'],[1,'#ffb56b']]); FS('rgba(255,190,90,.92)'); dot(.5,.6,H * .15)
     } else if (pr === 'night') {
+      const rng = mulberry32(999);
       sky([[0,'#0a0d24'],[1,'#1c2347']]); scat(999, 90, (rng, i) => {
         const sx = rng() * W, sy = rng() * H * .85, sr = rng() * 1.4 + .4; const tw = .3 + .65 * AB(SI(t * (.4 + rng() * 1.6) + rng() * 9));
         FS(`rgba(255,255,255,${tw})`);
@@ -3735,6 +3707,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     } else if (pr === 'spot') {
       FS('#0b0c10'); rect(0, 0, W, H); FS(rg(W * .5, H * .86, 10, W * .5, H * .86, W * .5,[0, 'rgba(255,240,200,.55)',1, 'rgba(255,240,200,0)'])); mv(W * .44, 0); mT(W * .44, 0); lT(W * .56, 0); mT(W * .44, 0); lT(W * .56, 0); lT(W * .9, H * .95); mT(W * .44, 0); lT(W * .56, 0); lT(W * .9, H * .95); lT(W * .1, H * .95); cP(); cP(); fL(); ell(.5,.88,W * .28,H * .07)
     } else if (pr === 'sky') {
+      const rng = mulberry32(77);
 
       sky([[0,'#2e7bd6'],[1,'#a8d4f0']]); scat(77, 5, (rng, i) => {
         const bx = rng(), sp = .008 + .01 * rng(), cy = H * (.05 + rng() * .45); const cxx = ((bx + t * sp) % 1) * W; FS('rgba(255,255,255,.85)');
@@ -3744,11 +3717,12 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'pastel') {
 
-      FS(lg(0, 0, W, H,[0, '#ffd9e8',.35, '#ffe9c9',.65, '#d9f2e3',1, '#c9e3ff'])); rect(0, 0, W, H); const rng = L.mulberry32(4242); FS('rgba(255,255,255,.5)');
+      FS(lg(0, 0, W, H,[0, '#ffd9e8',.35, '#ffe9c9',.65, '#d9f2e3',1, '#c9e3ff'])); rect(0, 0, W, H); const rng = mulberry32(4242); FS('rgba(255,255,255,.5)');
       times(24, i => {
         dotP(rng() * W, rng() * H, 3 + rng() * 9)
       })
     } else if (pr === 'santorini') {
+      const rng = mulberry32(518);
 
       sky([[0,'#78b8e8'],[.5,'#a8d0f0'],[1,'#3868a8']]);
 
@@ -3882,7 +3856,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('#f8d8a0'); dot(.5,.32,W * .09);
 
-      FS('#3a4a28'); mv(0, H * .55); const rng8 = L.mulberry32(2024); let jx = 0;
+      FS('#3a4a28'); mv(0, H * .55); const rng8 = mulberry32(2024); let jx = 0;
       while (jx < W) {
         qT(jx + W * .04, H * (.5 + rng8() * .08), jx + W * .08, H * .55); jx += W * .08
       }
@@ -3923,7 +3897,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('#f09858'); dot(.62,.3,W * .06);
 
-      FS('#3d5230'); mv(0, H * .52); const rngA = L.mulberry32(88); let px2 = 0;
+      FS('#3d5230'); mv(0, H * .52); const rngA = mulberry32(88); let px2 = 0;
       while (px2 < W) {
         qT(px2 + W * .05, H * (.46 + rngA() * .06), px2 + W * .1, H * .52); px2 += W * .1
       }
@@ -3971,7 +3945,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS(lg(0, H * .55, 0, H,[0, '#e8e0d0',1, '#c8bcA8'])); bnd(.55);
 
-      const rngT = L.mulberry32(666); const trees = [[.15, .78, .16], [.4, .7, .2], [.62, .82, .13], [.85, .68, .18]];
+      const rngT = mulberry32(666); const trees = [[.15, .78, .16], [.4, .7, .2], [.62, .82, .13], [.85, .68, .18]];
       for (const [tx, ty, ts] of trees) {
         const bx = W * tx, by = H * ty, sc = H * ts;
 
@@ -4032,14 +4006,14 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('#f8d8a0'); dot(.6,.32,W * .05);
 
-      const rngG = L.mulberry32(90); const balloons = [[.15, .18, .05, 0], [.4, .12, .04, 2.1], [.78, .22, .06, 4.2]];
+      const rngG = mulberry32(90); const balloons = [[.15, .18, .05, 0], [.4, .12, .04, 2.1], [.78, .22, .06, 4.2]];
       for (const [bx, by, bs, ph] of balloons) {
         const gx = W * (bx + .02 * SI(t * .1 + ph)); const gy = H * (by + .02 * SI(t * .25 + ph)); const gs = H * bs; FS('#a04038'); bP(); bP(); aR(gx, gy, gs, PI * .15, PI * .85); bP(); aR(gx, gy, gs, PI * .15, PI * .85); fL(); poly([gx - gs * .75,gy + gs * .1],[gx,gy + gs * 1.5,gx + gs * .75,gy + gs * .1]);
 
         FS('#4a3020'); rect(gx - gs * .12, gy + gs * 1.1, gs * .24, gs * .16)
       }
 
-      FS('rgba(120,80,60,.6)'); mv(0, H * .6); const rngD = L.mulberry32(55);
+      FS('rgba(120,80,60,.6)'); mv(0, H * .6); const rngD = mulberry32(55);
       for (let x = 0; x < W; x += W * .04) {
         const th = H * (.04 + rngD() * .06); lT(x, H * .6 - th); lT(x + W * .01, H * .6 - th); lT(x + W * .01, H * .6)
       }
@@ -4776,7 +4750,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         })
       });
 
-      const tr3 = L.mulberry32(555); FS('#e0c838');
+      const tr3 = mulberry32(555); FS('#e0c838');
       times(60, i => {
         rect(tr3() * W, H * (.78 + tr3() * .18), W * .008, W * .008)
       });
@@ -5133,7 +5107,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         plS([W * cx2, H * cy2 + H * .02],[W * cx2, H * (cy2 + .1)])
       }
 
-      const rng7 = L.mulberry32(777); FS('rgba(255,250,230,.5)');
+      const rng7 = mulberry32(777); FS('rgba(255,250,230,.5)');
       times(8, i => {
         const lx = rng7() * W, ly = H * (.35 + rng7() * .3); dotP(lx, ly, W * .004)
       })
@@ -5198,7 +5172,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         ellP(vx + sx2 * W, vy + sy2 * H, W * sr, H * sr * .4)
       }
 
-      const rng8 = L.mulberry32(888); FS('rgba(180,160,150,.4)');
+      const rng8 = mulberry32(888); FS('rgba(180,160,150,.4)');
       times(12, i => {
         const ax = rng8() * W, ay = H * (.3 + rng8() * .5); dotP(ax, ay, W * .003)
       })
@@ -5353,7 +5327,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('#b08858'); bnd(.68);
 
-      const rng9 = L.mulberry32(999); FS('rgba(80,60,40,.4)');
+      const rng9 = mulberry32(999); FS('rgba(80,60,40,.4)');
       times(40, i => {
         const gx2 = rng9() * W, gy2 = H * (.7 + rng9() * .25); dotP(gx2, gy2, W * (.002 + rng9() * .003))
       });
@@ -5478,7 +5452,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('#8a6848'); dotP(wx + W * .09, wy - H * .1, H * .015); lnW(1.5); plS([wx - W * .12, wy + H * .01],[wx - W * .12, wy + H * .07]); FS('#5a4838'); rect(wx - W * .135, wy + H * .07, W * .03, H * .04);
 
-      FS('#e8e0c8'); const rng = L.mulberry32(1337);
+      FS('#e8e0c8'); const rng = mulberry32(1337);
       times(8, i => {
         const sx = rng() * W, sy = H * (.58 + rng() * .12); ellP(sx, sy, W * .015, H * .012)
       });
@@ -5490,6 +5464,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         const gx = rng() * W, gy = H * (.8 + rng() * .18); const sw = SI(t * 1.5 + i) * W * .008; mv(gx, gy); mT(gx, gy); qT(gx + sw, gy - H * .04, gx + sw * 1.5, gy - H * .07); sK()
       })
     } else if (pr === 'tatras') {
+      const rng = mulberry32(934);
 
       sky([[0,'#b0d0e8'],[.5,'#d8e8f0'],[1,'#7a9878']]);
 
@@ -5537,6 +5512,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       SS('rgba(60,50,40,.8)'); lnW(2); const eagleA = t * .5; const ex = W * (.6 + CO(eagleA) * .12); const ey = H * (.3 + SI(eagleA) * .06); mv(ex - 8, ey); mT(ex - 8, ey); qT(ex - 3, ey - 5, ex, ey); qT(ex + 3, ey - 5, ex + 8, ey); sK()
     } else if (pr === 'izba') {
+      const rng = mulberry32(832);
 
       sky([[0,'#a8c8e8'],[.5,'#d8e8f0'],[1,'#b0c8a0']]);
 
@@ -5607,6 +5583,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         const bx = W * (.3 + i * .25 + SI(t * .4 + i) * .02); const by = H * (.12 + (i % 2) * .06); mv(bx - 5, by); mT(bx - 5, by); qT(bx, by - 4, bx + 5, by); sK()
       })
     } else if (pr === 'rann') {
+      const rng = mulberry32(731);
 
       sky([[0,'#182038'],[.5,'#3a4560'],[1,'#8890a8']]);
 
@@ -5634,6 +5611,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       const mx = (t * .3 % 2) * W; SS('rgba(240,240,250,.8)'); lnW(1.5); plS([mx, H * .15],[mx - W * .06, H * .19])
     } else if (pr === 'ghats') {
+      const rng = mulberry32(611);
 
       sky([[0,'#c8d8c0'],[.5,'#789868'],[1,'#2a4535']]);
 
@@ -5664,6 +5642,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         const bx = W * (.2 + i * .18 + SI(t * .35 + i) * .02); const by = H * (.15 + (i % 2) * .07); mv(bx - 5, by); mT(bx - 5, by); qT(bx, by - 4, bx + 5, by); sK()
       })
     } else if (pr === 'kaziranga') {
+      const rng = mulberry32(507);
 
       sky([[0,'#d8d0a8'],[.5,'#a0a868'],[1,'#3a5040']]);
 
@@ -5691,6 +5670,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         const bx = W * (.55 + i * .07 + S(.3) * .02); const by = H * (.28 + AB(i - 2) * .04); mv(bx - 6, by); mT(bx - 6, by); qT(bx, by - 5, bx + 6, by); sK()
       })
     } else if (pr === 'kerala') {
+      const rng = mulberry32(441);
 
       sky([[0,'#e0d8b0'],[.45,'#a8b878'],[1,'#305848']]);
 
@@ -5787,6 +5767,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         dotP(cx - W * .005, cy - H * .028, H * .008)
       })
     } else if (pr === 'himalaya') {
+      const rng = mulberry32(331);
 
       sky([[0,'#c8d8f0'],[.5,'#8098b8'],[1,'#40505e']]);
 
@@ -5810,6 +5791,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       SS('rgba(40,45,55,.8)'); lnW(1.6); const ex = W * .3 + S(.3) * W * .04, ey = H * .3 + C(.4) * H * .02; mv(ex - 9, ey); mT(ex - 9, ey); qT(ex, ey - 6, ex + 9, ey); sK()
     } else if (pr === 'ghat') {
+      const rng = mulberry32(209);
 
       sky([[0,'#f0c8a0'],[.5,'#d89878'],[1,'#48606a']]);
 
@@ -5934,6 +5916,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       SS('#5a4228'); lnW(4); plS([W * .32, H * .52],[W * .35, H * .3]); SS('#3a2a18'); lnW(5); mv(W * .335, H * .42); mT(W * .335, H * .42); lT(W * .365, H * .415); sK()
     } else if (pr === 'meteora') {
+      const rng = mulberry32(257);
 
       sky([[0,'#e8a870'],[.5,'#c87860'],[1,'#5a4a50']]);
 
@@ -5968,7 +5951,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS(lg(0, H * .4, 0, H,[0, '#3a7a80',1, '#1a4a58'])); mv(W * .28, H * .55); mT(W * .28, H * .55); lT(W * .18, H); lT(W * .84, H); lT(W * .84, H); lT(W * .74, H * .55); cP(); cP(); fL();
 
-      const rng = L.mulberry32(941);
+      const rng = mulberry32(941);
       times(7, i => {
         const rx = W * (.28 + rng() * .45); const ry = H * (.58 + rng() * .35); const rr = W * (.02 + rng() * .03);
 
@@ -5987,6 +5970,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         const px = W * (.3 + rng() * .4); const py = H * (.6 + rng() * .3); const tw = .5 + .5 * SI(t * 4 + i); dotP(px, py, 1.5 * tw)
       })
     } else if (pr === 'iceberg') {
+      const rng = mulberry32(761);
 
       sky([[0,'#4a6a8a'],[.5,'#7a9ab5'],[1,'#3a5a75']]);
 
@@ -6033,7 +6017,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       mv(W * .13, H * .2); mT(W * .13, H * .2); lT(W * .35, H * .12); lT(W * .35, H * .16); lT(W * .35, H * .16); lT(W * .13, H * .27); cP(); cP(); fL(); mv(W * .85, H * .28); mT(W * .85, H * .28); lT(W * .65, H * .2); lT(W * .65, H * .24); lT(W * .65, H * .24); lT(W * .85, H * .35); cP(); cP(); fL();
 
-      SS('rgba(120,160,110,.8)'); lnW(2); const rng = L.mulberry32(433);
+      SS('rgba(120,160,110,.8)'); lnW(2); const rng = mulberry32(433);
       times(14, i => {
         const bx = W * (.14 + rng() * .2); const by = H * (.13 + rng() * .08); const bl = H * (.06 + rng() * .12); const sw = SI(t + i) * 3; plS([bx, by],[bx + sw, by + bl * .6, bx + sw * .6, by + bl])
       });
@@ -6048,6 +6032,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('rgba(60,140,100,.85)'); const bx2 = W * (.3 + .2 * S(.4)); const by2 = H * (.45 + .06 * S(1.3)); const flap = S(8); bP(); bP(); eC(bx2, by2, 8, 5, 0, 0, 7); ellP(bx2, by2, 8, 5); plS([bx2 - 4, by2],[bx2 - 14, by2 - 8 * flap, bx2 - 18, by2 - 2])
     } else if (pr === 'grotto') {
+      const rng = mulberry32(887);
 
       sky([[0,'#0a1520'],[.55,'#10283a'],[1,'#0a3a50']]);
 
@@ -6076,7 +6061,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#a0c0d8'],[.6,'#c8b8a0'],[1,'#6a8090']]);
 
-      const rng = L.mulberry32(613); const hues = ['#c07050', '#d0a060', '#a08060', '#b06050', '#c09070'];
+      const rng = mulberry32(613); const hues = ['#c07050', '#d0a060', '#a08060', '#b06050', '#c09070'];
       times(4, i => {
         const bx = W * i * .13; const bh = H * (.2 + rng() * .15); FS(hues[i % hues.length]); rect(bx, H * .45 - bh, W * .12, bh);
 
@@ -6112,6 +6097,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       SS('#6a5038'); lnW(2); plS([W * .32, H * .5],[W * .5, H * .36, W * .68, H * .5])
     } else if (pr === 'pampas') {
+      const rng = mulberry32(509);
 
       sky([[0,'#8ab8e0'],[.55,'#c8d8c0'],[1,'#9aa86a']]);
 
@@ -6134,6 +6120,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         const bx = W * (.15 + i * .13 + SI(t * .3 + i) * .02); const by = H * (.12 + (i % 3) * .05); mv(bx - 5, by); mT(bx - 5, by); qT(bx, by - 4, bx + 5, by); sK()
       })
     } else if (pr === 'tea') {
+      const rng = mulberry32(359);
 
       sky([[0,'#a8c8d8'],[.45,'#c8d8b8'],[1,'#5a8a50']]);
 
@@ -6161,7 +6148,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'glade') {
 
-      sky([[0,'#4a7a5a'],[.5,'#6a9a68'],[1,'#4a7a48']]); const rng = L.mulberry32(347);
+      sky([[0,'#4a7a5a'],[.5,'#6a9a68'],[1,'#4a7a48']]); const rng = mulberry32(347);
 
       ([0, 1]).forEach(side => {
         times(4, i => {
@@ -6195,6 +6182,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     } else if (pr === 'billabong') {
 
       sky([[0,'#e8c88a'],[.5,'#d8a860'],[1,'#a87848']]);
+      const rng = mulberry32(337);
 
       FS('#f0e0b0'); dot(.8, .2, H * .09);
 
@@ -6236,7 +6224,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         const px = ((W * (.1 + i * .4) + t * W * .01) % (W * 1.2)) - W * .1; ellP(px, H * (.1 + i * .06), W * .12, H * .025)
       });
 
-      const rng = L.mulberry32(313); const stacks = [[.2, .35, .05], [.38, .28, .04], [.68, .4, .06], [.88, .3, .035]];
+      const rng = mulberry32(313); const stacks = [[.2, .35, .05], [.38, .28, .04], [.68, .4, .06], [.88, .3, .035]];
       for (const [sx, sh, sw] of stacks) {
         FS('#3a4a52'); poly([W * (sx - sw),H * .7],[W * (sx - sw * .7),H * (.7 - sh)],[W * sx,H * (.7 - sh) - H * .02,W * (sx + sw * .7),H * (.7 - sh)],[W * (sx + sw),H * .7]);
 
@@ -6262,6 +6250,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     } else if (pr === 'bazaar') {
 
       sky([[0,'#e8a860'],[.55,'#c88858'],[1,'#8a5a40']]);
+      const rng = mulberry32(293);
 
       FS('#a06a48'); rect(0, H * .35, W, H * .18); bP(); aR(W * .2, H * .35, W * .05, PI, PI * 2); aR(W * .2, H * .35, W * .05, PI, PI * 2); fL(); bP(); aR(W * .62, H * .35, W * .07, PI, PI * 2); aR(W * .62, H * .35, W * .07, PI, PI * 2); fL(); rect(W * .85, H * .22, W * .015, H * .3); bP(); aR(W * .857, H * .22, W * .012, PI, PI * 2); aR(W * .857, H * .22, W * .012, PI, PI * 2); fL();
 
@@ -6312,7 +6301,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         plS([W * (i * .08), H * .58],[W * (i * .16 - .02), H])
       });
 
-      const rng = L.mulberry32(277); FS('#3a3a32');
+      const rng = mulberry32(277); FS('#3a3a32');
       times(4, i => {
         const px = W * (.08 + rng() * .3); const py = H * (.7 + rng() * .2); ellP(px, py, W * .009, H * .008); dotP(px + W * .01, py - H * .004, W * .004)
       })
@@ -6320,7 +6309,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#a8c8e8'],[.55,'#c8bfa0'],[1,'#9a8a6a']]);
 
-      FS('#8a9a80'); poly([0,H * .45],[W * .25,H * .34,W * .5,H * .42],[W * .75,H * .5,W,H * .44],[W,H * .55],[W,H * .55],[0,H * .55]); const rng = L.mulberry32(263);
+      FS('#8a9a80'); poly([0,H * .45],[W * .25,H * .34,W * .5,H * .42],[W * .75,H * .5,W,H * .44],[W,H * .55],[W,H * .55],[0,H * .55]); const rng = mulberry32(263);
 
       times(9, i => {
         const px = W * (.05 + i * .11) + rng() * W * .03; const ph = H * (.18 + rng() * .25); const pw = W * (.02 + rng() * .018); FS(['#b8ac8e', '#a89a7c', '#c4b89e'][FL(rng() * 3)]); poly([px - pw,H * .85],[px - pw * .7,H * .85 - ph],[px,H * .85 - ph - H * .02,px + pw * .7,H * .85 - ph],[px + pw,H * .85]);
@@ -6338,6 +6327,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         const px = W * rng(); plS([px, H * .85],[px + W * .008, H * .82, px + W * .004, H * .8])
       })
     } else if (pr === 'loch') {
+      const rng = mulberry32(251);
 
       sky([[0,'#7a8a95'],[.5,'#4a5a68'],[1,'#2a3a48']]);
 
@@ -6373,7 +6363,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('#3d4a3a'); mv(0, 0); mT(0, 0); lT(W * .22, 0); qT(W * .18, H * .3, W * .2, H * .55); lT(W * .18, H); lT(W * .18, H); lT(0, H); cP(); cP(); fL(); mv(W, 0); mT(W, 0); lT(W * .78, 0); qT(W * .82, H * .3, W * .8, H * .55); lT(W * .82, H); lT(W * .82, H); lT(W, H); cP(); cP(); fL();
 
-      const rng = L.mulberry32(237); SS('#4a5a40'); lnW(1.5);
+      const rng = mulberry32(237); SS('#4a5a40'); lnW(1.5);
       times(8, i => {
         const px = W * (.3 + rng() * .4); const len = H * (.08 + rng() * .15); plS([px, H * .04],[px + SI(i) * W * .01, H * .04 + len * .5, px + SI(i * 1.7) * W * .015, H * .04 + len])
       });
@@ -6394,7 +6384,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       times(4, i => {
         const gx = W * (.15 + i * .22) + SI(t * .2 + i) * W * .02; FS('rgba(150,220,230,.07)'); mv(gx, 0); mT(gx, 0); lT(gx + W * .1, 0); lT(gx + W * .16, H); lT(gx + W * .16, H); lT(gx + W * .06, H); cP(); cP(); fL()
       });
-      const rng = L.mulberry32(223);
+      const rng = mulberry32(223);
 
       times(14, i => {
         const px = W * (.04 + rng() * .92); const kh = H * (.3 + rng() * .45); const sway = SI(t * .8 + i) * W * .012; SS(['#2a6a3a', '#3a7a45', '#1f5a35'][FL(rng() * 3)]); lnW(2 + rng() * 3); plS([px, H],[px + sway * .4, H - kh * .6, px + sway, H - kh]);
@@ -6415,7 +6405,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#d8a878'],[.4,'#c08858'],[1,'#98704a']]);
 
-      FS('#f8e0a8'); dot(.3,.16,H * .08); const rng = L.mulberry32(211);
+      FS('#f8e0a8'); dot(.3,.16,H * .08); const rng = mulberry32(211);
 
       FS('#a07850'); mv(0, H * .42);
       span(0, 10, x => {
@@ -6445,7 +6435,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#d8c090'],[.45,'#c8a870'],[1,'#a88558']]);
 
-      FS('#f8e8b0'); dot(.75,.14,H * .07); const rng = L.mulberry32(199);
+      FS('#f8e8b0'); dot(.75,.14,H * .07); const rng = mulberry32(199);
 
       FS('#b08a5f'); mv(0, H * .42);
       span(0, 8, x => {
@@ -6470,7 +6460,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'steppe') {
 
-      sky([[0,'#90b0d0'],[.4,'#c8c8a0'],[1,'#a0986a']]); const rng = L.mulberry32(191);
+      sky([[0,'#90b0d0'],[.4,'#c8c8a0'],[1,'#a0986a']]); const rng = mulberry32(191);
 
       FS('rgba(255,255,255,.75)');
       for (const [cx, cy, s] of [[.25, .18, 1], [.68, .12, .7]]) {
@@ -6491,7 +6481,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       FS('#4a5a38'); rect(W * .82, H * .38, W * .005, H * .045); ell(.822,.37,W * .02,H * .02)
     } else if (pr === 'glen') {
 
-      sky([[0,'#98a8b8'],[.4,'#889888'],[1,'#586848']]); const rng = L.mulberry32(181);
+      sky([[0,'#98a8b8'],[.4,'#889888'],[1,'#586848']]); const rng = mulberry32(181);
 
       FS('#4a6038'); mv(0, 0); mT(0, 0); lT(W * .3, 0); qT(W * .38, H * .35, W * .28, H); lT(0, H); lT(0, H); cP(); lT(0, H); cP(); fL(); FS('#42562e'); mv(W, 0); mT(W, 0); lT(W * .7, 0); qT(W * .62, H * .35, W * .72, H); lT(W, H); lT(W, H); cP(); lT(W, H); cP(); fL();
 
@@ -6512,7 +6502,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'cove') {
 
-      sky([[0,'#a8c8e0'],[.4,'#b8d0e0'],[1,'#d8c8a0']]); const rng = L.mulberry32(173);
+      sky([[0,'#a8c8e0'],[.4,'#b8d0e0'],[1,'#d8c8a0']]); const rng = mulberry32(173);
 
       FS('#7a7058'); mv(0, 0); mT(0, 0); lT(W * .18, 0); qT(W * .3, H * .3, W * .22, H * .55); lT(0, H * .7); lT(0, H * .7); cP(); lT(0, H * .7); cP(); fL(); mv(W, 0); mT(W, 0); lT(W * .82, 0); qT(W * .72, H * .35, W * .78, H * .6); lT(W, H * .75); lT(W, H * .75); cP(); lT(W, H * .75); cP(); fL();
 
@@ -6535,7 +6525,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'fen') {
 
-      sky([[0,'#b8c8d8'],[.45,'#a8b898'],[1,'#788868']]); const rng = L.mulberry32(163);
+      sky([[0,'#b8c8d8'],[.45,'#a8b898'],[1,'#788868']]); const rng = mulberry32(163);
 
       FS('#8aa0b0'); poly([W * .35,H],[W * .3,H * .8,W * .42,H * .62],[W * .55,H * .45,W * .48,H * .3],[W * .56,H * .3],[W * .62,H * .5,W * .5,H * .65],[W * .38,H * .82,W * .45,H]);
 
@@ -6563,7 +6553,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'cirque') {
 
-      sky([[0,'#a8b8d0'],[.4,'#9098a8'],[1,'#687078']]); const rng = L.mulberry32(151);
+      sky([[0,'#a8b8d0'],[.4,'#9098a8'],[1,'#687078']]); const rng = mulberry32(151);
 
       FS('#7a7f88'); mv(0, 0); mT(0, 0); lT(W * .22, 0); qT(W * .32, H * .4, W * .2, H); lT(0, H); lT(0, H); cP(); lT(0, H); cP(); fL(); mv(W, 0); mT(W, 0); lT(W * .78, 0); qT(W * .68, H * .4, W * .8, H); lT(W, H); lT(W, H); cP(); lT(W, H); cP(); fL();
 
@@ -6582,6 +6572,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         const px = W * (.2 + rng() * .6), py = H * (.82 + rng() * .16); FS('#6a7078'); ellP(px, py, W * (.008 + rng() * .012), H * (.004 + rng() * .006), rng() * .5)
       })
     } else if (pr === 'dune') {
+      const rng = mulberry32(139);
 
       sky([[0,'#c8d8e8'],[.35,'#e8d8b0'],[1,'#c8a878']]);
 
@@ -6604,7 +6595,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'quarry') {
 
-      sky([[0,'#b8a890'],[.4,'#a09070'],[1,'#806f55']]); const rng = L.mulberry32(131);
+      sky([[0,'#b8a890'],[.4,'#a09070'],[1,'#806f55']]); const rng = mulberry32(131);
 
       const bench = [.52, .68, .84];
       times(bench.length, s => {
@@ -6626,7 +6617,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#c8b8a0'],[.45,'#a89878'],[1,'#8a8068']]);
 
-      FS('rgba(255,220,170,.9)'); dot(.7,.38,H * .05); const rng = L.mulberry32(118);
+      FS('rgba(255,220,170,.9)'); dot(.7,.38,H * .05); const rng = mulberry32(118);
 
       FS('#94866a'); mv(0, H); mT(0, H); lT(0, H * .48);
       span(0, 12, x => {
@@ -6649,7 +6640,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'wadi') {
 
-      sky([[0,'#e0b880'],[.5,'#c89868'],[1,'#a88058']]); const rng = L.mulberry32(111);
+      sky([[0,'#e0b880'],[.5,'#c89868'],[1,'#a88058']]); const rng = mulberry32(111);
 
       FS('#b08858'); mv(0, H * .38);
       span(0, 10, x => {
@@ -6678,7 +6669,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       SS('#6a4a30'); lnW(4); plS([W * .55, H * .82],[W * .65, H * .78, W * .78, H * .84]); plS([W * .66, H * .8],[W * .7, H * .75])
     } else if (pr === 'saltflat') {
 
-      sky([[0,'#e8ecf0'],[.5,'#d8dde0'],[1,'#f0ece4']]); const rng = L.mulberry32(104);
+      sky([[0,'#e8ecf0'],[.5,'#d8dde0'],[1,'#f0ece4']]); const rng = mulberry32(104);
 
       FS('#b8c0c8'); mv(0, H * .42);
       span(0, 10, x => {
@@ -6709,7 +6700,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       ell(.6, .52, W * .15, H * .03)
     } else if (pr === 'highland') {
 
-      sky([[0,'#a8c8dc'],[.55,'#c8d8b8'],[1,'#7aa05a']]); const rng = L.mulberry32(97);
+      sky([[0,'#a8c8dc'],[.55,'#c8d8b8'],[1,'#7aa05a']]); const rng = mulberry32(97);
 
       const hills = ['#88a868', '#6f9450', '#5c8044'];
       spt(0, 3, h => {
@@ -6740,7 +6731,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'delta') {
 
-      sky([[0,'#a8d0e0'],[.5,'#88b8b0'],[1,'#c8d0a8']]); const rng = L.mulberry32(91);
+      sky([[0,'#a8d0e0'],[.5,'#88b8b0'],[1,'#c8d0a8']]); const rng = mulberry32(91);
 
       FS('#8aa868'); bnd(.4);
 
@@ -6774,7 +6765,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'mangrove') {
 
-      sky([[0,'#b8d0a8'],[.45,'#7a9a78'],[1,'#4a6a58']]); const rng = L.mulberry32(84);
+      sky([[0,'#b8d0a8'],[.45,'#7a9a78'],[1,'#4a6a58']]); const rng = mulberry32(84);
 
       times(8, i => {
         FS(`rgba(50,90,60,${.5 + rng() * .3})`);
@@ -6812,7 +6803,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#d8e4f0'],[.5,'#a8bcd4'],[1,'#d0dcd8']]);
 
-      FS('rgba(255,235,190,.9)'); dot(.2,.3,H * .055); const rng = L.mulberry32(77);
+      FS('rgba(255,235,190,.9)'); dot(.2,.3,H * .055); const rng = mulberry32(77);
 
       FS('#e8ecf0');
       times(3, m => {
@@ -6846,7 +6837,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#e8b070'],[.5,'#c88858'],[1,'#a06848']]);
 
-      FS('#fff0d0'); dot(.78,.16,H * .07); const rng = L.mulberry32(71);
+      FS('#fff0d0'); dot(.78,.16,H * .07); const rng = mulberry32(71);
 
       const bands = ['#c07850', '#b06040', '#d08858', '#a85838', '#c88050'];
       times(4, i => {
@@ -6889,7 +6880,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'pond') {
 
-      sky([[0,'#9ec8b8'],[.45,'#6a9888'],[1,'#3a6860']]); const rng = L.mulberry32(64);
+      sky([[0,'#9ec8b8'],[.45,'#6a9888'],[1,'#3a6860']]); const rng = mulberry32(64);
 
       FS('#7aa870'); mv(0, 0); mT(0, 0); lT(W, 0); mT(0, 0); lT(W, 0); lT(W, H * .12);
       for (let x = 12; x >= 0; x--) {
@@ -6920,7 +6911,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#a8c0d0'],[.4,'#c8d0c8'],[1,'#a89878']]);
 
-      FS('#7a9ab0'); rect(0, H * .38, W, H * .05); const rng = L.mulberry32(58);
+      FS('#7a9ab0'); rect(0, H * .38, W, H * .05); const rng = mulberry32(58);
 
       FS('#b0a088'); bnd(.43); SS('rgba(140,125,95,.5)'); lnW(2);
       spt(0, 10, i => {
@@ -6944,7 +6935,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       }
     } else if (pr === 'grove') {
 
-      sky([[0,'#a8c898'],[.45,'#88a878'],[1,'#5a7850']]); const rng = L.mulberry32(17);
+      sky([[0,'#a8c898'],[.45,'#88a878'],[1,'#5a7850']]); const rng = mulberry32(17);
 
       FS('#3a6038');
       times(8, i => {
@@ -6970,7 +6961,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'brook') {
 
-      sky([[0,'#90b8a8'],[.5,'#78a890'],[1,'#5a8068']]); const rng = L.mulberry32(49);
+      sky([[0,'#90b8a8'],[.5,'#78a890'],[1,'#5a8068']]); const rng = mulberry32(49);
 
       FS('#4a7048'); rect(0, 0, W, H * .3); bnd(.82);
 
@@ -6996,7 +6987,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'moor') {
 
-      sky([[0,'#98a0a8'],[.5,'#a8a898'],[1,'#6a7058']]); const rng = L.mulberry32(64);
+      sky([[0,'#98a0a8'],[.5,'#a8a898'],[1,'#6a7058']]); const rng = mulberry32(64);
 
       FS('#5a6250'); mv(0, H * .62);
       for (let i = 0; i <= 8; i++)
@@ -7019,7 +7010,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'onsen') {
 
-      sky([[0,'#a8b8c8'],[.4,'#c8d0d8'],[1,'#98a088']]); const rng = L.mulberry32(88);
+      sky([[0,'#a8b8c8'],[.4,'#c8d0d8'],[1,'#98a088']]); const rng = mulberry32(88);
 
       FS('rgba(120,140,130,.5)'); mv(0, H * .45);
       for (let i = 0; i <= 6; i++)
@@ -7043,7 +7034,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'orchard') {
 
-      sky([[0,'#88c0e0'],[.55,'#c8e0d8'],[1,'#7a9a55']]); const rng = L.mulberry32(55);
+      sky([[0,'#88c0e0'],[.55,'#c8e0d8'],[1,'#7a9a55']]); const rng = mulberry32(55);
 
       times(2, row => {
         const ty = H * (.45 + row * .2); const n = 4 + row * 2; const ts = W * (.05 + row * .025);
@@ -7071,7 +7062,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#8ab8d8'],[.5,'#c8d8e0'],[1,'#789a58']]);
 
-      const rng = L.mulberry32(33); FS('rgba(255,255,255,.4)');
+      const rng = mulberry32(33); FS('rgba(255,255,255,.4)');
       times(4, i => {
         ellP(W * (i * .28 + .1), H * (.1 + (i % 2) * .08), W * .1, H * .015, .05)
       });
@@ -7098,7 +7089,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#7ab8e0'],[.55,'#b8d8e8'],[1,'#88a860']]);
 
-      FS('#fff2c8'); dot(.82,.14,W * .06); const rng = L.mulberry32(121);
+      FS('#fff2c8'); dot(.82,.14,W * .06); const rng = mulberry32(121);
 
       times(3, row => {
         const ry = H * (.55 + row * .15); const n = 6 + row * 2; const fs = W * (.02 + row * .012);
@@ -7121,7 +7112,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'wisteria') {
 
-      sky([[0,'#c8c2e0'],[.45,'#d8d4e8'],[1,'#b8c4a0']]); const rng = L.mulberry32(77);
+      sky([[0,'#c8c2e0'],[.45,'#d8d4e8'],[1,'#b8c4a0']]); const rng = mulberry32(77);
 
       FS('#6a5a48'); rect(0, H * .1, W, H * .025); rect(0, H * .16, W, H * .02);
       for (let i = 0; i < 7; i++)
@@ -7147,7 +7138,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#d8cfb8'],[.6,'#cfc4a8'],[1,'#c0b294']]);
 
-      const rng = L.mulberry32(41); const rocks = [[.3, .68, .07], [.68, .55, .055], [.52, .82, .045]]; SS('rgba(140,125,95,.55)'); lnW(1.5);
+      const rng = mulberry32(41); const rocks = [[.3, .68, .07], [.68, .55, .055], [.52, .82, .045]]; SS('rgba(140,125,95,.55)'); lnW(1.5);
       for (const [rx, ry, rr] of rocks) {
         span(1, 6, k => {
           const rad = rr * (1 + k * .45); const wob = SI(t * .4 + k) * .01; ellPS(W * rx, H * ry, W * rad, H * rad * .35, wob)
@@ -7170,7 +7161,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'storm') {
 
-      const flash = MX(0, S(.9)) ** 14; sky([[0,'#2a3038'],[.6,'#1a2028'],[1,'#10141a']]); const rng = L.mulberry32(95);
+      const flash = MX(0, S(.9)) ** 14; sky([[0,'#2a3038'],[.6,'#1a2028'],[1,'#10141a']]); const rng = mulberry32(95);
 
       FS('#343c46');
       times(6, i => {
@@ -7200,7 +7191,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       sK()
     } else if (pr === 'observatory') {
 
-      sky([[0,'#0a0e24'],[.6,'#1a2040'],[1,'#2a2a3a']]); const rng = L.mulberry32(89);
+      sky([[0,'#0a0e24'],[.6,'#1a2040'],[1,'#2a2a3a']]); const rng = mulberry32(89);
 
       times(120, i => {
         const sx = rng() * W, sy = rng() * H * .65; const tw2 = .3 + .7 * AB(SI(t * 1.5 + i * 1.7));
@@ -7221,7 +7212,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       FS('rgba(160,190,255,.25)'); sV(); tR(ox, oy); rO(-.3); mv(-W * .012, -W * .05); mT(-W * .012, -W * .05); lT(W * .012, -W * .05); lT(W * .03, -H * .3); lT(W * .03, -H * .3); lT(-W * .03, -H * .3); cP(); cP(); fL(); rS()
     } else if (pr === 'prairie') {
 
-      sky([[0,'#9ec8e0'],[.55,'#c8d8a0'],[1,'#8aa860']]); const rng = L.mulberry32(79);
+      sky([[0,'#9ec8e0'],[.55,'#c8d8a0'],[1,'#8aa860']]); const rng = mulberry32(79);
 
       for (const [py, pc] of [[.62, '#7a9a52'], [.74, '#6a8a44']]) {
         FS(pc); mv(0, H * py);
@@ -7248,7 +7239,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'lagoon') {
 
-      sky([[0,'#8ec8e8'],[.45,'#5ab0d0'],[1,'#2a88a8']]); const rng = L.mulberry32(61);
+      sky([[0,'#8ec8e8'],[.45,'#5ab0d0'],[1,'#2a88a8']]); const rng = mulberry32(61);
 
       FS('rgba(255,240,190,.9)'); dot(.8,.18,H * .06);
 
@@ -7277,7 +7268,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'cliff') {
 
-      sky([[0,'#a8c8e0'],[.5,'#6890b0'],[1,'#3a5a74']]); const rng = L.mulberry32(93);
+      sky([[0,'#a8c8e0'],[.5,'#6890b0'],[1,'#3a5a74']]); const rng = mulberry32(93);
 
       FS('#2a4a62'); bnd(.6); SS('rgba(220,235,245,.5)'); lnW(2);
       spt(0, 7, i => {
@@ -7307,7 +7298,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'bayou') {
 
-      sky([[0,'#4a5a48'],[.55,'#2a3a30'],[1,'#1a2820']]); const rng = L.mulberry32(87);
+      sky([[0,'#4a5a48'],[.55,'#2a3a30'],[1,'#1a2820']]); const rng = mulberry32(87);
 
       FS('#2a4038'); bnd(.62);
 
@@ -7334,7 +7325,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'alps') {
 
-      sky([[0,'#7ab0d8'],[.55,'#c8dce8'],[1,'#6a8a6a']]); const rng = L.mulberry32(77);
+      sky([[0,'#7ab0d8'],[.55,'#c8dce8'],[1,'#6a8a6a']]); const rng = mulberry32(77);
 
       FS('rgba(255,255,255,.85)');
       times(4, i => {
@@ -7361,7 +7352,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       FS('#f8d878'); rect(W * .635, H * .755, W * .012, H * .015); rect(W * .665, H * .755, W * .012, H * .015)
     } else if (pr === 'mesa') {
 
-      sky([[0,'#e8a868'],[.5,'#c87a50'],[1,'#7a4030']]); FS('rgba(255,220,150,.9)'); dot(.5,.42,H * .07); const rng = L.mulberry32(69);
+      sky([[0,'#e8a868'],[.5,'#c87a50'],[1,'#7a4030']]); FS('rgba(255,220,150,.9)'); dot(.5,.42,H * .07); const rng = mulberry32(69);
 
       const mesas = [
         [W * .18, H * .55, W * .28, '#8a5040'],
@@ -7383,7 +7374,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'rainforest') {
 
-      sky([[0,'#7ab880'],[.5,'#3a7a50'],[1,'#1a4030']]); const rng = L.mulberry32(63);
+      sky([[0,'#7ab880'],[.5,'#3a7a50'],[1,'#1a4030']]); const rng = mulberry32(63);
 
       sV(); gA(.15); FS('#e8f8c0');
       times(4, i => {
@@ -7404,7 +7395,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       FS('rgba(180,220,190,.12)'); bnd(.55)
     } else if (pr === 'lavender') {
 
-      sky([[0,'#e8c8d8'],[.5,'#b890c8'],[1,'#6a4a78']]); FS('rgba(255,220,180,.85)'); dot(.7,.25,H * .08); const rng = L.mulberry32(57);
+      sky([[0,'#e8c8d8'],[.5,'#b890c8'],[1,'#6a4a78']]); FS('rgba(255,220,180,.85)'); dot(.7,.25,H * .08); const rng = mulberry32(57);
 
       FS('#4a5038');
       times(4, i => {
@@ -7431,7 +7422,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('rgba(110,95,70,.5)'); mv(0, H * .5);
       for (let i = 0; i <= 10; i++) lT(W * i / 10, H * .5 - SI(i * 1.9) * H * .04);
-      lT(W, H * .6); lT(0, H * .6); cP(); fL(); const rng = L.mulberry32(43);
+      lT(W, H * .6); lT(0, H * .6); cP(); fL(); const rng = mulberry32(43);
 
       FS('#9a8054'); bnd(.62);
 
@@ -7460,7 +7451,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       times(4, i => {
         sV(); tR(W * (.2 + i * .2), 0); rO(.3); rect(-W * .015, 0, W * .03, H); rS()
       });
-      const rng = L.mulberry32(91);
+      const rng = mulberry32(91);
 
       FS('#c8b088'); bnd(.85);
 
@@ -7479,7 +7470,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'geyser') {
 
-      sky([[0,'#b8c4cc'],[.55,'#8a9aa4'],[1,'#5a6a72']]); const rng = L.mulberry32(67);
+      sky([[0,'#b8c4cc'],[.55,'#8a9aa4'],[1,'#5a6a72']]); const rng = mulberry32(67);
 
       FS('#7a7068'); bnd(.72);
 
@@ -7532,7 +7523,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#f0d8a0'],[.5,'#e8b870'],[1,'#b88840']]); FS('rgba(255,230,160,.9)'); dot(.75,.3,H * .09);
 
-      const rng = L.mulberry32(83); FS('#6a5838');
+      const rng = mulberry32(83); FS('#6a5838');
       times(5, i => {
         const tx = rng() * W; ellP(tx, H * .58, W * .02, H * .035); rect(tx - 2, H * .58, 4, H * .03)
       });
@@ -7586,7 +7577,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('rgba(90,110,95,.5)'); mv(0, H * .45);
       for (let i = 0; i <= 10; i++) lT(W * i / 10, H * .45 - SI(i * 1.7) * H * .06);
-      lT(W, H * .5); lT(W, H * .6); lT(0, H * .6); cP(); fL(); const rng = L.mulberry32(59);
+      lT(W, H * .5); lT(W, H * .6); lT(0, H * .6); cP(); fL(); const rng = mulberry32(59);
 
       spt(0, 7, i => {
         const ty = H * (.5 + i * .07), th = H * .055; const water = i % 3 === 0; FS(water ? '#9ec8d8' : ['#6a9a58', '#7aaa62', '#5a8a50'][i % 3]); mv(0, ty + SI(i * 2) * 4);
@@ -7608,7 +7599,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#e8b890'],[.5,'#c87878'],[1,'#586878']]);
 
-      FS('rgba(255,220,160,.9)'); dot(.3,.5,H * .09); const rng = L.mulberry32(71);
+      FS('rgba(255,220,160,.9)'); dot(.3,.5,H * .09); const rng = mulberry32(71);
 
       FS('#4a6a84'); bnd(.62);
 
@@ -7631,7 +7622,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       mT(bx, by - H * .06); lT(bx, by); mT(bx, by - H * .06); lT(bx, by); lT(bx - W * .022, by); cP(); cP(); fL()
     } else if (pr === 'moon') {
 
-      sky([[0,'#0a0a12'],[.75,'#101018'],[1,'#181820']]); const rng = L.mulberry32(97);
+      sky([[0,'#0a0a12'],[.75,'#101018'],[1,'#181820']]); const rng = mulberry32(97);
 
       FS('#fff');
       times(60, i => {
@@ -7653,7 +7644,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'sakura') {
 
-      sky([[0,'#e8ecf4'],[.6,'#c8d0e0'],[1,'#98a4b8']]); const rng = L.mulberry32(37);
+      sky([[0,'#e8ecf4'],[.6,'#c8d0e0'],[1,'#98a4b8']]); const rng = mulberry32(37);
 
       FS('#7a9a6a'); bnd(.8); FS('rgba(255,200,215,.6)');
       times(30, i => {
@@ -7673,7 +7664,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'ruins') {
 
-      sky([[0,'#d8a878'],[.55,'#a87858'],[1,'#584838']]); FS('rgba(255,215,150,.8)'); dot(.5,.45,H * .12); const rng = L.mulberry32(51);
+      sky([[0,'#d8a878'],[.55,'#a87858'],[1,'#584838']]); FS('rgba(255,215,150,.8)'); dot(.5,.45,H * .12); const rng = mulberry32(51);
 
       FS('#6a5a44'); bnd(.78);
 
@@ -7684,7 +7675,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         rect(cx - colW * .7, H * .78 - ch - H * .02, colW * 1.4, H * .02);
 
         if (i % 2) {
-          FS(gr); poly([cx - colW / 2,H * .78 - ch],[cx + colW / 2,H * .78 - ch + H * .04],[cx + colW / 2,H * .78 - ch])
+          FS('#a87858'); poly([cx - colW / 2,H * .78 - ch],[cx + colW / 2,H * .78 - ch + H * .04],[cx + colW / 2,H * .78 - ch])
         }
 
         SS('rgba(80,120,50,.7)'); lnW(3); plS([cx - colW / 2, H * .78],[cx - colW, H * .78 - ch * .5, cx, H * .78 - ch])
@@ -7693,7 +7684,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       sV(); tR(W * .6, H * .9); rO(.12); FS('#7a7068'); rect(0, -H * .03, W * .25, H * .06); rS()
     } else if (pr === 'glacier') {
 
-      sky([[0,'#c8dce8'],[.5,'#8ab4cc'],[1,'#4a7a9a']]); const rng = L.mulberry32(19);
+      sky([[0,'#c8dce8'],[.5,'#8ab4cc'],[1,'#4a7a9a']]); const rng = mulberry32(19);
 
       FS('rgba(230,240,248,.9)');
       for (const [ix, ih] of [[W * .2, .3], [W * .75, .38]]) {
@@ -7714,7 +7705,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       gA(1)
     } else if (pr === 'fjord') {
 
-      sky([[0,'#a8c8d8'],[.5,'#6a94a8'],[1,'#3a5a6e']]); const rng = L.mulberry32(87);
+      sky([[0,'#a8c8d8'],[.5,'#6a94a8'],[1,'#3a5a6e']]); const rng = mulberry32(87);
 
       for (const [x0, s] of [[0, 1], [W, -1]]) {
         FS(s > 0 ? '#3e5a52' : '#4a6a5e'); mv(x0, H); lT(x0, H * .15); let vx = 0;
@@ -7732,7 +7723,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'autumn') {
 
-      sky([[0,'#d8e0e8'],[.5,'#c8b890'],[1,'#9a7048']]); const rng = L.mulberry32(23);
+      sky([[0,'#d8e0e8'],[.5,'#c8b890'],[1,'#9a7048']]); const rng = mulberry32(23);
 
       FS('#8a5a30'); bnd(.78); FS('rgba(200,90,40,.5)');
       times(40, i => {
@@ -7752,7 +7743,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'falls') {
 
-      sky([[0,'#8ec8e8'],[.5,'#5a9e6a'],[1,'#2e5e48']]); const rng = L.mulberry32(43);
+      sky([[0,'#8ec8e8'],[.5,'#5a9e6a'],[1,'#2e5e48']]); const rng = mulberry32(43);
 
       FS('#4a5a4a'); mv(0, H); mT(0, H); lT(0, H * .2); lT(W * .3, H * .35); lT(W * .3, H * .35); lT(W * .35, H); cP(); cP(); fL(); mv(W, H); mT(W, H); lT(W, H * .25); lT(W * .7, H * .4); lT(W * .7, H * .4); lT(W * .65, H); cP(); cP(); fL();
 
@@ -7789,7 +7780,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#f4b04e'],[.6,'#e07a3f'],[1,'#8a4a2a']]); FS('rgba(255,220,140,.9)'); dot(.5,.55,H * .16);
 
-      FS('#5e3818'); bnd(.72); const rng = L.mulberry32(67);
+      FS('#5e3818'); bnd(.72); const rng = mulberry32(67);
 
       ([W * .2, W * .78]).forEach(tx => {
         const th = H * .3, ty = H * .72; SS('#2e1c10'); lnW(W * .008); lC('round'); mv(tx, ty); mT(tx, ty); qT(tx + W * .01, ty - th * .6, tx + W * .02, ty - th); sK(); bP(); mv(tx + W * .02, ty - th * .7); mv(tx + W * .02, ty - th * .7); lT(tx - W * .03, ty - th * .95); plS([tx + W * .02, ty - th * .7],[tx - W * .03, ty - th * .95]); bP(); mv(tx + W * .02, ty - th * .7); mv(tx + W * .02, ty - th * .7);
@@ -7804,7 +7795,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#8fbf7a'],[.5,'#5e9e5a'],[1,'#2e5e40']]);
 
-      FS(lg(0, 0, W * .4, H,[0, 'rgba(255,250,200,.25)',1, 'rgba(255,250,200,0)'])); rect(0, 0, W, H); const rng = L.mulberry32(91);
+      FS(lg(0, 0, W * .4, H,[0, 'rgba(255,250,200,.25)',1, 'rgba(255,250,200,0)'])); rect(0, 0, W, H); const rng = mulberry32(91);
 
       spt(0, 14, i => {
         const bx = rng() * W, bw = W * (.008 + rng() * .012); const deep = rng() < .5; FS(deep ? 'rgba(40,90,50,.5)' : 'rgba(25,70,38,.9)'); rect(bx - bw / 2, 0, bw, H);
@@ -7821,7 +7812,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       })
     } else if (pr === 'canyon') {
 
-      sky([[0,'#f0a860'],[.5,'#d4786a'],[1,'#8a4a44']]); FS('rgba(255,225,170,.85)'); dot(.5,.34,H * .1); const rng = L.mulberry32(31);
+      sky([[0,'#f0a860'],[.5,'#d4786a'],[1,'#8a4a44']]); FS('rgba(255,225,170,.85)'); dot(.5,.34,H * .1); const rng = mulberry32(31);
 
       const layers = [
         ['rgba(150,70,55,.55)', .5], ['rgba(120,55,45,.75)', .66], ['#5e3229', .8],
@@ -7842,7 +7833,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#e89a5f'],[.55,'#c86a78'],[1,'#4a3050']]);
 
-      FS('rgba(255,215,150,.9)'); dot(.72,.3,H * .09); const rng = L.mulberry32(55);
+      FS('rgba(255,215,150,.9)'); dot(.72,.3,H * .09); const rng = mulberry32(55);
 
       FS('#3a2b42'); const wallY = H * .62, towerH = H * .34; rect(0, wallY, W, H - wallY);
       ([W * .16, W * .84]).forEach(tx => {
@@ -7865,7 +7856,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS(lg(W * .3, 0, W * .55, H,[0, 'rgba(200,225,255,.22)',1, 'rgba(200,225,255,0)'])); mv(W * .32, 0); mT(W * .32, 0); lT(W * .48, 0); mT(W * .32, 0); lT(W * .48, 0); lT(W * .68, H); mT(W * .32, 0); lT(W * .48, 0); lT(W * .68, H); lT(W * .4, H); cP(); cP(); fL();
 
-      const rng = L.mulberry32(77); FS('#2a3242');
+      const rng = mulberry32(77); FS('#2a3242');
       times(12, i => {
         const sx = rng() * W, sw = W * (.015 + rng() * .025), sh = H * (.06 + rng() * .14); mv(sx - sw, 0); mT(sx - sw, 0); lT(sx + sw, 0); mT(sx - sw, 0); lT(sx + sw, 0); lT(sx + (rng() - .5) * sw, sh); cP(); cP(); fL()
       });
@@ -7883,7 +7874,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#06091c'],[.75,'#101a3a'],[1,'#1c1430']]);
 
-      const rng = L.mulberry32(41); FS('rgba(255,210,140,.5)');
+      const rng = mulberry32(41); FS('rgba(255,210,140,.5)');
       times(40, i => {
         rect(rng() * W, H * (.9 + rng() * .08), 2, 2)
       });
@@ -7896,7 +7887,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
           FS(`hsla(${hue},90%,70%,.9)`);
           dotP(fx,ry,2.5)
         } else {
-          const boom = (cyc - .3) / .7; const rr = boom * H * .16; const a = MX(0, (1 - boom) * .9); const rng2 = L.mulberry32(100 + j);
+          const boom = (cyc - .3) / .7; const rr = boom * H * .16; const a = MX(0, (1 - boom) * .9); const rng2 = mulberry32(100 + j);
           FS(`hsla(${hue},90%,${65 + boom * 15}%,${a})`);
           times(26, k => {
             const ang = k * .2418 + rng2() * .15; const d = rr * (.6 + .4 * rng2()); dotP(fx + CO(ang) * d, fyy + SI(ang) * d + boom * boom * H * .05, 1.6 + (1 - boom) * 1.4)
@@ -7907,7 +7898,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#ffb37a'],[.45,'#ffd0a8'],[.6,'#e8f0f8'],[1,'#c8d8e8']]); FS('rgba(255,235,200,.9)'); dot(.68,.3,H * .06);
 
-      const rng = L.mulberry32(17); FS('#5a6a80');
+      const rng = mulberry32(17); FS('#5a6a80');
       times(5, i => {
         const px2 = W * (.1 + .2 * i) + (rng() - .5) * W * .08; const ph2 = H * (.1 + rng() * .12); mv(px2 - W * .09, H * .62); mT(px2 - W * .09, H * .62); lT(px2, H * .62 - ph2); mT(px2 - W * .09, H * .62); lT(px2, H * .62 - ph2); lT(px2 + W * .09, H * .62); cP(); cP(); fL()
       });
@@ -7922,11 +7913,11 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       sky([[0,'#a8d8f0'],[.45,'#d8ecf6'],[.5,'#7fa8c8'],[1,'#3a6080']]); const hr2 = H * .5;
 
       for (const [base, amp, col, sd] of [[.5, .16, '#5a7a90', 33], [.5, .11, '#4a6a80', 44]]) {
-        const rng = L.mulberry32(sd); FS(col); mv(0, H * base);
+        const rng = mulberry32(sd); FS(col); mv(0, H * base);
         for (let i = 1; i <= 10; i++) lT(i * W / 10, H * (base - amp * rng()));
         lT(W, H * base); cP(); fL();
 
-        gA(.35); sV(); tR(0, hr2 * 2); sC(1, -1); const rng2 = L.mulberry32(sd); mv(0, H * base);
+        gA(.35); sV(); tR(0, hr2 * 2); sC(1, -1); const rng2 = mulberry32(sd); mv(0, H * base);
         for (let i = 1; i <= 10; i++) lT(i * W / 10, H * (base - amp * rng2()));
         lT(W, H * base); cP(); fL(); rS(); gA(1)
       }
@@ -7948,7 +7939,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       poly([tx - tw * .52,ty + H * .02],[tx,ty - H * .05,tx + tw * .52,ty + H * .02],[tx + tw * .52,ty + H * .07],[tx,ty,tx - tw * .52,ty + H * .07]); rect(tx - pw / 2, ty - H * .01, pw, H * .18);
 
-      const rng = L.mulberry32(99); FS('rgba(255,190,110,.85)');
+      const rng = mulberry32(99); FS('rgba(255,190,110,.85)');
       times(8, i => {
         const lx = (rng() < .5 ? -1 : 1) * (W * .18 + rng() * W * .22) + W * .5; const ly = H * (.72 + rng() * .18); dotP(lx, ly, 3 + rng() * 3)
       })
@@ -7958,7 +7949,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('#f4f9fc'); bP(); poly([0,H],[W * .3,H * .55,W * .6,H * .66],[W * .85,H * .74,W,H * .64],[W * .85,H * .74,W,H * .64],[W,H],[W * .85,H * .74,W,H * .64],[W,H],[W * .85,H * .74,W,H * .64],[W,H]);
 
-      const rng = L.mulberry32(48); FS('rgba(70,95,90,.5)');
+      const rng = mulberry32(48); FS('rgba(70,95,90,.5)');
       times(7, i => {
         const tx = rng() * W, th = H * (.06 + rng() * .05), ty = H * (.52 + rng() * .04);
         times(3, k => {
@@ -7976,7 +7967,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('rgba(110,180,90,.85)'); bP(); poly([0,H],[W * .3,H * .5,W * .65,H * .62],[W * .85,H * .68,W,H * .6],[W * .85,H * .68,W,H * .6],[W,H],[W * .85,H * .68,W,H * .6],[W,H],[W * .85,H * .68,W,H * .6],[W,H]); FS('rgba(85,160,70,.9)'); bP(); poly([0,H],[W * .6,H * .55,W,H * .78],[W * .6,H * .55,W,H * .78],[W,H],[W * .6,H * .55,W,H * .78],[W,H],[W * .6,H * .55,W,H * .78],[W,H]);
 
-      const rng = L.mulberry32(75); const fcols = ['#ff8fb3', '#fff3b0', '#ffffff', '#ffd166'];
+      const rng = mulberry32(75); const fcols = ['#ff8fb3', '#fff3b0', '#ffffff', '#ffd166'];
       times(26, i => {
         const fx = rng() * W, fy = H * (.62 + rng() * .34); FS(fcols[FL(rng() * fcols.length)]);
         times(4, k => {
@@ -7997,7 +7988,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       FS('#241317'); mv(mx - W * .45, mbot); mT(mx - W * .45, mbot); lT(mx - W * .08, mtop); mT(mx - W * .45, mbot); lT(mx - W * .08, mtop); lT(mx + W * .08, mtop); mT(mx - W * .45, mbot); lT(mx - W * .08, mtop); lT(mx + W * .08, mtop); lT(mx + W * .45, mbot); cP(); cP(); fL();
 
-      FS('rgba(255,90,40,.9)'); ellP(mx, mtop + H * .02, W * .08, H * .025); SS('rgba(255,120,50,.75)'); lnW(H * .02); lC('round'); const rng = L.mulberry32(84);
+      FS('rgba(255,90,40,.9)'); ellP(mx, mtop + H * .02, W * .08, H * .025); SS('rgba(255,120,50,.75)'); lnW(H * .02); lC('round'); const rng = mulberry32(84);
       ([-1, 1]).forEach(s => {
         bP(); plS([mx + s * W * .05, mtop + H * .03],[mx + s * W * .14, mtop + H * .3, mx + s * W * .22, mbot])
       });
@@ -8019,7 +8010,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       });
       gA(1);
 
-      const rng = L.mulberry32(63); FS('rgba(255,255,255,.9)');
+      const rng = mulberry32(63); FS('rgba(255,255,255,.9)');
       ([rcx - rmax * .8, rcx + rmax * .8]).forEach(cx => {
         times(5, k => {
           dotP(cx + (rng() - .5) * W * .14, rcy - rng() * H * .06, 14 + rng() * 16)
@@ -8030,13 +8021,14 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       sky([[0,'#ffb37a'],[.4,'#ffd9b0'],[.7,'#aebfd0']]); FS('rgba(255,235,200,.9)'); dot(.6,.38,H * .07);
 
       for (const [base, amp, col, seed2] of [[.55, .12, '#7d8ba0', 11], [.72, .16, '#4a5a70', 22]]) {
-        const rng = L.mulberry32(seed2); FS(col); bP(); mv(0, H); lT(0, H * base);
+        const rng = mulberry32(seed2); FS(col); bP(); mv(0, H); lT(0, H * base);
         span(1, 12, i => {
           lT(i * W / 12, H * (base - amp * rng()))
         })
         lT(W, H); cP(); fL()
       }
     } else if (pr === 'space') {
+      const rng = mulberry32(414);
 
       sky([[0,'#03040c'],[1,'#0d1230']]); scat(414, 130, (rng, i) => {
         const tw = .4 + .6 * AB(SI(t * .8 + i * 2.3));
@@ -8046,6 +8038,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       const px2 = W * .72, py2 = H * .4, pr2 = H * .2; FS(lg(px2 - pr2, py2 - pr2, px2 + pr2, py2 + pr2,[0, '#e8c98a',.5, '#b98d4f',1, '#6e4f2a'])); dotP(px2, py2, pr2); SS('rgba(230,210,170,.55)'); lnW(H * .02); ellPS(px2, py2 + pr2 * .1, pr2 * 1.8, pr2 * .45, -.18)
     } else if (pr === 'sea') {
+      const rng = mulberry32(202);
 
       sky([[0,'#0a4d7a'],[.6,'#0b3a63'],[1,'#061f38']]);
 
@@ -8068,6 +8061,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         lT(W, H); cP(); fL()
       }
     } else if (pr === 'aurora') {
+      const rng = mulberry32(777);
 
       sky([[0,'#050a18'],[1,'#101c30']]); scat(777, 60, (rng, i) => {
         const tw = .3 + .7 * AB(SI(t * .7 + i * 1.9));
@@ -8087,7 +8081,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       sky([[0,'#12351f'],[.6,'#1d4d2a'],[1,'#0e2413']]);
 
-      const rng = L.mulberry32(313);
+      const rng = mulberry32(313);
       times(10, i => {
         FS(`rgba(230,255,190,${.05 + .08 * rng()})`);
         dotP(rng() * W, rng() * H * .5, 10 + rng() * 26)
@@ -8101,6 +8095,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         }
       })
     } else if (pr === 'beach') {
+      const rng = mulberry32(909);
 
       sky([[0,'#8ecfff'],[.5,'#c9e9ff'],[.51,'#2b7fc9'],[.78,'#1d63a8'],[.79,'#e8d5a0'],[1,'#d9c289']]);
 
@@ -8126,7 +8121,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       FS(lg(0, horizon - 14, 0, horizon + 14,[0, 'rgba(255,110,200,0)',.5, 'rgba(255,150,220,.55)',1, 'rgba(255,110,200,0)'])); rect(0, horizon - 14, W, 28)
     } else if (pr === 'city') {
 
-      sky([[0,'#141a30'],[1,'#3a3050']]); const rng = L.mulberry32(555); const n = 8;
+      sky([[0,'#141a30'],[1,'#3a3050']]); const rng = mulberry32(555); const n = 8;
       spt(0, n, i => {
         const bw = W / n * (.7 + rng() * .5), bh = H * (.3 + rng() * .35); const bx = i * W / n + rng() * W * .02, by = H - bh; FS('#10131f'); rect(bx, by, bw, bh + 2);
         for (let wy = by + H * .02; wy < H * .92; wy += H * .035) {
@@ -8138,10 +8133,44 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
           }
         }
       })
-    } else defaultBackdrop(c);
+    } else defaultBackdrop(c, W, H);
     flT('none');
     if (p.bgDim > 0) { FS(`rgba(8,10,16,${p.bgDim * .55})`); fR(0, 0, W, H) }
   }
+  return {
+    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS, PARTICLES, HAIRS, GRADE_STYLES,
+    defaultParams, clampParams, randomParams, drawBubble,
+    serializePreset, parsePreset, parseFavList,
+    keyAlpha, erodeAlpha, despill, blinkOpen, drawParticles, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory, drawBackdrop, shined,
+    MIME_CANDIDATES, pickMime,
+  }
+})();
+if (typeof globalThis !== 'undefined') globalThis.ShiroLib = ShiroLib;
+
+if (typeof document !== 'undefined') (() => {
+    const PI = Math.PI, MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, FL = Math.floor;
+const K0='#4a3828', K1='rgba(250,252,255,.8)';
+  const L = ShiroLib;
+  const $ = id => document.getElementById(id);
+  const on = (id, ev, k, n) => $(id).addEventListener(ev, e => { let v = n ? e.target.value.slice(0, n) : k === 'flip' ? e.target.checked : e.target.value; state.params[k] = v; touch() });
+  const mk = t => document.createElement(t);
+  const stage = $('stage'), ctx = stage.getContext('2d'); let W = stage.width, H = stage.height;
+  const err = m => { $('err').textContent = m || '' };
+
+  const state = {
+    params: L.defaultParams(),
+    bg: null,
+    media: null,
+    favs: loadFavs(),
+    keySrc: null, keyParams: '',
+    recorder: null, recTimer: 0,
+    frozenT: null,
+  };
+
+
+
+
+
 
   const shCv = mk('canvas'), shCtx = shCv.getContext('2d'); const modCv = mk('canvas'), mctx = modCv.getContext('2d'); const rimCv = mk('canvas'), rimCtx = rimCv.getContext('2d'); const outCv = mk('canvas'), outCtx = outCv.getContext('2d'); const pixCv = mk('canvas'), pctx = pixCv.getContext('2d'); const glowCv = mk('canvas'), glowCtx = glowCv.getContext('2d');
 
@@ -8232,7 +8261,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
       const os = 1 + p.shake * .04 + SI(t * .6) * p.camZoom * .22; ctx.save(); ctx.translate(W / 2 + (Math.random() - .5) * p.shake * 16, H / 2 + (Math.random() - .5) * p.shake * 16); ctx.scale(os, os); ctx.translate(-W / 2, -H / 2)
     }
-    drawBackdrop(ctx, p, t);
+    L.drawBackdrop(ctx, p, t, state.bg, W, H);
 
     const rotA = (p.rot - .5) * .6; const spinX = p.anim === 'spin' ? CO(t * 2.5) : 1; const flipY = p.anim === 'flip' ? CO(t * 2.5) : 1; const sq = p.squash > .02 ? SI(t * 3) * p.squash : 0; const sxx = (1 + sq * .18) * spinX, syy = (1 - sq * .22) * flipY; const xformed = AB(rotA) > .001 || AB(sxx - 1) > .001 || AB(syy - 1) > .001;
     if (state.media && xformed) {
@@ -8302,7 +8331,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     if (state.media && xformed) ctx.restore();
     if (p.particles !== 'none') L.drawParticles(ctx, W, H, p.particles, t, p.seed);
 
-    const gs = GRADE_STYLES[p.grade];
+    const gs = L.GRADE_STYLES[p.grade];
     if (gs) {
       ctx.globalCompositeOperation = gs[0]; FS(gs[1]); ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over'
     }
