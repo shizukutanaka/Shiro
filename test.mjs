@@ -692,6 +692,7 @@ const mkUI = (seed, opts = {}) => {
   ok(h.getEl('out-x').textContent === xCancel, 'pointercancel clears dragging (sticky-drag bug fix)');
   (h.winListeners.beforeunload || []).forEach(f => f());
   ok(h.store.has('shiro.session.v1'), 'beforeunload flushes pending session save');
+  ok(indexHtml.includes('touch-action:none'), 'stage has touch-action:none (drag works on touch devices)');
 }
 
 console.log(`${pass} pass / ${fail} fail`);
