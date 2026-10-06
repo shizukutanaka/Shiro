@@ -8,6 +8,7 @@ const L = sandbox.ShiroLib;
 let pass = 0, fail = 0;
 const ok = (cond, name) => { cond ? pass++ : (fail++, console.error('FAIL:', name)); };
 const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name); } catch { pass++; } };
+const mkCtx = all => { const calls = []; return { calls, ctx: new Proxy({}, { get: (t, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : (...a) => { for (const v of a) if (typeof v === 'number' || all) calls.push(v); return { addColorStop() {} }; }, set: () => true }) } };
 {
   const r1 = L.mulberry32(42), r2 = L.mulberry32(42);
   ok(r1() === r2() && r1() === r2(), 'mulberry32 deterministic');
@@ -67,14 +68,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(K.lAnk[1] > 0 && K.headC[1] > K.lAnk[1], 'head above ankles');
 }
 {
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => {
-      for (const v of a) if (typeof v === 'number') calls.push(v);
-      return { addColorStop() {} };
-    },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   for (const anim of L.ANIMS) {
     const p = L.defaultParams(); p.anim = anim;
     L.drawMannequin(ctx, p, 2.5, 640, 600, 500);
@@ -99,11 +93,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(q0.bob === 0, 'jump lands at t=0');
 }
 {
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return {}; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   const sil = { width: 100, height: 200 };
   L.drawStickerOutline(ctx, sil, 100, 200, 300, 400, 0);
   ok(calls.length === 0, 'outline 0 draws nothing');
@@ -112,11 +102,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.every(Number.isFinite), 'outline coords finite');
 }
 {
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   L.drawVignette(ctx, 1280, 720, 0);
   ok(calls.length === 0, 'vignette 0 draws nothing');
   L.drawVignette(ctx, 1280, 720, .5);
@@ -126,11 +112,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(L.clampParams({ watermark: 'x'.repeat(100) }).watermark.length === 60, 'watermark capped at 60');
   ok(L.clampParams({ watermark: 12345 }).watermark === '12345', 'watermark coerced to string');
   ok(L.clampParams(null).watermark === '', 'watermark defaults empty');
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) calls.push(v); return {}; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx(true);
   L.drawWatermark(ctx, '', 1280, 720, .5);
   ok(calls.length === 0, 'empty watermark draws nothing');
   L.drawWatermark(ctx, '@ume', 1280, 720, .5);
@@ -140,11 +122,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(L.clampParams({ eyeStyle: 'bogus' }).eyeStyle === 'dot', 'bad eyeStyle falls back');
   for (const es of L.EYES || ['dot','wink','closed','heart']) {
     const p = L.defaultParams(); p.eyeStyle = es;
-    const calls = [];
-    const ctx = new Proxy({}, {
-      get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-      set: () => true,
-    });
+    const {calls, ctx} = mkCtx();
     L.drawMannequin(ctx, p, 1.0, 640, 600, 500);
     ok(calls.length > 50 && calls.every(Number.isFinite), `eyeStyle ${es} draws`);
   }
@@ -156,11 +134,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(L.clampParams({ acc: 'crown' }).acc === 'crown' && L.clampParams({ acc: 'phones' }).acc === 'phones', 'new accessories valid');
   ok(L.clampParams({ blend: 'bogus' }).blend === 'none' && L.clampParams({ blend: 'screen' }).blend === 'screen', 'blend clamp');
   {
-    const calls = [];
-    const gctx = new Proxy({}, {
-      get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-      set: () => true,
-    });
+    const {calls, ctx: gctx} = mkCtx();
     L.drawGlow(gctx, {}, 300, 500, 640, 600, 0);
     ok(calls.length === 0, 'glow off draws nothing');
     L.drawGlow(gctx, {}, 300, 500, 640, 600, .8);
@@ -168,21 +142,13 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   }
   for (const acc of L.ACCS) {
     const p = L.defaultParams(); p.acc = acc;
-    const calls = [];
-    const ctx = new Proxy({}, {
-      get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-      set: () => true,
-    });
+    const {calls, ctx} = mkCtx();
     L.drawMannequin(ctx, p, 1.0, 640, 600, 500);
     ok(calls.every(Number.isFinite), `acc ${acc} draws`);
   }
 }
 for (const type of ['snow', 'sparkle', 'petal']) {
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   L.drawParticles(ctx, 640, 360, type, 1.7, 42);
   ok(calls.length > 20 && calls.every(Number.isFinite), `particles ${type} draws finite args`);
 }
@@ -208,11 +174,7 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   ok(d2[0] === 255, 'despill 0 no-op');
 }
 {
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   L.drawReflection(ctx, {}, 640, 600, 300, 500, 0);
   ok(calls.length === 0, 'reflection off draws nothing');
   L.drawReflection(ctx, {}, 640, 600, 300, 500, .8);
@@ -248,11 +210,7 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   ok(calls.length === before, 'zero alpha shadow skipped');
 }
 {
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: () => (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return {}; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   for (const acc of L.ACCS) L.drawAccessory(ctx, acc, 100, 100, 20);
   ok(calls.length > 20, 'accessory draws geometry');
   ok(calls.every(Number.isFinite), 'accessory coords finite');
@@ -278,77 +236,49 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
 }
 for (const bg of L.BGS) {
   const p = L.defaultParams(); p.bgPreset = bg;
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   L.drawBackdrop(ctx, p, 1.7, null, 640, 360);
   ok((bg === 'transparent' || calls.length > 0) && calls.every(Number.isFinite), `bg ${bg} draws finite args`);
 }
 for (const type of L.PARTICLES) {
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   L.drawParticles(ctx, 640, 360, type, 1.7, 42);
   ok(calls.every(Number.isFinite), `particles ${type} finite args`);
 }
 for (const hair of L.HAIRS) {
   const p = L.defaultParams(); p.hair = hair;
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   L.drawMannequin(ctx, p, 1.0, 640, 600, 500);
   ok(calls.every(Number.isFinite), `hair ${hair} draws`);
 }
 for (const acc of L.ACCS) {
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   if (acc === 'cape') { const p = L.defaultParams(); p.acc = acc; L.drawMannequin(ctx, p, 1.0, 640, 600, 500) } else L.drawAccessory(ctx, acc, 320, 200, 60, .58);
   ok((acc === 'none' || calls.length > 0) && calls.every(Number.isFinite), `acc ${acc} draws finite args`);
 }
 for (const anim of L.ANIMS) {
   const p = L.defaultParams(); p.anim = anim;
   for (const t of [0, 1.37, 4.2]) L.mannequinPose(p, t);
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   L.drawMannequin(ctx, p, 1.37, 640, 600, 500);
   ok(calls.length > 0 && calls.every(Number.isFinite), `anim ${anim} draws finite args`);
 }
 for (const es of L.EYES) {
   const p = L.defaultParams(); p.eyeStyle = es;
-  const calls = [];
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-    set: () => true,
-  });
+  const {calls, ctx} = mkCtx();
   L.drawMannequin(ctx, p, 1.0, 640, 600, 500);
   ok(calls.length > 0 && calls.every(Number.isFinite), `eyes ${es} draws finite args`);
 }
 for (const fit of L.FITS) {
   const p = L.defaultParams(); p.bgFit = fit; p.bgBlur = .3; p.bgSat = .7; p.bgContrast = .6; p.bgDrift = .5;
   for (const bg of [{ naturalWidth: 400, naturalHeight: 300 }, { videoWidth: 400, videoHeight: 300 }]) {
-    const calls = [];
-    const ctx = new Proxy({}, {
-      get: (t, k) => k === 'canvas' ? {} : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; },
-      set: () => true,
-    });
+    const {calls, ctx} = mkCtx();
     L.drawBackdrop(ctx, p, 1.7, bg, 640, 360);
     ok(calls.length > 0 && calls.every(Number.isFinite), `bgFit ${fit} ${bg.naturalWidth ? 'image' : 'video'} draws finite args`);
   }
 }
 {
-  const mkCtx = () => { const calls = []; return { calls, ctx: new Proxy({}, { get: (t, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; }, set: () => true }) } };
+
   const sil = {};
   const fin = (name, c) => ok(c.length > 0 && c.every(Number.isFinite), `${name} finite args`);
   let m;
