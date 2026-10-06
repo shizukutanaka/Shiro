@@ -672,3 +672,4 @@ node test.mjs   # 5445 assertions
 - **r263**: 非表示時の動画一時停止 — `visibilitychange`でモデル/背景動画をタブ非表示時にpause・復帰時に再生状態があればresume（バックグラウンドでのCPU/バッテリー浪費を防止、凍結状態は尊重）
 - **r264**: 仕上げa11y/メタ — `color-scheme:dark`+`theme-color`メタ（ネイティブ部品のダーク適合）、`#guides`をaria-hidden、`.del`にaria-label
 - **r265**: CSPメタ — アプリは外部通信ゼロのため`connect-src 'none'`で全リモートロードを構造遮断（img/mediaはblob:/data:のみ許可、object/base-uri/frame-ancestorsも無効化）
+- **r266**: 録画のvisibility連動 — タブ非表示中は描画が凍るのに録画が静止フレームを録り続けていたためMediaRecorderもpause/resume連動
