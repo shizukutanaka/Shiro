@@ -12,8 +12,26 @@ const ShiroLib = (() => {
       return ((t ^ t >>> 14) >>> 0) / 4294967296
     }
   }
+  const mir = f => [-1, 1].forEach(f);
+  const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i) }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i) };
+  const times = (n, f) => { for (let i = 0; i < n; i++) f(i) };
+  const scat = (seed, n, f) => { const r = mulberry32(seed); times(n, i => f(r, i)) };
+  const ctxH = c => {
+    const bP = () => c.beginPath(), cP = () => c.closePath(), mT = (x, y) => c.moveTo(x, y), lT = (x, y) => c.lineTo(x, y), qT = (a, b, q, d) => c.quadraticCurveTo(a, b, q, d), bZ = (a, b, q, d, e, f) => c.bezierCurveTo(a, b, q, d, e, f), aR = (x, y, r, s, e) => c.arc(x, y, r, s, e), eC = (x, y, rx, ry, o, s, e) => c.ellipse(x, y, rx, ry, o, s, e), fR = (x, y, w, h) => c.fillRect(x, y, w, h), sR = (x, y, w, h) => c.strokeRect(x, y, w, h), fL = () => c.fill(), sK = () => c.stroke(), sV = () => c.save(), rS = () => c.restore(), tR = (x, y) => c.translate(x, y), rO = a => c.rotate(a), sC = (x, y) => c.scale(x, y);
+    const FS = v => c.fillStyle = v, SS = v => c.strokeStyle = v, lnW = v => c.lineWidth = v, gA = v => c.globalAlpha = v, flT = v => c.filter = v, fT = v => c.font = v, tA = v => c.textAlign = v, lC = v => c.lineCap = v;
+    const _seg = (...p) => { mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }) };
+    const poly = (...p) => { bP(); _seg(...p); cP(); fL() };
+    const polyS = (...p) => { bP(); _seg(...p); cP(); sK() };
+    const plS = (...p) => { bP(); _seg(...p); sK() };
+    const plF = (...p) => { bP(); _seg(...p); fL() };
+    const rect = (x, y, w, h) => fR(x, y, w, h), mv = (x, y) => { bP(); mT(x, y) };
+    const ellP = (x, y, rx, ry, rot) => { bP(); eC(x, y, rx, ry, rot || 0, 0, 7); fL() };
+    const ellPS = (x, y, rx, ry, rot) => { bP(); eC(x, y, rx, ry, rot || 0, 0, 7); sK() };
+    const dotP = (x, y, r) => { bP(); aR(x, y, r, 0, 7); fL() };
+    const dotPS = (x, y, r) => { bP(); aR(x, y, r, 0, 7); sK() };
+    return { bP, cP, mT, lT, qT, bZ, aR, eC, fR, sR, fL, sK, sV, rS, tR, rO, sC, gA, FS, SS, lnW, flT, fT, tA, lC, poly, polyS, plS, plF, rect, mv, ellP, ellPS, dotP, dotPS }
+  };
   function strSeed(s) {
-      const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i) }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i) };
     let h = 2166136261;
     spt(0, s.length, i => { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) })
     return h >>> 0
@@ -180,7 +198,6 @@ const ShiroLib = (() => {
 
   function drawStickerOutline(c, silCanvas, wPix, hPix, cx, baseY, strength) {
       const gA=v=>c.globalAlpha = v;
-      const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i) }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i) };
     if (strength <= 0) return;
     const r = MX(1, RD(strength * wPix * .045)); c.save(); gA(MN(1, strength * 1.5));
     spt(0, 16, i => {
@@ -1175,15 +1192,7 @@ const ShiroLib = (() => {
   }
 
   function drawMannequin(ctx, p, t, cx, baseY, hPix) {
-      const mir=f=>[-1,1].forEach(f);
-      const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i) }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i) };
-      const plF=(...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }); fL() }, plS=(...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }); sK() };
-      const lC=v=>ctx.lineCap = v, FS=v=>ctx.fillStyle = v, SS=v=>ctx.strokeStyle = v, lnW=v=>ctx.lineWidth = v;
-      const bP=()=>ctx.beginPath(), cP=()=>ctx.closePath(), mT=(x,y)=>ctx.moveTo(x,y), lT=(x,y)=>ctx.lineTo(x,y), qT=(a,b,c,d)=>ctx.quadraticCurveTo(a,b,c,d), aR=(x,y,r,s,e)=>ctx.arc(x,y,r,s,e), eC=(x,y,rx,ry,o,s,e)=>ctx.ellipse(x,y,rx,ry,o,s,e), fR=(x,y,w,h)=>ctx.fillRect(x,y,w,h), fL=()=>ctx.fill(), sK=()=>ctx.stroke(), sV=()=>ctx.save(), rS=()=>ctx.restore(), tR=(x,y)=>ctx.translate(x,y), sC=(x,y)=>ctx.scale(x,y), gA=v=>ctx.globalAlpha = v;
-      const dot = (x, y, r) => { bP(); aR(x, y, r, 0, 7); fL() };
-      const dots = (x, y, r) => { bP(); aR(x, y, r, 0, 7); sK() };
-      const ell = (x, y, rx, ry, rot) => { bP(); eC(x, y, rx, ry, rot || 0, 0, 7); fL() };
-      const ells = (x, y, rx, ry, rot) => { bP(); eC(x, y, rx, ry, rot || 0, 0, 7); sK() };
+      const { bP, cP, mT, lT, qT, bZ, aR, eC, fR, fL, sK, sV, rS, tR, sC, gA, lC, FS, SS, lnW, plF, plS, ellP: ell, ellPS: ells, dotP: dot, dotPS: dots } = ctxH(ctx);
     const q = mannequinPose(p, t); const K = skeleton(p, q); const g = 1 - p.tone * .55;
 
     const hue = RD(p.clothHue * 360), sat = p.clothHue < .03 ? 0 : 55;
@@ -1380,14 +1389,7 @@ const ShiroLib = (() => {
   }
 
   function drawParticles(ctx, W, H, type, t, seed) {
-      const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i) }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i) };
-      const plS=(...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }); sK() };
-      const FS=v=>ctx.fillStyle = v, tA=v=>ctx.textAlign = v, lnW=v=>ctx.lineWidth = v, SS=v=>ctx.strokeStyle = v, fT=v=>ctx.font = v;
-      const bP=()=>ctx.beginPath(), mT=(x,y)=>ctx.moveTo(x,y), lT=(x,y)=>ctx.lineTo(x,y), qT=(a,b,c,d)=>ctx.quadraticCurveTo(a,b,c,d), aR=(x,y,r,s,e)=>ctx.arc(x,y,r,s,e), eC=(x,y,rx,ry,o,s,e)=>ctx.ellipse(x,y,rx,ry,o,s,e), fR=(x,y,w,h)=>ctx.fillRect(x,y,w,h), fL=()=>ctx.fill(), sK=()=>ctx.stroke(), sV=()=>ctx.save(), rS=()=>ctx.restore(), tR=(x,y)=>ctx.translate(x,y), rO=a=>ctx.rotate(a);
-      const dot = (x, y, r) => { bP(); aR(x, y, r, 0, 7); fL() };
-      const dots = (x, y, r) => { bP(); aR(x, y, r, 0, 7); sK() };
-      const ell = (x, y, rx, ry, rot) => { bP(); eC(x, y, rx, ry, rot || 0, 0, 7); fL() };
-      const ells = (x, y, rx, ry, rot) => { bP(); eC(x, y, rx, ry, rot || 0, 0, 7); sK() };
+      const { bP, mT, lT, qT, bZ, aR, eC, fR, fL, sK, sV, rS, tR, rO, FS, SS, lnW, fT, tA, plS, ellP: ell, ellPS: ells, dotP: dot, dotPS: dots } = ctxH(ctx);
     const S = f => SI(t * f), A = f => AB(S(f));
     const h = (i, k) => mulberry32((seed | 0) * 7919 + i * 131 + k)();
     const N = type === 'snow' ? 70 : type === 'petal' ? 34 : type === 'rain' ? 110 : type === 'leaf' ? 30 : type === 'ember' ? 38 : type === 'bubble' ? 28 : type === 'confetti' ? 70 : type === 'firefly' ? 26 : type === 'bokeh' ? 16 : type === 'notes' ? 18 : type === 'hearts' ? 20 : type === 'spark' ? 46 : type === 'wind' ? 14 : 42; sV();
@@ -1467,27 +1469,10 @@ const ShiroLib = (() => {
   }
 
   function drawAccessory(ctx, acc, hx, hy, hr, hue) {
-      const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i) }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i) };
-      const plS=(...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }); sK() };
-      const mir=f=>[-1,1].forEach(f);
-      const bP=()=>ctx.beginPath(), cP=()=>ctx.closePath(), mT=(x,y)=>ctx.moveTo(x,y), lT=(x,y)=>ctx.lineTo(x,y), qT=(a,b,c,d)=>ctx.quadraticCurveTo(a,b,c,d), bZ=(a,b,c,d,e,f)=>ctx.bezierCurveTo(a,b,c,d,e,f), aR=(x,y,r,s,e)=>ctx.arc(x,y,r,s,e), eC=(x,y,rx,ry,o,s,e)=>ctx.ellipse(x,y,rx,ry,o,s,e), fR=(x,y,w,h)=>ctx.fillRect(x,y,w,h), sR=(x,y,w,h)=>ctx.strokeRect(x,y,w,h), fL=()=>ctx.fill(), sK=()=>ctx.stroke(), sV=()=>ctx.save(), rS=()=>ctx.restore(), tR=(x,y)=>ctx.translate(x,y), rO=a=>ctx.rotate(a);
+      const { bP, cP, mT, lT, qT, bZ, aR, eC, fR, sR, fL, sK, sV, rS, tR, rO, plS, ellP: ell, ellPS: ells, dotP: dot, dotPS: dots, poly, polyS, rect, mv, FS, SS, lnW, fT, tA, lC } = ctxH(ctx);
     const dk = 'rgba(52,56,68,.95)', acc2 = `hsla(${RD((hue == null ? .58 : hue) * 360)},80%,64%,.92)`;
 
-      const ell = (x, y, rx, ry, rot) => { bP(); eC(x, y, rx, ry, rot || 0, 0, 7); fL() };
-      const ells = (x, y, rx, ry, rot) => { bP(); eC(x, y, rx, ry, rot || 0, 0, 7); sK() };
-      const dots = (x, y, r) => { bP(); aR(x, y, r, 0, 7); sK() };
       const LW = (v, m) => MX(m || 1, hr * v);
-      const times = (n, f) => { for (let i = 0; i < n; i++) f(i) };
-      const scat = (seed, n, f) => { const r = mulberry32(seed); times(n, i => f(r, i)) };
-      const rect = (x, y, w, h) => fR(x, y, w, h);
-      const mv = (x, y) => { bP(); mT(x, y) };
-      const FS=v=>ctx.fillStyle = v;
-      const lC=v=>ctx.lineCap = v, tA=v=>ctx.textAlign = v, fT=v=>ctx.font = v;
-      const SS=v=>ctx.strokeStyle = v;
-      const lnW=v=>ctx.lineWidth = v;
-      const poly = (...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }) ;cP(); fL() };
-      const polyS = (...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }) ;cP(); sK() };
-    const dot = (x, y, r) => { bP(); aR(x, y, r, 0, 7); fL() };
     sV();
     switch (acc) {
       case 'halo': {
@@ -3652,11 +3637,7 @@ const ShiroLib = (() => {
   }
   function drawBackdrop(c, p, t, bg, W, H) {
       const K0='#4a3828', K1='rgba(250,252,255,.8)';
-      const mir=f=>[-1,1].forEach(f);
-      const flT=v=>c.filter = v, lC=v=>c.lineCap = v;
-      const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i) }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i) };
-      const plS=(...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }); sK() };
-      const bP=()=>c.beginPath(), cP=()=>c.closePath(), mT=(x,y)=>c.moveTo(x,y), lT=(x,y)=>c.lineTo(x,y), qT=(a,b,q,d)=>c.quadraticCurveTo(a,b,q,d), bZ=(a,b,q,d,e,f)=>c.bezierCurveTo(a,b,q,d,e,f), aR=(x,y,r,s,e)=>c.arc(x,y,r,s,e), eC=(x,y,rx,ry,o,s,e)=>c.ellipse(x,y,rx,ry,o,s,e), fR=(x,y,w,h)=>c.fillRect(x,y,w,h), sR=(x,y,w,h)=>c.strokeRect(x,y,w,h), fL=()=>c.fill(), sK=()=>c.stroke(), sV=()=>c.save(), rS=()=>c.restore(), tR=(x,y)=>c.translate(x,y), rO=a=>c.rotate(a), sC=(x,y)=>c.scale(x,y), gA=v=>c.globalAlpha = v;
+      const { bP, cP, mT, lT, qT, bZ, aR, eC, fR, sR, fL, sK, sV, rS, tR, rO, sC, gA, flT, lC, FS, SS, lnW, plS, poly, polyS, rect, mv, ellP, ellPS, dotP, dotPS } = ctxH(c);
     const pr = p.bgPreset || 'gradient';
 
     const sky = (stops) => {
@@ -3667,21 +3648,8 @@ const ShiroLib = (() => {
       const ell = (x, y, rx, ry, rot) => { ellP(W * x,H * y,rx,ry,rot || 0) };
       const lg = (a, b, cc, d, s) => { const g = c.createLinearGradient(a, b, cc, d); for (let k = 0; k < s.length; k += 2) g.addColorStop(s[k], s[k + 1]); return g };
       const rg = (a, b, r0, cc, d, r1, s) => { const g = c.createRadialGradient(a, b, r0, cc, d, r1); for (let k = 0; k < s.length; k += 2) g.addColorStop(s[k], s[k + 1]); return g };
-      const ellP = (x, y, rx, ry, rot) => { bP(); eC(x, y, rx, ry, rot || 0, 0, 7); fL() };
-      const ellPS = (x, y, rx, ry, rot) => { bP(); eC(x, y, rx, ry, rot || 0, 0, 7); sK() };
-      const dotPS = (x, y, r) => { bP(); aR(x, y, r, 0, 7); sK() };
-      const dotP = (x, y, r) => { bP(); aR(x, y, r, 0, 7); fL() };
-      const times = (n, f) => { for (let i = 0; i < n; i++) f(i) };
-      const scat = (seed, n, f) => { const r = mulberry32(seed); times(n, i => f(r, i)) };
       const bnd = y => rect(0, H * y, W, H * (1 - y));
-      const rect = (x, y, w, h) => fR(x, y, w, h);
-      const mv = (x, y) => { bP(); mT(x, y) };
-      const FS=v=>c.fillStyle = v;
-      const SS=v=>c.strokeStyle = v;
       const lw = (m, f, w) => lnW(MX(m, (w || H) * f));
-      const lnW=v=>c.lineWidth = v;
-      const poly = (...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }) ;cP(); fL() };
-      const polyS = (...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]) }) ;cP(); sK() };
       const S = f => SI(t * f), C = f => CO(t * f), A = f => AB(S(f));
     const dot = (x, y, r) => { dotP(W * x,H * y,r) };
     if (bg) {
