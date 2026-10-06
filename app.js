@@ -8494,7 +8494,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     const bar = $('fav-bar'); bar.innerHTML = '';
     for (const f of state.favs) {
       const d = mk('div'); d.className = 'fav'; d.title = f.name; d.draggable = true; d.tabIndex = 0; d.role = 'button';
-      d.innerHTML = `<img alt=""><span></span><button class="del" title="削除">×</button>`;
+      d.innerHTML = `<img alt=""><span></span><button class="del" title="削除" aria-label="お気に入りを削除">×</button>`;
       d.querySelector('img').src = f.thumb || ''; d.querySelector('span').textContent = f.name;
       const apply = () => { state.params = L.clampParams(f.params); syncUI() };
       const del = () => { state.favs = state.favs.filter(x => x.id !== f.id); saveFavs(); renderFavs() };

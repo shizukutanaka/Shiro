@@ -670,3 +670,4 @@ node test.mjs   # 5445 assertions
 - **r261**: ゴールデン描画指紋を第2シナリオへ拡張 — walkアニメ+crown+twin髪+aurora背景+snow粒子+wink表情+noirグレード+screenブレンド+ふきだしの「フル装備」シーンを別ダイジェスト`1356307302`でピン留め（分岐描画パスの無自覚改変を捕捉）
 - **r262**: マルチポインタガード — ドラッグをpointerIdで追跡し、2本目のポインタのmove/up/cancelを無視（タッチ中の別ポインタ干渉・ダブルドラッグ開始を防止）
 - **r263**: 非表示時の動画一時停止 — `visibilitychange`でモデル/背景動画をタブ非表示時にpause・復帰時に再生状態があればresume（バックグラウンドでのCPU/バッテリー浪費を防止、凍結状態は尊重）
+- **r264**: 仕上げa11y/メタ — `color-scheme:dark`+`theme-color`メタ（ネイティブ部品のダーク適合）、`#guides`をaria-hidden、`.del`にaria-label
