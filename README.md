@@ -651,3 +651,4 @@ node test.mjs   # 5445 assertions
 - **r242**: 特殊経路網羅 — 全PLACES(9)/FACES(7)プリセット適用ループ、wmPos/particles変更後frame、prefers-reduced-motionブート（アニメがstillになる経路）。mkUIにreduced-motionオプション追加。
 - **r243**: index.htmlのoptionマークアップをJSONデータ化 — 602個の`<option>`（個々約25Bの純枠）を`<script type="application/json" id="OPTS">`+起動時生成へ変換。**index.html 39.5KB→24.7KB(-14.8KB)**。option整合ガードはOPT jsonを真値源として再構成。
 - **r244**: index.html仕上げの圧縮 — CSSの空白圧縮(-0.3KB) + OPTS JSONをペア配列から平坦配列(値,ラベルの交互)へ(-1.2KB)。**index.html 24.7KB→23.2KB（r243起点累計 -16.3KB、起点比 -41%）**。
+- **r245**: OPTSのキー列を廃止 — 9つのselectは値がlib配列/テーブルと逐語重複していたため、OPTSはラベル列のみ保持し起動時にキー一覧とZIPで合成。**index.html 23.2KB→18.0KB(-5.2KB、起点比-63%)**。データ重複排除による真値源の一元化（ガードはラベル個数/非空を検証）。

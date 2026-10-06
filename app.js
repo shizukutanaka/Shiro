@@ -8336,7 +8336,8 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     inp.addEventListener('dblclick', () => { state.params[key] = L.defaultParams()[key]; syncUI(false) });
     sDiv.appendChild(lab); sDiv.appendChild(inp)
   }
-  for (const [id, list] of Object.entries(JSON.parse($('OPTS').textContent))) { let h = ''; for (let i = 0; i < list.length; i += 2) h += `<option value="${list[i]}">${list[i + 1]}</option>`; $(id).innerHTML = h }
+  const OPTKEYS = { 'sel-anim': L.ANIMS, 'sel-acc': L.ACCS, 'sel-eyes': L.EYES, 'sel-hair': L.HAIRS, 'sel-bgpreset': L.BGS, 'sel-particles': L.PARTICLES, 'sel-fx': ['none', ...Object.keys(L.SUBJFX_FILTERS)], 'sel-grade': ['none', ...Object.keys(L.GRADE_STYLES)], 'sel-bgfit': L.FITS };
+  for (const [id, list] of Object.entries(JSON.parse($('OPTS').textContent))) { const ks = OPTKEYS[id]; let h = ''; if (ks) for (let i = 0; i < list.length; i++) h += `<option value="${ks[i]}">${list[i]}</option>`; else for (let i = 0; i < list.length; i += 2) h += `<option value="${list[i]}">${list[i + 1]}</option>`; $(id).innerHTML = h }
   $('sel-acc2').innerHTML = $('sel-acc').innerHTML;
   function syncUI(fromParams = true) {
     touch();
