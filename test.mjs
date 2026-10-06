@@ -1,24 +1,19 @@
-
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-
 const src = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
 const sandbox = { console };
 vm.createContext(sandbox);
 vm.runInContext(src, sandbox);
 const L = sandbox.ShiroLib;
-
 let pass = 0, fail = 0;
 const ok = (cond, name) => { cond ? pass++ : (fail++, console.error('FAIL:', name)); };
 const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name); } catch { pass++; } };
-
 {
   const r1 = L.mulberry32(42), r2 = L.mulberry32(42);
   ok(r1() === r2() && r1() === r2(), 'mulberry32 deterministic');
   const r = L.mulberry32(1); for (let i = 0; i < 100; i++) { const v = r(); ok(v >= 0 && v < 1, 'rng range'); }
   ok(L.strSeed('shiro') === L.strSeed('shiro') && L.strSeed('a') !== L.strSeed('b'), 'strSeed');
 }
-
 {
   const p = L.clampParams({ height: 5, x: -1, anim: 'bogus', flip: 1, seed: 3.7 });
   ok(p.height === 1 && p.x === 0, 'clamp numeric range');
@@ -28,7 +23,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   for (const k of L.NUM_KEYS) ok(d[k] >= 0 && d[k] <= 1, `default ${k} in range`);
   for (const k of L.NUM_KEYS) ok(d[k] === L.defaultParams()[k], `default ${k} matches`);
 }
-
 {
   for (let i = 0; i < 30; i++) {
     const p = L.randomParams(L.mulberry32(i));
@@ -36,7 +30,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     ok(L.ANIMS.includes(p.anim), 'random anim valid');
   }
 }
-
 {
   const p = L.randomParams(L.mulberry32(7));
   const back = L.parsePreset(L.serializePreset('テスト', p));
@@ -47,7 +40,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(list.length === 2 && list[1].params.height === 1, 'fav list filters and clamps');
   throws(() => L.parseFavList('{}'), 'non-array fav list rejected');
 }
-
 {
   ok(L.keyAlpha(255, 255, 255, 0, .5) === 255, 'thresh=0 keeps pure white');
   ok(L.keyAlpha(255, 255, 255, .8, 0) === 0, 'pure white keyed out');
@@ -55,7 +47,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   const a = L.keyAlpha(150, 160, 170, .5, .8);
   ok(a > 0 && a < 255, 'soft edge partial alpha');
 }
-
 {
   const p = L.defaultParams();
   for (const anim of L.ANIMS) {
@@ -65,7 +56,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     for (const v of Object.values(a)) ok(Number.isFinite(v), `pose ${anim} finite`);
   }
 }
-
 {
   const p = L.defaultParams();
   const K = L.skeleton(p, L.mannequinPose(p, 0));
@@ -76,7 +66,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   }
   ok(K.lAnk[1] > 0 && K.headC[1] > K.lAnk[1], 'head above ankles');
 }
-
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -93,14 +82,12 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.length > 100, 'draw emits geometry');
   ok(calls.every(Number.isFinite), 'draw coords finite');
 }
-
 {
   ok(L.clampParams({ bgPreset: 'bogus' }).bgPreset === 'gradient', 'bad bgPreset falls back');
   ok(L.BGS.includes(L.clampParams({ bgPreset: 'transparent' }).bgPreset), 'bgPreset survives clamp');
   for (let i = 0; i < 50; i++)
     ok(L.BGS.includes(L.randomParams(L.mulberry32(i)).bgPreset), 'random bgPreset valid');
 }
-
 {
   const p = L.defaultParams(); p.anim = 'jump'; p.animSpeed = .5;
   const s = .4 + .5 * 2.2;
@@ -111,7 +98,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   const q0 = L.mannequinPose(p, 0);
   ok(q0.bob === 0, 'jump lands at t=0');
 }
-
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -125,7 +111,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(calls.length === 32 * 4, 'outline emits 2x16 offset draws');
   ok(calls.every(Number.isFinite), 'outline coords finite');
 }
-
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -137,7 +122,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   L.drawVignette(ctx, 1280, 720, .5);
   ok(calls.length > 0 && calls.every(Number.isFinite), 'vignette coords finite');
 }
-
 {
   ok(L.clampParams({ watermark: 'x'.repeat(100) }).watermark.length === 60, 'watermark capped at 60');
   ok(L.clampParams({ watermark: 12345 }).watermark === '12345', 'watermark coerced to string');
@@ -152,7 +136,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   L.drawWatermark(ctx, '@ume', 1280, 720, .5);
   ok(calls.some(v => v === '@ume'), 'watermark text drawn');
 }
-
 {
   ok(L.clampParams({ eyeStyle: 'bogus' }).eyeStyle === 'dot', 'bad eyeStyle falls back');
   for (const es of L.EYES || ['dot','wink','closed','heart']) {
@@ -172,7 +155,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(L.clampParams({ subjFx: 'x', grade: 'y' }).subjFx === 'none' && L.clampParams({ subjFx: 'x', grade: 'y' }).grade === 'none', 'bad fx/grade fall back');
   ok(L.clampParams({ acc: 'crown' }).acc === 'crown' && L.clampParams({ acc: 'phones' }).acc === 'phones', 'new accessories valid');
   ok(L.clampParams({ blend: 'bogus' }).blend === 'none' && L.clampParams({ blend: 'screen' }).blend === 'screen', 'blend clamp');
-
   {
     const calls = [];
     const gctx = new Proxy({}, {
@@ -184,7 +166,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     L.drawGlow(gctx, {}, 300, 500, 640, 600, .8);
     ok(calls.length === 4 && calls.every(Number.isFinite), 'glow draws blurred silhouette');
   }
-
   for (const acc of L.ACCS) {
     const p = L.defaultParams(); p.acc = acc;
     const calls = [];
@@ -196,7 +177,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     ok(calls.every(Number.isFinite), `acc ${acc} draws`);
   }
 }
-
 for (const type of ['snow', 'sparkle', 'petal']) {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -211,14 +191,12 @@ ok(L.clampParams({ particles: 'snow' }).particles === 'snow', 'particles snow ke
 ok(L.clampParams({ acc: 'cape' }).acc === 'cape', 'cape accessory kept');
 ok(L.clampParams({ brow: 2 }).brow === 1 && L.clampParams({ brow: -1 }).brow === 0, 'brow clamped');
 ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' }).wmPos === 'tl', 'wmPos enum');
-
 {
   const p = { ...L.defaultParams(), anim: 'bow' };
   let maxTilt = 0;
   for (let t = 0; t < 3; t += .05) maxTilt = Math.max(maxTilt, L.mannequinPose(p, t).headTilt);
   ok(maxTilt > .3, 'bow pose tilts head deeply');
 }
-
 {
   const d = new Uint8Array([255, 200, 200, 128,  100, 50, 200, 255,  10, 20, 30, 0]);
   L.despill(d, 1);
@@ -229,7 +207,6 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   L.despill(d2, 0);
   ok(d2[0] === 255, 'despill 0 no-op');
 }
-
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -241,18 +218,15 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   L.drawReflection(ctx, {}, 640, 600, 300, 500, .8);
   ok(calls.length === 8 && calls.every(Number.isFinite), 'reflection draws flipped image');
 }
-
 {
   ok(L.blinkOpen(1.0) === 1 && L.blinkOpen(1.0) === L.blinkOpen(1.0), 'blink deterministic/open by default');
   ok(L.blinkOpen(.09) < .5, 'blink closes mid-cycle');
   for (let i = 0; i < 200; i++) { const v = L.blinkOpen(i * .07); ok(v >= 0 && v <= 1, 'blink range'); }
-
   ok(L.blinkOpen(2.5, 42) === L.blinkOpen(2.5, 42), 'blink seed deterministic');
   let differ = false;
   for (let i = 0; i < 200; i++) if (L.blinkOpen(i * .04, 0) !== L.blinkOpen(i * .04, 96)) { differ = true; break; }
   ok(differ, 'blink period varies by seed');
 }
-
 {
   const w = 5, h = 5, d = new Uint8Array(w * h * 4);
   for (let y = 1; y <= 3; y++) for (let x = 1; x <= 3; x++) d[(y * w + x) * 4 + 3] = 255;
@@ -261,7 +235,6 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   ok(d[(1 * w + 1) * 4 + 3] === 0, 'edge pixel eroded');
   ok(d[(0 * w + 0) * 4 + 3] === 0, 'transparent stays transparent');
 }
-
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -274,7 +247,6 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   L.contactShadow(ctx, 100, 200, 50, 0);
   ok(calls.length === before, 'zero alpha shadow skipped');
 }
-
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -287,7 +259,6 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   const p = L.randomParams(L.mulberry32(3));
   ok(L.ACCS.includes(p.acc) && L.clampParams({ acc: 'x' }).acc === 'none', 'acc clamped/valid');
 }
-
 {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -300,13 +271,11 @@ ok(L.clampParams({ wmPos: 'xx' }).wmPos === 'br' && L.clampParams({ wmPos: 'tl' 
   L.drawCastShadow(ctx, { width: 10, height: 10 }, 100, 200, 320, 600, .5, .4);
   ok(calls.length === before, 'cast shadow skipped at center dir');
 }
-
 {
   ok(L.pickMime(() => true).ext === 'mp4', 'mp4 preferred');
   ok(L.pickMime(m => m.includes('webm')).ext === 'webm', 'webm fallback');
   ok(L.pickMime(() => false) === null, 'no support -> null');
 }
-
 for (const bg of L.BGS) {
   const p = L.defaultParams(); p.bgPreset = bg;
   const calls = [];
@@ -317,7 +286,6 @@ for (const bg of L.BGS) {
   L.drawBackdrop(ctx, p, 1.7, null, 640, 360);
   ok((bg === 'transparent' || calls.length > 0) && calls.every(Number.isFinite), `bg ${bg} draws finite args`);
 }
-
 for (const type of L.PARTICLES) {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -327,7 +295,6 @@ for (const type of L.PARTICLES) {
   L.drawParticles(ctx, 640, 360, type, 1.7, 42);
   ok(calls.every(Number.isFinite), `particles ${type} finite args`);
 }
-
 for (const hair of L.HAIRS) {
   const p = L.defaultParams(); p.hair = hair;
   const calls = [];
@@ -338,7 +305,6 @@ for (const hair of L.HAIRS) {
   L.drawMannequin(ctx, p, 1.0, 640, 600, 500);
   ok(calls.every(Number.isFinite), `hair ${hair} draws`);
 }
-
 for (const acc of L.ACCS) {
   const calls = [];
   const ctx = new Proxy({}, {
@@ -348,7 +314,6 @@ for (const acc of L.ACCS) {
   if (acc === 'cape') { const p = L.defaultParams(); p.acc = acc; L.drawMannequin(ctx, p, 1.0, 640, 600, 500) } else L.drawAccessory(ctx, acc, 320, 200, 60, .58);
   ok((acc === 'none' || calls.length > 0) && calls.every(Number.isFinite), `acc ${acc} draws finite args`);
 }
-
 for (const anim of L.ANIMS) {
   const p = L.defaultParams(); p.anim = anim;
   for (const t of [0, 1.37, 4.2]) L.mannequinPose(p, t);
@@ -360,7 +325,6 @@ for (const anim of L.ANIMS) {
   L.drawMannequin(ctx, p, 1.37, 640, 600, 500);
   ok(calls.length > 0 && calls.every(Number.isFinite), `anim ${anim} draws finite args`);
 }
-
 for (const es of L.EYES) {
   const p = L.defaultParams(); p.eyeStyle = es;
   const calls = [];
@@ -371,7 +335,6 @@ for (const es of L.EYES) {
   L.drawMannequin(ctx, p, 1.0, 640, 600, 500);
   ok(calls.length > 0 && calls.every(Number.isFinite), `eyes ${es} draws finite args`);
 }
-
 for (const fit of L.FITS) {
   const p = L.defaultParams(); p.bgFit = fit; p.bgBlur = .3; p.bgSat = .7; p.bgContrast = .6; p.bgDrift = .5;
   for (const bg of [{ naturalWidth: 400, naturalHeight: 300 }, { videoWidth: 400, videoHeight: 300 }]) {
@@ -384,7 +347,6 @@ for (const fit of L.FITS) {
     ok(calls.length > 0 && calls.every(Number.isFinite), `bgFit ${fit} ${bg.naturalWidth ? 'image' : 'video'} draws finite args`);
   }
 }
-
 {
   const mkCtx = () => { const calls = []; return { calls, ctx: new Proxy({}, { get: (t, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; }, set: () => true }) } };
   const sil = {};
@@ -408,8 +370,6 @@ for (const fit of L.FITS) {
   ok(L.pickMime(() => true).ext === 'mp4' && L.pickMime(() => false) === null, 'pickMime');
   m = mkCtx(); const cv = {}; ok(L.shined({ width: 100, height: 100 }, m.ctx, cv, 1.7, .5) === cv && m.calls.every(Number.isFinite), 'shined finite args');
 }
-
-// 静的ガード: UIスコープからlib内部constへの裸参照(未エクスポート)を検出 — GRADE_STYLES/SUBJFX_FILTERS型クラッシュの再発防止
 {
   const uiSrc = src.slice(src.indexOf("if (typeof document !== 'undefined')"));
   const libSrc = src.slice(0, src.indexOf("if (typeof document !== 'undefined'"));
@@ -422,14 +382,10 @@ for (const fit of L.FITS) {
   const bare = [...libNames].filter(n => !uiDecls.has(n) && new RegExp(`[^.\\w$]${n.replace(/\$/g, '\\$')}`).test(uiNostr.replace(new RegExp(`L\\.${n.replace(/\$/g, '\\$')}`, 'g'), '')));
   ok(bare.length === 0, `no unexported lib refs in UI${bare.length ? ': ' + bare.join(',') : ''}`);
 }
-
-// 静的ガード: ヘルパー宣言の引数名がレシーバーをシャドウしていないか — qT=(a,b,c,d)=>c.型クラッシュの再発防止
 {
   const bad = [...src.matchAll(/(\w+)=\(([^)]*)\)=>(\w+)\./g)].filter(m => m[3] !== m[1] && m[2].split(',').map(s => s.trim()).includes(m[3]));
   ok(bad.length === 0, `no receiver-shadowing helper params${bad.length ? ': ' + bad.map(m => m[1]).join(',') : ''}`);
 }
-
-// 静的ガード: 宣言のない関数呼び出しを検出 — shined内sfR型クラッシュ(語彙変換が宣言を残して参照だけ移動した型)の再発防止
 {
   const nostr = src.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g, "''");
   const decls = new Set([...nostr.matchAll(/([\w$]+)\s*=(?![=>])/g)].map(m => m[1]));
@@ -441,8 +397,6 @@ for (const fit of L.FITS) {
   for (const m of nostr.matchAll(/(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(/g)) if (!decls.has(m[1]) && !builtins.has(m[1])) bad.add(m[1]);
   ok(bad.size === 0, `no undeclared function calls${bad.size ? ': ' + [...bad].join(',') : ''}`);
 }
-
-// 静的ガード: rng()を使う背景ケースで const rng 宣言が存在するか — scat変換が宣言を飲み込む型の再発防止
 {
   const marks = [...src.matchAll(/pr === '(\w+)'/g)];
   const bad = [];
@@ -458,8 +412,6 @@ for (const fit of L.FITS) {
   }
   ok(bad.length === 0, `all rng-using bg cases declare rng${bad.length ? ': ' + bad.join(',') : ''}`);
 }
-
-// 静的ガード: 関数スコープ単位の未宣言参照 — drawMannequinのbZ型(ファイル内他スコープに同名宣言があり大域スキャンが見逃す潜伏クラッシュ)の再発防止
 {
   const nostr = src.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g, "''");
   const builtins = new Set('if for while return switch case typeof new throw else do void delete in of instanceof try catch finally this super function async await Math JSON Object Array String Number Boolean Symbol Promise RegExp Error Map Set WeakMap WeakSet Reflect Proxy Intl Date parseInt parseFloat isNaN isFinite undefined null true false NaN Infinity globalThis window document requestAnimationFrame cancelAnimationFrame setTimeout clearTimeout setInterval clearInterval console localStorage navigator fetch Uint8Array Uint8ClampedArray Float32Array ImageData MediaRecorder URL Blob FileReader FormData Image ClipboardItem File matchMedia HTMLCanvasElement HTMLVideoElement getComputedStyle TextEncoder TextDecoder AbortController structuredClone queueMicrotask performance crypto alert confirm prompt'.split(' '));
@@ -483,6 +435,5 @@ for (const fit of L.FITS) {
   }
   ok(bad.length === 0, `no scope-level undeclared refs${bad.length ? ': ' + [...new Set(bad)].join(',') : ''}`);
 }
-
 console.log(`${pass} pass / ${fail} fail`);
 process.exit(fail ? 1 : 0);

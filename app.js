@@ -8115,7 +8115,7 @@ const ShiroLib = (() => {
 if (typeof globalThis !== 'undefined') globalThis.ShiroLib = ShiroLib;
 
 if (typeof document !== 'undefined') (() => {
-    const PI = Math.PI, MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, FL = Math.floor, PW = Math.pow, SG = Math.sign, RN = Math.random;
+    const MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, RN = Math.random;
 const K0='#4a3828', K1='rgba(250,252,255,.8)';
   const L = ShiroLib;
   const $ = id => document.getElementById(id);
