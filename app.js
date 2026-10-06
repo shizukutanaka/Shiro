@@ -8628,7 +8628,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       const s = JSON.parse(localStorage.getItem(SES_KEY) || 'null');
       if (!s || s.v !== 1 || !s.params) return false;
       state.params = L.clampParams(s.params);
-      if (s.aspect) { $('sel-aspect').value = s.aspect; applyAspect(s.aspect) }
+      if (s.aspect) { const a = s.aspect in ASPECTS ? s.aspect : '16:9'; $('sel-aspect').value = a; applyAspect(a) }
       return true
     } catch (e) { return false }
   }

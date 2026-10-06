@@ -428,6 +428,9 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
   ok(Object.keys(d).every(k => k in clamped), 'clampParams output preserves all defaultParams keys');
   const numD = Object.keys(d).filter(k => typeof d[k] === 'number');
   ok(L.NUM_KEYS.every(k => numD.includes(k)), 'NUM_KEYS only references real params');
+  const clampBody = /function clampParams\(p\) \{([\s\S]*?)return o/.exec(src)[1];
+  for (const k of ['anim', 'acc', 'acc2', 'bgPreset', 'eyeStyle', 'subjFx', 'grade', 'blend', 'particles', 'wmPos', 'hair', 'vidQ', 'bgFit'])
+    ok(new RegExp(k + '\\s*=\\s*\\w+\\.includes').test(clampBody), 'clampParams validates enum ' + k);
 }
 
 // ファズ: clampParams/parsePresetが破損入力を常に安全な形へ矯正
