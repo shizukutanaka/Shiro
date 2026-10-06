@@ -614,7 +614,12 @@ const mkUI = (seed, opts = {}) => {
   let favErr = null;
   try {
     const d = bar.children[0];
+    const n0 = bar.children.length;
     d.fire('click');
+    d.fire('keydown', { key: 'Enter', stopPropagation() {}, preventDefault() {} });
+    d.fire('keydown', { key: ' ', stopPropagation() {}, preventDefault() {} });
+    d.fire('keydown', { key: 'ArrowRight', shiftKey: true, stopPropagation() {}, preventDefault() {} });
+    ok(getEl('fav-bar').children.length === n0, 'fav keydown Enter/Space/Shift+Arrow handled (apply + keyboard reorder)');
     const dt = { data: {}, setData(t2, v) { this.data[t2] = v }, getData(t2) { return this.data[t2] }, dropEffect: '', effectAllowed: '' };
     d.fire('dragstart', { dataTransfer: dt }); d.fire('dragover', { dataTransfer: dt, preventDefault() {} }); d.fire('drop', { dataTransfer: dt, preventDefault() {} });
     d._q['span'].fire('dblclick', { stopPropagation() {} });
