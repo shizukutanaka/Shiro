@@ -413,9 +413,13 @@ for (const fit of L.FITS) {
 {
   const uiSrc = src.slice(src.indexOf("if (typeof document !== 'undefined')"));
   const libSrc = src.slice(0, src.indexOf("if (typeof document !== 'undefined'"));
-  const libNames = new Set([...libSrc.matchAll(/^  const ([A-Za-z_$][\w$]*) =/gm)].map(m => m[1]).filter(n => /^[A-Z]/.test(n)));
+  const libNames = new Set();
+  for (const m of libSrc.matchAll(/^  const (.*)$/gm)) for (const d of m[1].matchAll(/([\w$]+)\s*=(?![=>])/g)) libNames.add(d[1]);
+  for (const m of libSrc.matchAll(/^  function ([A-Za-z_$][\w$]*)/gm)) libNames.add(m[1]);
   const uiDecls = new Set([...uiSrc.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)|\(([\w$,\s]*)\)\s*=>|function\s+\w+\(([\w$,\s]*)\)|for \(let (\w+)/g)].flatMap(m => [m[1], m[2], m[3], m[4]].filter(Boolean).flatMap(s => s.split(',').map(x => x.trim()))));
-  const bare = [...libNames].filter(n => !uiDecls.has(n) && new RegExp(`[^.\\w$]${n.replace(/\$/g, '\\$')}`).test(uiSrc.replace(new RegExp(`L\\.${n.replace(/\$/g, '\\$')}`, 'g'), '')));
+  for (const m of uiSrc.matchAll(/^\s+(?:const|let|var)\s+(.*)$/gm)) for (const d of m[1].matchAll(/([\w$]+)\s*=(?![=>])/g)) uiDecls.add(d[1]);
+  const uiNostr = uiSrc.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g, "''");
+  const bare = [...libNames].filter(n => !uiDecls.has(n) && new RegExp(`[^.\\w$]${n.replace(/\$/g, '\\$')}`).test(uiNostr.replace(new RegExp(`L\\.${n.replace(/\$/g, '\\$')}`, 'g'), '')));
   ok(bare.length === 0, `no unexported lib refs in UI${bare.length ? ': ' + bare.join(',') : ''}`);
 }
 
@@ -453,6 +457,31 @@ for (const fit of L.FITS) {
     }
   }
   ok(bad.length === 0, `all rng-using bg cases declare rng${bad.length ? ': ' + bad.join(',') : ''}`);
+}
+
+// 静的ガード: 関数スコープ単位の未宣言参照 — drawMannequinのbZ型(ファイル内他スコープに同名宣言があり大域スキャンが見逃す潜伏クラッシュ)の再発防止
+{
+  const nostr = src.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g, "''");
+  const builtins = new Set('if for while return switch case typeof new throw else do void delete in of instanceof try catch finally this super function async await Math JSON Object Array String Number Boolean Symbol Promise RegExp Error Map Set WeakMap WeakSet Reflect Proxy Intl Date parseInt parseFloat isNaN isFinite undefined null true false NaN Infinity globalThis window document requestAnimationFrame cancelAnimationFrame setTimeout clearTimeout setInterval clearInterval console localStorage navigator fetch Uint8Array Uint8ClampedArray Float32Array ImageData MediaRecorder URL Blob FileReader FormData Image ClipboardItem File matchMedia HTMLCanvasElement HTMLVideoElement getComputedStyle TextEncoder TextDecoder AbortController structuredClone queueMicrotask performance crypto alert confirm prompt'.split(' '));
+  const namesFromDecl = (seg) => {
+    const d = new Set([...seg.matchAll(/([\w$]+)\s*=(?![=>])/g)].map(m => m[1]));
+    for (const m of seg.matchAll(/\{([\w$,:.\s[\]]*)\}\s*=(?![=>])/g)) for (const x of m[1].split(',')) { const v = x.trim().split(':').pop().replace(/[[\]\s]/g, '').trim(); if (/^[\w$]+$/.test(v)) d.add(v) }
+    for (const m of seg.matchAll(/function\s+([A-Za-z_$][\w$]*)|for\s*\(\s*(?:let|const|var)\s+(\w+)|\bcatch\s*\(\s*(\w+)/g)) d.add(m[1] || m[2] || m[3]);
+    for (const m of seg.matchAll(/\(([\w$,\s.]*)\)\s*=>|function\s*\w*\s*\(([\w$,\s.]*)\)/g)) for (const g of [m[1], m[2]]) if (g) for (const x of g.split(',')) { const v = x.trim().replace(/^\.\.\./, '').split('=')[0].trim(); if (/^[\w$]+$/.test(v)) d.add(v) }
+    return d;
+  };
+  const top = new Set();
+  for (const m of nostr.matchAll(/^  const (.*)$/gm)) for (const n of namesFromDecl(m[1])) top.add(n);
+  for (const m of nostr.matchAll(/^  (?:function|let|var)\s+([A-Za-z_$][\w$]*)/gm)) top.add(m[1]);
+  const fns = [...nostr.matchAll(/^  function (\w+)\s*\(([^)]*)\)\s*\{/gm)];
+  const bad = [];
+  for (let i = 0; i < fns.length; i++) {
+    const body = nostr.slice(fns[i].index + fns[i][0].length, i + 1 < fns.length ? fns[i + 1].index : nostr.length);
+    const local = namesFromDecl(body);
+    for (const x of fns[i][2].split(',')) { const v = x.trim(); if (v) local.add(v) }
+    for (const m of body.matchAll(/(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(/g)) { const n = m[1]; if (!local.has(n) && !top.has(n) && !builtins.has(n)) bad.push(`${fns[i][1]}:${n}`) }
+  }
+  ok(bad.length === 0, `no scope-level undeclared refs${bad.length ? ': ' + [...new Set(bad)].join(',') : ''}`);
 }
 
 console.log(`${pass} pass / ${fail} fail`);
