@@ -367,6 +367,22 @@ for (const fit of L.FITS) {
 }
 
 // UI IIFE網羅: DOMスタブでUI層全体を起動 — frame/syncUI/配線/お気に入り/セッション復元の実行面を網羅(frame内の参照クラッシュ全般を捕捉)
+
+// Guard: app.js が参照するDOM idがindex.htmlに実在するか照合(スタブ自動生成では検出不能なタイプミス型) + 配線キーがparamsに存在
+{
+  const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+  const htmlIds = new Set([...html.matchAll(/id="([^"]+)"/g)].map(m => m[1]));
+  const domCalls = [...src.matchAll(/(?:\$|on|clk)\('([a-zA-Z0-9_-]+)'/g)].map(m => m[1]);
+  const tableIds = [...src.matchAll(/\['((?:sel|inp|chk|btn|fav|bg|model)-[a-z0-9-]+)'/g)].map(m => m[1]);
+  const jsIds = new Set([...domCalls, ...tableIds].filter(id => !/^(sl-|out-)/.test(id)));
+  const missing = [...jsIds].filter(id => !htmlIds.has(id));
+  ok(missing.length === 0, `all referenced DOM ids exist in index.html${missing.length ? ': ' + missing.join(',') : ''}`);
+  const pkeys = new Set(Object.keys(L.defaultParams()));
+  const tablePairs = [...src.matchAll(/\['((?:sel|inp)-[a-z0-9-]+)',\s*'([a-zA-Z]+)'/g)].map(m => m[2]);
+  const badKeys = tablePairs.filter(k => !pkeys.has(k));
+  ok(badKeys.length === 0, `wiring tables only reference real params${badKeys.length ? ': ' + badKeys.join(',') : ''}`);
+}
+
 const mkUI = seed => {
   const h = { els: new Map(), calls: [], docListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null };
   const calls = h.calls;
