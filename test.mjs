@@ -537,6 +537,12 @@ const mkUI = (seed, opts = {}) => {
   try { h.frames(2); h.boom = false; h.frames(1); loopOk = true } catch (e) {}
   ok(loopOk && h.getEl('err').textContent.includes('描画エラー'), 'frame loop survives draw exception and reports once');
   ok(d === 2420624414, `render fingerprint stable (golden digest, update intentionally) got ${d}`) }
+  for (const [id, v] of [['sel-anim', 'walk'], ['sel-acc', 'crown'], ['sel-hair', 'twin'], ['sel-bgpreset', 'aurora'], ['sel-particles', 'snow'], ['sel-face', 'wink'], ['sel-grade', 'noir'], ['sel-blend', 'screen']]) { getEl(id).value = v; getEl(id).fire('change') }
+  getEl('inp-bubble').value = 'やあ'; getEl('inp-bubble').fire('input');
+  const n0 = calls.length; h.frames(2);
+  let d2 = 0; for (const c of calls.slice(n0)) d2 = (d2 * 31 + (typeof c === 'number' ? Math.round(c * 1e4) : [...String(c)].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7))) % 4294967291;
+  ok(calls.length - n0 > 50 && calls.every(Number.isFinite), `loaded-scene frames finite (n=${calls.length - n0})`);
+  ok(d2 === 1356307302, `loaded-scene fingerprint stable (golden2, update intentionally) got ${d2}`);
   const L2 = sandbox2.ShiroLib;
   ok(typeof L2.drawMannequin === 'function' && typeof L2.defaultParams === 'function', 'lib evaluated in UI context');
   const ANIMS = L.ANIMS;
@@ -702,10 +708,15 @@ const mkUI = (seed, opts = {}) => {
   ok(h.getEl('btn-rec').textContent === '動画 録画開始', 'recTimer auto-stops recording at 15s');
   const st = h.getEl('stage');
   st.fire('pointerdown', { pointerId: 1, clientX: 320, clientY: 180 });
-  st.fire('pointercancel');
+  st.fire('pointercancel', { pointerId: 1 });
   const xCancel = h.getEl('out-x').textContent;
   st.fire('pointermove', { pointerId: 1, clientX: 100, clientY: 100 });
   ok(h.getEl('out-x').textContent === xCancel, 'pointercancel clears dragging (sticky-drag bug fix)');
+  st.fire('pointerdown', { pointerId: 1, clientX: 320, clientY: 180 });
+  const xDrag = h.getEl('out-x').textContent;
+  st.fire('pointermove', { pointerId: 2, clientX: 60, clientY: 60 });
+  ok(h.getEl('out-x').textContent === xDrag, 'second pointer ignored during drag (multi-touch guard)');
+  st.fire('pointerup', { pointerId: 1 });
   (h.winListeners.beforeunload || []).forEach(f => f());
   ok(h.store.has('shiro.session.v1'), 'beforeunload flushes pending session save');
   ok(indexHtml.includes('touch-action:none'), 'stage has touch-action:none (drag works on touch devices)');
