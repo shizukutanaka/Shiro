@@ -8480,7 +8480,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     try { return L.parseFavList(localStorage.getItem(FKEY) || '[]') }
     catch { return [] }
   }
-  function saveFavs() { localStorage.setItem(FKEY, JSON.stringify(state.favs)) }
+  function saveFavs() { try { localStorage.setItem(FKEY, JSON.stringify(state.favs)) } catch (e) { err('お気に入りの保存容量を超えました。いくつか削除してください') } }
   function renderFavs() {
     const bar = $('fav-bar'); bar.innerHTML = '';
     for (const f of state.favs) {
