@@ -1375,7 +1375,7 @@ const ShiroLib = (() => {
   function shined(src, sctx, cv, t, amt) {
     cv.width = MX(2, src.width); cv.height = MX(2, src.height); sctx.clearRect(0, 0, cv.width, cv.height); sctx.drawImage(src, 0, 0, cv.width, cv.height); sctx.globalCompositeOperation = 'source-atop'; const ph = ((t * .45) % 2) - .5; const gr = sctx.createLinearGradient(cv.width * (ph - .28), 0, cv.width * ph, cv.height * .65); gr.addColorStop(0, 'rgba(255,255,255,0)');
     gr.addColorStop(.5, `rgba(255,255,255,${.6 * amt})`);
-    gr.addColorStop(1, 'rgba(255,255,255,0)'); sctx.fillStyle = gr; sfR(0, 0, cv.width, cv.height); sctx.globalCompositeOperation = 'source-over';
+    gr.addColorStop(1, 'rgba(255,255,255,0)'); sctx.fillStyle = gr; sctx.fillRect(0, 0, cv.width, cv.height); sctx.globalCompositeOperation = 'source-over';
     return cv
   }
 

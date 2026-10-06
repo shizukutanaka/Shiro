@@ -385,6 +385,30 @@ for (const fit of L.FITS) {
   }
 }
 
+{
+  const mkCtx = () => { const calls = []; return { calls, ctx: new Proxy({}, { get: (t, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return { addColorStop() {} }; }, set: () => true }) } };
+  const sil = {};
+  const fin = (name, c) => ok(c.length > 0 && c.every(Number.isFinite), `${name} finite args`);
+  let m;
+  m = mkCtx(); L.drawCastShadow(m.ctx, sil, 200, 400, 320, 600, .1, .5, .4); fin('castShadow', m.calls);
+  m = mkCtx(); L.drawCastShadow(m.ctx, sil, 200, 400, 320, 600, .9, .5, .4); fin('castShadow dir2', m.calls);
+  m = mkCtx(); L.drawRimLight(m.ctx, sil, 200, 400, 320, 600, .3, .5); fin('rimLight', m.calls);
+  m = mkCtx(); L.drawStickerOutline(m.ctx, sil, 200, 400, 320, 600, .8); fin('stickerOutline', m.calls);
+  m = mkCtx(); L.drawVignette(m.ctx, 640, 360, .5); fin('vignette', m.calls);
+  for (const pos of ['tl', 'tr', 'bl', 'br']) { m = mkCtx(); L.drawWatermark(m.ctx, 'テスト', 640, 360, .5, pos); fin(`watermark ${pos}`, m.calls); }
+  m = mkCtx(); L.drawGlow(m.ctx, sil, 200, 400, 320, 600, .5); fin('glow', m.calls);
+  m = mkCtx(); L.drawReflection(m.ctx, sil, 320, 600, 200, 400, .5); fin('reflection', m.calls);
+  m = mkCtx(); L.contactShadow(m.ctx, 320, 600, 80, .5); fin('contactShadow', m.calls);
+  m = mkCtx(); L.drawBubble(m.ctx, 'こんにちは', 320, 200, 640, 360, .5); fin('bubble', m.calls);
+  m = mkCtx(); L.drawParticles(m.ctx, 640, 360, 'snow', 1.7, 42); fin('particles(単独)', m.calls);
+  ok(L.keyAlpha(255, 255, 255, .5, .3) === 0 && L.keyAlpha(0, 0, 0, .5, .3) === 255 && L.keyAlpha(255, 255, 255, 0, .3) === 255, 'keyAlpha keys out white');
+  { const d = new Uint8ClampedArray(4 * 4 * 4).fill(255); L.erodeAlpha(d, 4, 4); ok(d.every(v => v >= 0), 'erodeAlpha runs'); }
+  { const d = new Uint8ClampedArray([10, 200, 30, 128]); L.despill(d, .5); ok(Number.isFinite(d[0] + d[1] + d[2]), 'despill finite'); }
+  ok(Number.isFinite(L.blinkOpen(1.7, 42)), 'blinkOpen finite');
+  ok(L.pickMime(() => true).ext === 'mp4' && L.pickMime(() => false) === null, 'pickMime');
+  m = mkCtx(); const cv = {}; ok(L.shined({ width: 100, height: 100 }, m.ctx, cv, 1.7, .5) === cv && m.calls.every(Number.isFinite), 'shined finite args');
+}
+
 // 静的ガード: UIスコープからlib内部constへの裸参照(未エクスポート)を検出 — GRADE_STYLES/SUBJFX_FILTERS型クラッシュの再発防止
 {
   const uiSrc = src.slice(src.indexOf("if (typeof document !== 'undefined')"));
@@ -399,6 +423,18 @@ for (const fit of L.FITS) {
 {
   const bad = [...src.matchAll(/(\w+)=\(([^)]*)\)=>(\w+)\./g)].filter(m => m[3] !== m[1] && m[2].split(',').map(s => s.trim()).includes(m[3]));
   ok(bad.length === 0, `no receiver-shadowing helper params${bad.length ? ': ' + bad.map(m => m[1]).join(',') : ''}`);
+}
+
+// 静的ガード: 宣言のない関数呼び出しを検出 — shined内sfR型クラッシュ(語彙変換が宣言を残して参照だけ移動した型)の再発防止
+{
+  const nostr = src.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g, "''");
+  const decls = new Set([...nostr.matchAll(/([\w$]+)\s*=(?![=>])/g)].map(m => m[1]));
+  for (const m of nostr.matchAll(/function\s+([A-Za-z_$][\w$]*)|for\s*\(\s*(?:let|const|var)\s+(\w+)|\bcatch\s*\(\s*(\w+)/g)) decls.add(m[1] || m[2] || m[3]);
+  for (const m of nostr.matchAll(/\(([\w$,\s.]*)\)\s*=>|function\s*\w*\s*\(([\w$,\s.]*)\)/g)) for (const g of [m[1], m[2]]) if (g) for (const x of g.split(',')) { const v = x.trim().replace(/^\.\.\./, '').split('=')[0].trim(); if (/^[\w$]+$/.test(v)) decls.add(v) }
+  const builtins = new Set('if for while return switch case typeof new throw else do void delete in of instanceof try catch finally this super function async await Math JSON Object Array String Number Boolean Symbol Promise RegExp Error Map Set WeakMap WeakSet Reflect Proxy Intl Date parseInt parseFloat isNaN isFinite undefined null true false NaN Infinity globalThis window document requestAnimationFrame cancelAnimationFrame setTimeout clearTimeout setInterval clearInterval console localStorage navigator fetch Uint8Array Uint8ClampedArray Float32Array ImageData MediaRecorder URL Blob FileReader FormData Image ClipboardItem File matchMedia HTMLCanvasElement HTMLVideoElement getComputedStyle TextEncoder TextDecoder AbortController structuredClone queueMicrotask performance crypto alert confirm prompt'.split(' '));
+  const bad = new Set();
+  for (const m of nostr.matchAll(/(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(/g)) if (!decls.has(m[1]) && !builtins.has(m[1])) bad.add(m[1]);
+  ok(bad.size === 0, `no undeclared function calls${bad.size ? ': ' + [...bad].join(',') : ''}`);
 }
 
 // 静的ガード: rng()を使う背景ケースで const rng 宣言が存在するか — scat変換が宣言を飲み込む型の再発防止
