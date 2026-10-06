@@ -497,7 +497,7 @@ const mkUI = (seed, opts = {}) => {
   const sandbox2 = {
     console, document: documentStub,
     localStorage: { getItem: k => h.store.has(k) ? h.store.get(k) : null, setItem: (k, v) => h.store.set(k, String(v)), removeItem: k => h.store.delete(k) },
-    matchMedia: q => ({ matches: !!(opts.rm && /reduced-motion/.test(q)), addEventListener() {} }),
+    matchMedia: q => { const m = { matches: !!(opts.rm && /reduced-motion/.test(q)) }; m.addEventListener = (ev, f) => { (h.mqL ||= []).push({ m, f }) }; return m },
     requestAnimationFrame: cb => { h.raf = cb; return 1 }, cancelAnimationFrame() {},
     performance: { now: () => (h.tt = (h.tt || 0) + 16.667) },
     setTimeout: (f, ms) => { const x = { f, ms, iv: false }; h.timers.push(x); return x },
@@ -651,6 +651,8 @@ const mkUI = (seed, opts = {}) => {
   ok(vEl.paused === true, 'visibilitychange pauses bg video when hidden');
   documentStub.hidden = false; (docListeners.visibilitychange || []).forEach(f => f());
   ok(vEl.paused === false, 'visibilitychange resumes bg video when visible');
+  for (const l of (h.mqL || [])) { l.m.matches = true; l.f({ matches: true }) }
+  ok(h.getEl('sel-anim').value === 'still' && h.getEl('out-shake').textContent === '0.00' && h.getEl('sel-particles').value === 'none', 'live prefers-reduced-motion change zeroes motion params');
   getEl('btn-rec').click();
   const recEl = (h.recs || []).pop();
   documentStub.hidden = true; (docListeners.visibilitychange || []).forEach(f => f());

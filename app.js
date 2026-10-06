@@ -8650,8 +8650,9 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
   const restored = restoreSession();
 
-  if (!restored && matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const p = state.params; p.anim = 'still'; p.shake = 0; p.bgDrift = 0; p.trail = 0; p.particles = 'none'
-  }
+  const applyRM = () => { const p = state.params; p.anim = 'still'; p.shake = 0; p.bgDrift = 0; p.trail = 0; p.particles = 'none' };
+  const rmQuery = matchMedia('(prefers-reduced-motion: reduce)');
+  if (!restored && rmQuery.matches) applyRM();
+  if (rmQuery.addEventListener) rmQuery.addEventListener('change', e => { if (e.matches) { applyRM(); syncUI() } });
   syncUI(); renderFavs(); requestAnimationFrame(frame)
 })();
