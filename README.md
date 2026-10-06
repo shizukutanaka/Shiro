@@ -640,3 +640,4 @@ node test.mjs   # 5445 assertions
 - **r231**: 語彙集約の残り14スコープ(drawCastShadow..frame)もctxHへ統合、`PW`/`SG`/`RN`追加。UI IIFE内は`ctxH`非公開のため`L.ctxH`経由(lib exportsへ追加) — 移行時にframe/drawMediaが参照不能で描画真っ黒になる実バグを検出・修復。静的ガード2系を強化: ①関数スコープ単位の未宣言参照監査(bZ型)を新設 ②UI→lib裸参照ガードを大文字限定→全トップレベル名+文字列除去に拡張(今回のctxH参照を確実に検出できる形)。
 - **r232**: デッドコード監査 — lib側ゼロ使用宣言0件。UI側の未使用算術束縛(PI/FL/PW/SG)を除去、test.mjsのコメント除去(-0.9KB)。`plF`/`polyS`等の低使用語彙はファクトリ内で共用のため維持。
 - **r233**: test.mjsのProxyスタブctxを`mkCtx(all)`ヘルパーへ集約 — 17箇所の逐語ブロックを`const {calls, ctx} = mkCtx()`に置換(measureText/all-argsはオプション化、タグ記録型2箇所は残存)。test.mjs -3.2KB。
+- **r234**: UI配線のテーブル化 — 13個のselect/3個のinputで `on(...)` 配線と `syncUI` 代入の二重リストを `SELS`/`INPS` 表に集約(変更時に片方だけ更新する事故型を根絶)。クリックリスナー `clk` 短縮(12箇所)。**-0.9KB**。

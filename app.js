@@ -8120,6 +8120,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   const L = ShiroLib;
   const $ = id => document.getElementById(id);
   const on = (id, ev, k, n) => $(id).addEventListener(ev, e => { let v = n ? e.target.value.slice(0, n) : k === 'flip' ? e.target.checked : e.target.value; state.params[k] = v; touch() });
+  const clk = (id, f) => $(id).addEventListener('click', f);
   const mk = t => document.createElement(t);
   const stage = $('stage'), ctx = stage.getContext('2d'); let W = stage.width, H = stage.height;
   const err = m => { $('err').textContent = m || '' };
@@ -8342,28 +8343,16 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       $('out-' + key).textContent = (+state.params[key]).toFixed(2)
     }
     if (fromParams) {
-      $('sel-anim').value = state.params.anim; $('sel-acc').value = state.params.acc; $('sel-eyes').value = state.params.eyeStyle; $('sel-fx').value = state.params.subjFx; $('sel-grade').value = state.params.grade; $('sel-blend').value = state.params.blend; $('sel-bgfit').value = state.params.bgFit; $('sel-bgpreset').value = state.params.bgPreset; $('sel-particles').value = state.params.particles; $('sel-wmpos').value = state.params.wmPos; $('sel-hair').value = state.params.hair; $('sel-vidq').value = state.params.vidQ; $('sel-acc2').value = state.params.acc2; $('chk-flip').checked = state.params.flip;
-      $('inp-watermark').value = state.params.watermark; $('inp-bubble').value = state.params.bubble; $('inp-title').value = state.params.title
+      for (const [id, k] of SELS) $(id).value = state.params[k]; $('chk-flip').checked = state.params.flip;
+      for (const [id, k] of INPS) $(id).value = state.params[k]
     }
   }
-  on('sel-anim', 'change', 'anim');
-  on('sel-acc', 'change', 'acc');
-  on('sel-acc2', 'change', 'acc2');
-  on('sel-eyes', 'change', 'eyeStyle');
-  on('sel-fx', 'change', 'subjFx');
-  on('sel-grade', 'change', 'grade');
-  on('sel-blend', 'change', 'blend');
-  on('sel-bgfit', 'change', 'bgFit');
-  on('sel-bgpreset', 'change', 'bgPreset');
-  on('sel-particles', 'change', 'particles');
-  on('sel-wmpos', 'change', 'wmPos');
-  on('sel-hair', 'change', 'hair');
-  on('sel-vidq', 'change', 'vidQ');
+  const SELS = [['sel-anim', 'anim'], ['sel-acc', 'acc'], ['sel-acc2', 'acc2'], ['sel-eyes', 'eyeStyle'], ['sel-fx', 'subjFx'], ['sel-grade', 'grade'], ['sel-blend', 'blend'], ['sel-bgfit', 'bgFit'], ['sel-bgpreset', 'bgPreset'], ['sel-particles', 'particles'], ['sel-wmpos', 'wmPos'], ['sel-hair', 'hair'], ['sel-vidq', 'vidQ']];
+  for (const [id, k] of SELS) on(id, 'change', k);
+  const INPS = [['inp-watermark', 'watermark', 60], ['inp-bubble', 'bubble', 24], ['inp-title', 'title', 40]];
+  for (const [id, k, n] of INPS) on(id, 'input', k, n);
   on('chk-flip', 'change', 'flip');
   $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
-  on('inp-watermark', 'input', 'watermark', 60);
-  on('inp-bubble', 'input', 'bubble', 24);
-  on('inp-title', 'input', 'title', 40);
 
   const PLACES = {
     tl: [.2, .62], tc: [.5, .62], tr: [.8, .62],
@@ -8398,10 +8387,10 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     if (bv) e.target.checked ? bv.pause() : bv.play().catch(() => {})
   });
 
-  $('btn-random').addEventListener('click', () => {
+  clk('btn-random', () => {
     state.params = L.randomParams(L.mulberry32((RN() * 4294967296) >>> 0)); syncUI()
   });
-  $('btn-reset').addEventListener('click', () => { state.params = L.defaultParams(); syncUI() });
+  clk('btn-reset', () => { state.params = L.defaultParams(); syncUI() });
 
   function readURL(file) { return URL.createObjectURL(file) }
   $('bg-file').addEventListener('change', e => {
@@ -8432,16 +8421,16 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     } else err('対応形式: 画像 / 動画ファイル');
     e.target.value = ''
   });
-  $('btn-model-reset').addEventListener('click', () => { state.media = null });
-  $('btn-bg-reset').addEventListener('click', () => { state.bg = null });
+  clk('btn-model-reset', () => { state.media = null });
+  clk('btn-bg-reset', () => { state.bg = null });
 
   function download(blob, name) {
     const a = mk('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000)
   }
-  $('btn-png').addEventListener('click', () =>
+  clk('btn-png', () =>
     stage.toBlob(b => b ? download(b, `shiro-s${state.params.seed}.png`) : err('PNG生成に失敗'), 'image/png'));
-  $('btn-png-copy').addEventListener('click', () => {
+  clk('btn-png-copy', () => {
     if (!navigator.clipboard || !window.ClipboardItem) return err('このブラウザはコピーに未対応です');
     stage.toBlob(async b => {
       try {
@@ -8451,7 +8440,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     }, 'image/png')
   });
 
-  $('btn-rec').addEventListener('click', () => {
+  clk('btn-rec', () => {
     if (state.recorder) { state.recorder.stop(); return }
     const pick = L.pickMime(m => MediaRecorder.isTypeSupported(m));
     if (!pick) return err('このブラウザは動画録画に未対応です');
@@ -8467,7 +8456,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     state.recorder = rec; rec.start(); $('btn-rec').textContent = '録画中… クリックで停止';
     state.recTimer = setTimeout(() => state.recorder && state.recorder.stop(), 15000)
   });
-  $('btn-share').addEventListener('click', async () => {
+  clk('btn-share', async () => {
     try {
       const blob = await new Promise(r => stage.toBlob(r, 'image/png'));
       const file = new File([blob], 'shiro.png', { type: 'image/png' });
@@ -8516,13 +8505,13 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     const c = mk('canvas'); c.width = 110; c.height = 62; c.getContext('2d').drawImage(stage, 0, 0, 110, 62);
     return c.toDataURL('image/jpeg', .7)
   }
-  $('btn-fav').addEventListener('click', () => {
+  clk('btn-fav', () => {
     const name = prompt('お気に入りの名前', 'モデル ' + (state.favs.length + 1));
     if (name === null) return;
     state.favs.push({ id: 'f' + Date.now().toString(36), name: name || '無題', params: state.params, thumb: thumb() });
     saveFavs(); renderFavs()
   });
-  $('btn-fav-exp').addEventListener('click', () =>
+  clk('btn-fav-exp', () =>
     download(new Blob([JSON.stringify(state.favs, null, 1)], { type: 'application/json' }), 'shiro-favs.json'));
   $('fav-file').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
@@ -8551,11 +8540,11 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     e.preventDefault(); state.params.scale = L.clamp01(state.params.scale - e.deltaY * .0008); syncUI()
   }, { passive: false });
 
-  $('btn-code-copy').addEventListener('click', async () => {
+  clk('btn-code-copy', async () => {
     try { await navigator.clipboard.writeText(L.serializePreset('shared', state.params)); err('') }
     catch { err('コピーに失敗しました(ブラウザのクリップボード権限を確認)') }
   });
-  $('btn-code-load').addEventListener('click', () => {
+  clk('btn-code-load', () => {
     const txt = prompt('パラメータコードを貼り付け');
     if (txt === null) return;
     try { state.params = L.parsePreset(txt).params; syncUI(); err('') }
