@@ -523,6 +523,7 @@ const mkUI = (seed, opts = {}) => {
   ok(fr.ran > 0 && !fr.e, `frame() runs 3x without crash${fr.e ? ': ' + fr.e.message : ''}`);
   ok(calls.length > 100, `frame emits canvas geometry (n=${calls.length})`);
   ok(calls.every(Number.isFinite), 'frame coords finite');
+  ok(calls.length < 700, `frame ctx-call budget ~165/frame (perf regression guard, n=${calls.length})`);
   const L2 = sandbox2.ShiroLib;
   ok(typeof L2.drawMannequin === 'function' && typeof L2.defaultParams === 'function', 'lib evaluated in UI context');
   const ANIMS = L.ANIMS;
