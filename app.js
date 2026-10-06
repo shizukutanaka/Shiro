@@ -8336,7 +8336,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     inp.addEventListener('dblclick', () => { state.params[key] = L.defaultParams()[key]; syncUI(false) });
     sDiv.appendChild(lab); sDiv.appendChild(inp)
   }
-  for (const [id, list] of Object.entries(JSON.parse($('OPTS').textContent))) $(id).innerHTML = list.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('');
+  for (const [id, list] of Object.entries(JSON.parse($('OPTS').textContent))) { let h = ''; for (let i = 0; i < list.length; i += 2) h += `<option value="${list[i]}">${list[i + 1]}</option>`; $(id).innerHTML = h }
   $('sel-acc2').innerHTML = $('sel-acc').innerHTML;
   function syncUI(fromParams = true) {
     touch();
