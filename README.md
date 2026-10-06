@@ -646,3 +646,4 @@ node test.mjs   # 5445 assertions
 - **r237**: ハーネスをmkUIファクトリ化し複数ブート評価に対応。セッション/お気に入りの復元経路・破損フォールバック・ランダムパラメータ8回のframe反復を追加 → **FKEYのTDZ参照で起動時にお気に入りが一切復元されていなかった潜伏バグを発見・修復**（FKEYをstate宣言前へ巻き上げ）。
 - **r238**: DOM id照合ガード — app.jsの`$()/on()/clk()`参照idとSELS/INPS表のidがindex.htmlに実在するか検査（DOMスタブの自動生成では検出不能なタイプミス型クラッシュを防止）。配線キーがdefaultParamsに存在するかも照合。
 - **r239**: select option値⇔真値源の双方向整合ガード — 15 select（ANIMS/ACCS/EYES/FITS/BGS/PARTICLES/HAIRS/SUBJFX/GRADES/BLENDS/WMPOS/VIDQS/PLACES/FACES/ASPECTS）の値が漏れ・ズレなく一致することを検証。sel-acc2のJS継承ルールも明示検査。
+- **r240**: ロバスト面の網羅 — clampParams/parsePresetに600件の破損入力ファズ（NaN/無限/非数/ゴミ型）を投げて常に安全な形へ矯正されるか検査、NUM_KEYS網羅性（clamp出力がdefaultParams全キーを保持＝追加し忘れでparams消失しない）、randomParamsの決定性契約。
