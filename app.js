@@ -8138,7 +8138,7 @@ const ShiroLib = (() => {
     if (p.bgDim > 0) { FS(`rgba(8,10,16,${p.bgDim * .55})`); fR(0, 0, W, H) }
   }
   return {
-    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS, PARTICLES, HAIRS, GRADE_STYLES,
+    clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, ACCS, BGS, EYES, NUM_KEYS, SLIDERS, PARTICLES, HAIRS, GRADE_STYLES, SUBJFX_FILTERS,
     defaultParams, clampParams, randomParams, drawBubble,
     serializePreset, parsePreset, parseFavList,
     keyAlpha, erodeAlpha, despill, blinkOpen, drawParticles, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory, drawBackdrop, shined,
@@ -8226,7 +8226,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     if (state.params.subjSat !== .5) fParts.push(`saturate(${(state.params.subjSat * 2).toFixed(2)})`);
     if (state.params.subjBright !== .5) fParts.push(`brightness(${(.7 + state.params.subjBright * .6).toFixed(2)})`);
     if (state.params.temp !== .5) fParts.push(`sepia(${AB(state.params.temp - .5) * .8}) hue-rotate(${(state.params.temp - .5) * -40}deg)`);
-    if (state.params.subjFx !== 'none') fParts.push(SUBJFX_FILTERS[state.params.subjFx]);
+    if (state.params.subjFx !== 'none') fParts.push(L.SUBJFX_FILTERS[state.params.subjFx]);
     if (fParts.length) flT(fParts.join(' '));
     if (state.params.blend !== 'none') c.globalCompositeOperation = state.params.blend;
     if (state.params.flip) { c.translate(2 * cx, 0); c.scale(-1, 1) }
@@ -8304,7 +8304,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         if (p.subjSat !== .5) fxParts.push(`saturate(${(p.subjSat * 2).toFixed(2)})`);
         if (p.subjBright !== .5) fxParts.push(`brightness(${(.7 + p.subjBright * .6).toFixed(2)})`);
         if (p.temp !== .5) fxParts.push(`sepia(${AB(p.temp - .5) * .8}) hue-rotate(${(p.temp - .5) * -40}deg)`);
-        if (p.subjFx !== 'none') fxParts.push(SUBJFX_FILTERS[p.subjFx]);
+        if (p.subjFx !== 'none') fxParts.push(L.SUBJFX_FILTERS[p.subjFx]);
         const fx = fxParts.join(' ');
         if (fx) flT(fx);
         if (p.blend !== 'none') ctx.globalCompositeOperation = p.blend;
