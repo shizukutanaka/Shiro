@@ -455,11 +455,11 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
 }
 
 const mkUI = (seed, opts = {}) => {
-  const h = { els: new Map(), calls: [], docListeners: {}, winListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null, timers: [], tt: 0, rs: 42, revokedUrls: 0 };
+  const h = { els: new Map(), calls: [], docListeners: {}, winListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null, timers: [], tt: 0, rs: 42, revokedUrls: 0, boom: false };
   const calls = h.calls;
   const fakeCtx = new Proxy({}, {
     get: (t2, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : k === 'getImageData' ? (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) :
-          k === 'createImageData' ? (w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) : k === 'createLinearGradient' || k === 'createRadialGradient' ? () => ({ addColorStop() {} }) : k === 'createPattern' ? () => ({}) : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return {} },
+          k === 'createImageData' ? (w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) : k === 'createLinearGradient' || k === 'createRadialGradient' ? () => ({ addColorStop() {} }) : k === 'createPattern' ? () => ({}) : (...a) => { if (h.boom) throw new Error('boom'); for (const v of a) if (typeof v === 'number') calls.push(v); return {} },
     set: () => true,
   });
   const mkEl = (tag = 'div') => {
@@ -533,7 +533,10 @@ const mkUI = (seed, opts = {}) => {
   ok(calls.every(Number.isFinite), 'frame coords finite');
   ok(calls.length < 700, `frame ctx-call budget ~165/frame (perf regression guard, n=${calls.length})`);
   { let d = 0; for (const c of calls) d = (d * 31 + (typeof c === 'number' ? Math.round(c * 1e4) : [...String(c)].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7))) % 4294967291;
-    ok(d === 2420624414, `render fingerprint stable (golden digest, update intentionally) got ${d}`) }
+    h.boom = true; let loopOk = false;
+  try { h.frames(2); h.boom = false; h.frames(1); loopOk = true } catch (e) {}
+  ok(loopOk && h.getEl('err').textContent.includes('描画エラー'), 'frame loop survives draw exception and reports once');
+  ok(d === 2420624414, `render fingerprint stable (golden digest, update intentionally) got ${d}`) }
   const L2 = sandbox2.ShiroLib;
   ok(typeof L2.drawMannequin === 'function' && typeof L2.defaultParams === 'function', 'lib evaluated in UI context');
   const ANIMS = L.ANIMS;

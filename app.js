@@ -8218,8 +8218,10 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     return _grainCv = cv
   }
 
-  const t0 = performance.now();
+  const t0 = performance.now(); let frameErr = null;
   function frame() {
+    requestAnimationFrame(frame);
+    try {
       const {gA, lnW, fT, tA, flT, FS, SS} = L.ctxH(ctx);
     const liveT = (performance.now() - t0) / 1000; const p = state.params;
 
@@ -8323,7 +8325,8 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       FS(`hsla(${RD(p.frameHue * 360)},45%,${p.frameHue < .08 ? 14 : 90}%,.96)`);
       ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.rect(0, 0, W, H); ctx.rect(b, b, W - 2 * b, H - 2 * b); ctx.fill('evenodd')
     }
-    L.drawWatermark(ctx, p.watermark, W, H, p.wmOpacity, p.wmPos); requestAnimationFrame(frame)
+    L.drawWatermark(ctx, p.watermark, W, H, p.wmOpacity, p.wmPos)
+    } catch (e) { if (frameErr !== e.message) { frameErr = e.message; err('描画エラー: ' + e.message) } }
   }
 
   const sDiv = $('sliders');
