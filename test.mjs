@@ -379,6 +379,9 @@ for (const fit of L.FITS) {
   const jsIds = new Set([...domCalls, ...tableIds].filter(id => !/^(sl-|out-)/.test(id)));
   const missing = [...jsIds].filter(id => !htmlIds.has(id));
   ok(missing.length === 0, `all referenced DOM ids exist in index.html${missing.length ? ': ' + missing.join(',') : ''}`);
+  const orphanFor = [...html.matchAll(/for="([^"]+)"/g)].map(m => m[1]).filter(id => !htmlIds.has(id));
+  const bareLbl = [...html.matchAll(/<label class="ctl"(?![^>]*for=)[^>]*>/g)];
+  ok(orphanFor.length === 0 && bareLbl.length === 0, `labels associated to real controls${orphanFor.length ? ' orphans:' + orphanFor.join(',') : ''}${bareLbl.length ? ' unassociated:' + bareLbl.length : ''}`);
   const pkeys = new Set(Object.keys(L.defaultParams()));
   const tablePairs = [...src.matchAll(/\['((?:sel|inp)-[a-z0-9-]+)',\s*'([a-zA-Z]+)'/g)].map(m => m[2]);
   const badKeys = tablePairs.filter(k => !pkeys.has(k));
