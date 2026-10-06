@@ -8125,6 +8125,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   const stage = $('stage'), ctx = stage.getContext('2d'); let W = stage.width, H = stage.height;
   const err = m => { $('err').textContent = m || '' };
 
+  const FKEY = 'shiro.favs.v1';
   const state = {
     params: L.defaultParams(),
     bg: null,
@@ -8466,7 +8467,6 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     } catch (e) { if (e.name !== 'AbortError') err('共有に失敗: ' + e.message) }
   });
 
-  const FKEY = 'shiro.favs.v1';
   function loadFavs() {
     try { return L.parseFavList(localStorage.getItem(FKEY) || '[]') }
     catch { return [] }
