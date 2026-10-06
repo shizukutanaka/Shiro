@@ -630,4 +630,5 @@ node test.mjs   # 5445 assertions
 - レンジループ語彙 `span`(包括)/`spt`(排他)を新設し `for (let i = a; i <= b; i++)` 形111箇所を機械変換 — break/return含む本体はスキップ、描画結果は同一
 - スタイル代入の残り621箇所(`c.`/`ctx.`のfillStyle/strokeStyle/lineWidth/globalAlpha/font/textAlign/lineCap/filter)を既存語彙+新 `flT` に変換、未注入スコープへ宣言を自動挿入(13関数) — 描画結果は同一
 - UI側も語彙化: `on(id,ev,key[,slice])` で定型リスナー17箇所、`mk` で `document.createElement` 16箇所、残りの `for (const s of [-1,1])` 8箇所を `mir` へ — 描画・挙動は同一
+- 行コメント全除去(2,459件・約60KB実バイト)+行末空白・`;}`・`0.`の微細削減 — 最大の容量削減、コメントはgit履歴に残存。挙動は完全に同一
 - 外部キー/ネットワーク/トラッキングなし。画像・動画・お気に入りは全てローカルに留まる
