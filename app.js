@@ -8109,7 +8109,7 @@ const ShiroLib = (() => {
     defaultParams, clampParams, randomParams, drawBubble,
     serializePreset, parsePreset, parseFavList,
     keyAlpha, erodeAlpha, despill, blinkOpen, drawParticles, contactShadow, drawCastShadow, drawRimLight, drawStickerOutline, drawVignette, drawWatermark, drawReflection, drawGlow, mannequinPose, skeleton, drawMannequin, drawAccessory, drawBackdrop, shined,
-    pickMime, ctxH,
+    BLENDS, WMPOS, VIDQS, pickMime, ctxH,
   }
 })();
 if (typeof globalThis !== 'undefined') globalThis.ShiroLib = ShiroLib;
@@ -8336,9 +8336,6 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     inp.addEventListener('dblclick', () => { state.params[key] = L.defaultParams()[key]; syncUI(false) });
     sDiv.appendChild(lab); sDiv.appendChild(inp)
   }
-  const OPTKEYS = { 'sel-anim': L.ANIMS, 'sel-acc': L.ACCS, 'sel-eyes': L.EYES, 'sel-hair': L.HAIRS, 'sel-bgpreset': L.BGS, 'sel-particles': L.PARTICLES, 'sel-fx': ['none', ...Object.keys(L.SUBJFX_FILTERS)], 'sel-grade': ['none', ...Object.keys(L.GRADE_STYLES)], 'sel-bgfit': L.FITS };
-  for (const [id, list] of Object.entries(JSON.parse($('OPTS').textContent))) { const ks = OPTKEYS[id]; let h = ''; if (ks) for (let i = 0; i < list.length; i++) h += `<option value="${ks[i]}">${list[i]}</option>`; else for (let i = 0; i < list.length; i += 2) h += `<option value="${list[i]}">${list[i + 1]}</option>`; $(id).innerHTML = h }
-  $('sel-acc2').innerHTML = $('sel-acc').innerHTML;
   function syncUI(fromParams = true) {
     touch();
     for (const [key] of L.SLIDERS) {
@@ -8555,6 +8552,9 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   });
 
   const ASPECTS = { '16:9': [1280, 720], '1:1': [960, 960], '9:16': [720, 1280] };
+  const OPTKEYS = { 'sel-anim': L.ANIMS, 'sel-acc': L.ACCS, 'sel-eyes': L.EYES, 'sel-hair': L.HAIRS, 'sel-bgpreset': L.BGS, 'sel-particles': L.PARTICLES, 'sel-fx': ['none', ...Object.keys(L.SUBJFX_FILTERS)], 'sel-grade': ['none', ...Object.keys(L.GRADE_STYLES)], 'sel-bgfit': L.FITS, 'sel-blend': L.BLENDS, 'sel-wmpos': L.WMPOS, 'sel-vidq': L.VIDQS, 'sel-place': ['', ...Object.keys(PLACES)], 'sel-face': ['', ...Object.keys(FACES)], 'sel-aspect': Object.keys(ASPECTS) };
+  for (const [id, list] of Object.entries(JSON.parse($('OPTS').textContent))) { const ks = OPTKEYS[id]; $(id).innerHTML = list.map((l, i) => `<option value="${ks[i]}">${l}</option>`).join('') }
+  $('sel-acc2').innerHTML = $('sel-acc').innerHTML;
   function applyAspect(v) {
     const [w, h] = ASPECTS[v] || ASPECTS['16:9']; stage.width = w; stage.height = h; W = w; H = h
   }
