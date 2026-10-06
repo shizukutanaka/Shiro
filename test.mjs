@@ -448,7 +448,7 @@ const keysOf = n => { const i = src.indexOf('const ' + n + ' = {'); const j = sr
 }
 
 const mkUI = (seed, opts = {}) => {
-  const h = { els: new Map(), calls: [], docListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null, timers: [] };
+  const h = { els: new Map(), calls: [], docListeners: {}, createdUrls: 0, store: new Map(Object.entries(seed || {})), raf: null, timers: [], tt: 0, rs: 42 };
   const calls = h.calls;
   const fakeCtx = new Proxy({}, {
     get: (t2, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : k === 'getImageData' ? (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) :
@@ -489,7 +489,7 @@ const mkUI = (seed, opts = {}) => {
     localStorage: { getItem: k => h.store.has(k) ? h.store.get(k) : null, setItem: (k, v) => h.store.set(k, String(v)), removeItem: k => h.store.delete(k) },
     matchMedia: q => ({ matches: !!(opts.rm && /reduced-motion/.test(q)), addEventListener() {} }),
     requestAnimationFrame: cb => { h.raf = cb; return 1 }, cancelAnimationFrame() {},
-    performance,
+    performance: { now: () => (h.tt = (h.tt || 0) + 16.667) },
     setTimeout: (f, ms) => { const x = { f, ms, iv: false }; h.timers.push(x); return x },
     clearTimeout: x => { const i = h.timers.indexOf(x); if (i >= 0) h.timers.splice(i, 1) },
     setInterval: (f, ms) => { const x = { f, ms, iv: true }; h.timers.push(x); return x },
@@ -504,6 +504,7 @@ const mkUI = (seed, opts = {}) => {
     File: class { constructor(p, n, o) { this.name = n; this.type = o && o.type } },
     FileReader: class { readAsDataURL() { setTimeout(() => this.onload && this.onload({ target: { result: 'data:,' } }), 0) } },
     MediaRecorder: class { static isTypeSupported() { return true } start() {} stop() { if (this.onstop) this.onstop() } requestData() {} },
+    Math: Object.assign(Object.create(Math), { random: () => { h.rs = ((h.rs || 0) * 1103515245 + 12345) % 2147483648; return h.rs / 2147483648 } }),
     Uint8ClampedArray, Uint8Array, Promise,
   };
   vm.createContext(sandbox2);
@@ -524,6 +525,8 @@ const mkUI = (seed, opts = {}) => {
   ok(calls.length > 100, `frame emits canvas geometry (n=${calls.length})`);
   ok(calls.every(Number.isFinite), 'frame coords finite');
   ok(calls.length < 700, `frame ctx-call budget ~165/frame (perf regression guard, n=${calls.length})`);
+  { let d = 0; for (const c of calls) d = (d * 31 + (typeof c === 'number' ? Math.round(c * 1e4) : [...String(c)].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7))) % 4294967291;
+    ok(d === 2420624414, `render fingerprint stable (golden digest, update intentionally) got ${d}`) }
   const L2 = sandbox2.ShiroLib;
   ok(typeof L2.drawMannequin === 'function' && typeof L2.defaultParams === 'function', 'lib evaluated in UI context');
   const ANIMS = L.ANIMS;
