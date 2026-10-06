@@ -568,7 +568,11 @@ const mkUI = (seed, opts = {}) => {
     const selPlace = getEl('sel-place'); selPlace.value = 'tc'; selPlace.fire('change');
     const selFace = getEl('sel-face'); selFace.value = 'happy'; selFace.fire('change');
     const selAspect = getEl('sel-aspect'); selAspect.value = '9:16'; selAspect.fire('change');
+    const scale0 = getEl('out-scale').textContent;
     getEl('stage').fire('wheel', { deltaY: 120, preventDefault() {} });
+    const scale1 = getEl('out-scale').textContent;
+    getEl('stage').fire('wheel', { deltaY: -500, ctrlKey: true, preventDefault() {} });
+    ok(scale1 !== scale0 && getEl('out-scale').textContent === scale1, 'wheel zooms scale, ctrl+wheel passes to browser zoom');
     getEl('btn-model-reset').click(); getEl('btn-bg-reset').click();
     getEl('btn-png').click(); getEl('btn-png-copy').click(); var copyErr = getEl('err').textContent;
     getEl('btn-rec').click(); getEl('btn-rec').click();
