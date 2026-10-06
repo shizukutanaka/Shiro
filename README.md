@@ -649,3 +649,4 @@ node test.mjs   # 5445 assertions
 - **r240**: ロバスト面の網羅 — clampParams/parsePresetに600件の破損入力ファズ（NaN/無限/非数/ゴミ型）を投げて常に安全な形へ矯正されるか検査、NUM_KEYS網羅性（clamp出力がdefaultParams全キーを保持＝追加し忘れでparams消失しない）、randomParamsの決定性契約。
 - **r241**: ブラウザ互換監査 — `captureStream`/`MediaRecorder`の機能検査を追加（未対応ブラウザでbtn-recがTypeErrorで死んでいた → 他ボタン同様に「未対応」表示）。使用Canvas APIは全てレガシー互換で他に検査要は0件。
 - **r242**: 特殊経路網羅 — 全PLACES(9)/FACES(7)プリセット適用ループ、wmPos/particles変更後frame、prefers-reduced-motionブート（アニメがstillになる経路）。mkUIにreduced-motionオプション追加。
+- **r243**: index.htmlのoptionマークアップをJSONデータ化 — 602個の`<option>`（個々約25Bの純枠）を`<script type="application/json" id="OPTS">`+起動時生成へ変換。**index.html 39.5KB→24.7KB(-14.8KB)**。option整合ガードはOPT jsonを真値源として再構成。
