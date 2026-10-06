@@ -658,3 +658,4 @@ node test.mjs   # 5445 assertions
 - **r249**: 全selectのZIP統一 — 残り6 select(blend/wmpos/vidq/place/face/aspect)もキーを真値源から派生（BLENDS/WMPOS/VIDQSをexport、PLACES/FACES/ASPECTSはUI内const）。OPTSは全select「ラベルのみ」の均一形式へ、生成ループも単一経路に簡素化。index.html 18.0→17.8KB（累計-63%）。
 - **r250**: フォームのアクセシビリティ — 全19個の`.ctl`ラベルに`for`関連付けを追加（ラベルクリックでコントロールへフォーカス、スクリーンリーダーが名前を読み上げ可能に）。ガード: 全for属性が実在idを指す＋関連付けなしctlラベル0件を静的検証。
 - **r251**: ピンチズームの阻害を修復 — stageのwheelハンドラが無条件preventDefaultでctrl+wheel(ブラウザ標準ズーム/トラックパッドのピンチ)を奪っていた。ctrlKey時は素通しに変更、通常wheelのスケール調整は維持。テストで両経路を検証。
+- **r252**: canvas/errのa11y属性 — `role="img" aria-label` でキャンバスに代替テキスト相当を付与、エラー領域を `role="status" aria-live="polite"` のライブリージョン化（スクリーンリーダーがエラー表示を自動通知）。キーボード配線はinput/select除外済みを確認。
