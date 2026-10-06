@@ -365,5 +365,99 @@ for (const fit of L.FITS) {
   }
   ok(bad.length === 0, `no scope-level undeclared refs${bad.length ? ': ' + [...new Set(bad)].join(',') : ''}`);
 }
+
+// UI IIFE網羅: DOMスタブでUI層全体を起動 — frame/syncUI/配線/お気に入り/セッション復元の実行面を網羅(frame内の参照クラッシュ全般を捕捉)
+{
+  const els = new Map();
+  const calls = [];
+  const fakeCtx = new Proxy({}, {
+    get: (t2, k) => k === 'canvas' ? {} : k === 'measureText' ? () => ({ width: 120 }) : k === 'getImageData' ? (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }) : k === 'createLinearGradient' || k === 'createRadialGradient' ? () => ({ addColorStop() {} }) : k === 'createPattern' ? () => ({}) : (...a) => { for (const v of a) if (typeof v === 'number') calls.push(v); return {} },
+    set: () => true,
+  });
+  const mkEl = (tag = 'div') => {
+    const el = {
+      tagName: tag.toUpperCase(), id: '', value: '', checked: false, textContent: '', innerHTML: '', src: '', href: '', download: '', className: '', type: '', min: 0, max: 1, step: .01, htmlFor: '', draggable: false,
+      style: {}, dataset: {}, files: [], children: [], listeners: {}, _q: {},
+      classList: { _s: new Set(), toggle(c, v) { v ? this._s.add(c) : this._s.delete(c) }, contains(c) { return this._s.has(c) }, add(c) { this._s.add(c) }, remove(c) { this._s.delete(c) } },
+      addEventListener(ev, f) { (this.listeners[ev] ||= []).push(f) },
+      removeEventListener() {}, setPointerCapture() {}, releasePointerCapture() {},
+      appendChild(c) { this.children.push(c); return c }, prepend(c) { this.children.unshift(c); return c }, remove() {},
+      click() { (this.listeners.click || []).forEach(f => f({ target: el })) },
+      fire(ev, e = {}) { e.target = e.target || el; (this.listeners[ev] || []).forEach(f => f(e)) },
+      querySelector(s) { return this._q[s] ||= mkEl('span') },
+      querySelectorAll() { return [] },
+      getContext: () => fakeCtx,
+      getBoundingClientRect: () => ({ left: 0, top: 0, width: 640, height: 360, right: 640, bottom: 360 }),
+      toBlob(cb) { cb({ size: 1 }) }, toDataURL: () => 'data:,', captureStream: () => ({}),
+      width: 640, height: 360, naturalWidth: 400, naturalHeight: 300, videoWidth: 400, videoHeight: 300,
+      muted: false, loop: false, playsInline: false, paused: true, currentTime: 0,
+      play: () => Promise.resolve(), pause() {}, focus() {}, blur() {},
+      setAttribute() {}, getAttribute: () => null, setPointerCapture() {},
+    };
+    return el;
+  };
+  const getEl = id => { if (!els.has(id)) els.set(id, mkEl()); return els.get(id) };
+  const docListeners = {};
+  const store = new Map();
+  let raf = null;
+  const documentStub = {
+    getElementById: getEl, createElement: t2 => mkEl(t2),
+    addEventListener(ev, f) { (docListeners[ev] ||= []).push(f) },
+    body: mkEl('body'), documentElement: mkEl('html'), hidden: false,
+  };
+  const sandbox2 = {
+    console, document: documentStub,
+    localStorage: { getItem: k => store.has(k) ? store.get(k) : null, setItem: (k, v) => store.set(k, String(v)), removeItem: k => store.delete(k) },
+    matchMedia: () => ({ matches: false, addEventListener() {} }),
+    requestAnimationFrame: cb => { raf = cb; return 1 }, cancelAnimationFrame() {},
+    performance, setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask,
+    prompt: (m, d) => d || 'fav1', alert() {}, confirm: () => true,
+    URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} },
+    navigator: {}, window: {}, location: { href: '', hash: '' }, history: { replaceState() {} },
+    Image: class { set src(v) { this._src = v; if (this.onload) setTimeout(() => this.onload(), 0) } },
+    ImageData: class { constructor(w, h) { this.width = w; this.height = h; this.data = new Uint8ClampedArray(w * h * 4) } },
+    Blob: class { constructor(parts, opts) { this.parts = parts; this.type = opts && opts.type } },
+    File: class { constructor(p, n, o) { this.name = n; this.type = o && o.type } },
+    FileReader: class { readAsDataURL() { setTimeout(() => this.onload && this.onload({ target: { result: 'data:,' } }), 0) } },
+    MediaRecorder: class { static isTypeSupported() { return true } start() {} stop() {} requestData() {} },
+    Uint8ClampedArray, Uint8Array, Promise,
+  };
+  vm.createContext(sandbox2);
+  let initErr = null;
+  try { vm.runInContext(src, sandbox2) } catch (e) { initErr = e }
+  ok(!initErr, `UI init completes${initErr ? ': ' + initErr.message : ''}`);
+  ok(!!raf, 'frame scheduled via requestAnimationFrame');
+  let frameErr = null, frameRan = false;
+  try { for (let i = 0; i < 3; i++) { const cb = raf; raf = null; if (!cb) break; cb(performance.now()); frameRan = true } } catch (e) { frameErr = e }
+  ok(frameRan && !frameErr, `frame() runs 3x without crash${frameErr ? ': ' + frameErr.message : ''}`);
+  ok(calls.length > 100, `frame emits canvas geometry (n=${calls.length})`);
+  ok(calls.every(Number.isFinite), 'frame coords finite');
+  const L2 = sandbox2.ShiroLib;
+  ok(typeof L2.drawMannequin === 'function' && typeof L2.defaultParams === 'function', 'lib evaluated in UI context');
+  const ANIMS = L.ANIMS;
+  ok(ANIMS.includes(getEl('sel-anim').value), 'syncUI set sel-anim to valid anim');
+  ok(getEl('sl-height') && getEl('sl-height').value !== '' , 'syncUI set slider values');
+  ok(getEl('out-height').textContent !== '', 'syncUI wrote slider readouts');
+  const selAnim = getEl('sel-anim'); selAnim.value = ANIMS[5];
+  selAnim.fire('change');
+  ok(getEl('sel-anim').value === ANIMS[5], 'anim change wiring round-trips to UI');
+  let evErr = null;
+  try {
+    (docListeners.keydown || []).forEach(f => f({ key: 'r', target: documentStub.body, preventDefault() {} }));
+    (docListeners.keydown || []).forEach(f => f({ key: 'ArrowRight', target: documentStub.body, preventDefault() {} }));
+    const stage = getEl('stage');
+    stage.fire('pointerdown', { pointerId: 1, clientX: 320, clientY: 180, preventDefault() {} });
+    stage.fire('pointermove', { pointerId: 1, clientX: 400, clientY: 200, preventDefault() {} });
+    stage.fire('pointerup', {});
+    getEl('chk-freeze').fire('change');
+    getEl('chk-freeze').fire('change');
+    getEl('btn-fav').click();
+  } catch (e) { evErr = e }
+  ok(!evErr, `UI events (keydown/pointer/freeze/fav) fire without crash${evErr ? ': ' + evErr.message : ''}`);
+  const favJson = store.get('shiro-favs') || store.get('shiroFavs') || [...store.keys()].map(k => [k, store.get(k)]).filter(([k]) => /fav/i.test(k))[0]?.[1];
+  ok(favJson && JSON.parse(favJson).length >= 1, 'fav click persisted to localStorage');
+  ok(calls.every(Number.isFinite), 'coords still finite after events');
+}
+
 console.log(`${pass} pass / ${fail} fail`);
 process.exit(fail ? 1 : 0);
