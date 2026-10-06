@@ -1209,6 +1209,7 @@ const ShiroLib = (() => {
 
   // ctx に (cx, baseY) を足元・高さ hPix で描画。q は mannequinPose の結果。
   function drawMannequin(ctx, p, t, cx, baseY, hPix) {
+      const mir=f=>[-1,1].forEach(f);
       const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i); }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i); };
       const plF=(...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]); }); fL(); }, plS=(...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]); }); sK(); };
       const lC=v=>ctx.lineCap = v, FS=v=>ctx.fillStyle = v, SS=v=>ctx.strokeStyle = v, lnW=v=>ctx.lineWidth = v;
@@ -1255,9 +1256,9 @@ const ShiroLib = (() => {
     if (hs === 'long' || hs === 'twin' || hs === 'bob') {
       // 後ろ髪: 頭の背面へ垂れる髪を顔より先に描く
       FS(hairC); ell(hx,hy + hr * .5,hr * 1.22,hr * (hs === 'long' ? 1.55 : hs === 'bob' ? .95 : .75),0);
-      if (hs === 'twin') for (const s of [-1, 1]) {
+      if (hs === 'twin') mir(s => {
         ell(hx + s * hr * 1.18,hy + hr * .75,hr * .3,hr * .8,s * .4);
-      }
+      })
     }
     FS(col);
     if (lw > 0) { SS('rgba(40,44,54,0.85)'); lnW(lw); }
@@ -1293,9 +1294,9 @@ const ShiroLib = (() => {
     if (hs === 'odango') {
       // お団子: 頭頂両サイドの丸いお団子
       FS(hairC);
-      for (const s of [-1, 1]) {
+      mir(s => {
         dot(hx + s * hr * .8,hy - hr * .85,hr * .34);
-      }
+      })
     }
     if (hs === 'ahoge') {
       // アホ毛: 頭頂から一本だけ跳ねた毛束
@@ -1314,7 +1315,7 @@ const ShiroLib = (() => {
     const eo = MX(.12, blinkOpen(t, p.seed));
     const eyeCol = `hsla(${RD(p.eyeHue * 360)},65%,42%,0.9)`;
     const es = p.eyeStyle || 'dot'; const esz = .6 + p.eyeSize * .8; // 目の大きさスケール(0.6-1.4)
-    for (const s of [-1, 1]) {
+    mir(s => {
       const ex = hx + s * hr * (.26 + .24 * (p.eyeGap == null ? .5 : p.eyeGap)), ey = hy - hr * .08;
       if (es === 'closed' || (es === 'wink' && s === 1)) {
         SS('rgba(60,64,74,0.85)'); lnW(MX(1, hr * .08 * esz)); bP(); aR(ex, ey, hr * .13 * esz, .15 * PI, .85 * PI); sK();
@@ -1359,21 +1360,21 @@ const ShiroLib = (() => {
           dot(gx - hr * .03 * esz,ey - hr * .035 * esz * eo,MX(.6, hr * .028 * esz));
         }
       }
-    }
+    })
     // 眉毛: brow<.5 で垂れ眉(困り) / >.5 で内側が下がるきりっと眉
     const bt = (p.brow - .5) * hr * .3;
     if (AB(bt) > hr * .02) {
       SS('rgba(60,64,74,0.8)'); lnW(MX(1, hr * .07));
-      for (const s of [-1, 1]) {
+      mir(s => {
         const by = hy - hr * .36; plS([hx + s * hr * .18, by + bt],[hx + s * hr * .56, by - bt * .3]);
-      }
+      })
     }
     // 頬の赤み
     if (p.blush > .02) {
       FS(`rgba(255,120,140,${p.blush * .4})`);
-      for (const s of [-1, 1]) {
+      mir(s => {
         ell(hx + s * hr * .55,hy + hr * .18,hr * .16,hr * .09,0);
-      }
+      })
     }
     // mouth: smile .5=直線、>で笑顔・<でしかめ面
     const mw = hr * .32, my = hy + hr * .38, curv = (p.smile - .5) * hr * .8;
@@ -3733,6 +3734,8 @@ if (typeof document !== 'undefined') (() => {
 const K0='#4a3828', K1='rgba(250,252,255,0.8)';
   const L = ShiroLib;
   const $ = id => document.getElementById(id);
+  const on = (id, ev, k, n) => $(id).addEventListener(ev, e => { let v = n ? e.target.value.slice(0, n) : k === 'flip' ? e.target.checked : e.target.value; state.params[k] = v; touch(); });
+  const mk = t => document.createElement(t);
   const stage = $('stage'), ctx = stage.getContext('2d'); let W = stage.width, H = stage.height;
   const err = m => { $('err').textContent = m || ''; };
 
@@ -3765,6 +3768,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
   // 背景グレーディング: 被写体を際立たせるため背景をぼかし・減光する(合成定番)
   // 画像なし時はプリセット背景: gradient=内蔵/green=グリーンスクリーン/white=白/transparent=透過PNG用
   function drawBackdrop(c, p, t) {
+      const mir=f=>[-1,1].forEach(f);
       const flT=v=>c.filter = v, lC=v=>c.lineCap = v;
       const span = (a, b, f) => { for (let i = a; i <= b; i++) f(i); }, spt = (a, b, f) => { for (let i = a; i < b; i++) f(i); };
       const plS=(...p) => { bP(); mT(p[0][0], p[0][1]); spt(1, p.length, i => { const a = p[i]; if (a.length === 2) lT(a[0], a[1]); else if (a.length === 4) qT(a[0], a[1], a[2], a[3]); else bZ(a[0], a[1], a[2], a[3], a[4], a[5]); }); sK(); };
@@ -4251,14 +4255,14 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
       // ペトラ: 薔薇色の岩壁の間に立つエル・ハズネの彫刻ファサード
       sky([[0,'#e8b890'],[.5,'#c08868'],[1,'#8a5a44']]);
       // シーク(両側の切り立つ岩壁)
-      for (const s of [-1, 1]) {
+      mir(s => {
         FS(s < 0 ? '#9a6a50' : '#8a5a44'); bP(); const edge = s < 0 ? 0 : W; const inner = s < 0 ? .28 : .72; mT(edge, 0); qT(W * inner - s * W * .02, H * .3, W * inner, H); lT(edge, H); cP(); cP(); fL();
         // 岩の縞(地層の曲線)
         SS('rgba(120,70,50,0.5)'); lnW(H * .008);
         span(1, 4, i => {
           plS([edge, H * i * .18],[W * inner * .6, H * (i * .18 + .04), W * inner, H * i * .16]);
         })
-      }
+      })
       // エル・ハズネのファサード(中央の彫刻神殿)
       const tx = W * .5, ty = H * .12, tw = W * .2, th = H * .7;
       // 本体(岩と同化する砂岩)
@@ -5779,14 +5783,14 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
       sky([[0,'#e0d8b0'],[.45,'#a8b878'],[1,'#305848']]);
       // 奥の椰子並木(左右)
       scat(441, 7, (rng, i) => {
-        for (const s of [-1, 1]) {
+        mir(s => {
           const px = W * .5 + s * W * (.12 + i * .06); const py = H * .6 - i * H * .015; const ps = 1 - i * .09; SS('#4a3a28'); lnW(3 * ps); plS([px, py],[px + s * W * .015, py - H * .1 * ps, px + s * W * .025, py - H * .16 * ps]);
           // 葉
           SS('#2a5838'); lnW(2 * ps);
           span(-2, 2, f => {
             plS([px + s * W * .025, py - H * .16 * ps],[px + s * W * (.025 + f * .02 * ps), py - H * (.16 + .04 * ps), px + s * W * (.025 + f * .04 * ps), py - H * (.12 * ps)]);
           })
-        }
+        })
       });
       // 水路
       FS('#3a5850'); poly([W * .3,H],[W * .44,H * .6],[W * .56,H * .6],[W * .7,H]);
@@ -5828,12 +5832,12 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
       // 聖水溜りと映り込み
       FS('#305060'); bnd(.78); FS('rgba(176,96,64,0.35)'); ellP(gx, H * .86, W * .16, H * .07);
       // 両脇の椰子
-      for (const s of [-1, 1]) {
+      mir(s => {
         const px = gx + s * W * .35; SS('#4a3a28'); lnW(5); plS([px, H * .78],[px + s * W * .02, H * .6, px + s * W * .04, H * .48]); SS('#2a5030'); lnW(3);
         span(-2, 2, f => {
           plS([px + s * W * .04, H * .48],[px + s * W * (.04 + f * .02), H * .42, px + s * W * (.04 + f * .045), H * .46]);
         })
-      }
+      })
       // 灯籠の点々
       FS('#f0c040');
       times(5, i => {
@@ -8228,7 +8232,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
   }
 
   // ---------- silhouettes for cast shadows ----------
-  const shCv = document.createElement('canvas'), shCtx = shCv.getContext('2d'); const modCv = document.createElement('canvas'), mctx = modCv.getContext('2d'); const rimCv = document.createElement('canvas'), rimCtx = rimCv.getContext('2d'); const outCv = document.createElement('canvas'), outCtx = outCv.getContext('2d'); const pixCv = document.createElement('canvas'), pctx = pixCv.getContext('2d'); const glowCv = document.createElement('canvas'), glowCtx = glowCv.getContext('2d');
+  const shCv = mk('canvas'), shCtx = shCv.getContext('2d'); const modCv = mk('canvas'), mctx = modCv.getContext('2d'); const rimCv = mk('canvas'), rimCtx = rimCv.getContext('2d'); const outCv = mk('canvas'), outCtx = outCv.getContext('2d'); const pixCv = mk('canvas'), pctx = pixCv.getContext('2d'); const glowCv = mk('canvas'), glowCtx = glowCv.getContext('2d');
   // cacheable=true で (src,サイズ,色) 不変なら再描画をスキップ — 静止画の3回シルエット生成を1回に
   function silhouetteOf(src, w, h, color, cv, cctx, cacheable) {
     cv = cv || shCv; cctx = cctx || shCtx; const col = color || '#0a0a0e';
@@ -8242,7 +8246,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
   }
 
   // ---------- chroma-keyed media ----------
-  const keyCv = document.createElement('canvas'), kctx = keyCv.getContext('2d', { willReadFrequently: true });
+  const keyCv = mk('canvas'), kctx = keyCv.getContext('2d', { willReadFrequently: true });
   function keyedMediaCanvas() {
     const el = state.media.el; const iw = el.naturalWidth || el.videoWidth, ih = el.naturalHeight || el.videoHeight;
     if (!iw || !ih || el.readyState < 2) return null;
@@ -8261,7 +8265,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
     if (state.media.kind === 'image') state.keyParams = cacheKey;
     return keyCv;
   }
-  const shnCv = document.createElement('canvas'), snc = shnCv.getContext('2d');
+  const shnCv = mk('canvas'), snc = shnCv.getContext('2d');
   function drawMedia(c, t) {
       const gA=v=>c.globalAlpha = v, flT=v=>c.filter = v;
     const el = state.media.el; const iw = el.naturalWidth || el.videoWidth, ih = el.naturalHeight || el.videoHeight;
@@ -8299,7 +8303,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
   let _grainCv = null;
   function grainCv() {
     if (_grainCv) return _grainCv;
-    const cv = document.createElement('canvas'); cv.width = cv.height = 128; const x = cv.getContext('2d'), im = x.createImageData(128, 128), d = im.data; const rng = L.mulberry32(12345);
+    const cv = mk('canvas'); cv.width = cv.height = 128; const x = cv.getContext('2d'), im = x.createImageData(128, 128), d = im.data; const rng = L.mulberry32(12345);
     for (let i = 0; i < d.length; i += 4) {
       const v = 110 + rng() * 90; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
     }
@@ -8419,9 +8423,9 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
   // ---------- controls ----------
   const sDiv = $('sliders');
   for (const [key, label] of L.SLIDERS) {
-    const lab = document.createElement('label'); lab.className = 'ctl'; lab.htmlFor = 'sl-' + key;
+    const lab = mk('label'); lab.className = 'ctl'; lab.htmlFor = 'sl-' + key;
     lab.innerHTML = `${label}<output id="out-${key}"></output>`;
-    const inp = document.createElement('input'); inp.type = 'range'; inp.min = 0; inp.max = 1; inp.step = .01; inp.id = 'sl-' + key;
+    const inp = mk('input'); inp.type = 'range'; inp.min = 0; inp.max = 1; inp.step = .01; inp.id = 'sl-' + key;
     inp.addEventListener('input', () => { state.params[key] = +inp.value; syncUI(false); });
     // ダブルクリックでその項目だけ初期値に戻す(キャラクリ系UIの定番)
     inp.addEventListener('dblclick', () => { state.params[key] = L.defaultParams()[key]; syncUI(false); });
@@ -8439,24 +8443,24 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
       $('inp-watermark').value = state.params.watermark; $('inp-bubble').value = state.params.bubble; $('inp-title').value = state.params.title;
     }
   }
-  $('sel-anim').addEventListener('change', e => { state.params.anim = e.target.value; touch(); });
-  $('sel-acc').addEventListener('change', e => { state.params.acc = e.target.value; touch(); });
-  $('sel-acc2').addEventListener('change', e => { state.params.acc2 = e.target.value; touch(); });
-  $('sel-eyes').addEventListener('change', e => { state.params.eyeStyle = e.target.value; touch(); });
-  $('sel-fx').addEventListener('change', e => { state.params.subjFx = e.target.value; touch(); });
-  $('sel-grade').addEventListener('change', e => { state.params.grade = e.target.value; touch(); });
-  $('sel-blend').addEventListener('change', e => { state.params.blend = e.target.value; touch(); });
-  $('sel-bgfit').addEventListener('change', e => { state.params.bgFit = e.target.value; touch(); });
-  $('sel-bgpreset').addEventListener('change', e => { state.params.bgPreset = e.target.value; touch(); });
-  $('sel-particles').addEventListener('change', e => { state.params.particles = e.target.value; touch(); });
-  $('sel-wmpos').addEventListener('change', e => { state.params.wmPos = e.target.value; touch(); });
-  $('sel-hair').addEventListener('change', e => { state.params.hair = e.target.value; touch(); });
-  $('sel-vidq').addEventListener('change', e => { state.params.vidQ = e.target.value; touch(); });
-  $('chk-flip').addEventListener('change', e => { state.params.flip = e.target.checked; touch(); });
+  on('sel-anim', 'change', 'anim');
+  on('sel-acc', 'change', 'acc');
+  on('sel-acc2', 'change', 'acc2');
+  on('sel-eyes', 'change', 'eyeStyle');
+  on('sel-fx', 'change', 'subjFx');
+  on('sel-grade', 'change', 'grade');
+  on('sel-blend', 'change', 'blend');
+  on('sel-bgfit', 'change', 'bgFit');
+  on('sel-bgpreset', 'change', 'bgPreset');
+  on('sel-particles', 'change', 'particles');
+  on('sel-wmpos', 'change', 'wmPos');
+  on('sel-hair', 'change', 'hair');
+  on('sel-vidq', 'change', 'vidQ');
+  on('chk-flip', 'change', 'flip');
   $('chk-guides').addEventListener('change', e => $('guides').classList.toggle('on', e.target.checked));
-  $('inp-watermark').addEventListener('input', e => { state.params.watermark = e.target.value.slice(0, 60); touch(); });
-  $('inp-bubble').addEventListener('input', e => { state.params.bubble = e.target.value.slice(0, 24); touch(); });
-  $('inp-title').addEventListener('input', e => { state.params.title = e.target.value.slice(0, 40); touch(); });
+  on('inp-watermark', 'input', 'watermark', 60);
+  on('inp-bubble', 'input', 'bubble', 24);
+  on('inp-title', 'input', 'title', 40);
   // 配置プリセット: モデルを9アンカーへ一発移動
   const PLACES = {
     tl: [.2, .62], tc: [.5, .62], tr: [.8, .62],
@@ -8501,7 +8505,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
   $('bg-file').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
     if (f.type.startsWith('video/')) {
-      const v = document.createElement('video'); v.muted = true; v.loop = true; v.playsInline = true; v.src = readURL(f);
+      const v = mk('video'); v.muted = true; v.loop = true; v.playsInline = true; v.src = readURL(f);
       v.onloadeddata = () => { v.play().catch(() => {}); state.bg = v; err(''); };
       v.onerror = () => err('背景動画を読み込めませんでした(mp4/webm/mov 等を確認)');
     } else {
@@ -8515,7 +8519,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
   $('model-file').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
     if (f.type.startsWith('video/')) {
-      const v = document.createElement('video'); v.muted = true; v.loop = true; v.playsInline = true; v.src = readURL(f);
+      const v = mk('video'); v.muted = true; v.loop = true; v.playsInline = true; v.src = readURL(f);
       v.onloadeddata = () => { v.play().catch(() => {}); state.media = { kind: 'video', el: v }; state.keyParams = ''; err(''); };
       v.onerror = () => err('動画を読み込めませんでした(mp4/webm/mov 等を確認)');
     } else if (f.type.startsWith('image/')) {
@@ -8531,7 +8535,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
 
   // ---------- export ----------
   function download(blob, name) {
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    const a = mk('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
   $('btn-png').addEventListener('click', () =>
@@ -8582,7 +8586,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
   function renderFavs() {
     const bar = $('fav-bar'); bar.innerHTML = '';
     for (const f of state.favs) {
-      const d = document.createElement('div'); d.className = 'fav'; d.title = f.name; d.draggable = true;
+      const d = mk('div'); d.className = 'fav'; d.title = f.name; d.draggable = true;
       d.innerHTML = `<img alt=""><span></span><button class="del" title="削除">×</button>`;
       d.querySelector('img').src = f.thumb || ''; d.querySelector('span').textContent = f.name;
       d.addEventListener('click', () => { state.params = L.clampParams(f.params); syncUI(); });
@@ -8609,7 +8613,7 @@ const K0='#4a3828', K1='rgba(250,252,255,0.8)';
     }
   }
   function thumb() {
-    const c = document.createElement('canvas'); c.width = 110; c.height = 62; c.getContext('2d').drawImage(stage, 0, 0, 110, 62);
+    const c = mk('canvas'); c.width = 110; c.height = 62; c.getContext('2d').drawImage(stage, 0, 0, 110, 62);
     return c.toDataURL('image/jpeg', .7);
   }
   $('btn-fav').addEventListener('click', () => {
