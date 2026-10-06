@@ -664,3 +664,4 @@ node test.mjs   # 5445 assertions
 - **r255**: タッチ操作の修復 — `#stage`に`touch-action:none`（ブラウザがタッチポインタをスクロール解釈に奪うのを防止→ドラッグ成立）＋`user-select:none`。
 - **r256**: お気に入りのキーボードa11y — fav項目を`tabindex`/`role="button"`化し Enter/Space=適用、Delete/Backspace=削除、Shift+矢印=並替に対応（これまでマウス/ドラッグのみだった）
 - **r257**: フォーカス可視性 — `:focus-visible`にアクセント色outline、fav項目のfocusはborderハイライト（キーボードフォーカス位置が視認可能に）
+- **r258**: BlobURLリーク修復 — ファイル読込（モデル/背景）のcreateObjectURLを追跡し、差替え・リセット・読込失敗時に`takeURL()`/`revokeObjectURL`で解放（これまでロードごとに蓄積リーク）
