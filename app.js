@@ -8535,7 +8535,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     if (!dragging) return;
     const [nx, ny] = stageXY(e); state.params.x = L.clamp01(nx); state.params.y = L.clamp01(ny); syncUI()
   });
-  stage.addEventListener('pointerup', () => dragging = false);
+  stage.addEventListener('pointerup', () => dragging = false); stage.addEventListener('pointercancel', () => dragging = false);
   stage.addEventListener('wheel', e => {
     if (e.ctrlKey) return;
     e.preventDefault(); state.params.scale = L.clamp01(state.params.scale - e.deltaY * .0008); syncUI()
@@ -8586,12 +8586,14 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
   const SES_KEY = 'shiro.session.v1'; let dirty = false;
   function touch() { dirty = true; if (!suppressHist) histTouch() }
-  setInterval(() => {
+  function saveSes() {
     if (!dirty) return; dirty = false;
     try {
       localStorage.setItem(SES_KEY, JSON.stringify({ v: 1, params: state.params, aspect: $('sel-aspect').value }))
     } catch (e) {}
-  }, 1200);
+  }
+  setInterval(saveSes, 1200);
+  if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('beforeunload', saveSes);
   function restoreSession() {
     try {
       const s = JSON.parse(localStorage.getItem(SES_KEY) || 'null');
