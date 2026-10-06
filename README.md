@@ -660,3 +660,4 @@ node test.mjs   # 5445 assertions
 - **r251**: ピンチズームの阻害を修復 — stageのwheelハンドラが無条件preventDefaultでctrl+wheel(ブラウザ標準ズーム/トラックパッドのピンチ)を奪っていた。ctrlKey時は素通しに変更、通常wheelのスケール調整は維持。テストで両経路を検証。
 - **r252**: canvas/errのa11y属性 — `role="img" aria-label` でキャンバスに代替テキスト相当を付与、エラー領域を `role="status" aria-live="polite"` のライブリージョン化（スクリーンリーダーがエラー表示を自動通知）。キーボード配線はinput/select除外済みを確認。
 - **r253**: ポインタ/保存の残穴修復 — `pointercancel`でdraggingを解除（タッチ中断時の粘着ドラッグ）、`beforeunload`で未保存dirtyを即座にlocalStorageへフラッシュ（セーブ間隔1.2s未満での終了ロス防止）。セーブ本体を`saveSes()`へ抽出。
+- **r254**: モーション配慮の深化 — reduced-motion時にアニメ静止だけでなく前庭刺激系（カメラシェイク・背景ドリフト・残像トレイル・パーティクル）もゼロ化。復元セッション優先の規約は維持。

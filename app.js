@@ -8621,6 +8621,8 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
 
   const restored = restoreSession();
 
-  if (!restored && matchMedia('(prefers-reduced-motion: reduce)').matches) state.params.anim = 'still';
+  if (!restored && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const p = state.params; p.anim = 'still'; p.shake = 0; p.bgDrift = 0; p.trail = 0; p.particles = 'none'
+  }
   syncUI(); renderFavs(); requestAnimationFrame(frame)
 })();
