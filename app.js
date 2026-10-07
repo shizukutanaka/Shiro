@@ -682,7 +682,7 @@ const ShiroLib = (() => {
         const sw = tt * 3;
         q.rArm = 1.4 + .9 * Math.sin(sw); q.rElb = .4;
         q.lArm = 1.4 + .9 * Math.sin(sw + Math.PI); q.lElb = .4;
-        q.lKnee = .3 * Math.abs(Math.sin(sw)); q.rKnee = -.3 * Math.abs(Math.sin(sw + Math.PI));
+        q.lKnee = .3 * Math.max(0, Math.sin(sw)); q.rKnee = -.3 * Math.max(0, -Math.sin(sw));
         q.lean = .15;
         q.bob = .03 * Math.sin(sw);
         q.headTilt = .2;
