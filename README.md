@@ -675,3 +675,4 @@ node test.mjs   # 5445 assertions
 - **r266**: 録画のvisibility連動 — タブ非表示中は描画が凍るのに録画が静止フレームを録り続けていたためMediaRecorderもpause/resume連動
 - **r267**: 復元edilen aspect değeri ASPECTS tablosunda doğrulanıyor — geçersiz değer gelirse select boş görünürken canvas 16:9 kalıyordu, artık her ikisi de 16:9'a düşer + clampParams'ın tüm enum alanlarını doğruladığını test eden statik guard
 - **r268**: prefers-reduced-motionがセッション中に有効化されても適用 — media queryのchangeイベントでanim/shake/drift/trail/particlesを即時ゼロ化（これまでは起動時のみ評価）
+- **r269**: デッドオプション3件の修復 — アクセサリ2枠目で'cape'が描画されなかった（body経路のみのケース→acc2でも描画）、目スタイル'wide'(見開き目)が無次元のeoをピクセル座標に使い潰れていた（白目楕円+瞳で再実装、瞬き・目線対応）、プリセット背景で「背景彩度/コントラスト」が無効だった（blurフィルタにsaturate/contrastを合成、bgDimは既に有効だった）
