@@ -1207,7 +1207,7 @@ const ShiroLib = (() => {
     sV(); gA(p.opacity);
     if (p.flip) { tR(2 * cx, 0); sC(-1, 1) }
 
-    if (p.acc === 'cape') {
+    if (p.acc === 'cape' || p.acc2 === 'cape') {
       const cs = `hsla(${hue},${MX(sat, 45)}%,${RD(38 + 12 * g)}%,.95)`;
       const sw = (q.lean * 2 + SI(t * 1.8) * .05) * hPix; const [lShx, lShy] = px(...K.lSh), [rShx, rShy] = px(...K.rSh), [pelx, pely] = px(...K.pelvis); FS(cs); bP(); mT(lShx, lShy); qT(lShx - bodyW + sw, pely + hPix * .06, pelx + sw * 1.5, pely + hPix * .3); qT(rShx + bodyW + sw, pely + hPix * .06, rShx, rShy); cP(); cP(); fL()
     }
@@ -1305,7 +1305,7 @@ const ShiroLib = (() => {
         cP(); fL()
       } else if (es === 'wide') {
 
-      FS('rgba(255,255,255,.95)'); bP(); bP(); aR(ex - eo, ey, esz * .62 * eo, 0, 7); dot(ex - eo,ey,esz * .62 * eo); bP(); bP(); aR(ex + eo, ey, esz * .62 * eo, 0, 7); dot(ex + eo,ey,esz * .62 * eo); FS(eyeCol); bP(); bP(); aR(ex - eo, ey, esz * .3 * eo, 0, 7); dot(ex - eo,ey,esz * .3 * eo); bP(); bP(); aR(ex + eo, ey, esz * .3 * eo, 0, 7); dot(ex + eo,ey,esz * .3 * eo)
+      FS('rgba(255,255,255,.95)'); ell(ex,ey,MX(1, hr * .16 * esz),MX(.5, hr * .16 * esz * MX(.2, eo)),0); FS(eyeCol); ell(ex + ((p.gaze == null ? .5 : p.gaze) - .5) * hr * .08,ey,MX(.8, hr * .07 * esz),MX(.5, hr * .07 * esz * MX(.2, eo)),0)
     } else if (es === 'cat') {
 
         FS(eyeCol); ell(ex,ey,MX(.8, hr * .045 * esz),MX(1, hr * .15 * esz * MX(.15, eo)),0)
@@ -3658,7 +3658,7 @@ const ShiroLib = (() => {
       return
     }
     if (pr === 'transparent') return;
-    if (p.bgBlur > 0) flT(`blur(${p.bgBlur * 10}px)`);
+    const bfx = `${p.bgBlur > 0 ? 'blur(' + p.bgBlur * 10 + 'px) ' : ''}${p.bgSat !== .5 ? 'saturate(' + p.bgSat * 2 + ') ' : ''}${p.bgContrast !== .5 ? 'contrast(' + (.5 + p.bgContrast) + ')' : ''}`.trim(); if (bfx) flT(bfx);
     if (pr === 'green') { FS('#00b140'); rect(0, 0, W, H) }
     else if (pr === 'white') { FS('#ffffff'); rect(0, 0, W, H) }
     else if (pr === 'sunset') {
