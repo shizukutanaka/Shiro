@@ -8300,6 +8300,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       if (xformed) ctx.restore()
     }
     if (state.media && xformed) ctx.restore();
+    if (p.bubble && state.media) L.drawBubble(ctx, p.bubble, p.x * W, p.y * H - H * (.25 + .7 * p.scale) * 1.02, W, H, p.bubbleHue);
     if (p.particles !== 'none') L.drawParticles(ctx, W, H, p.particles, t, p.seed);
 
     const gs = L.GRADE_STYLES[p.grade];
