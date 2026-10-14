@@ -676,3 +676,4 @@ node test.mjs   # 5445 assertions
 - **r267**: 復元edilen aspect değeri ASPECTS tablosunda doğrulanıyor — geçersiz değer gelirse select boş görünürken canvas 16:9 kalıyordu, artık her ikisi de 16:9'a düşer + clampParams'ın tüm enum alanlarını doğruladığını test eden statik guard
 - **r268**: prefers-reduced-motionがセッション中に有効化されても適用 — media queryのchangeイベントでanim/shake/drift/trail/particlesを即時ゼロ化（これまでは起動時のみ評価）
 - **r269**: デッドオプション3件の修復 — アクセサリ2枠目で'cape'が描画されなかった（body経路のみのケース→acc2でも描画）、目スタイル'wide'(見開き目)が無次元のeoをピクセル座標に使い潰れていた（白目楕円+瞳で再実装、瞬き・目線対応）、プリセット背景で「背景彩度/コントラスト」が無効だった（blurフィルタにsaturate/contrastを合成、bgDimは既に有効だった）
+- **r270**: 収益化導線（スポンサー）— `.github/FUNDING.yml`でGitHub Sponsorsボタンを有効化 + パネル末尾に「♡ 開発を応援する」リンク。設計判断: ゼロ依存・完全オフライン・CSPで外部ロードを遮断するアプリに広告/課金SDK/トラッキングは入れられない（ユーザー価値とプライバシー設計を毀損する）。支払い処理は外部（GitHub Sponsors）に委譲し、アプリ側は「静かな導線」だけを持つ最小構成。ナビゲーションはCSPの影響を受けないため`target=_blank`で安全に外部決済へ誘導できる
