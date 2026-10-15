@@ -8471,6 +8471,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     const rec = new MediaRecorder(stage.captureStream(30), { mimeType: pick.mime, videoBitsPerSecond: bits });
     const chunks = [];
     rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+    rec.onerror = () => { err('録画中にエラーが発生しました'); try { rec.stop() } catch (_) {} };
     rec.onstop = () => {
       state.recorder = null; clearTimeout(state.recTimer);
       download(new Blob(chunks, { type: pick.mime }), 'shiro.' + pick.ext);
