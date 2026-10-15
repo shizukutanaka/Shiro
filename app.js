@@ -8219,21 +8219,9 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   }
 
   const t0 = performance.now(); let frameErr = null;
-  function frame() {
-    requestAnimationFrame(frame);
-    try {
-      const {gA, lnW, fT, tA, flT, FS, SS} = L.ctxH(ctx);
-    const liveT = (performance.now() - t0) / 1000; const p = state.params;
-
-    const t = state.frozenT !== null ? state.frozenT + (p.tOffset - .5) * 4 : liveT; ctx.clearRect(0, 0, W, H);
-
-    const shaking = p.shake > 0 || p.camZoom > .02;
-    if (shaking) {
-
-      const os = 1 + p.shake * .04 + SI(t * .6) * p.camZoom * .22; ctx.save(); ctx.translate(W / 2 + (RN() - .5) * p.shake * 16, H / 2 + (RN() - .5) * p.shake * 16); ctx.scale(os, os); ctx.translate(-W / 2, -H / 2)
-    }
-    L.drawBackdrop(ctx, p, t, state.bg, W, H);
-
+  function stageBackdrop(ctx, t) { L.drawBackdrop(ctx, state.params, t, state.bg, W, H) }
+  function stageSubject(ctx, t) {
+    const {gA, flT} = L.ctxH(ctx); const p = state.params;
     const rotA = (p.rot - .5) * .6; const spinX = p.anim === 'spin' ? CO(t * 2.5) : 1; const flipY = p.anim === 'flip' ? CO(t * 2.5) : 1; const sq = p.squash > .02 ? SI(t * 3) * p.squash : 0; const sxx = (1 + sq * .18) * spinX, syy = (1 - sq * .22) * flipY; const xformed = AB(rotA) > .001 || AB(sxx - 1) > .001 || AB(syy - 1) > .001;
     if (state.media && xformed) {
       ctx.save(); ctx.translate(p.x * W, p.y * H); ctx.rotate(rotA); ctx.scale(sxx, syy); ctx.translate(-p.x * W, -p.y * H)
@@ -8301,13 +8289,19 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     }
     if (state.media && xformed) ctx.restore();
     if (p.bubble && state.media) L.drawBubble(ctx, p.bubble, p.x * W, p.y * H - H * (.25 + .7 * p.scale) * 1.02, W, H, p.bubbleHue);
-    if (p.particles !== 'none') L.drawParticles(ctx, W, H, p.particles, t, p.seed);
-
+  }
+  function stageParticles(ctx, t) {
+    const p = state.params; if (p.particles !== 'none') L.drawParticles(ctx, W, H, p.particles, t, p.seed)
+  }
+  function stageGrade(ctx) {
+    const {FS} = L.ctxH(ctx); const p = state.params;
     const gs = L.GRADE_STYLES[p.grade];
     if (gs) {
       ctx.globalCompositeOperation = gs[0]; FS(gs[1]); ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over'
     }
-    if (shaking) ctx.restore();
+  }
+  function stageOverlay(ctx) {
+    const {gA, fT, tA, lnW, FS, SS} = L.ctxH(ctx); const p = state.params;
     if (p.grain > 0) {
       ctx.save(); gA(p.grain * .15);
 
@@ -8327,6 +8321,23 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.rect(0, 0, W, H); ctx.rect(b, b, W - 2 * b, H - 2 * b); ctx.fill('evenodd')
     }
     L.drawWatermark(ctx, p.watermark, W, H, p.wmOpacity, p.wmPos)
+  }
+  L.renderStages = { backdrop: stageBackdrop, subject: stageSubject, particles: stageParticles, grade: stageGrade, overlay: stageOverlay };
+  function frame() {
+    requestAnimationFrame(frame);
+    try {
+      const liveT = (performance.now() - t0) / 1000; const p = state.params;
+
+    const t = state.frozenT !== null ? state.frozenT + (p.tOffset - .5) * 4 : liveT; ctx.clearRect(0, 0, W, H);
+
+    const shaking = p.shake > 0 || p.camZoom > .02;
+    if (shaking) {
+
+      const os = 1 + p.shake * .04 + SI(t * .6) * p.camZoom * .22; ctx.save(); ctx.translate(W / 2 + (RN() - .5) * p.shake * 16, H / 2 + (RN() - .5) * p.shake * 16); ctx.scale(os, os); ctx.translate(-W / 2, -H / 2)
+    }
+    stageBackdrop(ctx, t); stageSubject(ctx, t); stageParticles(ctx, t); stageGrade(ctx);
+    if (shaking) ctx.restore();
+    stageOverlay(ctx)
     } catch (e) { if (frameErr !== e.message) { frameErr = e.message; err('描画エラー: ' + e.message) } }
   }
 
