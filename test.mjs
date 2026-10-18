@@ -548,6 +548,8 @@ const mkUI = (seed, opts = {}) => {
   ok(d2 === 1356307302, `loaded-scene fingerprint stable (golden2, update intentionally) got ${d2}`);
   const L2 = sandbox2.ShiroLib;
   ok(typeof L2.drawMannequin === 'function' && typeof L2.defaultParams === 'function', 'lib evaluated in UI context');
+  { let e = null; try { const { ctx: c2 } = mkCtx(); for (const k of ['backdrop', 'subject', 'particles', 'grade', 'overlay']) L2.renderStages[k](c2, 1.7) } catch (x) { e = x }
+    ok(!e, `each render stage callable standalone (automation hook)${e ? ': ' + e.message : ''}`) }
   const ANIMS = L.ANIMS;
   ok(ANIMS.includes(getEl('sel-anim').value), 'syncUI set sel-anim to valid anim');
   ok(getEl('sl-height') && getEl('sl-height').value !== '' , 'syncUI set slider values');
