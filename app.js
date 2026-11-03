@@ -8552,7 +8552,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
   clk('btn-fav', () => {
     const name = prompt('お気に入りの名前', 'モデル ' + (state.favs.length + 1));
     if (name === null) return;
-    state.favs.push({ id: 'f' + Date.now().toString(36), name: name || '無題', params: state.params, thumb: thumb() });
+    state.favs.push({ id: 'f' + Date.now().toString(36), name: name || '無題', params: L.clampParams(state.params), thumb: thumb() });
     saveFavs(); renderFavs()
   });
   clk('btn-fav-exp', () =>
