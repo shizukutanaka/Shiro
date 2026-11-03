@@ -41,6 +41,8 @@ const mkCtx = all => { const calls = []; return { calls, ctx: new Proxy({}, { ge
   throws(() => L.parsePreset('not json'), 'garbage rejected');
   const list = L.parseFavList(JSON.stringify([{ name: 'a', params: p }, { bogus: 1 }, { name: 'b', params: { height: 9 } }]));
   ok(list.length === 2 && list[1].params.height === 1, 'fav list filters and clamps');
+  const withThumb = L.parseFavList(JSON.stringify([{ name: 'a', params: p, thumb: 'data:image/jpeg;base64,AAA' }, { name: 'b', params: p, thumb: 'javascript:x' }]));
+  ok(withThumb[0].thumb === 'data:image/jpeg;base64,AAA' && withThumb[1].thumb === '', 'fav list keeps data: thumb, strips junk');
   throws(() => L.parseFavList('{}'), 'non-array fav list rejected');
 }
 {

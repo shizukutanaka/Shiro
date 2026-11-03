@@ -140,7 +140,8 @@ const ShiroLib = (() => {
     const arr = JSON.parse(json);
     if (!Array.isArray(arr)) throw new Error('invalid favorite list');
     return arr.filter(o => o && typeof o.name === 'string' && o.params)
-      .map(o => ({ id: String(o.id || ''), name: o.name.slice(0, 60), params: clampParams(o.params) }))
+      .map(o => ({ id: String(o.id || ''), name: o.name.slice(0, 60), params: clampParams(o.params),
+        thumb: typeof o.thumb === 'string' && o.thumb.startsWith('data:image/') ? o.thumb.slice(0, 400000) : '' }))
   }
 
   function keyAlpha(r, g, b, thresh, soft) {
@@ -8513,7 +8514,8 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     for (const f of state.favs) {
       const d = mk('div'); d.className = 'fav'; d.title = f.name; d.draggable = true; d.tabIndex = 0; d.role = 'button';
       d.innerHTML = `<img alt=""><span></span><button class="del" title="削除" aria-label="お気に入りを削除">×</button>`;
-      d.querySelector('img').src = f.thumb || ''; d.querySelector('span').textContent = f.name;
+      if (f.thumb) d.querySelector('img').src = f.thumb; else d.querySelector('img').remove();
+      d.querySelector('span').textContent = f.name;
       const apply = () => { state.params = L.clampParams(f.params); syncUI() };
       const del = () => { state.favs = state.favs.filter(x => x.id !== f.id); saveFavs(); renderFavs() };
       d.addEventListener('click', apply);
