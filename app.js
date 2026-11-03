@@ -8185,10 +8185,10 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     L.contactShadow(c, cx, baseY, wPix * .55, state.params.shadow * .5, `hsla(${RD(state.params.shadowHue * 360)},45%,12%,${state.params.shadow * .5})`);
     const silCache = state.media.kind === 'image';
     const glowCol = `hsla(${RD(state.params.glowHue * 360)},90%,70%,1)`;
-    L.drawGlow(c, silhouetteOf(src, sw, sh, glowCol, glowCv, glowCtx, silCache), wPix, hPix, cx, baseY, state.params.glow);
-    L.drawCastShadow(c, silhouetteOf(src, sw, sh, `hsla(${RD(state.params.shadowHue * 360)},45%,12%,1)`, null, null, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4, state.params.shadowSoft);
-    L.drawRimLight(c, silhouetteOf(src, sw, sh, `hsla(${RD(state.params.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
-    L.drawStickerOutline(c, silhouetteOf(src, sw, sh, `hsla(${RD(state.params.outlineHue * 360)},70%,80%,1)`, outCv, outCtx, silCache), wPix, hPix, cx, baseY, state.params.outline);
+    if (state.params.glow > 0) L.drawGlow(c, silhouetteOf(src, sw, sh, glowCol, glowCv, glowCtx, silCache), wPix, hPix, cx, baseY, state.params.glow);
+    if (state.params.shadow > 0) L.drawCastShadow(c, silhouetteOf(src, sw, sh, `hsla(${RD(state.params.shadowHue * 360)},45%,12%,1)`, null, null, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.shadow * .4, state.params.shadowSoft);
+    if (state.params.rim > 0) L.drawRimLight(c, silhouetteOf(src, sw, sh, `hsla(${RD(state.params.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx, silCache), wPix, hPix, cx, baseY, state.params.castDir, state.params.rim);
+    if (state.params.outline > 0) L.drawStickerOutline(c, silhouetteOf(src, sw, sh, `hsla(${RD(state.params.outlineHue * 360)},70%,80%,1)`, outCv, outCtx, silCache), wPix, hPix, cx, baseY, state.params.outline);
     L.drawReflection(c, src, cx, baseY, wPix, hPix, state.params.reflect);
     if (state.media.kind === 'video') el.playbackRate = .25 + state.params.vidSpeed * 1.5;
     c.save(); gA(state.params.opacity); const fParts = [];
@@ -8250,10 +8250,10 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
       const hStretch = .6 + .8 * p.height, hFig = hPix * hStretch;
       if ((AB(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0 || p.glow > 0 || p.shine > .02) {
         modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hFig); mctx.clearRect(0, 0, modCv.width, modCv.height); L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, hPix);
-        L.drawGlow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.glowHue * 360)},90%,70%,1)`, glowCv, glowCtx), wPix, hFig, cx, baseY, p.glow);
-        L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.shadowHue * 360)},45%,12%,1)`), wPix, hFig, cx, baseY, p.castDir, p.shadow * .4, p.shadowSoft);
-        L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hFig, cx, baseY, p.castDir, p.rim);
-        L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.outlineHue * 360)},70%,80%,1)`, outCv, outCtx), wPix, hFig, cx, baseY, p.outline);
+        if (p.glow > 0) L.drawGlow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.glowHue * 360)},90%,70%,1)`, glowCv, glowCtx), wPix, hFig, cx, baseY, p.glow);
+        if (p.shadow > 0) L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.shadowHue * 360)},45%,12%,1)`), wPix, hFig, cx, baseY, p.castDir, p.shadow * .4, p.shadowSoft);
+        if (p.rim > 0) L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hFig, cx, baseY, p.castDir, p.rim);
+        if (p.outline > 0) L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.outlineHue * 360)},70%,80%,1)`, outCv, outCtx), wPix, hFig, cx, baseY, p.outline);
         L.drawReflection(ctx, modCv, cx, baseY, wPix, hFig, p.reflect)
       }
       if (p.pixel > .05) {
