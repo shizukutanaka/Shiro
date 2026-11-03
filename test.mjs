@@ -79,6 +79,15 @@ const mkCtx = all => { const calls = []; return { calls, ctx: new Proxy({}, { ge
   ok(calls.every(Number.isFinite), 'draw coords finite');
 }
 {
+  const a = mkCtx(), b = mkCtx();
+  const p0 = L.defaultParams(), p1 = L.defaultParams();
+  p0.height = 0; p1.height = 1;
+  L.drawMannequin(a.ctx, p0, 1.0, 640, 600, 500);
+  L.drawMannequin(b.ctx, p1, 1.0, 640, 600, 500);
+  ok(a.calls.length === b.calls.length && a.calls.every(Number.isFinite) && b.calls.every(Number.isFinite), 'height extremes finite');
+  ok(a.calls.some((v, i) => v !== b.calls[i]), 'height slider changes geometry');
+}
+{
   ok(L.clampParams({ bgPreset: 'bogus' }).bgPreset === 'gradient', 'bad bgPreset falls back');
   ok(L.BGS.includes(L.clampParams({ bgPreset: 'transparent' }).bgPreset), 'bgPreset survives clamp');
   for (let i = 0; i < 50; i++)

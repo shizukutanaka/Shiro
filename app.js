@@ -1199,7 +1199,8 @@ const ShiroLib = (() => {
     const col = `hsl(${hue},${sat}%,${RD(96 * g)}%)`;
     const shade = `hsl(${hue},${sat}%,${RD(85 * g)}%)`;
     const lw = (.5 + p.line * 4);
-    const px = (x, y) => [cx + (x + q.sway) * hPix, baseY - (y + q.bob) * hPix];
+    const hStretch = .6 + .8 * p.height;
+    const px = (x, y) => [cx + (x + q.sway) * hPix, baseY - (y * hStretch + q.bob) * hPix];
     const limbW = hPix * (.045 + .02 * p.shoulder); const bodyW = hPix * (.10 + .06 * p.shoulder);
 
     contactShadow(ctx, cx, baseY, hPix * (.16 + .07 * p.shoulder), p.shadow * .5, `hsla(${RD((p.shadowHue == null ? .62 : p.shadowHue) * 360)},45%,12%,${p.shadow * .5})`);
@@ -8246,17 +8247,18 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         ctx.save(); L.drawMannequin(ctx, p2, t * .9 + 2.3, cx + wPix * .55 * (p.flip ? -1 : 1), baseY, hPix * (.55 + p.duo * .35)); ctx.restore()
       }
 
+      const hStretch = .6 + .8 * p.height, hFig = hPix * hStretch;
       if ((AB(p.castDir - .5) >= .03 && p.shadow > 0) || p.rim > 0 || p.outline > 0 || p.reflect > 0 || p.glow > 0 || p.shine > .02) {
-        modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hPix); mctx.clearRect(0, 0, modCv.width, modCv.height); L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, modCv.height);
-        L.drawGlow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.glowHue * 360)},90%,70%,1)`, glowCv, glowCtx), wPix, hPix, cx, baseY, p.glow);
-        L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.shadowHue * 360)},45%,12%,1)`), wPix, hPix, cx, baseY, p.castDir, p.shadow * .4, p.shadowSoft);
-        L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hPix, cx, baseY, p.castDir, p.rim);
-        L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.outlineHue * 360)},70%,80%,1)`, outCv, outCtx), wPix, hPix, cx, baseY, p.outline);
-        L.drawReflection(ctx, modCv, cx, baseY, wPix, hPix, p.reflect)
+        modCv.width = Math.ceil(wPix); modCv.height = Math.ceil(hFig); mctx.clearRect(0, 0, modCv.width, modCv.height); L.drawMannequin(mctx, p, t, modCv.width / 2, modCv.height, hPix);
+        L.drawGlow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.glowHue * 360)},90%,70%,1)`, glowCv, glowCtx), wPix, hFig, cx, baseY, p.glow);
+        L.drawCastShadow(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.shadowHue * 360)},45%,12%,1)`), wPix, hFig, cx, baseY, p.castDir, p.shadow * .4, p.shadowSoft);
+        L.drawRimLight(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.rimHue * 360)},75%,72%,1)`, rimCv, rimCtx), wPix, hFig, cx, baseY, p.castDir, p.rim);
+        L.drawStickerOutline(ctx, silhouetteOf(modCv, modCv.width, modCv.height, `hsla(${RD(p.outlineHue * 360)},70%,80%,1)`, outCv, outCtx), wPix, hFig, cx, baseY, p.outline);
+        L.drawReflection(ctx, modCv, cx, baseY, wPix, hFig, p.reflect)
       }
       if (p.pixel > .05) {
 
-        const cell = 1 + p.pixel * 24; const pw = MX(2, RD(wPix / cell)), ph2 = MX(2, RD(hPix / cell)); pixCv.width = pw; pixCv.height = ph2; pctx.clearRect(0, 0, pw, ph2); L.drawMannequin(pctx, p, t, pw / 2, ph2, ph2); ctx.save(); gA(p.opacity); ctx.imageSmoothingEnabled = false; ctx.drawImage(pixCv, cx - wPix / 2, baseY - hPix, wPix, hPix); ctx.restore()
+        const cell = 1 + p.pixel * 24; const pw = MX(2, RD(wPix / cell)), ph2 = MX(2, RD(hFig / cell)); pixCv.width = pw; pixCv.height = ph2; pctx.clearRect(0, 0, pw, ph2); L.drawMannequin(pctx, p, t, pw / 2, ph2, hPix / cell); ctx.save(); gA(p.opacity); ctx.imageSmoothingEnabled = false; ctx.drawImage(pixCv, cx - wPix / 2, baseY - hFig, wPix, hFig); ctx.restore()
       } else {
 
         const fxParts = [];
@@ -8275,7 +8277,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         }
         gA(p.opacity);
         if (p.shine > .02) {
-          ctx.drawImage(L.shined(modCv, snc, shnCv, t, p.shine), cx - wPix / 2, baseY - hPix, wPix, hPix)
+          ctx.drawImage(L.shined(modCv, snc, shnCv, t, p.shine), cx - wPix / 2, baseY - hFig, wPix, hFig)
         } else {
           L.drawMannequin(ctx, p, t, cx, baseY, hPix)
         }
