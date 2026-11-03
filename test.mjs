@@ -32,6 +32,9 @@ const mkCtx = all => { const calls = []; return { calls, ctx: new Proxy({}, { ge
     for (const k of L.NUM_KEYS) ok(p[k] >= 0 && p[k] <= 1, `random ${k} in range`);
     ok(L.ANIMS.includes(p.anim), 'random anim valid');
   }
+  const seen = new Set();
+  for (let i = 0; i < 4000 && seen.size < L.BLENDS.length; i++) seen.add(L.randomParams(L.mulberry32(i + 777)).blend);
+  ok(L.BLENDS.every(b => seen.has(b)), 'random blend reaches all modes');
 }
 {
   const p = L.randomParams(L.mulberry32(7));
