@@ -4,7 +4,6 @@ const ShiroLib = (() => {
   const PI = Math.PI, MX = Math.max, MN = Math.min, SI = Math.sin, CO = Math.cos, AB = Math.abs, RD = Math.round, FL = Math.floor, PW = Math.pow, SG = Math.sign, RN = Math.random;
 
   const clamp01 = v => MN(1, MX(0, v));
-  const lerp = (a, b, t) => a + (b - a) * t;
 
   function mulberry32(a) {
     return function () {
@@ -8152,7 +8151,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h }
     cctx.clearRect(0, 0, w, h); cctx.globalCompositeOperation = 'source-over'; cctx.drawImage(src, 0, 0, w, h);
     cctx.globalCompositeOperation = 'source-in';
-    cctx.fillStyle = color || '#0a0a0e'; cctx.fillRect(0, 0, w, h); cctx.globalCompositeOperation = 'source-over';
+    cctx.fillStyle = col; cctx.fillRect(0, 0, w, h); cctx.globalCompositeOperation = 'source-over';
     return cv
   }
 
