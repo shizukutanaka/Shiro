@@ -8286,7 +8286,7 @@ const K0='#4a3828', K1='rgba(250,252,255,.8)';
         if (fx) flT('none')
       }
 
-      if (p.bubble) L.drawBubble(ctx, p.bubble, cx, baseY - hPix * 1.02, W, H, p.bubbleHue);
+      if (p.bubble) L.drawBubble(ctx, p.bubble, cx, baseY - hFig * 1.02, W, H, p.bubbleHue);
       if (xformed) ctx.restore()
     }
     if (state.media && xformed) ctx.restore();
