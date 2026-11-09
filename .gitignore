@@ -1,0 +1,9 @@
+# Shiro is a zero-dependency static page (no build, no node_modules);
+# this only keeps OS and editor noise out of the repository.
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
