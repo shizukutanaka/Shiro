@@ -2,6 +2,30 @@
 
 白モデル（内蔵の手続きマネキン、または自分の画像・動画素材）を、好きな背景画像にスワップ合成するキャラクタークリエイト風アプリ。依存ゼロ・ビルド不要の静的ページです。
 
+## English
+
+Shiro is a character-creator-style web app that composites a white model — the built-in procedural mannequin, or your own image/video material — onto any background image you like. It is a static page with zero dependencies and no build step.
+
+### How to run
+
+Just open `index.html` in a browser. No local server is needed, and the app makes no external network requests.
+
+### Features
+
+- **Choose a background image** — load any image as the composite backdrop (cover / contain fit toggle)
+- **Choose a model image/video** — replace the white model with your own material; common video formats such as mp4 / webm / mov are supported, and the "white keying strength" slider removes white backgrounds via chroma keying
+- **Parameters** — adjust height, head, shoulder width, arms, legs, tone, outline, motion, position, scale, and opacity with sliders, game character-creator style
+- **Animation** — idle / wave / walk / dance / still
+- **Random** — generate all body parameters at once with a seeded random generator
+- **Favorites** — save named presets with thumbnails in the browser (localStorage); export/import as JSON
+- **Output** — save as PNG, save a 5-second video (MP4 preferred, WebM fallback), or share directly to external apps via the Web Share API (falls back to PNG download where unsupported)
+
+Everything stays local: no external keys, network access, or tracking. Images, videos, and favorites never leave your device.
+
+Tests: `node test.mjs` (697 assertions).
+
+---
+
 ## 使い方
 
 `index.html` をブラウザで開くだけ。ローカルサーバー不要、外部通信なし。
