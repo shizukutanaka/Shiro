@@ -2,6 +2,8 @@
 
 白モデル（内蔵の手続きマネキン、または自分の画像・動画素材）を、好きな背景画像にスワップ合成するキャラクタークリエイト風アプリ。依存ゼロ・ビルド不要の静的ページです。
 
+Version: 0.1.0
+
 ## English
 
 Shiro is a character-creator-style web app that composites a white model — the built-in procedural mannequin, or your own image/video material — onto any background image you like. It is a static page with zero dependencies and no build step.
