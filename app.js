@@ -438,9 +438,12 @@ if (typeof document !== 'undefined') (() => {
   const FKEY = 'shiro.favs.v1';
   function loadFavs() {
     try { return L.parseFavList(localStorage.getItem(FKEY) || '[]'); }
-    catch { return []; }
+    catch { err('保存済みお気に入りを読み込めませんでした（データが壊れている可能性があります）'); return []; }
   }
-  function saveFavs() { localStorage.setItem(FKEY, JSON.stringify(state.favs)); }
+  function saveFavs() {
+    try { localStorage.setItem(FKEY, JSON.stringify(state.favs)); }
+    catch { err('お気に入りを保存できませんでした（ブラウザの保存容量が不足している可能性があります）'); }
+  }
   function renderFavs() {
     const bar = $('fav-bar'); bar.innerHTML = '';
     for (const f of state.favs) {
