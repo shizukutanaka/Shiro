@@ -1,4 +1,4 @@
-// node test.mjs — ShiroLib 純粋ロジックの検証ゲート
+// node test.mjs — ShiroLib 純粋ロジック＋UI 起動の検証ゲート
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
@@ -106,6 +106,114 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(L.pickMime(() => true).ext === 'mp4', 'mp4 preferred');
   ok(L.pickMime(m => m.includes('webm')).ext === 'webm', 'webm fallback');
   ok(L.pickMime(() => false) === null, 'no support -> null');
+}
+
+// ---------- UI boot (DOM stub): 初回起動で誤った「読み込めませんでした」を出さない ----------
+// UI 部は document がある場合のみ動くため、最小の DOM スタブで起動そのものを再現する。
+// お気に入り読み込みの宣言順ミス（TDZ）で毎回データ破損エラーに見えた回帰の固定。
+{
+  const makeCtx = () => new Proxy({}, {
+    get: (t, k) => {
+      if (k === 'canvas') return {};
+      if (k === 'createLinearGradient') return () => ({ addColorStop() {} });
+      if (k === 'getImageData') return () => ({ data: new Uint8ClampedArray(4) });
+      return () => {};
+    },
+    set: () => true,
+  });
+  const boot = (initial) => {
+    const registry = new Map();
+    const makeEl = (tag) => {
+      const el = {
+        tagName: String(tag || 'div').toUpperCase(),
+        children: [], listeners: {}, style: {}, _qs: {},
+        value: '', checked: false, title: '', src: '', href: '', download: '',
+        type: '', min: '', max: '', step: '', className: '', htmlFor: '',
+        width: 640, height: 600, _text: '', _html: '',
+        addEventListener(ev, fn) { (this.listeners[ev] ||= []).push(fn); },
+        appendChild(c) { this.children.push(c); return c; },
+        querySelector(sel) { return this._qs[sel] ||= makeEl('div'); },
+        getContext() { return makeCtx(); },
+        toDataURL() { return 'data:image/jpeg;base64,stub'; },
+        toBlob(cb) { cb(null); },
+        click() {},
+      };
+      Object.defineProperty(el, 'id', {
+        get() { return this._id || ''; },
+        set(v) { this._id = v; registry.set(v, this); },
+      });
+      Object.defineProperty(el, 'textContent', {
+        get() { return this._text; },
+        set(v) { this._text = String(v); },
+      });
+      Object.defineProperty(el, 'innerHTML', {
+        get() { return this._html; },
+        set(v) { this._html = String(v); if (v === '') this.children.length = 0; },
+      });
+      return el;
+    };
+    const store = new Map(Object.entries(initial || {}));
+    const sb = {
+      console,
+      document: {
+        getElementById: id => registry.get(id) || (() => { const e = makeEl('div'); e.id = id; return e; })(),
+        createElement: tag => makeEl(tag),
+      },
+      localStorage: {
+        getItem: k => (store.has(k) ? store.get(k) : null),
+        setItem: (k, v) => store.set(k, String(v)),
+        removeItem: k => store.delete(k),
+      },
+      performance: { now: () => 0 },
+      requestAnimationFrame: cb => { bootRaf.cb = cb; return 1; },
+      setTimeout: () => 0,
+      prompt: () => 'テスト',
+      navigator: {},
+    };
+    const bootRaf = { cb: null };
+    // index.html に静的に存在する要素を先に実体化する（実ブラウザでは常時存在するため）
+    for (const id of ['stage', 'err', 'sliders', 'sel-anim', 'sel-bgfit', 'chk-flip',
+      'btn-random', 'bg-file', 'model-file', 'btn-model-reset', 'btn-bg-reset',
+      'btn-png', 'btn-rec', 'btn-share', 'btn-fav', 'btn-fav-exp', 'fav-file', 'fav-bar'])
+      sb.document.getElementById(id);
+    vm.createContext(sb);
+    vm.runInContext(src, sb);
+    return { registry, store, raf: bootRaf };
+  };
+
+  // 新規プロファイル（保存データなし）: エラーを出さず起動し、1フレーム描画できる
+  {
+    const { registry, raf } = boot();
+    ok(registry.get('err').textContent === '', 'fresh boot shows no favorites error');
+    ok(registry.get('fav-bar').children.length === 0, 'fresh boot renders empty fav bar');
+    let frameOk = true;
+    try { raf.cb(); } catch { frameOk = false; }
+    ok(frameOk, 'first frame renders');
+  }
+
+  // 保存済みお気に入りがある場合: 読み込めてエラーなしで表示される
+  {
+    const saved = JSON.stringify([{ id: 'f1', name: '保存済み', params: L.defaultParams(), thumb: '' }]);
+    const { registry } = boot({ 'shiro.favs.v1': saved });
+    ok(registry.get('err').textContent === '', 'saved favs boot shows no error');
+    ok(registry.get('fav-bar').children.length === 1, 'saved favs are rendered');
+  }
+
+  // 本当に壊れたデータ: エラー表示は残る（握りつぶして直したことにしない）
+  {
+    const { registry } = boot({ 'shiro.favs.v1': '{{{broken' });
+    ok(registry.get('err').textContent.includes('読み込めませんでした'), 'corrupt favs still surface an error');
+  }
+
+  // 保存→再起動の往復: 保存したお気に入りが次の起動で読み込める
+  {
+    const first = boot();
+    first.registry.get('btn-fav').listeners.click[0]();
+    ok(first.store.has('shiro.favs.v1'), 'favorite is persisted on save');
+    const second = boot(Object.fromEntries(first.store));
+    ok(second.registry.get('err').textContent === '', 'reboot after save shows no error');
+    ok(second.registry.get('fav-bar').children.length === 1, 'saved favorite survives reboot');
+  }
 }
 
 console.log(`${pass} pass / ${fail} fail`);

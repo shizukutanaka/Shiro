@@ -269,6 +269,9 @@ if (typeof document !== 'undefined') (() => {
   const W = stage.width, H = stage.height;
   const err = m => { $('err').textContent = m || ''; };
 
+  // お気に入りの保存キー。state の初期化（loadFavs）が参照するため、state より前に宣言する
+  const FKEY = 'shiro.favs.v1';
+
   const state = {
     params: L.defaultParams(),
     bg: null,               // HTMLImageElement
@@ -435,7 +438,6 @@ if (typeof document !== 'undefined') (() => {
   });
 
   // ---------- favorites ----------
-  const FKEY = 'shiro.favs.v1';
   function loadFavs() {
     try { return L.parseFavList(localStorage.getItem(FKEY) || '[]'); }
     catch { err('保存済みお気に入りを読み込めませんでした（データが壊れている可能性があります）'); return []; }

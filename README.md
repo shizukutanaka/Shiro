@@ -24,7 +24,7 @@ Just open `index.html` in a browser. No local server is needed, and the app make
 
 Everything stays local: no external keys, network access, or tracking. Images, videos, and favorites never leave your device.
 
-Tests: `node test.mjs` (697 assertions).
+Tests: `node test.mjs` (706 assertions).
 
 ---
 
@@ -46,12 +46,12 @@ Tests: `node test.mjs` (697 assertions).
 |---|---|
 | `index.html` | UI（キャンバス + パラメータパネル + お気に入りバー） |
 | `app.js` | 全ロジック。純粋関数は `ShiroLib` に集約（RNG・パラメータ検証・プリセット・クロマキー・骨格・描画） |
-| `test.mjs` | `node test.mjs` で純粋ロジックを検証するテストゲート |
+| `test.mjs` | `node test.mjs` で純粋ロジックと UI 起動を検証するテストゲート |
 
 ## テスト
 
 ```sh
-node test.mjs   # 697 assertions
+node test.mjs   # 706 assertions
 ```
 
 ## 設計メモ
