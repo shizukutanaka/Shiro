@@ -4,6 +4,8 @@
 
 Version: 0.1.0
 
+![Shiro の画面](docs/screenshot.png)
+
 ## English
 
 Shiro is a character-creator-style web app that composites a white model — the built-in procedural mannequin, or your own image/video material — onto any background image you like. It is a static page with zero dependencies and no build step.
