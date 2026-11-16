@@ -90,6 +90,126 @@ const ShiroLib = (() => {
       .map(o => ({ id: String(o.id || ''), name: o.name.slice(0, 60), params: clampParams(o.params) }));
   }
 
+  // ---------- share link ----------
+  // 作品状態（パラメーター＋背景シェーダー）を URL フラグメント (#s=...) に埋める。
+  // フラグメントはサーバへ送信されないため、状態は利用者の端末間だけで運ばれる。
+  // 直列化は既存のプリセット形式 {v:1, name, params} をそのまま再利用し、
+  // シェーダー状態だけを同じ JSON に相乗りさせる（新しい状態形式は作らない）。
+  // 状態は数値と列挙値だけの固定サイズ（画像・動画素材は含まない）なので
+  // 圧縮なしの base64url で十分短い。長さ上限を超える場合はリンクを作らない。
+  const SHARE_FRAGMENT_MAX_LENGTH = 2000; // '#s=' を含むフラグメント全体の上限
+  const SHARE_URL_MAX_LENGTH = 8000;      // 完成した URL 全体の上限（UI 側の防御）
+
+  // シェーダー状態を共有リンク用に検証・正規化する。
+  // リンクは他者から届く入力なので、localStorage の自己保存値より厳しく扱う:
+  // id はプリセットの許可リスト、パラメーターは各プリセットの範囲内に収める。
+  function clampShaderState(o) {
+    const d = { id: '', paletteIdx: 0, params: [], playing: true, speed: 1 };
+    if (!o || typeof o !== 'object') return d;
+    const preset = SHADER_PRESETS.find(p => p.id === o.id);
+    if (!preset) return d;
+    d.id = preset.id;
+    if (Number.isInteger(o.paletteIdx) && o.paletteIdx >= 0 && o.paletteIdx < SHADER_PALETTES.length)
+      d.paletteIdx = o.paletteIdx;
+    if (Array.isArray(o.params)) {
+      const defs = parseShaderParams(preset.code);
+      d.params = o.params.slice(0, defs.length).map((v, i) => {
+        const n = +v;
+        return Number.isFinite(n) ? Math.min(defs[i].max, Math.max(defs[i].min, n)) : defs[i].def;
+      });
+    }
+    if (typeof o.playing === 'boolean') d.playing = o.playing;
+    if (Number.isFinite(o.speed)) d.speed = Math.min(3, Math.max(0, o.speed));
+    return d;
+  }
+
+  function buildShareJson(params, shader) {
+    const base = JSON.parse(serializePreset('', params));
+    base.shader = clampShaderState(shader);
+    return JSON.stringify(base);
+  }
+  function parseShareJson(json) {
+    const preset = parsePreset(json); // v / name / params の検証と clamp を既存形式に委ねる
+    const raw = JSON.parse(json);
+    return { name: preset.name, params: preset.params, shader: clampShaderState(raw.shader) };
+  }
+
+  // UTF-8 <-> バイト列と base64url の純粋実装（依存なし・Node でも検証可能にする）
+  function utf8Bytes(str) {
+    const bytes = [];
+    for (let i = 0; i < str.length; i++) {
+      const cp = str.codePointAt(i);
+      if (cp > 0xFFFF) i++;
+      if (cp < 0x80) bytes.push(cp);
+      else if (cp < 0x800) bytes.push(0xC0 | (cp >> 6), 0x80 | (cp & 63));
+      else if (cp < 0x10000) bytes.push(0xE0 | (cp >> 12), 0x80 | ((cp >> 6) & 63), 0x80 | (cp & 63));
+      else bytes.push(0xF0 | (cp >> 18), 0x80 | ((cp >> 12) & 63), 0x80 | ((cp >> 6) & 63), 0x80 | (cp & 63));
+    }
+    return bytes;
+  }
+  function utf8String(bytes) {
+    let out = '', i = 0;
+    while (i < bytes.length) {
+      const b = bytes[i];
+      let cp, len;
+      if (b < 0x80) { cp = b; len = 1; }
+      else if ((b & 0xE0) === 0xC0) { cp = b & 0x1F; len = 2; }
+      else if ((b & 0xF0) === 0xE0) { cp = b & 0x0F; len = 3; }
+      else if ((b & 0xF8) === 0xF0) { cp = b & 0x07; len = 4; }
+      else throw new Error('invalid utf-8 in share payload');
+      if (i + len > bytes.length) throw new Error('truncated utf-8 in share payload');
+      for (let j = 1; j < len; j++) {
+        const c = bytes[i + j];
+        if ((c & 0xC0) !== 0x80) throw new Error('invalid utf-8 in share payload');
+        cp = (cp << 6) | (c & 63);
+      }
+      if ((len === 2 && cp < 0x80) || (len === 3 && cp < 0x800) || (len === 4 && cp < 0x10000))
+        throw new Error('overlong utf-8 in share payload');
+      out += String.fromCodePoint(cp);
+      i += len;
+    }
+    return out;
+  }
+  const B64URL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  function bytesToB64Url(bytes) {
+    let out = '';
+    for (let i = 0; i < bytes.length; i += 3) {
+      const n = (bytes[i] << 16) | ((bytes[i + 1] || 0) << 8) | (bytes[i + 2] || 0);
+      out += B64URL[(n >> 18) & 63] + B64URL[(n >> 12) & 63]
+        + (i + 1 < bytes.length ? B64URL[(n >> 6) & 63] : '')
+        + (i + 2 < bytes.length ? B64URL[n & 63] : '');
+    }
+    return out;
+  }
+  function b64UrlToBytes(s) {
+    if (!/^[A-Za-z0-9_-]+$/.test(s) || s.length % 4 === 1) throw new Error('invalid share payload');
+    const bytes = [];
+    let acc = 0, bits = 0;
+    for (const ch of s) {
+      acc = (acc << 6) | B64URL.indexOf(ch); bits += 6;
+      if (bits >= 8) { bits -= 8; bytes.push((acc >> bits) & 0xFF); }
+    }
+    return bytes;
+  }
+
+  // 作品状態からフラグメント文字列 's=...' を作る。上限超過時は例外（黙って切らない）。
+  function encodeShareLink(params, shader) {
+    const frag = 's=' + bytesToB64Url(utf8Bytes(buildShareJson(params, shader)));
+    if (frag.length > SHARE_FRAGMENT_MAX_LENGTH) throw new RangeError('share link too long');
+    return frag;
+  }
+  // フラグメント / ハッシュ / URL 全体を受け取り、共有でない場合は null、
+  // 's=' で始まるのに壊れている場合は例外を返す。
+  function decodeShareLink(input) {
+    if (input == null) return null;
+    let s = String(input);
+    const h = s.indexOf('#');
+    if (h >= 0) s = s.slice(h + 1);
+    if (!s.startsWith('s=')) return null;
+    if (s.length > SHARE_FRAGMENT_MAX_LENGTH) throw new Error('share link too long');
+    return parseShareJson(utf8String(b64UrlToBytes(s.slice(2))));
+  }
+
   // ---------- chroma key (white) ----------
   // thresh>0 のとき白に近い画素を透過。soft で境界をぼかす。
   function keyAlpha(r, g, b, thresh, soft) {
@@ -462,6 +582,8 @@ void main(){
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
+    SHARE_FRAGMENT_MAX_LENGTH, SHARE_URL_MAX_LENGTH,
+    clampShaderState, buildShareJson, parseShareJson, encodeShareLink, decodeShareLink,
     keyAlpha, mannequinPose, skeleton, drawMannequin,
     MIME_CANDIDATES, pickMime,
     SHADER_PALETTES, SHADER_PRESETS, parseShaderParams, wrapShaderSource,
@@ -491,6 +613,25 @@ if (typeof document !== 'undefined') (() => {
     recorder: null, recTimer: 0,
     shader: loadShaderState(),
   };
+
+  // 共有リンク (#s=...) で開かれた場合は、その作品状態を初期状態にする。
+  // フラグメントはサーバへ送られない。共有でないアンカーは無視し、
+  // 壊れた共有リンクはエラー表示だけして通常起動する（起動自体は止めない）。
+  // シェーダー UI の構築はこの後ろで行われるため、ここで state を差し替えれば
+  // パラメーター・シェーダーとも UI へ自然に反映される。
+  let sharedApplied = false, sharedFailed = false;
+  try {
+    const h = typeof location !== 'undefined' ? location.hash : '';
+    if (h && h.length > 1) {
+      const shared = L.decodeShareLink(h);
+      if (shared) {
+        state.params = shared.params;
+        state.shader = shared.shader;
+        saveShaderState(); // 手動でシェーダーを選んだ場合と同じくブラウザへも残す
+        sharedApplied = true;
+      }
+    }
+  } catch { sharedFailed = true; }
 
   function loadShaderState() {
     const d = { id: '', paletteIdx: 0, params: [], playing: true, speed: 1 };
@@ -845,6 +986,41 @@ if (typeof document !== 'undefined') (() => {
     } catch (e) { if (e.name !== 'AbortError') err('共有に失敗: ' + e.message); }
   });
 
+  // ---------- share link ----------
+  // 現在の作品状態をフラグメントに埋めた URL を作り、コピーできる形で提示する。
+  // リンクの生成と表示は同期に行い、クリップボード書き込みだけを非同期で試す
+  // （file:// 等でクリップボードが使えない環境でもリンク自体は必ず手に入る）。
+  function currentShareUrl() {
+    const frag = L.encodeShareLink(state.params, state.shader); // 上限超過時は例外
+    const base = typeof location !== 'undefined' && location.href ? location.href.split('#')[0] : '';
+    const url = base + '#' + frag;
+    if (url.length > L.SHARE_URL_MAX_LENGTH) throw new RangeError('share link too long');
+    return url;
+  }
+  function copyText(text, doneMsg) {
+    const msg = m => { $('share-msg').textContent = m; };
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => msg(doneMsg), () => msg('コピーできませんでした。リンクを選択して手動でコピーしてください。'));
+    } else {
+      msg('リンクを表示しました。選択してコピーしてください。');
+      const inp = $('share-url');
+      if (typeof inp.select === 'function') inp.select();
+    }
+  }
+  $('btn-share-link').addEventListener('click', () => {
+    try {
+      const url = currentShareUrl();
+      $('share-url').value = url;
+      $('share-link-box').style.display = '';
+      err('');
+      copyText(url, '共有リンクをコピーしました。このリンクを開くと、同じ作品をそのまま編集できます。');
+    } catch { err('共有リンクを作れませんでした（状態が大きすぎます）'); }
+  });
+  $('btn-copy-link').addEventListener('click', () => {
+    const url = $('share-url').value;
+    if (url) copyText(url, '共有リンクをコピーしました。');
+  });
+
   // ---------- favorites ----------
   function loadFavs() {
     try { return L.parseFavList(localStorage.getItem(FKEY) || '[]'); }
@@ -942,6 +1118,22 @@ if (typeof document !== 'undefined') (() => {
   }
 
   // ---------- init ----------
+  // 共有リンクから開いた受け手への導線: 状態は適用済みなので、案内を出し、
+  // そのまま編集を始められるようにする。フラグメントは適用後に消す
+  // （残すと再読み込みのたびに自分の編集が共有状態で上書きされてしまう）。
+  $('btn-edit-shared').addEventListener('click', () => {
+    $('shared-banner').style.display = 'none';
+    const first = $('sl-height');
+    if (first && typeof first.focus === 'function') first.focus();
+  });
+  if (sharedFailed) err('共有リンクを読み込めませんでした（リンクが壊れている可能性があります）');
+  if (sharedApplied) {
+    $('shared-banner').style.display = '';
+    try {
+      if (typeof history !== 'undefined' && history.replaceState && typeof location !== 'undefined' && location.href)
+        history.replaceState(null, '', location.href.split('#')[0]);
+    } catch { /* 消せなくても編集は続けられる */ }
+  }
   syncUI();
   renderFavs();
   requestAnimationFrame(frame);

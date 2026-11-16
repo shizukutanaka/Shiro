@@ -24,10 +24,11 @@ Just open `index.html` in a browser. No local server is needed, and the app make
 - **Random** — generate all body parameters at once with a seeded random generator
 - **Favorites** — save named presets with thumbnails in the browser (localStorage); export/import as JSON
 - **Output** — save as PNG, save a 5-second video (MP4 preferred, WebM fallback), or share directly to external apps via the Web Share API (falls back to PNG download where unsupported)
+- **Share link** — "Create share link" embeds the current work state (character parameters + shader background settings) in the URL fragment (`#s=…`, base64url, max 2,000 characters). Fragments are never sent to a server, so the state travels only between devices via the link itself. Opening the link restores the work ready to edit — the recipient can adjust it and re-share their own version. Background images and model material are **not** included in the link (they never leave your device); a link that is too long is refused rather than truncated, and a corrupted link shows an error and falls back to the default state
 
 Everything stays local: no external keys, network access, or tracking. Images, videos, and favorites never leave your device.
 
-Tests: `node test.mjs` (741 assertions).
+Tests: `node test.mjs` (770 assertions).
 
 ---
 
@@ -43,6 +44,7 @@ Tests: `node test.mjs` (741 assertions).
 - **ランダム** — 全身パラメーターをシード付き乱数で一括生成
 - **お気に入り** — 名前付きプリセットをサムネイル付きでブラウザ(localStorage)に保存。JSON で書き出し/読み込み可能
 - **出力** — PNG 保存、動画保存（5秒: MP4 優先・非対応時は WebM）、共有ボタンで外部アプリへ直接送受信（Web Share API、非対応環境は PNG ダウンロードにフォールバック）
+- **共有リンク** — 「共有リンクを作る」で作品状態（キャラのパラメーター＋背景シェーダーの設定）を URL のフラグメント（`#s=…`、base64url、上限2,000文字）に埋め込んだリンクを作成。フラグメントはサーバーへ送られないため、状態はリンク経由で端末間だけを移動します。リンクを開くと作品が復元され、そのまま編集して自分の作品として再共有できます。背景画像・モデル素材はリンクに**含まれません**。長すぎるリンクは切り捨てず生成を拒否し、壊れたリンクはエラーを表示して既定の状態で起動します
 
 ## 構成
 
@@ -55,7 +57,7 @@ Tests: `node test.mjs` (741 assertions).
 ## テスト
 
 ```sh
-node test.mjs   # 741 assertions
+node test.mjs   # 770 assertions
 ```
 
 ## 設計メモ
@@ -63,6 +65,7 @@ node test.mjs   # 741 assertions
 - マネキンは関節スケルトン（脚2関節×2、腕2関節×2、頭・胴）を正規化空間で計算し、capsule 描画。アニメーションは時間 t の決定論的関数なので録画とプレビューが一致する
 - 動画素材の白抜きはフレーム毎に per-pixel アルファ適用（処理幅 960px にキャップ）。静止画はパラメータ変更時のみ再処理
 - 外部キー/ネットワーク/トラッキングなし。画像・動画・お気に入りは全てローカルに留まる
+- 共有リンクの直列化は、お気に入りと同じ既存のプリセット形式（`{v:1, name, params}`）を再利用し、シェーダー状態を同じ JSON に相乗りさせている。受け取ったリンクは他者からの入力として扱い、デコード時に版数確認・パラメーターのクランプ・シェーダー ID の許可リスト照合・シェーダーパラメーターの範囲クランプを全て行う
 
 ## ライセンス
 
