@@ -201,8 +201,8 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
       requestAnimationFrame: cb => { bootRaf.cb = cb; return 1; },
       setTimeout: () => 0,
       prompt: () => 'テスト',
-      navigator: {},
-      location: { hash: opts.hash || '', href: 'https://example.test/index.html' + (opts.hash || '') },
+      navigator: opts.navigator !== undefined ? opts.navigator : {},
+      location: { hash: opts.hash || '', protocol: opts.protocol || '', href: 'https://example.test/index.html' + (opts.hash || '') },
       history: { replaceState: () => {} },
     };
     const bootRaf = { cb: null };
@@ -287,6 +287,21 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     ok(back && JSON.stringify(back.params) === JSON.stringify(L.clampParams(L.defaultParams())), 'generated link restores current params');
     ok(registry.get('share-link-box').style.display === '', 'share link box revealed');
   }
+
+  // PWA: https 配信時の起動では Service Worker が登録され、file:// では登録されない
+  {
+    const registered = [];
+    const nav = { serviceWorker: { register: url => { registered.push(url); return Promise.resolve(); } } };
+    const { registry } = boot({}, { navigator: nav, protocol: 'https:' });
+    ok(registered.length === 1 && registered[0] === 'sw.js', 'https boot registers sw.js once');
+    ok(registry.get('err').textContent === '', 'https boot shows no error');
+  }
+  {
+    const registered = [];
+    const nav = { serviceWorker: { register: url => { registered.push(url); return Promise.resolve(); } } };
+    boot({}, { navigator: nav, protocol: 'file:' });
+    ok(registered.length === 0, 'file boot does not register a service worker');
+  }
 }
 
 // shader backgrounds (AQUA 由来の純粋ロジック)
@@ -312,6 +327,141 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(w3.src.startsWith('#version 300 es'), 'GL2 header starts with version');
   ok(w3.src.includes('#define gl_FragColor _outColor'), 'GL2 maps gl_FragColor');
   ok(w3.headerLines > 10, 'header line count tracked');
+}
+
+// ---------- PWA: manifest ----------
+{
+  const manifest = JSON.parse(readFileSync(new URL('./manifest.webmanifest', import.meta.url), 'utf8'));
+  ok(typeof manifest.name === 'string' && manifest.name.includes('Shiro') && manifest.short_name === 'Shiro', 'manifest names');
+  ok(manifest.display === 'standalone', 'manifest display standalone');
+  ok(manifest.start_url === './index.html' && manifest.scope === './', 'manifest start_url and scope are relative');
+  ok(manifest.theme_color === '#14151a' && manifest.background_color === '#14151a', 'manifest colors match the app background');
+  const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+  ok(html.includes('<link rel="manifest" href="manifest.webmanifest">'), 'index.html links the manifest');
+  ok(html.includes('<meta name="theme-color" content="#14151a">'), 'index.html theme-color matches the manifest');
+  ok(html.includes('rel="apple-touch-icon"'), 'index.html has an apple-touch-icon');
+  const byKey = new Map();
+  for (const icon of manifest.icons) for (const s of icon.sizes.split(' ')) byKey.set(`${s}|${icon.purpose || 'any'}`, icon);
+  ok(byKey.has('192x192|any') && byKey.has('512x512|any'), 'manifest declares 192 and 512 icons');
+  ok(byKey.has('512x512|maskable'), 'manifest declares a maskable icon');
+  for (const icon of manifest.icons) {
+    const buf = readFileSync(new URL('./' + icon.src, import.meta.url));
+    ok(buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), `icon ${icon.src} is a PNG`);
+    ok(icon.sizes.split(' ').includes(`${buf.readUInt32BE(16)}x${buf.readUInt32BE(20)}`), `icon ${icon.src} dimensions match the manifest`);
+    ok(icon.type === 'image/png', `icon ${icon.src} type is image/png`);
+  }
+}
+
+// ---------- PWA: 登録ポリシー（http(s) のみ・失敗は本体を妨げない） ----------
+{
+  const calls = [];
+  const navOk = { serviceWorker: { register: u => { calls.push(u); return Promise.resolve(); } } };
+  ok(L.registerServiceWorker(navOk, { protocol: 'https:' }) === true && calls[0] === 'sw.js', 'sw registered over https');
+  ok(L.registerServiceWorker(navOk, { protocol: 'http:' }) === true, 'sw registered over http');
+  ok(L.registerServiceWorker(navOk, { protocol: 'file:' }) === false && calls.length === 2, 'sw not registered on file:');
+  ok(L.registerServiceWorker({}, { protocol: 'https:' }) === false, 'sw unsupported browser -> false');
+  ok(L.registerServiceWorker(null, null) === false, 'sw missing env -> false');
+  ok(L.registerServiceWorker({ serviceWorker: { register: () => { throw new Error('x'); } } }, { protocol: 'https:' }) === false, 'sw register throw is swallowed');
+  ok(L.registerServiceWorker({ serviceWorker: { register: () => Promise.reject(new Error('x')) } }, { protocol: 'https:' }) === true, 'sw register rejection is swallowed');
+}
+
+// ---------- PWA: Service Worker の振る舞い（vm + フェイク CacheStorage） ----------
+{
+  const ORIGIN = 'https://example.test';
+  const makeRes = body => ({ status: 200, body, clone() { return makeRes(body); } });
+  class FakeCache {
+    constructor() { this.map = new Map(); }
+    async addAll(urls) { for (const u of urls) this.map.set(new URL(u, ORIGIN + '/').href, makeRes('shell:' + u)); }
+    async put(req, res) { this.map.set(typeof req === 'string' ? new URL(req, ORIGIN + '/').href : req.url, res); }
+    async match(req, opts = {}) {
+      const key = typeof req === 'string' ? new URL(req, ORIGIN + '/').href : req.url;
+      if (this.map.has(key)) return this.map.get(key);
+      if (opts.ignoreSearch) {
+        const bare = key.split('?')[0];
+        for (const [k, v] of this.map) if (k.split('?')[0] === bare) return v;
+      }
+      return undefined;
+    }
+  }
+  class FakeCacheStorage {
+    constructor() { this.byName = new Map(); }
+    async open(name) { if (!this.byName.has(name)) this.byName.set(name, new FakeCache()); return this.byName.get(name); }
+    async keys() { return [...this.byName.keys()]; }
+    async delete(name) { return this.byName.delete(name); }
+  }
+  const loadSW = (storage, fetchImpl, versionOverride) => {
+    let code = readFileSync(new URL('./sw.js', import.meta.url), 'utf8');
+    if (versionOverride) code = code.replace(/const SW_VERSION = '[^']+'/, `const SW_VERSION = '${versionOverride}'`);
+    const listeners = {};
+    const calls = { skipWaiting: 0, claim: 0 };
+    const sb = {
+      console, URL, module: { exports: {} },
+      self: {
+        addEventListener: (type, fn) => { listeners[type] = fn; },
+        location: { origin: ORIGIN },
+        skipWaiting: () => { calls.skipWaiting++; return Promise.resolve(); },
+        clients: { claim: () => { calls.claim++; return Promise.resolve(); } },
+      },
+      caches: storage, fetch: fetchImpl,
+    };
+    vm.createContext(sb);
+    vm.runInContext(code, sb);
+    return { listeners, calls, api: sb.module.exports };
+  };
+  const fireLifecycle = async (sw, type) => {
+    let p;
+    sw.listeners[type]({ waitUntil: q => { p = q; } });
+    await p;
+  };
+  const fireFetch = async (sw, request) => {
+    let p, responded = false;
+    sw.listeners.fetch({ request, respondWith: q => { responded = true; p = q; } });
+    return responded ? p : undefined;
+  };
+  const online = async req => makeRes('net:' + req.url);
+  const offline = async () => { throw new Error('offline'); };
+
+  const storage = new FakeCacheStorage();
+  await storage.open('shiro-shell-0.0.0+0'); // 前版の残骸
+  const sw = loadSW(storage, online);
+  ok(sw.api.APP_SHELL.includes('./index.html') && sw.api.APP_SHELL.includes('./app.js')
+    && sw.api.APP_SHELL.includes('./manifest.webmanifest'), 'app shell covers page, script and manifest');
+  ok(sw.api.APP_SHELL.filter(u => u.includes('icon')).length === 3, 'app shell covers the icons');
+  ok(sw.api.CACHE_NAME === 'shiro-shell-' + sw.api.SW_VERSION, 'cache name carries the version');
+
+  await fireLifecycle(sw, 'install');
+  const shellCache = await storage.open(sw.api.CACHE_NAME);
+  ok(shellCache.map.size === sw.api.APP_SHELL.length, 'install precaches the whole shell');
+  ok(sw.calls.skipWaiting === 1, 'install skips waiting');
+
+  await fireLifecycle(sw, 'activate');
+  ok(!(await storage.keys()).includes('shiro-shell-0.0.0+0'), 'activate deletes the old-version cache');
+  ok((await storage.keys()).includes(sw.api.CACHE_NAME), 'activate keeps the current cache');
+  ok(sw.calls.claim === 1, 'activate claims clients');
+
+  // 在線時: ネットワーク優先で返し、キャッシュも新しい内容に差し替わる（固着しない）
+  const res1 = await fireFetch(sw, { method: 'GET', url: ORIGIN + '/app.js', mode: 'cors' });
+  ok(res1 && res1.body === 'net:' + ORIGIN + '/app.js', 'online fetch returns the network response');
+  const cached = await shellCache.match({ url: ORIGIN + '/app.js' });
+  ok(cached && cached.body === 'net:' + ORIGIN + '/app.js', 'online fetch refreshes the cache');
+
+  // オフライン時: 直近のキャッシュで起動できる
+  const swOff = loadSW(storage, offline);
+  const res2 = await fireFetch(swOff, { method: 'GET', url: ORIGIN + '/app.js', mode: 'cors' });
+  ok(res2 && res2.body === 'net:' + ORIGIN + '/app.js', 'offline fetch falls back to the cache');
+  const res3 = await fireFetch(swOff, { method: 'GET', url: ORIGIN + '/opened/from/a/share/link', mode: 'navigate' });
+  ok(res3 && res3.body === 'shell:./index.html', 'offline navigation falls back to index.html');
+
+  // 扱わないリクエストは素通し（respondWith しない）
+  ok(await fireFetch(sw, { method: 'GET', url: 'https://other.example/x.js', mode: 'cors' }) === undefined, 'cross-origin fetch is left alone');
+  ok(await fireFetch(sw, { method: 'POST', url: ORIGIN + '/app.js', mode: 'cors' }) === undefined, 'non-GET fetch is left alone');
+
+  // 版上げ: 新しい SW が有効化されると旧キャッシュは消える
+  const sw2 = loadSW(storage, online, '0.1.0+2');
+  await fireLifecycle(sw2, 'install');
+  await fireLifecycle(sw2, 'activate');
+  const names = await storage.keys();
+  ok(!names.includes(sw.api.CACHE_NAME) && names.includes(sw2.api.CACHE_NAME), 'version bump purges the previous shell cache');
 }
 
 console.log(`${pass} pass / ${fail} fail`);

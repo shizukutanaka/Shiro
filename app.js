@@ -232,6 +232,21 @@ const ShiroLib = (() => {
     return null;
   }
 
+  // ---------- PWA ----------
+  // Service Worker は http(s) 配信時だけ意味を持つ。file:// で開いた場合や
+  // SW 非対応環境では登録せず、従来どおりの静的ページとして動く（段階的強化）。
+  // 登録の失敗は握りつぶす: オフライン対応は付加価値であり、本体機能の
+  // 起動を妨げてはならない。登録したかどうかを戻り値で返す（テスト用）。
+  function registerServiceWorker(nav, loc) {
+    try {
+      if (!nav || !('serviceWorker' in nav)) return false;
+      if (!loc || !/^https?:$/.test(loc.protocol || '')) return false;
+      const p = nav.serviceWorker.register('sw.js');
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+      return true;
+    } catch { return false; }
+  }
+
   // ---------- mannequin ----------
   // 正面図の関節人形。y は足元=0・上向き正、全長 1.0 の正規化空間。
   function mannequinPose(p, t) {
@@ -585,7 +600,7 @@ void main(){
     SHARE_FRAGMENT_MAX_LENGTH, SHARE_URL_MAX_LENGTH,
     clampShaderState, buildShareJson, parseShareJson, encodeShareLink, decodeShareLink,
     keyAlpha, mannequinPose, skeleton, drawMannequin,
-    MIME_CANDIDATES, pickMime,
+    MIME_CANDIDATES, pickMime, registerServiceWorker,
     SHADER_PALETTES, SHADER_PRESETS, parseShaderParams, wrapShaderSource,
   };
 })();
@@ -1118,6 +1133,10 @@ if (typeof document !== 'undefined') (() => {
   }
 
   // ---------- init ----------
+  // PWA: http(s) 配信時のみ Service Worker を登録する（file:// では何もしない）。
+  L.registerServiceWorker(
+    typeof navigator !== 'undefined' ? navigator : null,
+    typeof location !== 'undefined' ? location : null);
   // 共有リンクから開いた受け手への導線: 状態は適用済みなので、案内を出し、
   // そのまま編集を始められるようにする。フラグメントは適用後に消す
   // （残すと再読み込みのたびに自分の編集が共有状態で上書きされてしまう）。
