@@ -52,6 +52,38 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   throws(() => L.parseFavList('{}'), 'non-array fav list rejected');
 }
 
+// share link round-trip
+{
+  const p = L.randomParams(L.mulberry32(11));
+  const shader = { id: 'aurora', paletteIdx: 3, params: [2.5, 1.1, 0.7], playing: false, speed: 2 };
+  const frag = L.encodeShareLink(p, shader);
+  ok(frag.startsWith('s='), 'share fragment prefix');
+  ok(/^[A-Za-z0-9_-]+$/.test(frag.slice(2)), 'share fragment is base64url');
+  ok(frag.length <= L.SHARE_FRAGMENT_MAX_LENGTH, 'share fragment within limit');
+  const back = L.decodeShareLink('#' + frag);
+  ok(JSON.stringify(back.params) === JSON.stringify(L.clampParams(p)), 'share params round-trip');
+  ok(back.shader.id === 'aurora' && back.shader.paletteIdx === 3 && back.shader.playing === false && back.shader.speed === 2, 'share shader round-trip');
+  ok(JSON.stringify(back.shader.params) === JSON.stringify([2.5, 1.1, 0.7]), 'share shader params round-trip');
+  ok(L.decodeShareLink('https://example.test/index.html#' + frag).shader.id === 'aurora', 'share decode accepts full URL');
+  const plain = L.decodeShareLink('#' + L.encodeShareLink(L.defaultParams(), null));
+  ok(plain.shader.id === '' && plain.shader.speed === 1 && plain.shader.playing === true, 'share without shader gives defaults');
+  ok(L.decodeShareLink('') === null && L.decodeShareLink('#section') === null && L.decodeShareLink(null) === null, 'non-share hash ignored');
+  throws(() => L.decodeShareLink('#s=!!!'), 'share bad charset rejected');
+  throws(() => L.decodeShareLink('#s=' + Buffer.from('{"v":2,"name":"","params":{}}').toString('base64url')), 'share bad version rejected');
+  throws(() => L.decodeShareLink('#s=' + frag.slice(2, 10)), 'share truncated payload rejected');
+  throws(() => L.decodeShareLink('#s=' + 'A'.repeat(L.SHARE_FRAGMENT_MAX_LENGTH)), 'share oversize fragment rejected');
+  // リンクは他者からの入力: 許可リスト外と範囲外は decode 側で落とす/収める
+  const rawJson = JSON.stringify({ v: 1, name: '', params: p, shader: { id: 'aqua-flow', paletteIdx: 99, params: [999, -5, 'x'], speed: 99, playing: 'yes' } });
+  const dec = L.decodeShareLink('#s=' + Buffer.from(rawJson, 'utf8').toString('base64url'));
+  ok(dec.shader.paletteIdx === 0 && dec.shader.speed === 3 && dec.shader.playing === true, 'share crafted shader scalars clamped');
+  ok(dec.shader.params[0] === 3.0 && dec.shader.params[1] === 1.0, 'share crafted shader params clamped to preset range');
+  ok(dec.shader.params[2] === 0.55, 'share non-numeric shader param falls back to default');
+  const decBogus = L.decodeShareLink('#s=' + Buffer.from(JSON.stringify({ v: 1, name: '', params: p, shader: { id: 'bogus' } }), 'utf8').toString('base64url'));
+  ok(decBogus.shader.id === '', 'share unknown shader id dropped');
+  const jp = '#s=' + Buffer.from(JSON.stringify({ v: 1, name: 'テスト作品', params: p }), 'utf8').toString('base64url');
+  ok(L.decodeShareLink(jp).name === 'テスト作品', 'share utf-8 payload decodes');
+}
+
 // chroma key
 {
   ok(L.keyAlpha(255, 255, 255, 0, .5) === 255, 'thresh=0 keeps pure white');
@@ -121,12 +153,13 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     },
     set: () => true,
   });
-  const boot = (initial) => {
+  const boot = (initial, opts = {}) => {
     const registry = new Map();
     const makeEl = (tag) => {
       const el = {
         tagName: String(tag || 'div').toUpperCase(),
         children: [], listeners: {}, style: {}, _qs: {},
+        classList: { toggle() {}, add() {}, remove() {}, contains: () => false },
         value: '', checked: false, title: '', src: '', href: '', download: '',
         type: '', min: '', max: '', step: '', className: '', htmlFor: '',
         width: 640, height: 600, _text: '', _html: '',
@@ -169,12 +202,17 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
       setTimeout: () => 0,
       prompt: () => 'テスト',
       navigator: {},
+      location: { hash: opts.hash || '', href: 'https://example.test/index.html' + (opts.hash || '') },
+      history: { replaceState: () => {} },
     };
     const bootRaf = { cb: null };
     // index.html に静的に存在する要素を先に実体化する（実ブラウザでは常時存在するため）
     for (const id of ['stage', 'err', 'sliders', 'sel-anim', 'sel-bgfit', 'chk-flip',
       'btn-random', 'bg-file', 'model-file', 'btn-model-reset', 'btn-bg-reset',
-      'btn-png', 'btn-rec', 'btn-share', 'btn-fav', 'btn-fav-exp', 'fav-file', 'fav-bar'])
+      'btn-png', 'btn-rec', 'btn-share', 'btn-fav', 'btn-fav-exp', 'fav-file', 'fav-bar',
+      'btn-share-link', 'share-link-box', 'share-url', 'btn-copy-link', 'share-msg',
+      'shared-banner', 'btn-edit-shared',
+      'sel-shader', 'shader-ui', 'shader-params', 'shader-palettes', 'shader-speed', 'out-shader-speed', 'btn-shader-play'])
       sb.document.getElementById(id);
     vm.createContext(sb);
     vm.runInContext(src, sb);
@@ -213,6 +251,41 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     const second = boot(Object.fromEntries(first.store));
     ok(second.registry.get('err').textContent === '', 'reboot after save shows no error');
     ok(second.registry.get('fav-bar').children.length === 1, 'saved favorite survives reboot');
+  }
+
+  // 共有リンクで開く: パラメーターとシェーダーが復元され、受け手への案内が出る。
+  // なお err には共有リンク由来の文言が出ないことだけを見る: スタブの WebGL は
+  // シェーダーのコンパイル可否を再現できないため、実機では出ない文言が残り得る。
+  {
+    const p = { ...L.defaultParams(), height: 0.11, anim: 'dance' };
+    const hash = '#' + L.encodeShareLink(p, { id: 'ripple', paletteIdx: 2, params: [20, 2, 3], speed: 1.5 });
+    const { registry } = boot({}, { hash });
+    ok(!registry.get('err').textContent.includes('共有リンク'), 'share boot has no share-link error');
+    ok(Math.abs(+registry.get('sl-height').value - 0.11) < 1e-9, 'share boot restores slider');
+    ok(registry.get('sel-anim').value === 'dance', 'share boot restores anim');
+    ok(registry.get('sel-shader').value === 'ripple', 'share boot restores shader selection');
+    ok(registry.get('shared-banner').style.display === '', 'share boot shows recipient banner');
+  }
+
+  // 壊れた共有リンク: エラーは出すが、通常起動して描画できる
+  {
+    const { registry, raf } = boot({}, { hash: '#s=!!!broken' });
+    ok(registry.get('err').textContent.includes('共有リンクを読み込めませんでした'), 'corrupt share link surfaces an error');
+    ok(registry.get('shared-banner').style.display !== '', 'corrupt share link shows no banner');
+    let frameOk = true;
+    try { raf.cb(); } catch { frameOk = false; }
+    ok(frameOk, 'corrupt share link still boots and renders');
+  }
+
+  // 共有リンク生成: 現在の状態を往復できる URL がその場で手に入る
+  {
+    const { registry } = boot();
+    registry.get('btn-share-link').listeners.click[0]();
+    const url = registry.get('share-url').value;
+    ok(url.includes('#s='), 'share link generated into the box');
+    const back = L.decodeShareLink(url);
+    ok(back && JSON.stringify(back.params) === JSON.stringify(L.clampParams(L.defaultParams())), 'generated link restores current params');
+    ok(registry.get('share-link-box').style.display === '', 'share link box revealed');
   }
 }
 
