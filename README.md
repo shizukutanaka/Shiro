@@ -17,6 +17,7 @@ Just open `index.html` in a browser. No local server is needed, and the app make
 ### Features
 
 - **Choose a background image** — load any image as the composite backdrop (cover / contain fit toggle)
+- **Shader backgrounds (from AQUA)** — animated WebGL shader backdrops (Aqua Flow, Aurora, Chromatic Plasma, Ripple, Crystal Voronoi) with per-shader parameter sliders, a 6-colour palette, speed control and play/pause; the choice is remembered in the browser, and shaders are included in PNG / video / share output
 - **Choose a model image/video** — replace the white model with your own material; common video formats such as mp4 / webm / mov are supported, and the "white keying strength" slider removes white backgrounds via chroma keying
 - **Parameters** — adjust height, head, shoulder width, arms, legs, tone, outline, motion, position, scale, and opacity with sliders, game character-creator style
 - **Animation** — idle / wave / walk / dance / still
@@ -26,7 +27,7 @@ Just open `index.html` in a browser. No local server is needed, and the app make
 
 Everything stays local: no external keys, network access, or tracking. Images, videos, and favorites never leave your device.
 
-Tests: `node test.mjs` (706 assertions).
+Tests: `node test.mjs` (741 assertions).
 
 ---
 
@@ -35,6 +36,7 @@ Tests: `node test.mjs` (706 assertions).
 `index.html` をブラウザで開くだけ。ローカルサーバー不要、外部通信なし。
 
 - **背景画像を選ぶ** — 合成先の好きな画像を読み込み（cover / contain 切替）
+- **背景シェーダー（AQUA 由来）** — WebGL シェーダーの動く背景（Aqua Flow、Aurora、Chromatic Plasma、Ripple、Crystal Voronoi）。シェーダーごとのパラメータースライダー、基調色6色、速さ調整、再生/一時停止つき。選択はブラウザに保存され、PNG・動画・共有の書き出しにも背景が含まれます
 - **モデル画像/動画を選ぶ** — 自分の素材で白モデルを差し替え。mp4 / webm / mov 等の通常動画形式に対応。「白抜き強度」で白背景をクロマキー除去
 - **パラメーター** — 身長・頭・肩幅・腕・脚・トーン・輪郭・動き・位置・倍率・不透明度をスライダーで調整（ゲームのキャラクリエイト感覚）
 - **アニメーション** — 待機 / 手を振る / 歩く / ダンス / 静止
@@ -53,7 +55,7 @@ Tests: `node test.mjs` (706 assertions).
 ## テスト
 
 ```sh
-node test.mjs   # 706 assertions
+node test.mjs   # 741 assertions
 ```
 
 ## 設計メモ
