@@ -14,6 +14,8 @@ Shiro is a character-creator-style web app that composites a white model — the
 
 Just open `index.html` in a browser. No local server is needed, and the app makes no external network requests.
 
+Served over HTTP(S) instead, Shiro is an installable PWA: it can be added to a phone or desktop home screen like an app, and after the first visit it launches offline. The Service Worker caches only the app shell (page, script, manifest, icons) and always fetches network-first, so a new version is never masked by a stale cache. Opening the file directly keeps working exactly as before, just without installation and offline launch.
+
 ### Features
 
 - **Choose a background image** — load any image as the composite backdrop (cover / contain fit toggle)
@@ -25,16 +27,19 @@ Just open `index.html` in a browser. No local server is needed, and the app make
 - **Favorites** — save named presets with thumbnails in the browser (localStorage); export/import as JSON
 - **Output** — save as PNG, save a 5-second video (MP4 preferred, WebM fallback), or share directly to external apps via the Web Share API (falls back to PNG download where unsupported)
 - **Share link** — "Create share link" embeds the current work state (character parameters + shader background settings) in the URL fragment (`#s=…`, base64url, max 2,000 characters). Fragments are never sent to a server, so the state travels only between devices via the link itself. Opening the link restores the work ready to edit — the recipient can adjust it and re-share their own version. Background images and model material are **not** included in the link (they never leave your device); a link that is too long is refused rather than truncated, and a corrupted link shows an error and falls back to the default state
+- **Installable / offline (PWA)** — when served over HTTP(S), Shiro installs like an app (manifest + icons) and launches offline after the first visit; the Service Worker caches the app shell only, never your images, videos, or favorites
 
 Everything stays local: no external keys, network access, or tracking. Images, videos, and favorites never leave your device.
 
-Tests: `node test.mjs` (770 assertions).
+Tests: `node test.mjs` (813 assertions).
 
 ---
 
 ## 使い方
 
 `index.html` をブラウザで開くだけ。ローカルサーバー不要、外部通信なし。
+
+HTTP(S) で配信した場合は PWA としてインストールもできます。ホーム画面に追加してアプリのように起動でき、初回アクセス後はオフラインでも開けます。Service Worker がキャッシュするのはアプリ本体（ページ・スクリプト・マニフェスト・アイコン）だけで、取得はネットワーク優先のため新しい版が古いキャッシュに隠れることはありません。ファイルを直接開く従来の使い方もそのまま使えます（その場合はインストールとオフライン起動だけが無効です）。
 
 - **背景画像を選ぶ** — 合成先の好きな画像を読み込み（cover / contain 切替）
 - **背景シェーダー（AQUA 由来）** — WebGL シェーダーの動く背景（Aqua Flow、Aurora、Chromatic Plasma、Ripple、Crystal Voronoi）。シェーダーごとのパラメータースライダー、基調色6色、速さ調整、再生/一時停止つき。選択はブラウザに保存され、PNG・動画・共有の書き出しにも背景が含まれます
@@ -45,6 +50,7 @@ Tests: `node test.mjs` (770 assertions).
 - **お気に入り** — 名前付きプリセットをサムネイル付きでブラウザ(localStorage)に保存。JSON で書き出し/読み込み可能
 - **出力** — PNG 保存、動画保存（5秒: MP4 優先・非対応時は WebM）、共有ボタンで外部アプリへ直接送受信（Web Share API、非対応環境は PNG ダウンロードにフォールバック）
 - **共有リンク** — 「共有リンクを作る」で作品状態（キャラのパラメーター＋背景シェーダーの設定）を URL のフラグメント（`#s=…`、base64url、上限2,000文字）に埋め込んだリンクを作成。フラグメントはサーバーへ送られないため、状態はリンク経由で端末間だけを移動します。リンクを開くと作品が復元され、そのまま編集して自分の作品として再共有できます。背景画像・モデル素材はリンクに**含まれません**。長すぎるリンクは切り捨てず生成を拒否し、壊れたリンクはエラーを表示して既定の状態で起動します
+- **インストール／オフライン（PWA）** — HTTP(S) 配信時はアプリとしてインストールでき、初回アクセス後はオフラインでも起動。Service Worker のキャッシュ対象はアプリ本体のみで、素材・お気に入りは対象外です
 
 ## 構成
 
@@ -52,12 +58,15 @@ Tests: `node test.mjs` (770 assertions).
 |---|---|
 | `index.html` | UI（キャンバス + パラメータパネル + お気に入りバー） |
 | `app.js` | 全ロジック。純粋関数は `ShiroLib` に集約（RNG・パラメータ検証・プリセット・クロマキー・骨格・描画） |
+| `manifest.webmanifest` | PWA マニフェスト（名前・アイコン・テーマ色・表示モード）。HTTP(S) 配信時のみ有効 |
+| `sw.js` | Service Worker（アプリ本体のキャッシュとオフライン起動）。登録は http(s) 配信時のみで、file:// では従来どおり動く |
+| `icon-192.png` / `icon-512.png` / `icon-512-maskable.png` | アプリアイコン（白モデルの図形を生成したもの） |
 | `test.mjs` | `node test.mjs` で純粋ロジックと UI 起動を検証するテストゲート |
 
 ## テスト
 
 ```sh
-node test.mjs   # 770 assertions
+node test.mjs   # 813 assertions
 ```
 
 ## 設計メモ
@@ -66,6 +75,7 @@ node test.mjs   # 770 assertions
 - 動画素材の白抜きはフレーム毎に per-pixel アルファ適用（処理幅 960px にキャップ）。静止画はパラメータ変更時のみ再処理
 - 外部キー/ネットワーク/トラッキングなし。画像・動画・お気に入りは全てローカルに留まる
 - 共有リンクの直列化は、お気に入りと同じ既存のプリセット形式（`{v:1, name, params}`）を再利用し、シェーダー状態を同じ JSON に相乗りさせている。受け取ったリンクは他者からの入力として扱い、デコード時に版数確認・パラメーターのクランプ・シェーダー ID の許可リスト照合・シェーダーパラメーターの範囲クランプを全て行う
+- PWA の Service Worker はアプリ本体（シェル）だけをキャッシュする。取得はネットワーク優先（在線時は常に最新、オフライン時のみキャッシュ）、キャッシュ名には版数を持ち activate で旧版を全て消すため、新版が古いキャッシュに固着しない。ユーザーの素材・お気に入りはキャッシュ対象外
 
 ## ライセンス
 
