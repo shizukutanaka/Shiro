@@ -216,5 +216,30 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   }
 }
 
+// shader backgrounds (AQUA 由来の純粋ロジック)
+{
+  ok(Array.isArray(L.SHADER_PRESETS) && L.SHADER_PRESETS.length >= 4, 'shader presets exist');
+  ok(L.SHADER_PALETTES.length === 6 && L.SHADER_PALETTES.every(c => c.length === 3), 'palettes are rgb triples');
+  for (const p of L.SHADER_PRESETS) {
+    ok(typeof p.id === 'string' && typeof p.code === 'string' && p.code.includes('void main()'), `preset ${p.id} has main`);
+    const defs = L.parseShaderParams(p.code);
+    ok(defs.length >= 1 && defs.length <= 8, `preset ${p.id} params in 1..8`);
+    for (const d of defs) ok(d.min < d.max && d.def >= d.min && d.def <= d.max, `preset ${p.id} param ${d.name} sane`);
+  }
+  ok(L.parseShaderParams('void main(){}').length === 0, 'no annotations -> no params');
+  const many = Array.from({ length: 12 }, (_, i) => `// @param p${i} [0, 1, 0.5]`).join('\n');
+  ok(L.parseShaderParams(many).length === 8, 'params capped at 8');
+
+  const w1 = L.wrapShaderSource('uniform float iTime;\nvoid main(){ gl_FragColor = vec4(1.); }', false);
+  ok((w1.src.match(/uniform float iTime;/g) || []).length === 1, 'user redeclaration stripped, header supplies it once');
+  ok(w1.src.includes('uniform float u_p[8];'), 'header supplies u_p');
+  const w2 = L.wrapShaderSource('void mainImage(out vec4 c, in vec2 fc){ c = vec4(1.); }', false);
+  ok(w2.src.includes('void main()') && w2.src.includes('mainImage(_c, gl_FragCoord.xy)'), 'mainImage wrapped');
+  const w3 = L.wrapShaderSource('void main(){ gl_FragColor = vec4(1.); }', true);
+  ok(w3.src.startsWith('#version 300 es'), 'GL2 header starts with version');
+  ok(w3.src.includes('#define gl_FragColor _outColor'), 'GL2 maps gl_FragColor');
+  ok(w3.headerLines > 10, 'header line count tracked');
+}
+
 console.log(`${pass} pass / ${fail} fail`);
 process.exit(fail ? 1 : 0);

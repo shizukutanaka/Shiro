@@ -251,12 +251,220 @@ const ShiroLib = (() => {
     ctx.restore();
   }
 
+  // ---------- shader backgrounds (from AQUA Shader Studio) ----------
+  // フルスクリーンシェーダーを背景に使うための資産と純粋ロジック。
+  // シェーダーは Shadertoy 互換の約束で書かれている:
+  //   uniform は iTime / iResolution / iMouse / u_color / u_p[8] が自動供給され、
+  //   `// @param name [min, max, default]` 注釈が調整スライダーになる。
+  const SHADER_PALETTES = [
+    [.39, .82, 1.00], // aqua
+    [.75, .35, .95], // purple-pink
+    [.19, .82, .35], // green-mint
+    [1.00, .62, .04], // orange-red
+    [1.00, .84, .04], // yellow-green
+    [1.00, 1.00, 1.00], // mono
+  ];
+
+  const SHADER_PRESETS = [
+    {
+      id: 'aqua-flow', name: 'Aqua Flow',
+      code: `// AQUA — Liquid Flow
+// @param flow [0.3, 3.0, 1.2]
+// @param detail [1.0, 8.0, 4.0]
+// @param hue [0.4, 0.7, 0.55]
+
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),
+             mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;
+  for(int i=0;i<6;i++){v+=a*noise(p);p*=2.02;a*=.5;}return v;}
+
+void main(){
+  vec2 uv = (gl_FragCoord.xy - .5*iResolution.xy) / min(iResolution.x,iResolution.y);
+  float t = iTime * u_p[0];
+  vec2 q = uv * u_p[1];
+  float n = fbm(q + vec2(t*.15, -t*.1));
+  float m = fbm(q*1.7 + n*2.0 + vec2(-t*.2, t*.12));
+  vec3 base = u_color;
+  vec3 hi = mix(base, vec3(1.), .6);
+  vec3 col = mix(base*.15, hi, smoothstep(.35,.85,m));
+  col += pow(smoothstep(.6,1.,m), 4.) * vec3(.4,.7,1.) * .6;
+  col *= 1.0 - .35*length(uv);
+  gl_FragColor = vec4(col, 1.);
+}`,
+    },
+    {
+      id: 'aurora', name: 'Aurora',
+      code: `// Northern Lights
+// @param bands [1.0, 6.0, 3.0]
+// @param speed [0.2, 2.0, 0.6]
+// @param soft [0.1, 1.0, 0.4]
+
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),
+             mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / iResolution.xy;
+  vec3 col = vec3(0.);
+  for(float i=0.; i<u_p[0]; i++){
+    float y = uv.y + .15*i + noise(vec2(uv.x*2.+i, iTime*u_p[1]))*.3;
+    float a = smoothstep(.5, .5+u_p[2], 1.0 - abs(y - .5 - .1*sin(uv.x*3.+iTime)));
+    col += u_color * a * (1.0 - i/u_p[0]) * .7;
+  }
+  col += vec3(.02,.02,.08);
+  gl_FragColor = vec4(col, 1.);
+}`,
+    },
+    {
+      id: 'plasma', name: 'Chromatic Plasma',
+      code: `// Chromatic Plasma
+// @param scale [1.0, 10.0, 4.0]
+// @param warp [0.0, 3.0, 1.2]
+// @param chroma [0.0, 0.1, 0.03]
+
+vec3 pal(float t){return .5 + .5*cos(6.283*(vec3(.0,.33,.67)+t));}
+
+void main(){
+  vec2 uv = (gl_FragCoord.xy - .5*iResolution.xy) / min(iResolution.x,iResolution.y);
+  uv *= u_p[0];
+  float t = iTime*.3;
+  for(int i=0;i<4;i++){
+    float fi = float(i)+1.0;
+    uv += u_p[1]*vec2(sin(uv.y*fi+t), cos(uv.x*fi+t))/fi;
+  }
+  vec3 c = pal(length(uv)*.2 + t*.1) * u_color * 2.0;
+  c.r *= 1. + u_p[2]*sin(iTime*2.);
+  c.b *= 1. - u_p[2]*sin(iTime*2.);
+  gl_FragColor = vec4(c, 1.);
+}`,
+    },
+    {
+      id: 'ripple', name: 'Ripple',
+      code: `// Concentric Ripples (move the pointer to move the source)
+// @param freq [5.0, 40.0, 18.0]
+// @param speed [0.5, 4.0, 1.5]
+// @param sharp [0.5, 6.0, 2.0]
+
+void main(){
+  vec2 uv = (gl_FragCoord.xy - .5*iResolution.xy) / min(iResolution.x,iResolution.y);
+  vec2 mc = (abs(iMouse.xy) / iResolution.xy - .5) * 2.0;
+  float d = length(uv - mc);
+  float w = sin(d*u_p[0] - iTime*u_p[1]);
+  w = pow(abs(w), u_p[2]) * sign(w);
+  vec3 c = u_color * (.5 + .5*w) + vec3(.02,.1,.2);
+  c *= exp(-d*.8);
+  gl_FragColor = vec4(c, 1.);
+}`,
+    },
+    {
+      id: 'crystal', name: 'Crystal Voronoi',
+      code: `// Voronoi Crystal
+// @param cells [2.0, 20.0, 8.0]
+// @param edge [0.01, 0.2, 0.04]
+// @param glow [0.0, 2.0, 1.0]
+
+vec2 hash2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));
+  return fract(sin(p)*43758.5453);}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / iResolution.xy;
+  uv.x *= iResolution.x/iResolution.y;
+  uv *= u_p[0];
+  vec2 g = floor(uv), f = fract(uv);
+  float m = 8., m2 = 8.;
+  for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){
+    vec2 o = vec2(x,y);
+    vec2 p = o + hash2(g+o)*(.5+.5*sin(iTime+6.283*hash2(g+o).x));
+    float d = length(f-p);
+    if(d<m){m2=m; m=d;} else if(d<m2) m2=d;
+  }
+  float e = smoothstep(0., u_p[1], m2-m);
+  vec3 c = u_color * e + u_color * u_p[2] * (1.-e) * .3;
+  gl_FragColor = vec4(c, 1.);
+}`,
+    },
+  ];
+
+  // `// @param name [min, max, default]` 注釈をスライダー定義に変換する（最大8個）
+  function parseShaderParams(src) {
+    const re = /\/\/\s*@param\s+(\w+)\s*\[([\d.\-]+)\s*,\s*([\d.\-]+)\s*,\s*([\d.\-]+)\]/g;
+    const out = []; let m;
+    while ((m = re.exec(String(src || ''))) && out.length < 8)
+      out.push({ name: m[1], min: +m[2], max: +m[3], def: +m[4] });
+    return out;
+  }
+
+  // ユーザー/プリセットの GLSL を、標準 uniform を自動供給する形に包む。
+  // - 標準 uniform の再宣言は除去される（こちらが供給する）
+  // - Shadertoy 形式 (void mainImage) は main() で包む
+  // 戻り値: { src, headerLines } — headerLines はエラーメッセージの行番号補正用
+  function wrapShaderSource(raw, isGL2) {
+    let src = String(raw || '').trim();
+    const hasMainImage = /void\s+mainImage\s*\(/.test(src);
+    const hasMain = /void\s+main\s*\(\s*\)/.test(src);
+    const stripUniforms = [
+      'u_time', 'u_resolution', 'u_mouse', 'u_color', 'u_p',
+      'iTime', 'iResolution', 'iMouse', 'iFrame', 'iTimeDelta', 'iDate',
+      'iChannel0', 'iChannel1', 'iBufferA',
+    ];
+    for (const name of stripUniforms) {
+      const arr = name === 'u_p' ? '\\s*\\[\\s*\\d+\\s*\\]' : '';
+      src = src.replace(new RegExp(`uniform\\s+\\w+\\s+${name}${arr}\\s*;`, 'g'), '');
+    }
+    src = src.replace(/precision\s+\w+\s+float\s*;\s*/g, '');
+    const header = isGL2 ? `#version 300 es
+precision highp float;
+out vec4 _outColor;
+uniform float iTime;
+uniform float iTimeDelta;
+uniform int   iFrame;
+uniform vec3  iResolution;
+uniform vec4  iMouse;
+uniform vec4  iDate;
+uniform vec3  u_color;
+uniform float u_p[8];
+#define u_time iTime
+#define u_resolution (iResolution.xy)
+#define u_mouse (iMouse.xy/iResolution.xy)
+#define gl_FragColor _outColor
+#define texture2D texture
+` : `precision highp float;
+uniform float iTime;
+uniform float iTimeDelta;
+uniform int   iFrame;
+uniform vec3  iResolution;
+uniform vec4  iMouse;
+uniform vec4  iDate;
+uniform vec3  u_color;
+uniform float u_p[8];
+#define u_time iTime
+#define u_resolution (iResolution.xy)
+#define u_mouse (iMouse.xy/iResolution.xy)
+#define texture(s,uv) texture2D(s,uv)
+`;
+    let body = src;
+    if (hasMainImage && !hasMain) {
+      body += `
+void main(){
+  vec4 _c;
+  mainImage(_c, gl_FragCoord.xy);
+  ${isGL2 ? '_outColor' : 'gl_FragColor'} = _c;
+}`;
+    }
+    const headerLines = (header.match(/\n/g) || []).length + 1;
+    return { src: header + '\n' + body, headerLines };
+  }
+
   return {
     clamp01, lerp, mulberry32, strSeed, ANIMS, FITS, NUM_KEYS, SLIDERS,
     defaultParams, clampParams, randomParams,
     serializePreset, parsePreset, parseFavList,
     keyAlpha, mannequinPose, skeleton, drawMannequin,
     MIME_CANDIDATES, pickMime,
+    SHADER_PALETTES, SHADER_PRESETS, parseShaderParams, wrapShaderSource,
   };
 })();
 if (typeof globalThis !== 'undefined') globalThis.ShiroLib = ShiroLib;
@@ -271,6 +479,8 @@ if (typeof document !== 'undefined') (() => {
 
   // お気に入りの保存キー。state の初期化（loadFavs）が参照するため、state より前に宣言する
   const FKEY = 'shiro.favs.v1';
+  // 背景シェーダーの保存キー（AQUA 由来の背景設定。お気に入りの params とは独立）
+  const SKEY = 'shiro.shader.v1';
 
   const state = {
     params: L.defaultParams(),
@@ -279,7 +489,26 @@ if (typeof document !== 'undefined') (() => {
     favs: loadFavs(),
     keySrc: null, keyParams: '',
     recorder: null, recTimer: 0,
+    shader: loadShaderState(),
   };
+
+  function loadShaderState() {
+    const d = { id: '', paletteIdx: 0, params: [], playing: true, speed: 1 };
+    try {
+      const o = JSON.parse(localStorage.getItem(SKEY) || 'null');
+      if (!o) return d;
+      if (L.SHADER_PRESETS.some(p => p.id === o.id)) d.id = o.id;
+      if (Number.isInteger(o.paletteIdx) && o.paletteIdx >= 0 && o.paletteIdx < L.SHADER_PALETTES.length)
+        d.paletteIdx = o.paletteIdx;
+      if (Array.isArray(o.params)) d.params = o.params.slice(0, 8).map(v => +v || 0);
+      if (typeof o.playing === 'boolean') d.playing = o.playing;
+      if (Number.isFinite(o.speed)) d.speed = Math.min(3, Math.max(0, o.speed));
+    } catch { /* 壊れた保存値は既定に落とす（背景は本体機能ではないため） */ }
+    return d;
+  }
+  function saveShaderState() {
+    try { localStorage.setItem(SKEY, JSON.stringify(state.shader)); } catch { /* 保存できなくても動作は続ける */ }
+  }
 
   // ---------- backdrop / model source ----------
   function defaultBackdrop(c) {
@@ -333,13 +562,178 @@ if (typeof document !== 'undefined') (() => {
     c.restore();
   }
 
+  // ---------- shader background (AQUA 由来) ----------
+  // フルスクリーンシェーダーを stage の背面レイヤー (#glbg) に描く。
+  // AQUA Shader Studio の Renderer を背景用途に絞って移植したもの:
+  // 標準 uniform の自動供給、コンパイル失敗時は前回成功したプログラムで
+  // 描き続ける（背景が突然真っ黒にならない）、WebGL が無い環境では無効化。
+  const glbg = $('glbg');
+  class ShaderBg {
+    constructor(canvas) {
+      this.cv = canvas;
+      this.gl = canvas.getContext('webgl2', { antialias: false, preserveDrawingBuffer: true })
+        || canvas.getContext('webgl', { antialias: false, preserveDrawingBuffer: true });
+      if (!this.gl) throw new Error('WebGL未対応');
+      this.isGL2 = typeof WebGL2RenderingContext !== 'undefined' && this.gl instanceof WebGL2RenderingContext;
+      this.prog = null; this.lastGoodProg = null; this.uLocs = {};
+      this.t = 0; this.tPrev = 0; this.frame = 0;
+      this.mouse = [0, 0, 0, 0];
+      this.color = L.SHADER_PALETTES[0];
+      this.params = new Float32Array(8);
+      this.errorCb = null;
+      const gl = this.gl;
+      const vs = this.isGL2
+        ? '#version 300 es\nin vec2 p;void main(){gl_Position=vec4(p,0,1);}'
+        : 'attribute vec2 p;void main(){gl_Position=vec4(p,0,1);}';
+      const v = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(v, vs); gl.compileShader(v);
+      this.vs = v;
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    }
+    compile(rawSrc) {
+      const gl = this.gl;
+      const { src, headerLines } = L.wrapShaderSource(rawSrc, this.isGL2);
+      const f = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(f, src); gl.compileShader(f);
+      if (!gl.getShaderParameter(f, gl.COMPILE_STATUS)) {
+        const log = gl.getShaderInfoLog(f) || 'Unknown';
+        gl.deleteShader(f);
+        const adjusted = log.replace(/ERROR:\s*(\d+):(\d+):/g,
+          (_, a, b) => `ERROR: ${a}:${Math.max(1, +b - headerLines)}:`);
+        if (this.errorCb) this.errorCb(adjusted);
+        return false;
+      }
+      const p = gl.createProgram();
+      gl.attachShader(p, this.vs); gl.attachShader(p, f);
+      gl.bindAttribLocation(p, 0, 'p');
+      gl.linkProgram(p);
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+        if (this.errorCb) this.errorCb(gl.getProgramInfoLog(p) || 'link error');
+        return false;
+      }
+      if (this.lastGoodProg && this.lastGoodProg !== this.prog) gl.deleteProgram(this.lastGoodProg);
+      this.lastGoodProg = this.prog;
+      this.prog = p;
+      gl.useProgram(p);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      for (const n of ['iTime', 'iTimeDelta', 'iFrame', 'iResolution', 'iMouse', 'iDate', 'u_color'])
+        this.uLocs[n] = gl.getUniformLocation(p, n);
+      this.uLocs.u_p = gl.getUniformLocation(p, 'u_p[0]') || gl.getUniformLocation(p, 'u_p');
+      if (this.errorCb) this.errorCb(null);
+      return true;
+    }
+    render(now, speed, playing) {
+      const gl = this.gl;
+      const active = this.prog || this.lastGoodProg;
+      if (!active) return;
+      const dt = this.tPrev ? (now - this.tPrev) / 1000 : 0;
+      this.tPrev = now;
+      if (playing) this.t += dt * speed;
+      gl.viewport(0, 0, this.cv.width, this.cv.height);
+      gl.useProgram(active);
+      const u = this.uLocs, d = new Date();
+      if (u.iTime) gl.uniform1f(u.iTime, this.t);
+      if (u.iTimeDelta) gl.uniform1f(u.iTimeDelta, playing ? dt * speed : 0);
+      if (u.iFrame) gl.uniform1i(u.iFrame, this.frame);
+      if (u.iResolution) gl.uniform3f(u.iResolution, this.cv.width, this.cv.height, 1.0);
+      if (u.iMouse) gl.uniform4f(u.iMouse, this.mouse[0], this.mouse[1], this.mouse[2], this.mouse[3]);
+      if (u.iDate) gl.uniform4f(u.iDate, d.getFullYear(), d.getMonth(), d.getDate(), d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds());
+      if (u.u_color) gl.uniform3fv(u.u_color, this.color);
+      if (u.u_p) gl.uniform1fv(u.u_p, this.params);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      if (playing) this.frame++;
+    }
+  }
+
+  let shaderBg = null;
+  try {
+    shaderBg = new ShaderBg(glbg);
+    shaderBg.errorCb = log => { if (log) err('背景シェーダーのコンパイルエラー:\n' + log.split('\n').filter(Boolean).slice(0, 3).join('\n')); };
+  } catch {
+    shaderBg = null; // WebGL が無い環境ではシェーダー背景なしで通常動作する
+  }
+  const shaderActive = () => !!(shaderBg && state.shader.id);
+
+  function applyShaderPreset() {
+    if (!shaderBg) return;
+    const p = L.SHADER_PRESETS.find(x => x.id === state.shader.id);
+    glbg.style.display = p ? 'block' : 'none';
+    stage.classList.toggle('translucent', !!p);
+    if (!p) return;
+    shaderBg.color = L.SHADER_PALETTES[state.shader.paletteIdx] || L.SHADER_PALETTES[0];
+    const defs = L.parseShaderParams(p.code);
+    defs.forEach((d, i) => {
+      const saved = state.shader.params[i];
+      shaderBg.params[i] = Number.isFinite(saved) && state.shader.params.length ? saved : d.def;
+    });
+    shaderBg.t = 0; shaderBg.frame = 0;
+    if (!shaderBg.compile(p.code) && !shaderBg.lastGoodProg)
+      err('背景シェーダーをコンパイルできませんでした');
+    buildShaderParamUI(defs);
+  }
+
+  function buildShaderParamUI(defs) {
+    const box = $('shader-params');
+    box.innerHTML = '';
+    defs.forEach((d, i) => {
+      const lab = document.createElement('label');
+      lab.className = 'ctl'; lab.htmlFor = 'shp-' + i;
+      lab.innerHTML = `${d.name}<output id="shp-out-${i}"></output>`;
+      const inp = document.createElement('input');
+      inp.type = 'range'; inp.id = 'shp-' + i;
+      inp.min = d.min; inp.max = d.max; inp.step = (d.max - d.min) / 200;
+      inp.value = shaderBg.params[i];
+      inp.addEventListener('input', () => {
+        const v = +inp.value;
+        shaderBg.params[i] = v;
+        state.shader.params[i] = v;
+        $('shp-out-' + i).textContent = v.toFixed(2);
+        saveShaderState();
+      });
+      box.appendChild(lab); box.appendChild(inp);
+      lab.querySelector('output').textContent = (+shaderBg.params[i]).toFixed(2);
+    });
+  }
+
+  // stage 上のポインタをシェーダーの iMouse へ（Ripple の波源など）
+  stage.addEventListener('pointermove', e => {
+    if (!shaderBg) return;
+    const r = stage.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    shaderBg.mouse[0] = (e.clientX - r.left) / r.width * glbg.width;
+    shaderBg.mouse[1] = glbg.height - (e.clientY - r.top) / r.height * glbg.height;
+  });
+  stage.addEventListener('pointerdown', () => {
+    if (shaderBg) { shaderBg.mouse[2] = Math.abs(shaderBg.mouse[0]); shaderBg.mouse[3] = Math.abs(shaderBg.mouse[1]); }
+  });
+  stage.addEventListener('pointerup', () => {
+    if (shaderBg) { shaderBg.mouse[2] = -Math.abs(shaderBg.mouse[2]); shaderBg.mouse[3] = -Math.abs(shaderBg.mouse[3]); }
+  });
+
+  // 書き出し用: 背景シェーダーと stage を合成したキャンバスを返す
+  function compositeCanvas() {
+    if (!shaderActive()) return stage;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const c2 = c.getContext('2d');
+    c2.drawImage(glbg, 0, 0, W, H);
+    c2.drawImage(stage, 0, 0);
+    return c;
+  }
+
   // ---------- render loop ----------
   const t0 = performance.now();
-  function frame() {
+  function frame(now) {
     const t = (performance.now() - t0) / 1000;
     const p = state.params;
+    if (shaderActive()) shaderBg.render(now || 0, state.shader.speed, state.shader.playing);
     ctx.clearRect(0, 0, W, H);
-    if (state.bg) drawCover(ctx, state.bg, p.bgFit); else defaultBackdrop(ctx);
+    if (!shaderActive()) {
+      if (state.bg) drawCover(ctx, state.bg, p.bgFit); else defaultBackdrop(ctx);
+    }
     if (state.media) drawMedia(ctx);
     else L.drawMannequin(ctx, p, t, p.x * W, p.y * H, H * (0.25 + 0.7 * p.scale));
     requestAnimationFrame(frame);
@@ -410,16 +804,30 @@ if (typeof document !== 'undefined') (() => {
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
   $('btn-png').addEventListener('click', () =>
-    stage.toBlob(b => b ? download(b, 'shiro.png') : err('PNG生成に失敗'), 'image/png'));
+    compositeCanvas().toBlob(b => b ? download(b, 'shiro.png') : err('PNG生成に失敗'), 'image/png'));
   $('btn-rec').addEventListener('click', () => {
     if (state.recorder) return;
     const pick = L.pickMime(m => MediaRecorder.isTypeSupported(m));
     if (!pick) return err('このブラウザは動画録画に未対応です');
-    const rec = new MediaRecorder(stage.captureStream(30), { mimeType: pick.mime });
+    // シェーダー背景があるときは合成キャンバスを録る（stage だけでは背景が写らない）
+    let srcCanvas = stage, compTimer = 0;
+    if (shaderActive()) {
+      srcCanvas = document.createElement('canvas');
+      srcCanvas.width = W; srcCanvas.height = H;
+      const c2 = srcCanvas.getContext('2d');
+      const drawComp = () => {
+        c2.drawImage(glbg, 0, 0, W, H);
+        c2.drawImage(stage, 0, 0);
+        if (state.recorder) compTimer = requestAnimationFrame(drawComp);
+      };
+      drawComp();
+    }
+    const rec = new MediaRecorder(srcCanvas.captureStream(30), { mimeType: pick.mime });
     const chunks = [];
     rec.ondataavailable = e => e.data.size && chunks.push(e.data);
     rec.onstop = () => {
       state.recorder = null;
+      cancelAnimationFrame(compTimer);
       download(new Blob(chunks, { type: pick.mime }), 'shiro.' + pick.ext);
       $('btn-rec').textContent = '動画を保存（5秒）';
     };
@@ -429,7 +837,7 @@ if (typeof document !== 'undefined') (() => {
   });
   $('btn-share').addEventListener('click', async () => {
     try {
-      const blob = await new Promise(r => stage.toBlob(r, 'image/png'));
+      const blob = await new Promise(r => compositeCanvas().toBlob(r, 'image/png'));
       const file = new File([blob], 'shiro.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] }))
         await navigator.share({ files: [file], title: 'Shiro' });
@@ -465,7 +873,7 @@ if (typeof document !== 'undefined') (() => {
   }
   function thumb() {
     const c = document.createElement('canvas'); c.width = 110; c.height = 62;
-    c.getContext('2d').drawImage(stage, 0, 0, 110, 62);
+    c.getContext('2d').drawImage(compositeCanvas(), 0, 0, 110, 62);
     return c.toDataURL('image/jpeg', .7);
   }
   $('btn-fav').addEventListener('click', () => {
@@ -486,6 +894,52 @@ if (typeof document !== 'undefined') (() => {
     }).catch(() => err('お気に入りファイルを読み込めませんでした'));
     e.target.value = '';
   });
+
+  // ---------- shader background controls ----------
+  {
+    const palBox = $('shader-palettes');
+    L.SHADER_PALETTES.forEach((rgb, i) => {
+      const b = document.createElement('button');
+      b.className = 'swatch' + (i === state.shader.paletteIdx ? ' sel' : '');
+      b.style.background = `rgb(${rgb.map(v => Math.round(v * 255)).join(',')})`;
+      b.title = '基調色 ' + (i + 1);
+      b.addEventListener('click', () => {
+        state.shader.paletteIdx = i;
+        if (shaderBg) shaderBg.color = L.SHADER_PALETTES[i];
+        palBox.querySelectorAll('.swatch').forEach((x, j) => x.classList.toggle('sel', j === i));
+        saveShaderState();
+      });
+      palBox.appendChild(b);
+    });
+    const syncShaderUI = () => {
+      $('sel-shader').value = state.shader.id;
+      $('shader-ui').style.display = state.shader.id ? '' : 'none';
+      $('shader-speed').value = state.shader.speed;
+      $('out-shader-speed').textContent = state.shader.speed.toFixed(2) + 'x';
+      $('btn-shader-play').textContent = state.shader.playing ? 'シェーダーを一時停止' : 'シェーダーを再生';
+    };
+    $('sel-shader').addEventListener('change', e => {
+      state.shader.id = e.target.value;
+      state.shader.params = []; // プリセットが変わったらパラメータは既定に戻す
+      applyShaderPreset();
+      syncShaderUI();
+      saveShaderState();
+      if (state.shader.id && !shaderBg) err('このブラウザは WebGL に未対応のため、シェーダー背景は使えません');
+      else if (state.shader.id) err('');
+    });
+    $('shader-speed').addEventListener('input', e => {
+      state.shader.speed = +e.target.value;
+      $('out-shader-speed').textContent = state.shader.speed.toFixed(2) + 'x';
+      saveShaderState();
+    });
+    $('btn-shader-play').addEventListener('click', () => {
+      state.shader.playing = !state.shader.playing;
+      syncShaderUI();
+      saveShaderState();
+    });
+    syncShaderUI();
+    if (state.shader.id) applyShaderPreset();
+  }
 
   // ---------- init ----------
   syncUI();
