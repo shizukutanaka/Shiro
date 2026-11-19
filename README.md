@@ -49,7 +49,7 @@ Served over HTTP(S) instead, Shiro is an installable PWA: it can be added to a p
 
 Everything stays local: no external keys, network access, or tracking. Images, videos, and favorites never leave your device.
 
-Tests: `node test.mjs` (835 assertions).
+Tests: `node test.mjs` (836 assertions).
 
 ---
 
@@ -104,7 +104,7 @@ HTTP(S) で配信した場合は PWA としてインストールもできます�
 ## テスト
 
 ```sh
-node test.mjs   # 835 assertions
+node test.mjs   # 836 assertions
 ```
 
 ## 設計メモ

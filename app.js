@@ -1217,6 +1217,7 @@ if (typeof document !== 'undefined') (() => {
     });
     syncShaderUI = () => {
       $('sel-shader').value = state.shader.id;
+      [...palBox.children].forEach((x, j) => x.classList.toggle('sel', j === state.shader.paletteIdx));
       $('shader-ui').style.display = state.shader.id ? '' : 'none';
       $('shader-speed').value = state.shader.speed;
       $('out-shader-speed').textContent = state.shader.speed.toFixed(2) + 'x';

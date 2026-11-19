@@ -199,7 +199,13 @@ const pngChunkList = buf => {
       const el = {
         tagName: String(tag || 'div').toUpperCase(),
         children: [], listeners: {}, style: {}, _qs: {},
-        classList: { toggle() {}, add() {}, remove() {}, contains: () => false },
+        classList: (() => {
+          const set = new Set();
+          return {
+            toggle(c, force) { const on = force === undefined ? !set.has(c) : !!force; on ? set.add(c) : set.delete(c); return on; },
+            add(c) { set.add(c); }, remove(c) { set.delete(c); }, contains: c => set.has(c),
+          };
+        })(),
         value: '', checked: false, title: '', src: '', href: '', download: '',
         type: '', min: '', max: '', step: '', className: '', htmlFor: '',
         width: 640, height: 600, _text: '', _html: '',
@@ -345,6 +351,7 @@ const pngChunkList = buf => {
     ok(Math.abs(+registry.get('sl-height').value - 0.23) < 1e-9, 'work png restores slider');
     ok(registry.get('sel-anim').value === 'wave', 'work png restores anim');
     ok(registry.get('sel-shader').value === 'aurora', 'work png restores shader selection');
+    ok(registry.get('shader-palettes').children.map(b => b.classList.contains('sel')).join() === 'false,true' + ',false'.repeat(L.SHADER_PALETTES.length - 2), 'work png moves the palette selection mark');
     ok(e.target.value === '', 'work file input is reset');
     await open(new Uint8Array(PNG_1X1));
     ok(registry.get('err').textContent.includes('作品情報が入っていません'), 'plain png explains it has no work');
