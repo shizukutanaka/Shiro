@@ -1067,8 +1067,25 @@ if (typeof document !== 'undefined') (() => {
     c.getContext('2d').drawImage(compositeCanvas(), 0, 0, 110, 62);
     return c.toDataURL('image/jpeg', .7);
   }
-  $('btn-fav').addEventListener('click', () => {
-    const name = prompt('お気に入りの名前', 'モデル ' + (state.favs.length + 1));
+  // 名前入力はページ内モーダル（Electron は prompt() を実装していないため）
+  const favDlg = $('fav-dialog'), favName = $('fav-name');
+  let favNameDone = null;
+  const askFavName = def => new Promise(resolve => {
+    favNameDone = resolve;
+    favName.value = def; favDlg.style.display = '';
+    favName.focus(); favName.select();
+  });
+  const closeFavName = v => {
+    favDlg.style.display = 'none';
+    const done = favNameDone; favNameDone = null;
+    if (done) done(v);
+  };
+  $('fav-form').addEventListener('submit', e => { e.preventDefault(); closeFavName(favName.value); });
+  $('fav-cancel').addEventListener('click', () => closeFavName(null));
+  favDlg.addEventListener('keydown', e => { if (e.key === 'Escape') closeFavName(null); });
+  $('btn-fav').addEventListener('click', async () => {
+    if (favNameDone) return;
+    const name = await askFavName('モデル ' + (state.favs.length + 1));
     if (name === null) return;
     state.favs.push({ id: 'f' + Date.now().toString(36), name: name || '無題', params: state.params, thumb: thumb() });
     saveFavs(); renderFavs();

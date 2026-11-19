@@ -169,7 +169,7 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
         getContext() { return makeCtx(); },
         toDataURL() { return 'data:image/jpeg;base64,stub'; },
         toBlob(cb) { cb(null); },
-        click() {},
+        click() {}, focus() {}, select() {},
       };
       Object.defineProperty(el, 'id', {
         get() { return this._id || ''; },
@@ -200,7 +200,6 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
       performance: { now: () => 0 },
       requestAnimationFrame: cb => { bootRaf.cb = cb; return 1; },
       setTimeout: () => 0,
-      prompt: () => 'テスト',
       navigator: opts.navigator !== undefined ? opts.navigator : {},
       location: { hash: opts.hash || '', protocol: opts.protocol || '', href: 'https://example.test/index.html' + (opts.hash || '') },
       history: { replaceState: () => {} },
@@ -247,7 +246,10 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   {
     const first = boot();
     first.registry.get('btn-fav').listeners.click[0]();
-    ok(first.store.has('shiro.favs.v1'), 'favorite is persisted on save');
+    first.registry.get('fav-name').value = 'テスト';
+    first.registry.get('fav-form').listeners.submit[0]({ preventDefault() {} });
+    await new Promise(r => setTimeout(r, 0));
+    ok(first.store.has('shiro.favs.v1') && JSON.parse(first.store.get('shiro.favs.v1'))[0].name === 'テスト', 'favorite is persisted on save');
     const second = boot(Object.fromEntries(first.store));
     ok(second.registry.get('err').textContent === '', 'reboot after save shows no error');
     ok(second.registry.get('fav-bar').children.length === 1, 'saved favorite survives reboot');

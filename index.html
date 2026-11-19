@@ -31,6 +31,10 @@
   .fav img { width:100%; height:56px; object-fit:cover; display:block; }
   .fav span { display:block; font-size:11px; padding:2px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--sub); }
   .fav .del { position:absolute; top:2px; right:2px; width:18px; height:18px; border:0; border-radius:4px; background:rgba(0,0,0,.6); color:#fff; cursor:pointer; font-size:11px; line-height:1; }
+  #fav-dialog { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:10; }
+  #fav-form { width:280px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; }
+  #fav-name { width:100%; background:#14151a; color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:6px; margin:6px 0 10px; font-size:13px; }
+  #fav-form .row { justify-content:flex-end; margin:0; }
   #panel { width:300px; flex:0 0 auto; overflow-y:auto; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; }
   h1 { font-size:16px; margin:0 0 4px; }
   .sub { color:var(--sub); font-size:12px; margin:0 0 12px; }
@@ -142,6 +146,13 @@
     </details>
     <div style="color:var(--sub);font-size:11px;margin-top:8px">v0.1.0</div>
   </div>
+</div>
+<div id="fav-dialog" style="display:none" role="dialog" aria-modal="true" aria-labelledby="fav-name-label">
+  <form id="fav-form">
+    <label id="fav-name-label" for="fav-name">お気に入りの名前</label>
+    <input id="fav-name" type="text" autocomplete="off">
+    <div class="row"><button type="button" id="fav-cancel">キャンセル</button><button type="submit" class="primary">OK</button></div>
+  </form>
 </div>
 <script src="app.js"></script>
 </body>

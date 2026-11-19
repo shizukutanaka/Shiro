@@ -17,7 +17,7 @@ The desktop app is a minimal Electron shell around the unchanged page: the page 
 - Windows: portable `.exe` (no installer) · macOS: `.zip` · Linux: `.AppImage`
 - The builds are **unsigned**, so Windows SmartScreen and macOS Gatekeeper may warn on first launch. On Windows choose "More info" → "Run anyway"; on macOS right-click the app → "Open" (or allow it in System Settings → Privacy & Security). On Linux, make the AppImage executable (`chmod +x`).
 - Share links created in the desktop app point at the local `file://` page, so they open only on the same machine; use the browser version to create links for other devices.
-- "Save to favorites" does not work in the desktop app yet: the app asks for the name with `prompt()`, which Electron does not support. Importing favorites from JSON works.
+- Favorites work the same as in the browser version (save, export, import from JSON). The favorite name is entered in an in-page dialog, not `prompt()`, which Electron does not support.
 
 Run from source (Node.js required; Electron is a dev dependency only):
 
@@ -59,7 +59,7 @@ Tests: `node test.mjs` (813 assertions).
 - Windows: portable `.exe`（インストール不要）／ macOS: `.zip` ／ Linux: `.AppImage`
 - **未署名**のため、初回起動時に Windows SmartScreen や macOS Gatekeeper の警告が出ることがあります。Windows は「詳細情報」→「実行」、macOS はアプリを右クリック→「開く」（または システム設定 → プライバシーとセキュリティ で許可）。Linux は AppImage に実行権限（`chmod +x`）を付けてください
 - デスクトップアプリで作った共有リンクはローカルの `file://` ページを指すため、同じ PC でしか開けません。他の端末へ送るリンクはブラウザ版で作ってください
-- 「お気に入りに保存」はデスクトップアプリではまだ使えません（名前入力に使う `prompt()` を Electron がサポートしていないため）。JSON からの読み込みは使えます
+- お気に入り（保存・書き出し・JSON からの読み込み）はブラウザ版と同じく使えます。名前はページ内のダイアログで入力します（Electron がサポートしていない `prompt()` は使いません）
 
 ソースから起動・ビルド（Node.js が必要。Electron は開発用依存のみ）:
 
