@@ -210,6 +210,80 @@ const ShiroLib = (() => {
     return parseShareJson(utf8String(b64UrlToBytes(s.slice(2))));
   }
 
+  // ---------- 作品PNG: 書き出した PNG 自体を「開き直せる作品ファイル」にする ----------
+  // 共有リンクと同じペイロード（'s=...'、ASCII のみ）を PNG の tEXt チャンクに入れる。
+  // 画像はどの経路（USB・自分のクラウド・チャット）で運んでも同じ作品状態を持ち運べ、
+  // デスクトップ版の file:// リンクのように「同じ PC でしか開けない」制約がない。
+  // 画像ビューアは未知の tEXt を無視するので、普通の PNG としてもそのまま使える。
+  const PNG_SIG = [137, 80, 78, 71, 13, 10, 26, 10];
+  const PNG_WORK_KEYWORD = 'shiro';
+  let crcTable = null;
+  function crc32(bytes) {
+    if (!crcTable) {
+      crcTable = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+        crcTable[n] = c >>> 0;
+      }
+    }
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) c = crcTable[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  // PNG のチャンク列を { type, start, len }（start はデータ先頭）で返す。PNG でなければ null。
+  function pngChunks(png) {
+    if (!png || png.length < 8 || PNG_SIG.some((b, i) => png[i] !== b)) return null;
+    const out = [];
+    let i = 8;
+    while (i + 12 <= png.length) {
+      const len = ((png[i] << 24) | (png[i + 1] << 16) | (png[i + 2] << 8) | png[i + 3]) >>> 0;
+      if (i + 12 + len > png.length) throw new Error('truncated png chunk');
+      const type = String.fromCharCode(png[i + 4], png[i + 5], png[i + 6], png[i + 7]);
+      out.push({ type, at: i, start: i + 8, len });
+      i += 12 + len;
+      if (type === 'IEND') return out;
+    }
+    throw new Error('png without IEND');
+  }
+  function embedWorkInPng(png, params, shader) {
+    const chunks = pngChunks(png);
+    if (!chunks) throw new Error('not a png');
+    const iend = chunks[chunks.length - 1].at;
+    const text = PNG_WORK_KEYWORD + '\0' + encodeShareLink(params, shader);
+    const body = new Uint8Array(4 + text.length);
+    for (let i = 0; i < 4; i++) body[i] = 'tEXt'.charCodeAt(i);
+    for (let i = 0; i < text.length; i++) body[4 + i] = text.charCodeAt(i);
+    const out = new Uint8Array(png.length + 12 + text.length);
+    out.set(png.subarray ? png.subarray(0, iend) : png.slice(0, iend), 0);
+    let o = iend;
+    const u32 = v => { out[o++] = v >>> 24; out[o++] = (v >>> 16) & 255; out[o++] = (v >>> 8) & 255; out[o++] = v & 255; };
+    u32(text.length);
+    out.set(body, o); o += body.length;
+    u32(crc32(body));
+    out.set(png.subarray ? png.subarray(iend) : png.slice(iend), o);
+    return out;
+  }
+  // 作品情報を含まない PNG（または PNG でないファイル）は null、
+  // 作品情報はあるが壊れている場合は例外（共有リンクと同じ検証・クランプを通す）。
+  function extractWorkFromPng(png) {
+    const chunks = pngChunks(png);
+    if (!chunks) return null;
+    const head = PNG_WORK_KEYWORD + '\0';
+    for (const c of chunks) {
+      if (c.type !== 'tEXt' || c.len <= head.length) continue;
+      let k = '';
+      for (let i = 0; i < head.length; i++) k += String.fromCharCode(png[c.start + i]);
+      if (k !== head) continue;
+      let text = '';
+      for (let i = c.start + head.length; i < c.start + c.len; i++) text += String.fromCharCode(png[i]);
+      const work = decodeShareLink(text);
+      if (!work) throw new Error('invalid work payload');
+      return work;
+    }
+    return null;
+  }
+
   // ---------- chroma key (white) ----------
   // thresh>0 のとき白に近い画素を透過。soft で境界をぼかす。
   function keyAlpha(r, g, b, thresh, soft) {
@@ -599,6 +673,7 @@ void main(){
     serializePreset, parsePreset, parseFavList,
     SHARE_FRAGMENT_MAX_LENGTH, SHARE_URL_MAX_LENGTH,
     clampShaderState, buildShareJson, parseShareJson, encodeShareLink, decodeShareLink,
+    crc32, embedWorkInPng, extractWorkFromPng,
     keyAlpha, mannequinPose, skeleton, drawMannequin,
     MIME_CANDIDATES, pickMime, registerServiceWorker,
     SHADER_PALETTES, SHADER_PRESETS, parseShaderParams, wrapShaderSource,
@@ -959,8 +1034,18 @@ if (typeof document !== 'undefined') (() => {
     a.href = URL.createObjectURL(blob); a.download = name; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
+  // 書き出す PNG には作品状態を埋める（「作品PNGを開く」で編集を再開できる）。
+  // 埋め込みに失敗しても画像そのものは必ず書き出す。
+  async function workPngBlob() {
+    const blob = await new Promise(r => compositeCanvas().toBlob(r, 'image/png'));
+    if (!blob) return null;
+    try {
+      const png = L.embedWorkInPng(new Uint8Array(await blob.arrayBuffer()), state.params, state.shader);
+      return new Blob([png], { type: 'image/png' });
+    } catch { return blob; }
+  }
   $('btn-png').addEventListener('click', () =>
-    compositeCanvas().toBlob(b => b ? download(b, 'shiro.png') : err('PNG生成に失敗'), 'image/png'));
+    workPngBlob().then(b => b ? download(b, 'shiro.png') : err('PNG生成に失敗')));
   $('btn-rec').addEventListener('click', () => {
     if (state.recorder) return;
     const pick = L.pickMime(m => MediaRecorder.isTypeSupported(m));
@@ -993,7 +1078,8 @@ if (typeof document !== 'undefined') (() => {
   });
   $('btn-share').addEventListener('click', async () => {
     try {
-      const blob = await new Promise(r => compositeCanvas().toBlob(r, 'image/png'));
+      const blob = await workPngBlob();
+      if (!blob) return err('PNG生成に失敗');
       const file = new File([blob], 'shiro.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] }))
         await navigator.share({ files: [file], title: 'Shiro' });
@@ -1113,6 +1199,7 @@ if (typeof document !== 'undefined') (() => {
   });
 
   // ---------- shader background controls ----------
+  let syncShaderUI = () => {};
   {
     const palBox = $('shader-palettes');
     L.SHADER_PALETTES.forEach((rgb, i) => {
@@ -1128,8 +1215,9 @@ if (typeof document !== 'undefined') (() => {
       });
       palBox.appendChild(b);
     });
-    const syncShaderUI = () => {
+    syncShaderUI = () => {
       $('sel-shader').value = state.shader.id;
+      [...palBox.children].forEach((x, j) => x.classList.toggle('sel', j === state.shader.paletteIdx));
       $('shader-ui').style.display = state.shader.id ? '' : 'none';
       $('shader-speed').value = state.shader.speed;
       $('out-shader-speed').textContent = state.shader.speed.toFixed(2) + 'x';
@@ -1157,6 +1245,23 @@ if (typeof document !== 'undefined') (() => {
     syncShaderUI();
     if (state.shader.id) applyShaderPreset();
   }
+
+  // ---------- 作品PNGを開く ----------
+  $('work-file').addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    f.arrayBuffer().then(buf => {
+      const work = L.extractWorkFromPng(new Uint8Array(buf));
+      if (!work) return err('この画像には Shiro の作品情報が入っていません（Shiro の「PNG保存」で書き出した PNG を選んでください）');
+      state.params = work.params;
+      state.shader = work.shader;
+      saveShaderState();
+      syncUI();
+      applyShaderPreset();
+      syncShaderUI();
+      err('');
+    }).catch(() => err('作品PNGを読み込めませんでした（ファイルが壊れている可能性があります）'));
+    e.target.value = '';
+  });
 
   // ---------- init ----------
   // PWA: http(s) 配信時のみ Service Worker を登録する（file:// では何もしない）。
