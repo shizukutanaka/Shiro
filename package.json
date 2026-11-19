@@ -1,0 +1,38 @@
+{
+  "name": "shiro",
+  "productName": "Shiro",
+  "version": "0.1.0",
+  "description": "Shiro — white-model character-creator compositing app (desktop app)",
+  "license": "MIT",
+  "private": true,
+  "main": "desktop/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test.mjs",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "44.11.4",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.shiro.app",
+    "productName": "Shiro",
+    "icon": "icon-512.png",
+    "files": [
+      "desktop/**/*",
+      "index.html",
+      "app.js",
+      "manifest.webmanifest",
+      "sw.js",
+      "icon-192.png",
+      "icon-512.png",
+      "icon-512-maskable.png",
+      "package.json"
+    ],
+    "win": { "target": "portable" },
+    "mac": { "target": "zip", "category": "public.app-category.graphics-design" },
+    "linux": { "target": "AppImage", "category": "Graphics" }
+  }
+}
