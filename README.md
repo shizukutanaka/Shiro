@@ -1,6 +1,6 @@
 # Shiro
 
-白モデル（内蔵の手続きマネキン、または自分の画像・動画素材）を、好きな背景画像にスワップ合成するキャラクタークリエイト風アプリ。依存ゼロ・ビルド不要の静的ページです。
+白モデル（内蔵の手続きマネキン、または自分の画像・動画素材）を、好きな背景画像にスワップ合成するキャラクタークリエイト風アプリ。正規の配布形態はデスクトップアプリ（Windows / macOS / Linux）です。アプリ本体は依存ゼロ・ビルド不要の静的ページで、デスクトップアプリはそれを最小の Electron 殻で包んだものです。
 
 Version: 0.1.0
 
@@ -8,9 +8,25 @@ Version: 0.1.0
 
 ## English
 
-Shiro is a character-creator-style web app that composites a white model — the built-in procedural mannequin, or your own image/video material — onto any background image you like. It is a static page with zero dependencies and no build step.
+Shiro is a character-creator-style app that composites a white model — the built-in procedural mannequin, or your own image/video material — onto any background image you like. Its canonical form is a desktop app (Windows / macOS / Linux). The app itself is a static page with zero dependencies and no build step; the desktop app wraps that page in a minimal Electron shell.
 
-### How to run
+### Desktop app (canonical form)
+
+The desktop app is a minimal Electron shell around the unchanged page: the page gets no Node.js access (context isolation on, Node integration off, sandbox on, no preload script), and navigating away from the app page or opening new windows is refused.
+
+- Windows: portable `.exe` (no installer) · macOS: `.zip` · Linux: `.AppImage`
+- The builds are **unsigned**, so Windows SmartScreen and macOS Gatekeeper may warn on first launch. On Windows choose "More info" → "Run anyway"; on macOS right-click the app → "Open" (or allow it in System Settings → Privacy & Security). On Linux, make the AppImage executable (`chmod +x`).
+- Share links created in the desktop app point at the local `file://` page, so they open only on the same machine; use the browser version to create links for other devices.
+
+Run from source (Node.js required; Electron is a dev dependency only):
+
+```sh
+npm install
+npm start          # launch the desktop app
+npm run dist       # build for the current OS into dist/
+```
+
+### Browser version
 
 Just open `index.html` in a browser. No local server is needed, and the app makes no external network requests.
 
@@ -35,7 +51,23 @@ Tests: `node test.mjs` (813 assertions).
 
 ---
 
-## 使い方
+## デスクトップアプリ（正規形態）
+
+デスクトップアプリは、アプリ本体（変更なし）を包む最小の Electron 殻です。ページには Node.js の権限を一切与えず（contextIsolation 有効・nodeIntegration 無効・sandbox 有効・preload なし）、アプリ外へのナビゲーションと新規ウィンドウは禁止しています。
+
+- Windows: portable `.exe`（インストール不要）／ macOS: `.zip` ／ Linux: `.AppImage`
+- **未署名**のため、初回起動時に Windows SmartScreen や macOS Gatekeeper の警告が出ることがあります。Windows は「詳細情報」→「実行」、macOS はアプリを右クリック→「開く」（または システム設定 → プライバシーとセキュリティ で許可）。Linux は AppImage に実行権限（`chmod +x`）を付けてください
+- デスクトップアプリで作った共有リンクはローカルの `file://` ページを指すため、同じ PC でしか開けません。他の端末へ送るリンクはブラウザ版で作ってください
+
+ソースから起動・ビルド（Node.js が必要。Electron は開発用依存のみ）:
+
+```sh
+npm install
+npm start          # デスクトップアプリを起動
+npm run dist       # 現在の OS 向けに dist/ へビルド
+```
+
+## ブラウザ版の使い方
 
 `index.html` をブラウザで開くだけ。ローカルサーバー不要、外部通信なし。
 
@@ -62,6 +94,8 @@ HTTP(S) で配信した場合は PWA としてインストールもできます�
 | `sw.js` | Service Worker（アプリ本体のキャッシュとオフライン起動）。登録は http(s) 配信時のみで、file:// では従来どおり動く |
 | `icon-192.png` / `icon-512.png` / `icon-512-maskable.png` | アプリアイコン（白モデルの図形を生成したもの） |
 | `test.mjs` | `node test.mjs` で純粋ロジックと UI 起動を検証するテストゲート |
+| `desktop/main.js` | デスクトップアプリの Electron 殻（ウィンドウでアプリ本体を表示するだけ。本体には触れない） |
+| `package.json` | Electron / electron-builder（版数固定の開発用依存）とビルド設定（Windows=portable exe、macOS=zip、Linux=AppImage） |
 
 ## テスト
 
