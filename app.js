@@ -1082,7 +1082,16 @@ if (typeof document !== 'undefined') (() => {
   };
   $('fav-form').addEventListener('submit', e => { e.preventDefault(); closeFavName(favName.value); });
   $('fav-cancel').addEventListener('click', () => closeFavName(null));
-  favDlg.addEventListener('keydown', e => { if (e.key === 'Escape') closeFavName(null); });
+  // フォーカスをモーダル内に留める（背面に抜けると Esc も効かなくなるため）
+  favDlg.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeFavName(null); return; }
+    if (e.key !== 'Tab') return;
+    const f = favDlg.querySelectorAll('input, button'), first = f[0], last = f[f.length - 1];
+    const cur = document.activeElement;
+    if (e.shiftKey ? (cur === first || cur === favDlg) : cur === last) {
+      e.preventDefault(); (e.shiftKey ? last : first).focus();
+    }
+  });
   $('btn-fav').addEventListener('click', async () => {
     if (favNameDone) return;
     const name = await askFavName('モデル ' + (state.favs.length + 1));
