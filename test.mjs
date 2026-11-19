@@ -1,6 +1,7 @@
 // node test.mjs — ShiroLib 純粋ロジック＋UI 起動の検証ゲート
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import zlib from 'node:zlib';
 
 const src = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
 const sandbox = { console };
@@ -82,6 +83,45 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   ok(decBogus.shader.id === '', 'share unknown shader id dropped');
   const jp = '#s=' + Buffer.from(JSON.stringify({ v: 1, name: 'テスト作品', params: p }), 'utf8').toString('base64url');
   ok(L.decodeShareLink(jp).name === 'テスト作品', 'share utf-8 payload decodes');
+}
+
+// 作品PNG: PNG の tEXt に作品状態を埋め、そこから復元する
+const PNG_1X1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
+const pngChunkList = buf => {
+  const out = []; let i = 8;
+  while (i < buf.length) {
+    const len = buf.readUInt32BE(i), type = buf.toString('latin1', i + 4, i + 8);
+    out.push({ type, data: buf.subarray(i + 8, i + 8 + len), crc: buf.readUInt32BE(i + 8 + len), raw: buf.subarray(i + 4, i + 8 + len) });
+    i += 12 + len;
+  }
+  return out;
+};
+{
+  ok(L.crc32(Buffer.from('123456789')) === 0xCBF43926, 'crc32 check value');
+  const p = { ...L.randomParams(L.mulberry32(5)), anim: 'walk' };
+  const shader = { id: 'crystal', paletteIdx: 4, params: [1], playing: true, speed: 0.5 };
+  const out = Buffer.from(L.embedWorkInPng(new Uint8Array(PNG_1X1), p, shader));
+  const chunks = pngChunkList(out);
+  ok(out.subarray(0, 8).equals(PNG_1X1.subarray(0, 8)), 'work png keeps the signature');
+  ok(chunks.map(c => c.type).join(',') === 'IHDR,IDAT,tEXt,IEND', 'work chunk inserted just before IEND');
+  ok(chunks.every(c => c.crc === L.crc32(c.raw)), 'every chunk crc is valid');
+  if (zlib.crc32) ok(chunks.every(c => c.crc === zlib.crc32(c.raw)), 'chunk crc matches zlib');
+  const t = chunks[2].data.toString('latin1');
+  ok(t.startsWith('shiro\0s='), 'tEXt keyword is shiro and payload is the share fragment');
+  ok(zlib.inflateSync(chunks[1].data).length === 5, 'image data untouched');
+  const back = L.extractWorkFromPng(new Uint8Array(out));
+  ok(JSON.stringify(back.params) === JSON.stringify(L.clampParams(p)), 'work png params round-trip');
+  ok(back.shader.id === 'crystal' && back.shader.paletteIdx === 4 && back.shader.speed === 0.5, 'work png shader round-trip');
+  ok(L.extractWorkFromPng(new Uint8Array(PNG_1X1)) === null, 'plain png has no work');
+  ok(L.extractWorkFromPng(new Uint8Array(Buffer.from('GIF89a not a png'))) === null, 'non-png has no work');
+  ok(L.extractWorkFromPng(new Uint8Array(0)) === null, 'empty file has no work');
+  throws(() => L.extractWorkFromPng(new Uint8Array(out.subarray(0, out.length - 20))), 'truncated work png rejected');
+  throws(() => L.embedWorkInPng(new Uint8Array(Buffer.from('nope')), p, shader), 'embedding into non-png rejected');
+  const bad = Buffer.from(out); const at = bad.indexOf('shiro\0s=', 0, 'latin1') + 8; bad[at] = 0x21;
+  throws(() => L.extractWorkFromPng(new Uint8Array(bad)), 'corrupt work payload rejected');
+  const crafted = Buffer.from(L.embedWorkInPng(new Uint8Array(PNG_1X1), { ...p, height: 9 }, { id: 'bogus' }));
+  const dec = L.extractWorkFromPng(new Uint8Array(crafted));
+  ok(dec.params.height === 1 && dec.shader.id === '', 'work png payload clamped like share links');
 }
 
 // chroma key
@@ -288,6 +328,27 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
     const back = L.decodeShareLink(url);
     ok(back && JSON.stringify(back.params) === JSON.stringify(L.clampParams(L.defaultParams())), 'generated link restores current params');
     ok(registry.get('share-link-box').style.display === '', 'share link box revealed');
+  }
+
+  // 作品PNGを開く: PNG に埋めた状態がスライダー・シェーダー選択へ戻る。情報のない PNG は案内を出す
+  {
+    const { registry } = boot();
+    const p = { ...L.defaultParams(), height: 0.23, anim: 'wave' };
+    const png = L.embedWorkInPng(new Uint8Array(PNG_1X1), p, { id: 'aurora', paletteIdx: 1, params: [], speed: 1 });
+    const open = async bytes => {
+      const e = { target: { files: [{ arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) }], value: 'x' } };
+      registry.get('work-file').listeners.change[0](e);
+      await new Promise(r => setTimeout(r, 0));
+      return e;
+    };
+    const e = await open(png);
+    ok(Math.abs(+registry.get('sl-height').value - 0.23) < 1e-9, 'work png restores slider');
+    ok(registry.get('sel-anim').value === 'wave', 'work png restores anim');
+    ok(registry.get('sel-shader').value === 'aurora', 'work png restores shader selection');
+    ok(e.target.value === '', 'work file input is reset');
+    await open(new Uint8Array(PNG_1X1));
+    ok(registry.get('err').textContent.includes('作品情報が入っていません'), 'plain png explains it has no work');
+    ok(Math.abs(+registry.get('sl-height').value - 0.23) < 1e-9, 'plain png leaves the current work alone');
   }
 
   // PWA: https 配信時の起動では Service Worker が登録され、file:// では登録されない

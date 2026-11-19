@@ -127,6 +127,9 @@
       <button id="btn-share">共有（外部アプリ）</button>
     </div>
     <div class="row">
+      <label class="filebtn">作品PNGを開く<input id="work-file" type="file" accept="image/png"></label>
+    </div>
+    <div class="row">
       <button id="btn-share-link" class="primary">共有リンクを作る</button>
     </div>
     <div id="share-link-box" style="display:none">
@@ -142,6 +145,7 @@
       背景画像を読み込み、白モデル（内蔵）または自分の画像・動画を合成します。
       「白抜き強度」を上げると白背景の素材が切り抜かれます。ランダムで全身パラメーターが一括変化。
       お気に入りはブラウザに保存され、JSONで書き出し/読み込みできます。
+      「PNG保存」「共有（外部アプリ）」の PNG には作品の状態（パラメーター・背景シェーダー）が入っていて、「作品PNGを開く」でその PNG から編集を再開できます。別の PC や端末へは PNG を送るだけで持ち運べます（背景画像・モデル素材は含まれません）。
       「共有リンクを作る」で、作品の状態を埋め込んだリンクを作れます。リンクを開いた人は同じ作品をそのまま編集できます（背景画像・モデル素材はリンクに含まれません）。
     </details>
     <div style="color:var(--sub);font-size:11px;margin-top:8px">v0.1.0</div>
