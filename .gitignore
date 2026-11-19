@@ -1,5 +1,7 @@
-# Shiro is a zero-dependency static page (no build, no node_modules);
-# this only keeps OS and editor noise out of the repository.
+# The app itself is a zero-dependency static page. node_modules/ and dist/
+# come only from the Electron desktop shell (npm install / npm run dist).
+node_modules/
+dist/
 .DS_Store
 Thumbs.db
 desktop.ini
