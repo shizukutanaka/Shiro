@@ -51,6 +51,14 @@ const throws = (fn, name) => { try { fn(); fail++; console.error('FAIL:', name);
   const list = L.parseFavList(JSON.stringify([{ name: 'a', params: p }, { bogus: 1 }, { name: 'b', params: { height: 9 } }]));
   ok(list.length === 2 && list[1].params.height === 1, 'fav list filters and clamps');
   throws(() => L.parseFavList('{}'), 'non-array fav list rejected');
+  const thumbed = L.parseFavList(JSON.stringify([
+    { name: 't', params: p, thumb: 'data:image/png;base64,AAAA' },
+    { name: 'missing', params: p },
+    { name: 'nonstring', params: p, thumb: 42 },
+  ]));
+  ok(thumbed[0].thumb === 'data:image/png;base64,AAAA', 'fav thumb survives round-trip');
+  ok(thumbed[1].thumb === '', 'missing thumb becomes empty string');
+  ok(thumbed[2].thumb === '', 'non-string thumb becomes empty string');
 }
 
 // share link round-trip

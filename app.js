@@ -87,7 +87,7 @@ const ShiroLib = (() => {
     const arr = JSON.parse(json);
     if (!Array.isArray(arr)) throw new Error('invalid favorite list');
     return arr.filter(o => o && typeof o.name === 'string' && o.params)
-      .map(o => ({ id: String(o.id || ''), name: o.name.slice(0, 60), params: clampParams(o.params) }));
+      .map(o => ({ id: String(o.id || ''), name: o.name.slice(0, 60), params: clampParams(o.params), thumb: typeof o.thumb === 'string' ? o.thumb : '' }));
   }
 
   // ---------- share link ----------
