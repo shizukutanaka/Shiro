@@ -309,6 +309,20 @@ const pngChunkList = buf => {
     ok(second.registry.get('fav-bar').children.length === 1, 'saved favorite survives reboot');
   }
 
+  // 保存後にスライダーを動かしても、お気に入りは保存時点の値へ戻す
+  {
+    const { registry } = boot();
+    registry.get('btn-fav').listeners.click[0]();
+    registry.get('fav-name').value = 'テスト';
+    registry.get('fav-form').listeners.submit[0]({ preventDefault() {} });
+    await new Promise(r => setTimeout(r, 0));
+    const height = registry.get('sl-height');
+    height.value = '0.9';
+    height.listeners.input[0]();
+    registry.get('fav-bar').children[0].listeners.click[0]();
+    ok(Math.abs(+height.value - L.defaultParams().height) < 1e-9, 'favorite restores params captured at save time');
+  }
+
   // 共有リンクで開く: パラメーターとシェーダーが復元され、受け手への案内が出る。
   // なお err には共有リンク由来の文言が出ないことだけを見る: スタブの WebGL は
   // シェーダーのコンパイル可否を再現できないため、実機では出ない文言が残り得る。

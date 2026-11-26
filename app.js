@@ -1182,7 +1182,7 @@ if (typeof document !== 'undefined') (() => {
     if (favNameDone) return;
     const name = await askFavName('モデル ' + (state.favs.length + 1));
     if (name === null) return;
-    state.favs.push({ id: 'f' + Date.now().toString(36), name: name || '無題', params: state.params, thumb: thumb() });
+    state.favs.push({ id: 'f' + Date.now().toString(36), name: name || '無題', params: L.clampParams(state.params), thumb: thumb() });
     saveFavs(); renderFavs();
   });
   $('btn-fav-exp').addEventListener('click', () =>
